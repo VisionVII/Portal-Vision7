@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, User } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 const Header = () => {
   const currentDate = new Date().toLocaleDateString('pt-PT', {
@@ -50,7 +50,7 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Search and User */}
+          {/* Search only */}
           <div className="flex items-center gap-4">
             <div className="hidden md:block">
               <input
@@ -59,9 +59,6 @@ const Header = () => {
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-portugal-green"
               />
             </div>
-            <button className="p-2 text-gray-600 hover:text-portugal-green transition-colors">
-              <User size={24} />
-            </button>
           </div>
         </div>
       </div>
