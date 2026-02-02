@@ -1,16 +1,21 @@
-
 import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import PostCard from '../components/PostCard';
 import AdSpace from '../components/AdSpace';
 import CookieBanner from '../components/CookieBanner';
-import { posts } from '../data/posts';
+import { usePosts } from '@/hooks/usePosts';
+import { useCategories } from '@/hooks/useCategories';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
-  const featuredPost = posts.find(post => post.featured);
-  const regularPosts = posts.filter(post => !post.featured);
-  const latestPosts = posts.slice(0, 4);
+  const { data: posts, isLoading } = usePosts();
+  const { data: categories } = useCategories();
+
+  const featuredPost = posts?.find(post => post.featured);
+  const regularPosts = posts?.filter(post => !post.featured) || [];
+  const latestPosts = posts?.slice(0, 4) || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,12 +50,26 @@ const Index = () => {
         <AdSpace size="banner" position="Topo da Página" className="mb-8" />
 
         {/* Featured Post */}
-        {featuredPost && (
+        {isLoading ? (
           <section className="mb-12">
-            <h2 className="text-3xl font-headline font-bold text-gray-900 mb-6">
-              Destaque
-            </h2>
-            <PostCard {...featuredPost} />
+            <h2 className="text-3xl font-headline font-bold text-gray-900 mb-6">Destaque</h2>
+            <Skeleton className="h-96 w-full rounded-lg" />
+          </section>
+        ) : featuredPost && (
+          <section className="mb-12">
+            <h2 className="text-3xl font-headline font-bold text-gray-900 mb-6">Destaque</h2>
+            <PostCard 
+              id={featuredPost.id}
+              title={featuredPost.title}
+              excerpt={featuredPost.excerpt}
+              image={featuredPost.image_url || ''}
+              category={featuredPost.categories?.name || 'Geral'}
+              categoryColor={featuredPost.categories?.color || 'bg-gray-600'}
+              author={featuredPost.author_name}
+              date={new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
+              readTime={featuredPost.read_time}
+              slug={featuredPost.slug}
+            />
           </section>
         )}
 
@@ -62,11 +81,31 @@ const Index = () => {
               <h2 className="text-3xl font-headline font-bold text-gray-900 mb-6">
                 Últimas Notícias
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {latestPosts.map((post) => (
-                  <PostCard key={post.id} {...post} />
-                ))}
-              </div>
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-64 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {latestPosts.map((post) => (
+                    <PostCard 
+                      key={post.id}
+                      id={post.id}
+                      title={post.title}
+                      excerpt={post.excerpt}
+                      image={post.image_url || ''}
+                      category={post.categories?.name || 'Geral'}
+                      categoryColor={post.categories?.color || 'bg-gray-600'}
+                      author={post.author_name}
+                      date={new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      readTime={post.read_time}
+                      slug={post.slug}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* Ad Space - Middle */}
@@ -77,35 +116,45 @@ const Index = () => {
               <h2 className="text-3xl font-headline font-bold text-gray-900 mb-6">
                 Mais Notícias
               </h2>
-              <div className="space-y-6">
-                {regularPosts.map((post) => (
-                  <div key={post.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                    <div className="flex gap-4">
-                      <img
-                        src={`https://images.unsplash.com/${post.image}?auto=format&fit=crop&w=200&q=80`}
-                        alt={post.title}
-                        className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
-                      />
-                      <div className="flex-1">
-                        <span className={`category-badge ${post.categoryColor} mb-2`}>
-                          {post.category}
-                        </span>
-                        <h3 className="font-headline font-bold text-lg text-gray-900 mb-2 hover:text-portugal-green transition-colors">
-                          {post.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                          {post.excerpt}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>{post.author}</span>
-                          <span>{post.date}</span>
-                          <span>{post.readTime}</span>
+              {isLoading ? (
+                <div className="space-y-6">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-32 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {regularPosts.map((post) => (
+                    <Link to={`/post/${post.slug}`} key={post.id}>
+                      <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <div className="flex gap-4">
+                          <img
+                            src={post.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=200&q=80'}
+                            alt={post.title}
+                            className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                          />
+                          <div className="flex-1">
+                            <span className={`category-badge ${post.categories?.color || 'bg-gray-600'} mb-2`}>
+                              {post.categories?.name || 'Geral'}
+                            </span>
+                            <h3 className="font-headline font-bold text-lg text-gray-900 mb-2 hover:text-portugal-green transition-colors">
+                              {post.title}
+                            </h3>
+                            <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                              {post.excerpt}
+                            </p>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <span>{post.author_name}</span>
+                              <span>{new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                              <span>{post.read_time}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </section>
           </div>
 
@@ -119,21 +168,31 @@ const Index = () => {
               <h3 className="text-xl font-headline font-bold text-gray-900 mb-4">
                 Mais Populares
               </h3>
-              <div className="space-y-4">
-                {posts.slice(0, 5).map((post, index) => (
-                  <div key={post.id} className="flex gap-3">
-                    <span className="flex-shrink-0 w-8 h-8 bg-portugal-green text-white rounded-full flex items-center justify-center font-bold text-sm">
-                      {index + 1}
-                    </span>
-                    <div>
-                      <h4 className="font-semibold text-sm text-gray-900 hover:text-portugal-green transition-colors cursor-pointer">
-                        {post.title}
-                      </h4>
-                      <p className="text-xs text-gray-500 mt-1">{post.date}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {posts?.slice(0, 5).map((post, index) => (
+                    <Link to={`/post/${post.slug}`} key={post.id} className="flex gap-3 group">
+                      <span className="flex-shrink-0 w-8 h-8 bg-portugal-green text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <h4 className="font-semibold text-sm text-gray-900 group-hover:text-portugal-green transition-colors">
+                          {post.title}
+                        </h4>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Categories */}
@@ -142,14 +201,14 @@ const Index = () => {
                 Categorias
               </h3>
               <div className="space-y-2">
-                {['Tecnologia', 'Desporto', 'Música', 'Saúde', 'Mundo'].map((category) => (
-                  <a
-                    key={category}
-                    href={`/${category.toLowerCase()}`}
+                {categories?.map((category) => (
+                  <Link
+                    key={category.id}
+                    to={`/${category.slug}`}
                     className="block py-2 px-3 text-gray-700 hover:bg-gray-50 hover:text-portugal-green transition-colors rounded"
                   >
-                    {category}
-                  </a>
+                    {category.name}
+                  </Link>
                 ))}
               </div>
             </div>
