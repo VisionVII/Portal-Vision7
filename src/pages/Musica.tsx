@@ -1,67 +1,88 @@
-
 import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import PostCard from '../components/PostCard';
 import AdSpace from '../components/AdSpace';
+import { usePostsByCategory } from '@/hooks/usePosts';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from 'react-router-dom';
 
 const Musica = () => {
-  const musicNews = [
-    {
-      id: 14,
-      title: "Festival Rock in Rio Lisboa anuncia lineup 2025",
-      excerpt: "Grandes nomes da música internacional confirmados para a edição portuguesa do festival.",
-      image: "photo-1493225457124-a3eb161ffa5f",
-      category: "Festivais",
-      categoryColor: "bg-purple-600",
-      author: "Ana Rodrigues",
-      date: "27 Jun 2025",
-      readTime: "3 min"
-    },
-    {
-      id: 15,
-      title: "Artista português ganha Grammy Internacional",
-      excerpt: "Reconhecimento mundial para a música portuguesa numa cerimónia histórica.",
-      image: "photo-1511735111819-9a3f7709049c",
-      category: "Prémios",
-      categoryColor: "bg-yellow-600",
-      author: "Carlos Mendes",
-      date: "26 Jun 2025",
-      readTime: "4 min"
-    },
-    {
-      id: 16,
-      title: "Nova casa de fados abre no Porto",
-      excerpt: "Espaço dedicado ao fado tradicional promete revitalizar a cultura musical da cidade.",
-      image: "photo-1493225457124-a3eb161ffa5f",
-      category: "Cultura",
-      categoryColor: "bg-indigo-600",
-      author: "Teresa Lima",
-      date: "25 Jun 2025",
-      readTime: "2 min"
-    }
-  ];
+  const { data: posts, isLoading } = usePostsByCategory('musica');
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Música</h1>
-          <p className="text-lg text-gray-600">O melhor da música portuguesa e internacional</p>
+      {/* Category Header */}
+      <section className="bg-purple-600 text-white py-12">
+        <div className="container mx-auto px-4">
+          <h1 className="text-4xl md:text-5xl font-headline font-bold mb-4">
+            Música
+          </h1>
+          <p className="text-xl opacity-90">
+            Festivais, concertos e toda a atualidade musical
+          </p>
         </div>
+      </section>
 
-        <AdSpace size="banner" position="topo-musica" className="mb-8" />
+      <div className="container mx-auto px-4 py-8">
+        <AdSpace size="banner" position="Topo da Categoria" className="mb-8" />
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          {musicNews.map((post) => (
-            <PostCard key={post.id} {...post} />
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-3">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-64 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : posts && posts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {posts.map((post) => (
+                  <PostCard 
+                    key={post.id}
+                    id={post.id}
+                    title={post.title}
+                    excerpt={post.excerpt}
+                    image={post.image_url || ''}
+                    category={post.categories?.name || 'Música'}
+                    categoryColor={post.categories?.color || 'bg-purple-600'}
+                    author={post.author_name}
+                    date={new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    readTime={post.read_time}
+                    slug={post.slug}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Em breve mais conteúdo</h3>
+                <p className="text-gray-600">Estamos a trabalhar para trazer as melhores notícias de música.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="lg:col-span-1">
+            <AdSpace size="square" position="Lateral Música" className="mb-8" />
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-xl font-headline font-bold text-gray-900 mb-4">Outras Categorias</h3>
+              <div className="space-y-2">
+                {[
+                  { name: 'Tecnologia', slug: 'tecnologia' },
+                  { name: 'Desporto', slug: 'desporto' },
+                  { name: 'Saúde', slug: 'saude' },
+                  { name: 'Mundo', slug: 'mundo' }
+                ].map((category) => (
+                  <Link key={category.slug} to={`/${category.slug}`} className="block py-2 px-3 text-gray-700 hover:bg-gray-50 hover:text-portugal-green transition-colors rounded">
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-
-        <AdSpace size="rectangle" position="meio-musica" className="mb-8" />
-      </main>
+      </div>
 
       <Footer />
     </div>
