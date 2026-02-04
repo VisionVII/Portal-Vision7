@@ -12,6 +12,7 @@ import Saude from "./pages/Saude";
 import Mundo from "./pages/Mundo";
 import Post from "./pages/Post";
 import AdminLogin from "./pages/AdminLogin";
+import AdminRegister from "./pages/AdminRegister";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
