@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import NewsletterForm from './NewsletterForm';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -53,14 +54,7 @@ const Footer = () => {
               Receba as últimas notícias diretamente no seu email
             </p>
             <div className="space-y-2">
-              <input
-                type="email"
-                placeholder="Seu email"
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-portugal-green text-white"
-              />
-              <button className="w-full bg-portugal-green hover:bg-green-700 text-white py-2 rounded transition-colors">
-                Subscrever
-              </button>
+              <NewsletterForm variant="footer" />
             </div>
           </div>
         </div>
