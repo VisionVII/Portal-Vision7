@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { useCreatePost, useUpdatePost, CreatePostData, Post } from '@/hooks/usePosts';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PostFormProps {
   post?: Post | null;
@@ -27,10 +29,60 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     status: post?.status || 'draft',
   });
 
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(post?.image_url || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { data: categories } = useCategories();
   const createPost = useCreatePost();
   const updatePost = useUpdatePost();
   const { toast } = useToast();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Erro", description: "Por favor selecione um ficheiro de imagem.", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Erro", description: "A imagem não pode ter mais de 5MB.", variant: "destructive" });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `posts/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('post-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('post-images')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, image_url: publicUrl });
+      setImagePreview(publicUrl);
+      toast({ title: "Sucesso", description: "Imagem carregada com sucesso!" });
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message || "Erro ao carregar imagem.", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setFormData({ ...formData, image_url: '' });
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const generateSlug = (title: string) => {
     return title
@@ -165,13 +217,61 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="image">URL da Imagem</Label>
-            <Input
-              id="image"
-              value={formData.image_url}
-              onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-              placeholder="https://images.unsplash.com/..."
-            />
+            <Label>Imagem do Post</Label>
+            <div className="space-y-3">
+              {imagePreview ? (
+                <div className="relative inline-block">
+                  <img src={imagePreview} alt="Preview" className="w-full max-w-md h-48 object-cover rounded-lg border" />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-portugal-green transition-colors"
+                >
+                  <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">
+                    {isUploading ? 'A carregar...' : 'Clique para carregar uma imagem'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG até 5MB</p>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {isUploading ? 'A carregar...' : 'Carregar Imagem'}
+                </Button>
+                <span className="text-xs text-gray-500">ou</span>
+                <Input
+                  value={formData.image_url}
+                  onChange={(e) => {
+                    setFormData({...formData, image_url: e.target.value});
+                    setImagePreview(e.target.value || null);
+                  }}
+                  placeholder="Cole o URL de uma imagem"
+                  className="flex-1"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">

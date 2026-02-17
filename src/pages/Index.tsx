@@ -4,6 +4,7 @@ import Footer from '../components/Footer';
 import PostCard from '../components/PostCard';
 import AdSpace from '../components/AdSpace';
 import CookieBanner from '../components/CookieBanner';
+import NewsletterForm from '../components/NewsletterForm';
 import { usePosts } from '@/hooks/usePosts';
 import { useCategories } from '@/hooks/useCategories';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -219,16 +220,7 @@ const Index = () => {
               <p className="text-sm opacity-90 mb-4">
                 Receba as principais notícias diretamente no seu email
               </p>
-              <div className="space-y-3">
-                <input
-                  type="email"
-                  placeholder="Seu email"
-                  className="w-full px-3 py-2 rounded text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
-                />
-                <button className="w-full bg-white text-portugal-green py-2 rounded font-semibold hover:bg-gray-100 transition-colors">
-                  Subscrever
-                </button>
-              </div>
+              <NewsletterForm variant="sidebar" />
             </div>
           </div>
         </div>
