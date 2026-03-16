@@ -114,10 +114,16 @@ const AdminLogin = () => {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-2">
+            <Link 
+              to="/admin/register" 
+              className="block text-sm text-portugal-green hover:text-portugal-green/80 font-medium"
+            >
+              Criar conta de teste
+            </Link>
             <Link 
               to="/" 
-              className="inline-flex items-center text-sm text-gray-600 hover:text-portugal-green"
+              className="inline-flex items-center text-sm text-muted-foreground hover:text-portugal-green"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar ao site
