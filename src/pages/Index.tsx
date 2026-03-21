@@ -128,7 +128,7 @@ const Index = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {regularPosts.map((post) => (
+                  {paginatedRegularPosts.map((post) => (
                     <Link to={`/post/${post.slug}`} key={post.id}>
                       <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                         <div className="flex gap-4">
@@ -157,6 +157,7 @@ const Index = () => {
                       </div>
                     </Link>
                   ))}
+                  <PostPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
                 </div>
               )}
             </section>
