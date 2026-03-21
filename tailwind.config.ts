@@ -108,8 +108,8 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.6s ease-out'
 			},
-			fontFamily: {
-				'headline': ['Georgia', 'serif'],
+		fontFamily: {
+				'headline': ['"Playfair Display"', 'Georgia', 'serif'],
 				'body': ['Inter', 'system-ui', 'sans-serif']
 			}
 		}
