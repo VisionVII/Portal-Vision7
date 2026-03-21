@@ -3,26 +3,24 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import PostCard from '../components/PostCard';
 import AdSpace from '../components/AdSpace';
+import PostPagination from '../components/PostPagination';
 import { usePostsByCategory } from '@/hooks/usePosts';
+import { usePagination } from '@/hooks/usePagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 
 const Saude = () => {
   const { data: posts, isLoading } = usePostsByCategory('saude');
+  const { paginatedItems, currentPage, totalPages, goToPage } = usePagination(posts, { pageSize: 6 });
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      {/* Category Header */}
       <section className="bg-red-600 text-white py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl md:text-5xl font-headline font-bold mb-4">
-            Saúde
-          </h1>
-          <p className="text-xl opacity-90">
-            Bem-estar, medicina e investigação em saúde
-          </p>
+          <h1 className="text-4xl md:text-5xl font-headline font-bold mb-4">Saúde</h1>
+          <p className="text-xl opacity-90">Bem-estar, medicina e investigação em saúde</p>
         </div>
       </section>
 
@@ -37,24 +35,27 @@ const Saude = () => {
                   <Skeleton key={i} className="h-64 w-full rounded-lg" />
                 ))}
               </div>
-            ) : posts && posts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {posts.map((post) => (
-                  <PostCard 
-                    key={post.id}
-                    id={post.id}
-                    title={post.title}
-                    excerpt={post.excerpt}
-                    image={post.image_url || ''}
-                    category={post.categories?.name || 'Saúde'}
-                    categoryColor={post.categories?.color || 'bg-red-600'}
-                    author={post.author_name}
-                    date={new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    readTime={post.read_time}
-                    slug={post.slug}
-                  />
-                ))}
-              </div>
+            ) : paginatedItems.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {paginatedItems.map((post) => (
+                    <PostCard 
+                      key={post.id}
+                      id={post.id}
+                      title={post.title}
+                      excerpt={post.excerpt}
+                      image={post.image_url || ''}
+                      category={post.categories?.name || 'Saúde'}
+                      categoryColor={post.categories?.color || 'bg-red-600'}
+                      author={post.author_name}
+                      date={new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      readTime={post.read_time}
+                      slug={post.slug}
+                    />
+                  ))}
+                </div>
+                <PostPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+              </>
             ) : (
               <div className="bg-white rounded-lg shadow-md p-8 text-center">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Em breve mais conteúdo</h3>

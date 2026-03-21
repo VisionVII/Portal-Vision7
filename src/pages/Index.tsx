@@ -5,8 +5,10 @@ import PostCard from '../components/PostCard';
 import AdSpace from '../components/AdSpace';
 import CookieBanner from '../components/CookieBanner';
 import NewsletterForm from '../components/NewsletterForm';
+import PostPagination from '../components/PostPagination';
 import { usePosts } from '@/hooks/usePosts';
 import { useCategories } from '@/hooks/useCategories';
+import { usePagination } from '@/hooks/usePagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 
@@ -17,6 +19,7 @@ const Index = () => {
   const featuredPost = posts?.find(post => post.featured);
   const regularPosts = posts?.filter(post => !post.featured) || [];
   const latestPosts = posts?.slice(0, 4) || [];
+  const { paginatedItems: paginatedRegularPosts, currentPage, totalPages, goToPage } = usePagination(regularPosts, { pageSize: 6 });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -125,7 +128,7 @@ const Index = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {regularPosts.map((post) => (
+                  {paginatedRegularPosts.map((post) => (
                     <Link to={`/post/${post.slug}`} key={post.id}>
                       <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                         <div className="flex gap-4">
@@ -154,6 +157,7 @@ const Index = () => {
                       </div>
                     </Link>
                   ))}
+                  <PostPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
                 </div>
               )}
             </section>
