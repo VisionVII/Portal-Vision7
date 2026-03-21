@@ -5,8 +5,10 @@ import PostCard from '../components/PostCard';
 import AdSpace from '../components/AdSpace';
 import CookieBanner from '../components/CookieBanner';
 import NewsletterForm from '../components/NewsletterForm';
+import PostPagination from '../components/PostPagination';
 import { usePosts } from '@/hooks/usePosts';
 import { useCategories } from '@/hooks/useCategories';
+import { usePagination } from '@/hooks/usePagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 
