@@ -2,35 +2,52 @@
 import React from 'react';
 
 interface AdSpaceProps {
-  size: 'banner' | 'rectangle' | 'square' | 'skyscraper';
+  size: 'leaderboard' | 'banner' | 'rectangle' | 'square' | 'skyscraper' | 'inline';
   position: string;
   className?: string;
 }
 
 const AdSpace: React.FC<AdSpaceProps> = ({ size, position, className = '' }) => {
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'banner':
-        return 'w-full h-24 md:h-32';
-      case 'rectangle':
-        return 'w-full h-64';
-      case 'square':
-        return 'w-full h-80';
-      case 'skyscraper':
-        return 'w-full h-96';
-      default:
-        return 'w-full h-64';
-    }
+  const sizeConfig: Record<string, { classes: string; label: string; dimensions: string }> = {
+    leaderboard: {
+      classes: 'w-full h-[90px] md:h-[90px]',
+      label: 'Leaderboard',
+      dimensions: '728×90',
+    },
+    banner: {
+      classes: 'w-full h-[60px] md:h-[90px]',
+      label: 'Banner',
+      dimensions: '468×60 / 728×90',
+    },
+    rectangle: {
+      classes: 'w-full max-w-[336px] mx-auto h-[250px] md:h-[280px]',
+      label: 'Retângulo',
+      dimensions: '300×250 / 336×280',
+    },
+    square: {
+      classes: 'w-full h-[250px]',
+      label: 'Quadrado',
+      dimensions: '250×250 / 300×250',
+    },
+    skyscraper: {
+      classes: 'w-full h-[600px] hidden lg:flex',
+      label: 'Skyscraper',
+      dimensions: '160×600',
+    },
+    inline: {
+      classes: 'w-full h-[100px] md:h-[90px]',
+      label: 'Inline',
+      dimensions: '728×90',
+    },
   };
 
+  const config = sizeConfig[size] || sizeConfig.rectangle;
+
   return (
-    <div className={`ad-space ${getSizeClasses()} ${className}`}>
-      <div className="text-center">
-        <p className="text-lg font-semibold mb-2">Espaço Publicitário</p>
-        <p className="text-sm">{size.toUpperCase()} - {position}</p>
-        <p className="text-xs mt-2 text-gray-400">
-          Cole aqui o código do Google Ads ou outro serviço de publicidade
-        </p>
+    <div className={`ad-space ${config.classes} ${className}`}>
+      <div className="text-center px-4">
+        <p className="text-xs font-medium uppercase tracking-wider opacity-60 mb-1">Publicidade</p>
+        <p className="text-[10px] opacity-40">{config.dimensions} — {position}</p>
       </div>
     </div>
   );

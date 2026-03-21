@@ -1,12 +1,12 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 20% 98%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -24,8 +24,8 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --ring: 146 61% 25%;
+    --radius: 0.75rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -34,6 +34,11 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Ad space tokens */
+    --ad-bg: 210 20% 96%;
+    --ad-border: 214 20% 88%;
+    --ad-text: 215 16% 57%;
   }
 
   .dark {
@@ -64,6 +69,9 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --ad-bg: 222 40% 8%;
+    --ad-border: 217 32% 20%;
+    --ad-text: 215 20% 50%;
   }
 }
 
@@ -73,7 +81,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -83,7 +91,7 @@
 
 @layer components {
   .blog-card {
-    @apply bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
+    @apply bg-card rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-border/50;
   }
   
   .category-badge {
@@ -91,6 +99,15 @@
   }
   
   .ad-space {
-    @apply bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center min-h-[250px] text-gray-500;
+    @apply bg-[hsl(var(--ad-bg))] border border-dashed border-[hsl(var(--ad-border))] rounded-xl flex items-center justify-center text-[hsl(var(--ad-text))];
+  }
+
+  .section-title {
+    @apply text-2xl md:text-3xl font-headline font-bold text-foreground mb-6 relative;
+  }
+
+  .section-title::after {
+    content: '';
+    @apply block w-12 h-1 bg-primary rounded-full mt-2;
   }
 }
