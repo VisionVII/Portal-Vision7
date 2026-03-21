@@ -19,6 +19,7 @@ const Index = () => {
   const featuredPost = posts?.find(post => post.featured);
   const regularPosts = posts?.filter(post => !post.featured) || [];
   const latestPosts = posts?.slice(0, 4) || [];
+  const { paginatedItems: paginatedRegularPosts, currentPage, totalPages, goToPage } = usePagination(regularPosts, { pageSize: 6 });
 
   return (
     <div className="min-h-screen bg-gray-50">
