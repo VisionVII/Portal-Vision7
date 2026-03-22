@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
+import RichTextEditor from './RichTextEditor';
 import { useCreatePost, useUpdatePost, CreatePostData, Post } from '@/hooks/usePosts';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -286,13 +287,10 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
           
           <div className="space-y-2">
             <Label htmlFor="content">Conteúdo *</Label>
-            <Textarea
-              id="content"
-              value={formData.content}
-              onChange={(e) => setFormData({...formData, content: e.target.value})}
+            <RichTextEditor
+              content={formData.content}
+              onChange={(html) => setFormData({...formData, content: html})}
               placeholder="Escreva o conteúdo completo do artigo..."
-              className="min-h-[200px]"
-              required
             />
           </div>
 

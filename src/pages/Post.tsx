@@ -119,9 +119,11 @@ const Post = () => {
                     {post.excerpt}
                   </p>
                   
-                  <div className="text-gray-800 leading-relaxed space-y-4 whitespace-pre-wrap">
-                    {post.content}
-                  </div>
+                  
+                  <div 
+                    className="prose prose-lg max-w-none text-gray-800 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                  />
 
                   {/* Tags */}
                   {post.tags && post.tags.length > 0 && (
