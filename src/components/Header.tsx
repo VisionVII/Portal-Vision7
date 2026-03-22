@@ -15,6 +15,7 @@ const Header = () => {
 
   const { data: dbCategories } = useCategories();
   const { data: posts } = usePosts();
+  const { theme, toggleTheme } = useTheme();
 
   const currentDate = new Date().toLocaleDateString('pt-PT', {
     weekday: 'long',
