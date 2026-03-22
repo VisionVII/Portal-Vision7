@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Search, X } from 'lucide-react';
+import { Calendar, Search, X, Moon, Sun } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { usePosts } from '@/hooks/usePosts';
+import { useTheme } from '@/hooks/useTheme';
 
 const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -14,6 +15,7 @@ const Header = () => {
 
   const { data: dbCategories } = useCategories();
   const { data: posts } = usePosts();
+  const { theme, toggleTheme } = useTheme();
 
   const currentDate = new Date().toLocaleDateString('pt-PT', {
     weekday: 'long',
@@ -87,9 +89,20 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Search */}
-          <div className="relative" ref={searchRef}>
-            <div className="flex items-center gap-2">
+          {/* Search + Theme Toggle */}
+          <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              title={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
+            >
+              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </button>
+
+            {/* Search */}
+            <div className="relative" ref={searchRef}>
+              <div className="flex items-center gap-2">
               <div className={`flex items-center transition-all duration-300 ${searchOpen ? 'w-72 md:w-96' : 'w-0 md:w-64'} overflow-hidden`}>
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -192,6 +205,7 @@ const Header = () => {
                 )}
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
