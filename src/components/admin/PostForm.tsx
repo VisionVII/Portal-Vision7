@@ -287,13 +287,10 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
           
           <div className="space-y-2">
             <Label htmlFor="content">Conteúdo *</Label>
-            <Textarea
-              id="content"
-              value={formData.content}
-              onChange={(e) => setFormData({...formData, content: e.target.value})}
+            <RichTextEditor
+              content={formData.content}
+              onChange={(html) => setFormData({...formData, content: html})}
               placeholder="Escreva o conteúdo completo do artigo..."
-              className="min-h-[200px]"
-              required
             />
           </div>
 
