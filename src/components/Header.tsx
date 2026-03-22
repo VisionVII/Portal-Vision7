@@ -4,8 +4,6 @@ import { Calendar, Search, X, Moon, Sun } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { usePosts } from '@/hooks/usePosts';
 import { useTheme } from '@/hooks/useTheme';
-import { useCategories } from '@/hooks/useCategories';
-import { usePosts } from '@/hooks/usePosts';
 
 const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
