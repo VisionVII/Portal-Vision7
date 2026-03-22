@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Search, X } from 'lucide-react';
+import { Calendar, Search, X, Moon, Sun } from 'lucide-react';
+import { useCategories } from '@/hooks/useCategories';
+import { usePosts } from '@/hooks/usePosts';
+import { useTheme } from '@/hooks/useTheme';
 import { useCategories } from '@/hooks/useCategories';
 import { usePosts } from '@/hooks/usePosts';
 
