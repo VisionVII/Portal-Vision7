@@ -6,6 +6,7 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { data: siteSettings } = useSiteSettings();
 
   return (
     <footer className="bg-gray-900 text-white">
