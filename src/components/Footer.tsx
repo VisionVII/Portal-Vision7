@@ -15,10 +15,14 @@ const Footer = () => {
           {/* Logo e Descrição */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-portugal-red rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">PN</span>
-              </div>
-              <h3 className="text-xl font-bold">Porto Notícias</h3>
+              {siteSettings?.logo_url ? (
+                <img src={siteSettings.logo_url} alt="Logo" className="w-10 h-10 object-contain rounded-full" />
+              ) : (
+                <div className="w-10 h-10 bg-portugal-red rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">PN</span>
+                </div>
+              )}
+              <h3 className="text-xl font-bold">{siteSettings?.site_name || 'Porto Notícias'}</h3>
             </div>
             <p className="text-gray-300 text-sm">
               O seu portal de informação confiável em Portugal. 

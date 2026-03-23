@@ -82,11 +82,15 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-portugal-red rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">PN</span>
-            </div>
+            {siteSettings?.logo_url ? (
+              <img src={siteSettings.logo_url} alt="Logo" className="w-12 h-12 object-contain rounded-full" />
+            ) : (
+              <div className="w-12 h-12 bg-portugal-red rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-xl">PN</span>
+              </div>
+            )}
             <div>
-              <h1 className="text-2xl font-bold text-portugal-green">Porto Notícias</h1>
+              <h1 className="text-2xl font-bold text-portugal-green">{siteSettings?.site_name || 'Porto Notícias'}</h1>
               <p className="text-sm text-muted-foreground">Seu portal de informação</p>
             </div>
           </Link>
