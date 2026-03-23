@@ -111,6 +111,10 @@ const AdminDashboard = () => {
               <Mail className="h-4 w-4" />
               Newsletter
             </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1.5">
+              <Settings className="h-4 w-4" />
+              Configurações
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
