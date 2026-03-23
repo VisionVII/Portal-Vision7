@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Plus, LogOut, LayoutDashboard, FileText, Mail, Settings } from 'lucide-react';
+import SiteSettingsManager from '@/components/admin/SiteSettingsManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePosts, Post } from '@/hooks/usePosts';
 import { useNewsletterStats } from '@/hooks/useNewsletter';
