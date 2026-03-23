@@ -180,6 +180,10 @@ const AdminDashboard = () => {
           <TabsContent value="newsletter">
             <NewsletterManager />
           </TabsContent>
+
+          <TabsContent value="settings">
+            <SiteSettingsManager />
+          </TabsContent>
         </Tabs>
       </main>
     </div>
