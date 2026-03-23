@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import NewsletterForm from './NewsletterForm';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
