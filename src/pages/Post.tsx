@@ -147,34 +147,14 @@ const Post = () => {
 
               {/* Ad Space */}
               <AdSpace size="rectangle" position="Após o Conteúdo" className="mt-8" />
+
+              {/* Related Posts - Full width below content */}
+              <RelatedPosts posts={relatedPosts} />
             </div>
 
             {/* Sidebar */}
             <div className="lg:col-span-1">
               <AdSpace size="square" position="Lateral do Post" className="mb-8" />
-              
-              {/* Related Posts */}
-              {relatedPosts.length > 0 && (
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h3 className="text-xl font-headline font-bold text-gray-900 mb-4">
-                    Posts Relacionados
-                  </h3>
-                  <div className="space-y-4">
-                    {relatedPosts.map((relatedPost) => (
-                      <div key={relatedPost.id} className="border-b border-gray-200 pb-4 last:border-b-0">
-                        <Link to={`/post/${relatedPost.slug}`}>
-                          <h4 className="font-semibold text-sm text-gray-900 hover:text-portugal-green transition-colors mb-2">
-                            {relatedPost.title}
-                          </h4>
-                          <p className="text-xs text-gray-500">
-                            {new Date(relatedPost.published_at || relatedPost.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </p>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
