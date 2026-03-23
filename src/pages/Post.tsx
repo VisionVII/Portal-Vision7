@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import AdSpace from '../components/AdSpace';
+import RelatedPosts from '../components/RelatedPosts';
 import { usePost, usePosts } from '@/hooks/usePosts';
 import { Calendar, User, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
