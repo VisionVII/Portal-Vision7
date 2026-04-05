@@ -1,0 +1,167 @@
+{
+  "module": "Automação n8n",
+  "version": "1.0.0",
+  "owner": "Vision7 Core Team",
+  "status": "Em desenvolvimento",
+  "last_updated": "2026-04-05",
+  "objective": "Integração com n8n para automação de workflows: ingestão de RSS feeds, curadoria AI de conteúdo, execução e monitoramento de workflows, com dashboard administrativo completo.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Dashboard de automações com KPIs: total workflows, automações ativas, execuções, status de segurança",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "Listar, ativar, desativar e executar workflows n8n via REST API",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Monitoramento de execuções com auto-refresh a cada 10s",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Criar/editar automações com: nome, workflow associado, RSS feeds, keywords, prompt AI, intervalo",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Visualizador de JSON para detalhes de execução",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-006",
+      "description": "Persistência de automações em Supabase (atualmente localStorage)",
+      "priority": "Alta",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-007",
+      "description": "Edge Function proxy para proteger API key n8n do client-side",
+      "priority": "Crítica",
+      "status": "Pendente"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "API key n8n não deve ser exposta no browser em produção",
+      "category": "Segurança",
+      "status": "Pendente"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Dashboard com refresh sem perda de estado do formulário",
+      "category": "Manutenibilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-003",
+      "description": "Feedback visual para todas as operações (toast + loading states)",
+      "category": "Acessibilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-004",
+      "description": "Rate limiting para chamadas à API n8n",
+      "category": "Segurança",
+      "status": "Pendente"
+    }
+  ],
+  "flows": {
+    "data_flow": "AdminAutomation UI → n8n.ts service → [Edge Function proxy] → n8n REST API → Workflow execution → RSS/AI → Post creation",
+    "user_flow": "Admin Dashboard → Automações → Ver Workflows → Criar Automação → Configurar RSS/Keywords/AI → Ativar → Monitorar Execuções"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/automation-arch.md",
+    "ui_wireframe": "sdd/diagrams/automation-ui.md"
+  },
+  "dependencies": {
+    "modules": ["Auth & Segurança", "CMS", "Agregador de Notícias", "Supabase & Database"],
+    "packages": ["lucide-react", "sonner"],
+    "supabase_tables": ["automations (planned)"],
+    "api_endpoints": ["n8n REST API: /workflows, /executions"]
+  },
+  "files": {
+    "components": [],
+    "hooks": [],
+    "pages": [
+      "src/pages/admin/AdminAutomation.tsx"
+    ],
+    "services": [
+      "src/services/n8n.ts"
+    ],
+    "types": [
+      "src/types/automation.ts"
+    ],
+    "migrations": []
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "unit",
+      "description": "Testar n8n.ts service com mock API responses",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "integration",
+      "description": "Testar fluxo completo: criar automação → executar → verificar resultado",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "security",
+      "description": "Verificar que API key não é exposta em network requests client-side",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-004",
+      "type": "e2e",
+      "description": "Testar dashboard com n8n indisponível (graceful degradation)",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "Type-check n8n service e types",
+      "tool": "TypeScript",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "Validar env vars necessárias no deploy",
+      "tool": "GitHub Actions",
+      "trigger": "Deploy",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [
+    "n8n pode ser escalado horizontalmente em Docker",
+    "Execuções monitoradas com auto-refresh configurável",
+    "Automações futuras em Supabase permitem query/filter server-side",
+    "Edge Function proxy permite rate limiting centralizado"
+  ],
+  "security_considerations": [
+    "API key n8n deve migrar para Edge Function (não expor no VITE_*)",
+    "Acesso restrito a super_admin e admin",
+    "Rate limiting para prevenir abuse de execuções",
+    "Logs de execução para auditoria",
+    "Validação de webhook payloads"
+  ],
+  "change_history": [
+    {
+      "date": "2026-04-05",
+      "version": "1.0.0",
+      "author": "Vision7 Team",
+      "description": "Módulo de automação criado: dashboard, service layer, types, SDD spec"
+    }
+  ]
+}

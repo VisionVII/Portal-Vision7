@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { posts as initialPosts } from '@/data/posts';
 
 export interface Post {
   id: string;
@@ -45,6 +46,49 @@ export interface UpdatePostData extends Partial<CreatePostData> {
   id: string;
 }
 
+const FALLBACK_CATEGORIES = {
+  tecnologia: { id: 'fallback-tecnologia', name: 'Tecnologia', slug: 'tecnologia', color: 'bg-blue-600' },
+  desporto: { id: 'fallback-desporto', name: 'Desporto', slug: 'desporto', color: 'bg-emerald-600' },
+  musica: { id: 'fallback-musica', name: 'Música', slug: 'musica', color: 'bg-violet-600' },
+  saude: { id: 'fallback-saude', name: 'Saúde', slug: 'saude', color: 'bg-rose-600' },
+  mundo: { id: 'fallback-mundo', name: 'Mundo', slug: 'mundo', color: 'bg-amber-600' },
+} as const;
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+const fallbackPosts: Post[] = initialPosts.map((post) => {
+  const categoryKey = slugify(post.category) as keyof typeof FALLBACK_CATEGORIES;
+  const category = FALLBACK_CATEGORIES[categoryKey] ?? FALLBACK_CATEGORIES.tecnologia;
+  const now = new Date().toISOString();
+
+  return {
+    id: String(post.id),
+    title: post.title,
+    slug: slugify(post.title),
+    excerpt: post.excerpt,
+    content: post.content,
+    image_url: post.image.startsWith('http') ? post.image : `https://images.unsplash.com/${post.image}?auto=format&fit=crop&w=1200&q=80`,
+    category_id: category.id,
+    author_id: null,
+    author_name: post.author,
+    status: 'published',
+    featured: post.featured,
+    read_time: post.readTime,
+    tags: post.tags,
+    views: 0,
+    published_at: now,
+    created_at: now,
+    updated_at: now,
+    categories: category,
+  };
+});
+
 // Fetch all posts (published for public, all for admin)
 export const usePosts = (adminView = false) => {
   return useQuery({
@@ -69,9 +113,20 @@ export const usePosts = (adminView = false) => {
       
       const { data, error } = await query;
       
-      if (error) throw error;
-      return data as Post[];
+      if (error) {
+        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
+          console.warn('usePosts query failed, using fallback content:', error.message);
+        }
+        return fallbackPosts;
+      }
+      
+      if (!data || data.length === 0) {
+        return fallbackPosts;
+      }
+
+      return (data as Post[]) ?? fallbackPosts;
     },
+    retry: 1,
   });
 };
 
@@ -95,10 +150,16 @@ export const usePostsByCategory = (categorySlug: string) => {
         .eq('status', 'published')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data as Post[];
+      if (error) {
+        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
+          console.warn('usePostsByCategory supabase query error', error);
+        }
+        return fallbackPosts.filter((post) => post.categories?.slug === categorySlug);
+      }
+      return (data as Post[]) ?? fallbackPosts.filter((post) => post.categories?.slug === categorySlug);
     },
     enabled: !!categorySlug,
+    retry: false,
   });
 };
 
@@ -121,10 +182,16 @@ export const usePost = (slug: string) => {
         .eq('slug', slug)
         .maybeSingle();
       
-      if (error) throw error;
-      return data as Post | null;
+      if (error) {
+        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
+          console.warn('usePost supabase query error', error);
+        }
+        return fallbackPosts.find((post) => post.slug === slug) ?? null;
+      }
+      return (data as Post | null) ?? fallbackPosts.find((post) => post.slug === slug) ?? null;
     },
     enabled: !!slug,
+    retry: false,
   });
 };
 
@@ -147,10 +214,16 @@ export const usePostById = (id: string) => {
         .eq('id', id)
         .maybeSingle();
       
-      if (error) throw error;
-      return data as Post | null;
+      if (error) {
+        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
+          console.warn('usePostById supabase query error', error);
+        }
+        return fallbackPosts.find((post) => post.id === id) ?? null;
+      }
+      return (data as Post | null) ?? fallbackPosts.find((post) => post.id === id) ?? null;
     },
     enabled: !!id,
+    retry: false,
   });
 };
 
@@ -218,6 +291,23 @@ export const useDeletePost = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+};
+
+type SupabaseRpc = <T = unknown>(fn: string, params?: unknown) => Promise<{ data: T | null; error: { message?: string } | null }>;
+
+const supabaseRpc = supabase.rpc as unknown as SupabaseRpc;
+
+export const useTrackPostView = () => {
+  return useMutation({
+    mutationFn: async (postId: string) => {
+      const { error } = await supabaseRpc('increment_views', {
+        content_type: 'post',
+        content_id: postId,
+      });
+
+      if (error) throw new Error(error.message || 'Não foi possível registar a visualização do post.');
     },
   });
 };

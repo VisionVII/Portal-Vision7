@@ -62,17 +62,37 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
 
   if (!editor) return null;
 
+  const getSafeUrl = (value: string | null, type: 'link' | 'image') => {
+    if (!value) return null;
+
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+    try {
+      const parsed = new URL(candidate);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new Error('invalid_protocol');
+      }
+      return parsed.toString();
+    } catch {
+      window.alert(`Insira uma URL válida e segura para ${type === 'link' ? 'o link' : 'a imagem'}.`);
+      return null;
+    }
+  };
+
   const addLink = () => {
-    const url = window.prompt('URL do link:');
+    const url = getSafeUrl(window.prompt('URL do link (https://...)'), 'link');
     if (url) {
-      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+      editor.chain().focus().extendMarkRange('link').setLink({ href: url, target: '_blank', rel: 'noopener noreferrer nofollow' }).run();
     }
   };
 
   const addImage = () => {
-    const url = window.prompt('URL da imagem:');
+    const url = getSafeUrl(window.prompt('URL da imagem (https://...)'), 'image');
     if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+      editor.chain().focus().setImage({ src: url, alt: 'Imagem inserida no editor' }).run();
     }
   };
 

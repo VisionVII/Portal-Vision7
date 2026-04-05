@@ -9,6 +9,14 @@ export interface Category {
   created_at: string;
 }
 
+const FALLBACK_CATEGORIES: Category[] = [
+  { id: 'fallback-tecnologia', name: 'Tecnologia', slug: 'tecnologia', color: 'bg-blue-600', created_at: new Date().toISOString() },
+  { id: 'fallback-desporto', name: 'Desporto', slug: 'desporto', color: 'bg-emerald-600', created_at: new Date().toISOString() },
+  { id: 'fallback-musica', name: 'Música', slug: 'musica', color: 'bg-violet-600', created_at: new Date().toISOString() },
+  { id: 'fallback-saude', name: 'Saúde', slug: 'saude', color: 'bg-rose-600', created_at: new Date().toISOString() },
+  { id: 'fallback-mundo', name: 'Mundo', slug: 'mundo', color: 'bg-amber-600', created_at: new Date().toISOString() },
+];
+
 export const useCategories = () => {
   return useQuery({
     queryKey: ['categories'],
@@ -17,10 +25,21 @@ export const useCategories = () => {
         .from('categories')
         .select('*')
         .order('name', { ascending: true });
-      
-      if (error) throw error;
-      return data as Category[];
+
+      if (error) {
+        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
+          console.warn('useCategories supabase query error', error);
+        }
+        return FALLBACK_CATEGORIES;
+      }
+
+      if (!data || data.length === 0) {
+        return FALLBACK_CATEGORIES;
+      }
+
+      return (data as Category[]) ?? FALLBACK_CATEGORIES;
     },
+    retry: false,
   });
 };
 

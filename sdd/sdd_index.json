@@ -1,0 +1,317 @@
+{
+  "$schema": "./templates/module_schema.json",
+  "project": "Vision7 Portal",
+  "version": "1.0.0",
+  "last_updated": "2026-04-05",
+  "description": "Índice central SDD do projeto Vision7 — mapa de todos os módulos, dependências e status.",
+  "modules": [
+    {
+      "id": "news-aggregator",
+      "name": "Agregador de Notícias",
+      "spec_file": "sdd/modules/news-aggregator.json",
+      "version": "1.0.1",
+      "status": "Finalizado",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "supabase-database",
+        "auth-security",
+        "tags-taxonomy",
+        "automation-n8n"
+      ],
+      "dependents": [
+        "cms",
+        "frontend-ui"
+      ],
+      "priority": "Crítica",
+      "tags": [
+        "content",
+        "core"
+      ]
+    },
+    {
+      "id": "cms",
+      "name": "CMS",
+      "spec_file": "sdd/modules/cms.json",
+      "version": "1.0.1",
+      "status": "Finalizado",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "supabase-database",
+        "auth-security",
+        "news-aggregator",
+        "tags-taxonomy"
+      ],
+      "dependents": [
+        "automation-n8n"
+      ],
+      "priority": "Crítica",
+      "tags": [
+        "admin",
+        "core"
+      ]
+    },
+    {
+      "id": "frontend-ui",
+      "name": "Frontend & UI",
+      "spec_file": "sdd/modules/frontend-ui.json",
+      "version": "1.0.1",
+      "status": "Finalizado",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "supabase-database",
+        "news-aggregator",
+        "tags-taxonomy",
+        "analytics"
+      ],
+      "dependents": [],
+      "priority": "Crítica",
+      "tags": [
+        "public",
+        "ui",
+        "core"
+      ]
+    },
+    {
+      "id": "automation-n8n",
+      "name": "Automação n8n",
+      "spec_file": "sdd/modules/automation-n8n.json",
+      "version": "1.0.0",
+      "status": "Em desenvolvimento",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "supabase-database",
+        "auth-security",
+        "news-aggregator"
+      ],
+      "dependents": [
+        "cicd-devops"
+      ],
+      "priority": "Alta",
+      "tags": [
+        "automation",
+        "integration"
+      ]
+    },
+    {
+      "id": "analytics",
+      "name": "Analytics",
+      "spec_file": "sdd/modules/analytics.json",
+      "version": "0.5.0",
+      "status": "Em desenvolvimento",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "supabase-database",
+        "auth-security"
+      ],
+      "dependents": [
+        "frontend-ui"
+      ],
+      "priority": "Média",
+      "tags": [
+        "data",
+        "monitoring"
+      ]
+    },
+    {
+      "id": "tags-taxonomy",
+      "name": "Tags & Taxonomia",
+      "spec_file": "sdd/modules/tags-taxonomy.json",
+      "version": "1.0.1",
+      "status": "Finalizado",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "supabase-database"
+      ],
+      "dependents": [
+        "news-aggregator",
+        "cms",
+        "frontend-ui"
+      ],
+      "priority": "Alta",
+      "tags": [
+        "content",
+        "taxonomy"
+      ]
+    },
+    {
+      "id": "auth-security",
+      "name": "Auth & Segurança",
+      "spec_file": "sdd/modules/auth-security.json",
+      "version": "1.0.0",
+      "status": "Finalizado",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "supabase-database"
+      ],
+      "dependents": [
+        "cms",
+        "automation-n8n",
+        "analytics",
+        "news-aggregator"
+      ],
+      "priority": "Crítica",
+      "tags": [
+        "security",
+        "core"
+      ]
+    },
+    {
+      "id": "supabase-database",
+      "name": "Supabase & Database",
+      "spec_file": "sdd/modules/supabase-database.json",
+      "version": "1.0.1",
+      "status": "Finalizado",
+      "owner": "Vision7 Core Team",
+      "depends_on": [],
+      "dependents": [
+        "auth-security",
+        "news-aggregator",
+        "cms",
+        "frontend-ui",
+        "automation-n8n",
+        "analytics",
+        "tags-taxonomy"
+      ],
+      "priority": "Crítica",
+      "tags": [
+        "infrastructure",
+        "core"
+      ]
+    },
+    {
+      "id": "agents-skills-ai",
+      "name": "Agents & Skills AI",
+      "spec_file": "sdd/modules/agents-skills-ai.json",
+      "version": "0.5.0",
+      "status": "Em desenvolvimento",
+      "owner": "Vision7 Core Team",
+      "depends_on": [],
+      "dependents": [],
+      "priority": "Média",
+      "tags": [
+        "ai",
+        "tooling"
+      ]
+    },
+    {
+      "id": "cicd-devops",
+      "name": "CI/CD & DevOps",
+      "spec_file": "sdd/modules/cicd-devops.json",
+      "version": "0.3.0",
+      "status": "Em desenvolvimento",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "automation-n8n"
+      ],
+      "dependents": [],
+      "priority": "Alta",
+      "tags": [
+        "devops",
+        "automation"
+      ]
+    }
+  ],
+  "dependency_graph": {
+    "layers": [
+      {
+        "layer": 0,
+        "name": "Infraestrutura",
+        "modules": [
+          "supabase-database"
+        ]
+      },
+      {
+        "layer": 1,
+        "name": "Segurança & Taxonomia",
+        "modules": [
+          "auth-security",
+          "tags-taxonomy"
+        ]
+      },
+      {
+        "layer": 2,
+        "name": "Core Content",
+        "modules": [
+          "news-aggregator",
+          "analytics"
+        ]
+      },
+      {
+        "layer": 3,
+        "name": "Admin & Automation",
+        "modules": [
+          "cms",
+          "automation-n8n"
+        ]
+      },
+      {
+        "layer": 4,
+        "name": "Apresentação",
+        "modules": [
+          "frontend-ui"
+        ]
+      },
+      {
+        "layer": 5,
+        "name": "DevOps & AI",
+        "modules": [
+          "cicd-devops",
+          "agents-skills-ai"
+        ]
+      }
+    ]
+  },
+  "sync_targets": {
+    "database": {
+      "source": "supabase/migrations/",
+      "modules_affected": [
+        "supabase-database",
+        "auth-security",
+        "news-aggregator",
+        "analytics"
+      ],
+      "action": "Regenerar spec de database e validar RLS"
+    },
+    "frontend": {
+      "source": "src/pages/, src/components/",
+      "modules_affected": [
+        "frontend-ui",
+        "cms"
+      ],
+      "action": "Atualizar lista de files e rotas no spec"
+    },
+    "api": {
+      "source": "src/services/, src/hooks/",
+      "modules_affected": [
+        "automation-n8n",
+        "analytics",
+        "news-aggregator"
+      ],
+      "action": "Atualizar endpoints e data flows"
+    },
+    "security": {
+      "source": "src/contexts/AuthContext.tsx, supabase/migrations/*roles*",
+      "modules_affected": [
+        "auth-security"
+      ],
+      "action": "Validar RBAC e RLS policies"
+    },
+    "automation": {
+      "source": "src/services/n8n.ts, src/types/automation.ts",
+      "modules_affected": [
+        "automation-n8n",
+        "cicd-devops"
+      ],
+      "action": "Atualizar workflows e CI/CD integration"
+    }
+  },
+  "statistics": {
+    "total_modules": 10,
+    "finalized": 6,
+    "in_development": 4,
+    "pending": 0,
+    "total_functional_requirements": 64,
+    "total_qa_tests": 38,
+    "coverage_percentage": 0
+  }
+}

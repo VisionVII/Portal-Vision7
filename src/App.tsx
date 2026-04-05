@@ -4,18 +4,25 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import DynamicFavicon from "@/components/DynamicFavicon";
-import Index from "./pages/Index";
-import Tecnologia from "./pages/Tecnologia";
-import Desporto from "./pages/Desporto";
-import Musica from "./pages/Musica";
-import Saude from "./pages/Saude";
-import Mundo from "./pages/Mundo";
-import Post from "./pages/Post";
-import AdminLogin from "./pages/AdminLogin";
-import AdminRegister from "./pages/AdminRegister";
-import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
+import DynamicFavicon from "@/components/system/DynamicFavicon";
+import ErrorBoundary from "@/components/system/ErrorBoundary";
+import ScrollToTop from "@/components/system/ScrollToTop";
+import Index from "@/pages/site/Index";
+import Tecnologia from "@/pages/site/Tecnologia";
+import Desporto from "@/pages/site/Desporto";
+import Musica from "@/pages/site/Musica";
+import Saude from "@/pages/site/Saude";
+import Mundo from "@/pages/site/Mundo";
+import Post from "@/pages/site/Post";
+import Podcast from "@/pages/site/Podcast";
+import NotFound from "@/pages/site/NotFound";
+import AdminLogin from "@/pages/admin/AdminLogin";
+import AdminRegister from "@/pages/admin/AdminRegister";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminAutomation from "@/pages/admin/AdminAutomation";
+import PrivacyPolicy from "@/pages/site/PrivacyPolicy";
+import Course from "@/pages/site/Course";
+import Podcasts from "@/pages/site/Podcasts";
 
 const queryClient = new QueryClient();
 
@@ -26,22 +33,30 @@ const App = () => (
         <DynamicFavicon />
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
+        <ErrorBoundary>
+          <BrowserRouter>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/" element={<Index />} />
             <Route path="/tecnologia" element={<Tecnologia />} />
             <Route path="/desporto" element={<Desporto />} />
             <Route path="/musica" element={<Musica />} />
             <Route path="/saude" element={<Saude />} />
             <Route path="/mundo" element={<Mundo />} />
-            <Route path="/post/:id" element={<Post />} />
+            <Route path="/podcasts" element={<Podcasts />} />
+            <Route path="/podcast/:id" element={<Podcast />} />
+            <Route path="/post/:slug" element={<Post />} />
+            <Route path="/curso/:slug" element={<Course />} />
+            <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/register" element={<AdminRegister />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/automation" element={<AdminAutomation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+      </ErrorBoundary>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

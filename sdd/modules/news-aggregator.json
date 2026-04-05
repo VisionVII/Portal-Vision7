@@ -1,0 +1,221 @@
+{
+  "module": "Agregador de Notícias",
+  "version": "1.0.1",
+  "owner": "Vision7 Core Team",
+  "status": "Finalizado",
+  "last_updated": "2026-04-05",
+  "objective": "Sistema de agregação, criação e gestão de posts/notícias com suporte a categorias, tags, drafts/publicações, e conteúdo fallback offline. Integra com n8n para ingestão automática de feeds RSS.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "CRUD completo de posts (criar, ler, atualizar, deletar) com campos: título, slug, conteúdo HTML, excerpt, imagem, categoria, tags, status (draft/published)",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "Listagem de posts com paginação, filtro por categoria/tag, e ordenação por data",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Sistema de fallback com conteúdo padrão quando banco de dados está offline",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Upload de imagens de capa para Supabase Storage (bucket post-images)",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Geração automática de slug a partir do título",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-006",
+      "description": "Integração com n8n para ingestão automática de RSS feeds com keywords e prompts AI",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-007",
+      "description": "Contagem de views por post via analytics_events",
+      "priority": "Média",
+      "status": "Finalizado"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Posts devem carregar em menos de 2s com TanStack Query cache",
+      "category": "Performance",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Conteúdo HTML sanitizado via DOMPurify antes de renderização",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-003",
+      "description": "SEO-friendly com slugs, meta tags e structured data",
+      "category": "SEO",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "NFR-004",
+      "description": "RLS policies garantem que apenas admin/editor podem modificar posts",
+      "category": "Segurança",
+      "status": "Finalizado"
+    }
+  ],
+  "flows": {
+    "data_flow": "RSS Feed → n8n Workflow → Supabase posts table → TanStack Query → React Components → DOMPurify → DOM",
+    "user_flow": "Admin: Login OTP → Dashboard → Novo Post → Editor TipTap → Preview → Publicar | Visitante: Homepage → Categoria → Post → Leitura"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/news-aggregator-arch.md",
+    "ui_wireframe": "sdd/diagrams/news-aggregator-ui.md"
+  },
+  "dependencies": {
+    "modules": [
+      "CMS",
+      "Auth & Segurança",
+      "Tags & Taxonomia",
+      "Automação n8n",
+      "Supabase & Database"
+    ],
+    "packages": [
+      "@tanstack/react-query",
+      "@supabase/supabase-js",
+      "dompurify",
+      "react-router-dom"
+    ],
+    "supabase_tables": [
+      "posts",
+      "categories",
+      "analytics_events"
+    ],
+    "api_endpoints": [
+      "supabase.from('posts')",
+      "supabase.storage.from('post-images')"
+    ]
+  },
+  "files": {
+    "components": [
+      "src/components/content/AdSpace.tsx",
+      "src/components/content/CategoryPage.tsx",
+      "src/components/content/NewsletterForm.tsx",
+      "src/components/content/PostCard.tsx",
+      "src/components/content/PostPagination.tsx",
+      "src/components/content/RelatedPosts.tsx",
+      "src/components/admin/PostForm.tsx",
+      "src/components/admin/RichTextEditor.tsx"
+    ],
+    "hooks": [
+      "src/hooks/usePosts.ts",
+      "src/hooks/usePagination.ts"
+    ],
+    "pages": [
+      "src/pages/site/Index.tsx"
+    ],
+    "services": [],
+    "types": [
+      "src/integrations/supabase/types.ts"
+    ],
+    "migrations": [
+      "supabase/migrations/20260202183547_6d80e859-6e5c-4280-be42-4f0fb8d43b54.sql"
+    ]
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "unit",
+      "description": "Testar criação de post com todos os campos obrigatórios",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "unit",
+      "description": "Testar geração de slug com caracteres especiais portugueses",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "integration",
+      "description": "Testar fluxo completo: criar, publicar, ler, deletar post",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-004",
+      "type": "security",
+      "description": "Validar sanitização DOMPurify com payloads XSS conhecidos",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-005",
+      "type": "e2e",
+      "description": "Testar fallback de conteúdo quando Supabase está indisponível",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "Lint e type-check em componentes de posts",
+      "tool": "ESLint + TypeScript",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "Build de produção com tree-shaking",
+      "tool": "Vite",
+      "trigger": "Push para main",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [
+    "TanStack Query com staleTime configurado para cache eficiente",
+    "Paginação server-side via Supabase range queries",
+    "Imagens em Supabase Storage com CDN",
+    "Fallback content para resiliência offline"
+  ],
+  "security_considerations": [
+    "DOMPurify sanitiza todo HTML de posts antes de renderizar",
+    "RLS policies restringem escrita a roles admin/editor",
+    "URLs no editor validadas contra javascript: e protocolos inseguros",
+    "Upload de imagens restrito a tipos MIME permitidos",
+    "Links externos incluem rel='noopener noreferrer nofollow'"
+  ],
+  "change_history": [
+    {
+      "date": "2026-02-02",
+      "version": "0.1.0",
+      "author": "Vision7 Team",
+      "description": "Schema inicial de posts e categorias"
+    },
+    {
+      "date": "2026-03-23",
+      "version": "0.9.0",
+      "author": "Vision7 Team",
+      "description": "CRUD completo, fallback, paginação"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.0",
+      "author": "Vision7 Team",
+      "description": "Spec SDD gerado; segurança reforçada no editor"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.1",
+      "author": "sdd-sync",
+      "description": "Auto-sync: file list updated"
+    }
+  ]
+}

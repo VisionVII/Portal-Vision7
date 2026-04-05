@@ -1,0 +1,155 @@
+{
+  "module": "Analytics",
+  "version": "0.5.0",
+  "owner": "Vision7 Core Team",
+  "status": "Em desenvolvimento",
+  "last_updated": "2026-04-05",
+  "objective": "Sistema de analytics e monetização para rastreamento de eventos, métricas de engajamento, trending content e configuração de monetização do portal.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Rastreamento de eventos genéricos com event_type, event_data JSONB, user_id, session_id, IP e user_agent",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "Hook useTrackEvent para tracking declarativo em componentes React",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Agregação de eventos por tipo com useAnalyticsSummary",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Trending diário: top events dos últimos N dias",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Dashboard visual de analytics no admin (gráficos, tabelas)",
+      "priority": "Alta",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-006",
+      "description": "Configuração de monetização: ads, sponsorships, premium content",
+      "priority": "Média",
+      "status": "Em desenvolvimento"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Tracking events não deve impactar performance da UI (fire-and-forget)",
+      "category": "Performance",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Dados de analytics protegidos por RLS (somente admin pode ler)",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-003",
+      "description": "GDPR-compliant: apenas rastrear com consentimento de cookies analytics",
+      "category": "Segurança",
+      "status": "Em desenvolvimento"
+    }
+  ],
+  "flows": {
+    "data_flow": "User Interaction → useTrackEvent() → Supabase Insert (analytics_events) → Admin Query → Aggregation → Dashboard Charts",
+    "user_flow": "Admin Dashboard → Tab Analytics → Visualizar Métricas → Filtrar por Período → Exportar"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/analytics-arch.md",
+    "ui_wireframe": "sdd/diagrams/analytics-ui.md"
+  },
+  "dependencies": {
+    "modules": ["Auth & Segurança", "Supabase & Database", "Frontend & UI"],
+    "packages": ["@tanstack/react-query", "@supabase/supabase-js"],
+    "supabase_tables": ["analytics_events", "monetization_settings"],
+    "api_endpoints": ["supabase.from('analytics_events')", "supabase.from('monetization_settings')"]
+  },
+  "files": {
+    "components": [],
+    "hooks": [
+      "src/hooks/useAnalytics.ts",
+      "src/hooks/useMonetization.ts"
+    ],
+    "pages": [],
+    "services": [],
+    "types": [
+      "src/integrations/supabase/types.ts"
+    ],
+    "migrations": [
+      "supabase/migrations/20260217224603_09688a98-dec5-4c1f-843b-bec95ed6869d.sql"
+    ]
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "unit",
+      "description": "Testar useTrackEvent registra evento corretamente no Supabase",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "unit",
+      "description": "Testar useAnalyticsSummary retorna agregação correta",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "security",
+      "description": "Verificar RLS: visitante não pode ler analytics_events",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-004",
+      "type": "integration",
+      "description": "Testar GDPR: tracking desligado sem consentimento de cookies",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "Type-check hooks de analytics",
+      "tool": "TypeScript",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [
+    "analytics_events com index em event_type e created_at para queries rápidas",
+    "Considerar partitioning por mês para tabelas grandes",
+    "Agregação pode ser movida para materialized views",
+    "Fire-and-forget pattern não bloqueia UI"
+  ],
+  "security_considerations": [
+    "RLS deny-by-default em analytics_events",
+    "Apenas admin roles podem ler dados agregados",
+    "IP e user_agent armazenados para audit mas não expostos no frontend",
+    "GDPR: cookie consent required antes de tracking"
+  ],
+  "change_history": [
+    {
+      "date": "2026-02-17",
+      "version": "0.1.0",
+      "author": "Vision7 Team",
+      "description": "Tabela analytics_events e hooks base"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "0.5.0",
+      "author": "Vision7 Team",
+      "description": "SDD spec gerado; dashboard visual pendente"
+    }
+  ]
+}

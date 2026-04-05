@@ -1,0 +1,119 @@
+{
+  "module": "Agents & Skills AI",
+  "version": "0.5.0",
+  "owner": "Vision7 Core Team",
+  "status": "Em desenvolvimento",
+  "last_updated": "2026-04-05",
+  "objective": "Agentes e skills de IA para assistência no desenvolvimento, segurança, UX/UI, curadoria de conteúdo e otimização de performance do portal Vision7.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Agente de Segurança: auditorias, RLS validation, vulnerability scanning",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "Agente UX/UI: design review, accessibility validation, responsive testing",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Assistente Portal: onboarding, task guidance, codebase navigation",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Skill de Gestão de Conteúdo: post creation workflows, SEO optimization",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Skill de Curadoria Inteligente: RSS selection, AI-assisted editing",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-006",
+      "description": "Skill de Otimização de Performance: Lighthouse, bundle analysis, caching",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-007",
+      "description": "Portal AI módulo (src/modules/portal-ai): integração futura com chat/assistente no frontend",
+      "priority": "Baixa",
+      "status": "Pendente"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Agents e skills devem ser invocáveis de forma isolada ou combinada",
+      "category": "Manutenibilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Documentação de cada agent/skill em formato .md legível",
+      "category": "Manutenibilidade",
+      "status": "Finalizado"
+    }
+  ],
+  "flows": {
+    "data_flow": "Developer Request → Agent/Skill Selection → Codebase Analysis → Recommendation/Action → Code Updates",
+    "user_flow": "Developer: Describe task → AI Agent processes → Generates spec/code/review → Developer validates"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/ai-agents-arch.md",
+    "ui_wireframe": ""
+  },
+  "dependencies": {
+    "modules": ["Todos (os agents analisam todos os módulos)"],
+    "packages": [],
+    "supabase_tables": [],
+    "api_endpoints": []
+  },
+  "files": {
+    "components": [],
+    "hooks": [],
+    "pages": [],
+    "services": [],
+    "types": [],
+    "migrations": []
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "integration",
+      "description": "Validar que cada agent.md e skill.md é invocável pelo Copilot",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [],
+  "scalability_notes": [
+    "Novos agents/skills podem ser adicionados como arquivos .md sem alteração de código",
+    "Portal AI módulo preparado para expansão com backend"
+  ],
+  "security_considerations": [
+    "Agents não executam código automaticamente sem validação",
+    "Skills de segurança monitoram RLS e vulnerabilidades"
+  ],
+  "change_history": [
+    {
+      "date": "2026-03-23",
+      "version": "0.1.0",
+      "author": "Vision7 Team",
+      "description": "Agents e skills criados para segurança, UX/UI, portal, conteúdo, performance"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "0.5.0",
+      "author": "Vision7 Team",
+      "description": "SDD spec gerado; portal-ai module placeholder"
+    }
+  ]
+}

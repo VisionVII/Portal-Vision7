@@ -1,0 +1,73 @@
+{
+  "$schema": "./module_schema.json",
+  "module": "",
+  "version": "0.1.0",
+  "owner": "",
+  "status": "Pendente",
+  "last_updated": "",
+  "objective": "",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "",
+      "priority": "Alta",
+      "status": "Pendente"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "",
+      "category": "Performance",
+      "status": "Pendente"
+    }
+  ],
+  "flows": {
+    "data_flow": "",
+    "user_flow": ""
+  },
+  "diagrams": {
+    "architecture": "",
+    "ui_wireframe": ""
+  },
+  "dependencies": {
+    "modules": [],
+    "packages": [],
+    "supabase_tables": [],
+    "api_endpoints": []
+  },
+  "files": {
+    "components": [],
+    "hooks": [],
+    "pages": [],
+    "services": [],
+    "types": [],
+    "migrations": []
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "unit",
+      "description": "",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "",
+      "tool": "",
+      "trigger": "",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [],
+  "security_considerations": [],
+  "change_history": [
+    {
+      "date": "",
+      "version": "",
+      "author": "",
+      "description": ""
+    }
+  ]
+}

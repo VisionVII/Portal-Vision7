@@ -1,0 +1,257 @@
+{
+  "module": "CMS",
+  "version": "1.0.1",
+  "owner": "Vision7 Core Team",
+  "status": "Finalizado",
+  "last_updated": "2026-04-05",
+  "objective": "Sistema de gestão de conteúdo completo para administração do portal: posts, cursos, podcasts, categorias, newsletter, site settings, media uploads e developer tools.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Dashboard admin com 8 tabs: Overview, Builder, Conteúdo, Cursos, CRM, Acessos, Developer, Brand Settings",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "Editor WYSIWYG TipTap com formatação rica, links, imagens, listas e code blocks",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Gestão de cursos com criação, edição e listagem",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Gestão de podcasts com upload de áudio e transcrições",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Gestão de newsletter subscribers com exportação",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-006",
+      "description": "Site settings: favicon, hero banner, seções homepage, metadata",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-007",
+      "description": "Developer Control Center com env vars info, debug tools, email principal",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-008",
+      "description": "Brand settings e CMS customizer para identidade visual",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-009",
+      "description": "Access management com invite-based registration e role assignment",
+      "priority": "Alta",
+      "status": "Finalizado"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Dashboard deve ser responsivo e funcional em mobile",
+      "category": "Acessibilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Todas as operações CRUD devem dar feedback visual (toast)",
+      "category": "Manutenibilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-003",
+      "description": "Formulários validados client-side antes de submit",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-004",
+      "description": "Acesso restrito por role (admin, super_admin para Developer)",
+      "category": "Segurança",
+      "status": "Finalizado"
+    }
+  ],
+  "flows": {
+    "data_flow": "Admin UI → React Form State → Supabase Mutation → Database (with RLS) → TanStack Query Invalidation → UI Update",
+    "user_flow": "Login OTP → Dashboard Overview → Tab Navigation → CRUD Operations → Toast Feedback"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/cms-arch.md",
+    "ui_wireframe": "sdd/diagrams/cms-ui.md"
+  },
+  "dependencies": {
+    "modules": [
+      "Auth & Segurança",
+      "Agregador de Notícias",
+      "Tags & Taxonomia",
+      "Supabase & Database"
+    ],
+    "packages": [
+      "@tiptap/react",
+      "@tiptap/starter-kit",
+      "@tiptap/extension-link",
+      "@tiptap/extension-image",
+      "@tanstack/react-query",
+      "lucide-react",
+      "sonner"
+    ],
+    "supabase_tables": [
+      "posts",
+      "categories",
+      "courses",
+      "podcasts",
+      "newsletter_subscribers",
+      "site_settings",
+      "user_roles",
+      "user_profiles",
+      "registration_invites"
+    ],
+    "api_endpoints": [
+      "supabase.from('posts')",
+      "supabase.from('courses')",
+      "supabase.from('site_settings')",
+      "supabase.storage.from('post-images')",
+      "supabase.storage.from('podcasts')"
+    ]
+  },
+  "files": {
+    "components": [
+      "src/components/admin/AdminAccessManager.tsx",
+      "src/components/admin/AdminCmsCustomizer.tsx",
+      "src/components/admin/AdminCoursesManager.tsx",
+      "src/components/admin/AdminStatsCards.tsx",
+      "src/components/admin/DeveloperControlCenter.tsx",
+      "src/components/admin/NewsletterManager.tsx",
+      "src/components/admin/PostForm.tsx",
+      "src/components/admin/PostsTable.tsx",
+      "src/components/admin/RichTextEditor.tsx",
+      "src/components/admin/SiteSettingsManager.tsx"
+    ],
+    "hooks": [
+      "src/hooks/usePosts.ts",
+      "src/hooks/useCourses.ts",
+      "src/hooks/usePodcasts.ts",
+      "src/hooks/useCategories.ts",
+      "src/hooks/useNewsletter.ts",
+      "src/hooks/useSiteSettings.ts",
+      "src/hooks/useUserProfiles.ts",
+      "src/hooks/useAdminAccess.ts"
+    ],
+    "pages": [
+      "src/pages/admin/AdminAutomation.tsx",
+      "src/pages/admin/AdminDashboard.tsx",
+      "src/pages/admin/AdminLogin.tsx",
+      "src/pages/admin/AdminRegister.tsx"
+    ],
+    "services": [],
+    "types": [
+      "src/integrations/supabase/types.ts"
+    ],
+    "migrations": [
+      "supabase/migrations/20260202183547_6d80e859-6e5c-4280-be42-4f0fb8d43b54.sql",
+      "supabase/migrations/20260323_expand_roles.sql",
+      "supabase/migrations/20260323_permissions_features.sql"
+    ]
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "unit",
+      "description": "Testar PostForm com validação de campos obrigatórios",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "integration",
+      "description": "Testar fluxo completo de criação e publicação de post via CMS",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "e2e",
+      "description": "Testar navegação entre todas as tabs do dashboard",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-004",
+      "type": "security",
+      "description": "Verificar que roles não-admin não acessam rotas /admin/*",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-005",
+      "type": "unit",
+      "description": "Testar RichTextEditor URL validation com input malicioso",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "Lint e type-check admin components",
+      "tool": "ESLint + TypeScript",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "Build verificação de bundle size",
+      "tool": "Vite + análise de bundle",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [
+    "Dashboard tab-based minimiza renderização desnecessária",
+    "TanStack Query invalidation seletiva por módulo",
+    "Uploads diretos ao Storage com presigned URLs",
+    "Site settings cached com staleTime longo"
+  ],
+  "security_considerations": [
+    "Acesso ao CMS protegido por AuthContext + useAdminAccess",
+    "Editor TipTap com validação de URLs (getSafeUrl)",
+    "Upload de media validado por tipo MIME",
+    "Developer tools restrito a super_admin",
+    "Invite-based registration previne auto-cadastro"
+  ],
+  "change_history": [
+    {
+      "date": "2026-02-02",
+      "version": "0.1.0",
+      "author": "Vision7 Team",
+      "description": "Dashboard base com PostForm e editor"
+    },
+    {
+      "date": "2026-03-23",
+      "version": "0.8.0",
+      "author": "Vision7 Team",
+      "description": "Todos os managers e tabs implementados"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.0",
+      "author": "Vision7 Team",
+      "description": "SDD spec gerado; editor security hardened; OTP login"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.1",
+      "author": "sdd-sync",
+      "description": "Auto-sync: file list updated"
+    }
+  ]
+}

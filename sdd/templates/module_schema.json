@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SDD Module Specification",
+  "description": "Schema for Vision7 Spec-Driven Development module documents",
+  "type": "object",
+  "required": ["module", "version", "owner", "status", "objective"],
+  "properties": {
+    "module": {
+      "type": "string",
+      "description": "Nome único do módulo"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Versão semântica do spec"
+    },
+    "owner": {
+      "type": "string",
+      "description": "Responsável pelo módulo"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Pendente", "Em desenvolvimento", "Finalizado", "Depreciado"],
+      "description": "Estado atual do módulo"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da última atualização"
+    },
+    "objective": {
+      "type": "string",
+      "description": "Descrição objetiva do módulo"
+    },
+    "functional_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "priority", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^FR-\\d{3}$" },
+          "description": { "type": "string" },
+          "priority": { "type": "string", "enum": ["Crítica", "Alta", "Média", "Baixa"] },
+          "status": { "type": "string", "enum": ["Pendente", "Em desenvolvimento", "Finalizado", "Testado"] }
+        }
+      }
+    },
+    "non_functional_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "category", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^NFR-\\d{3}$" },
+          "description": { "type": "string" },
+          "category": { "type": "string", "enum": ["Performance", "Segurança", "Acessibilidade", "SEO", "Escalabilidade", "Manutenibilidade"] },
+          "status": { "type": "string", "enum": ["Pendente", "Em desenvolvimento", "Finalizado", "Testado"] }
+        }
+      }
+    },
+    "flows": {
+      "type": "object",
+      "properties": {
+        "data_flow": { "type": "string" },
+        "user_flow": { "type": "string" }
+      }
+    },
+    "diagrams": {
+      "type": "object",
+      "properties": {
+        "architecture": { "type": "string" },
+        "ui_wireframe": { "type": "string" }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "modules": { "type": "array", "items": { "type": "string" } },
+        "packages": { "type": "array", "items": { "type": "string" } },
+        "supabase_tables": { "type": "array", "items": { "type": "string" } },
+        "api_endpoints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "files": {
+      "type": "object",
+      "properties": {
+        "components": { "type": "array", "items": { "type": "string" } },
+        "hooks": { "type": "array", "items": { "type": "string" } },
+        "pages": { "type": "array", "items": { "type": "string" } },
+        "services": { "type": "array", "items": { "type": "string" } },
+        "types": { "type": "array", "items": { "type": "string" } },
+        "migrations": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "qa_tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "description", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^QA-\\d{3}$" },
+          "type": { "type": "string", "enum": ["unit", "integration", "e2e", "security", "performance"] },
+          "description": { "type": "string" },
+          "status": { "type": "string", "enum": ["Pendente", "Em desenvolvimento", "Finalizado", "Falhou"] }
+        }
+      }
+    },
+    "ci_cd_integration": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step": { "type": "string" },
+          "tool": { "type": "string" },
+          "trigger": { "type": "string" },
+          "status": { "type": "string", "enum": ["Pendente", "Configurado", "Ativo"] }
+        }
+      }
+    },
+    "scalability_notes": { "type": "array", "items": { "type": "string" } },
+    "security_considerations": { "type": "array", "items": { "type": "string" } },
+    "change_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["date", "version", "description"],
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "version": { "type": "string" },
+          "author": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  }
+}

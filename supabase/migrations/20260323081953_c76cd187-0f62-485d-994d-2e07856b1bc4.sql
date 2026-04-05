@@ -44,4 +44,4 @@ USING (public.has_role(auth.uid(), 'admin'));
 -- Insert default settings
 INSERT INTO public.site_settings (key, value) VALUES 
   ('logo_url', null),
-  ('site_name', 'Porto Notícias');
+  ('site_name', 'Vision');

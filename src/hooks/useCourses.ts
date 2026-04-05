@@ -1,0 +1,139 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { courses as initialCourses, Course } from '@/data/courses';
+
+export interface CreateCourseData {
+  title: string;
+  slug: string;
+  description: string;
+  level: 'Iniciante' | 'Intermediário' | 'Avançado';
+  duration?: string;
+  instructor?: string;
+  status?: string;
+  category_id?: string | null;
+  tags?: string[];
+}
+
+export interface UpdateCourseData extends Partial<CreateCourseData> {
+  id: string;
+}
+
+const fallbackCourses: Course[] = initialCourses.map((course) => ({
+  ...course,
+  status: 'published',
+  tags: [],
+  category_id: null,
+  categories: course.category
+    ? {
+        id: `fallback-${course.slug}`,
+        name: course.category,
+        slug: course.category.toLowerCase(),
+        color: 'bg-blue-600',
+      }
+    : null,
+}));
+
+export const useCourses = (adminView = false) => {
+  return useQuery({
+    queryKey: ['courses', adminView],
+    queryFn: async () => {
+      let query = supabase
+        .from('courses')
+        .select(`
+          *,
+          categories (
+            id,
+            name,
+            slug,
+            color
+          )
+        `)
+        .order('published_at', { ascending: false });
+
+      if (!adminView) {
+        query = query.eq('status', 'published');
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
+          console.warn('useCourses supabase query error', error);
+        }
+        return adminView ? [] : fallbackCourses;
+      }
+
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        return adminView ? [] : fallbackCourses;
+      }
+
+      return (data as unknown as Course[]) ?? (adminView ? [] : fallbackCourses);
+    },
+    retry: false,
+  });
+};
+
+export const useCreateCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (courseData: CreateCourseData) => {
+      const { data, error } = await supabase
+        .from('courses')
+        .insert([{
+          ...courseData,
+          published_at: courseData.status === 'published' ? new Date().toISOString() : null,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    },
+  });
+};
+
+export const useUpdateCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...courseData }: UpdateCourseData) => {
+      const { data, error } = await supabase
+        .from('courses')
+        .update({
+          ...courseData,
+          published_at: courseData.status === 'published' ? new Date().toISOString() : undefined,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    },
+  });
+};
+
+export const useDeleteCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    },
+  });
+};

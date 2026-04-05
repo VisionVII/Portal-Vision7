@@ -8,6 +8,8 @@ export interface SiteSetting {
   updated_at: string;
 }
 
+export type SiteSettingsMap = Record<string, string | null>;
+
 export const useSiteSettings = () => {
   return useQuery({
     queryKey: ['site-settings'],
@@ -15,11 +17,17 @@ export const useSiteSettings = () => {
       const { data, error } = await supabase
         .from('site_settings')
         .select('*');
-      if (error) throw error;
-      const settings: Record<string, string | null> = {};
+      if (error) {
+        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
+          console.warn('useSiteSettings supabase query error', error);
+        }
+        return {} as SiteSettingsMap;
+      }
+      const settings: SiteSettingsMap = {};
       (data as SiteSetting[])?.forEach(s => { settings[s.key] = s.value; });
       return settings;
     },
+    retry: false,
   });
 };
 
@@ -29,8 +37,39 @@ export const useUpdateSiteSetting = () => {
     mutationFn: async ({ key, value }: { key: string; value: string | null }) => {
       const { error } = await supabase
         .from('site_settings')
-        .update({ value, updated_at: new Date().toISOString() })
-        .eq('key', key);
+        .upsert({
+          key,
+          value,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'key',
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+    },
+  });
+};
+
+export const useUpdateSiteSettingsBatch = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (entries: Array<{ key: string; value: string | null }>) => {
+      if (!entries.length) return;
+
+      const payload = entries.map(({ key, value }) => ({
+        key,
+        value,
+        updated_at: new Date().toISOString(),
+      }));
+
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert(payload, { onConflict: 'key' });
+
       if (error) throw error;
     },
     onSuccess: () => {
