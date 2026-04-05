@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      automations: {
+        Row: {
+          id: string
+          name: string
+          workflow_id: string
+          active: boolean
+          interval: number
+          rss_feeds: string[]
+          keywords: string[]
+          prompt: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          workflow_id: string
+          active?: boolean
+          interval?: number
+          rss_feeds?: string[]
+          keywords?: string[]
+          prompt?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          workflow_id?: string
+          active?: boolean
+          interval?: number
+          rss_feeds?: string[]
+          keywords?: string[]
+          prompt?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string
