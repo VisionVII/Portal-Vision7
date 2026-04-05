@@ -232,24 +232,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const requestAdminCode = async (email: string) => {
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/admin/login`,
-        shouldCreateUser: false,
-      },
+    const { data, error } = await supabase.functions.invoke('send-login-code', {
+      body: { email },
     });
 
     setIsLoading(false);
-    return { error: error as Error | null };
+
+    if (error) return { error: error as Error };
+
+    if (data?.error) return { error: new Error(data.error) };
+
+    return { error: null };
   };
 
   const verifyAdminCode = async (email: string, token: string) => {
     setIsLoading(true);
 
+    // Step 1: verify the custom 6-digit code via Edge Function
+    const { data: verifyData, error: invokeError } = await supabase.functions.invoke('verify-login-code', {
+      body: { email, code: token },
+    });
+
+    if (invokeError) {
+      setIsLoading(false);
+      return { error: invokeError as Error, isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
+    }
+
+    if (verifyData?.error) {
+      setIsLoading(false);
+      return { error: new Error(verifyData.error), isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
+    }
+
+    // Step 2: exchange the hashed token for a real Supabase session
     const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token,
+      token_hash: verifyData.token_hash,
       type: 'email',
     });
 

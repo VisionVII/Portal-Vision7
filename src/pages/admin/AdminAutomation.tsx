@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAutomations } from '@/hooks/useAutomations';
 import { useToast } from '@/hooks/use-toast';
 import {
   activateWorkflow,
@@ -34,7 +35,6 @@ import {
 } from '@/services/n8n';
 import type { Automation, N8nExecution, N8nWorkflow } from '@/types/automation';
 
-const STORAGE_KEY = 'vision-admin-automations';
 const ALLOWED_ROLES = ['super_admin', 'admin', 'editor'];
 
 const emptyForm = {
@@ -46,14 +46,6 @@ const emptyForm = {
   rssFeeds: [''],
   keywords: [] as string[],
   prompt: '',
-};
-
-const buildAutomationId = () => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return `automation-${Date.now()}`;
 };
 
 const formatDateTime = (value?: string) => {
@@ -85,11 +77,12 @@ const AdminAutomation = () => {
   const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
   const [executions, setExecutions] = useState<N8nExecution[]>([]);
   const [selectedExecution, setSelectedExecution] = useState<N8nExecution | null>(null);
-  const [automations, setAutomations] = useState<Automation[]>([]);
   const [formState, setFormState] = useState(emptyForm);
   const [isBusy, setIsBusy] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [n8nError, setN8nError] = useState<string | null>(null);
+
+  const { automations, createAutomation, updateAutomation, deleteAutomation, isSaving } = useAutomations();
 
   const n8nConfig = useMemo(() => getN8nConfigStatus(), []);
   const hasAllowedRole = useMemo(() => roles.some((role) => ALLOWED_ROLES.includes(role)), [roles]);
@@ -99,22 +92,6 @@ const AdminAutomation = () => {
       navigate('/admin/login');
     }
   }, [authLoading, canAccessDashboard, hasAllowedRole, navigate, user]);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setAutomations(JSON.parse(stored) as Automation[]);
-      }
-    } catch (error) {
-      console.warn('Falha ao carregar automações locais.', error);
-    }
-  }, []);
-
-  const persistAutomations = (next: Automation[]) => {
-    setAutomations(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  };
 
   const refreshN8nData = useCallback(async (showToast = false) => {
     setIsBusy(true);
@@ -162,7 +139,7 @@ const AdminAutomation = () => {
     return map;
   }, [executions]);
 
-  const handleSaveAutomation = () => {
+  const handleSaveAutomation = async () => {
     if (!formState.name.trim() || !formState.workflowId.trim()) {
       toast({
         title: 'Campos obrigatórios',
@@ -172,8 +149,7 @@ const AdminAutomation = () => {
       return;
     }
 
-    const payload: Automation = {
-      id: formState.id || buildAutomationId(),
+    const payload = {
       name: formState.name.trim(),
       workflowId: formState.workflowId.trim(),
       active: formState.active,
@@ -181,19 +157,15 @@ const AdminAutomation = () => {
       rssFeeds: formState.rssFeeds.map((item) => item.trim()).filter(Boolean),
       keywords: formState.keywords.map((item) => item.trim()).filter(Boolean),
       prompt: formState.prompt.trim(),
-      createdAt: formState.id ? automations.find((item) => item.id === formState.id)?.createdAt || new Date().toISOString() : new Date().toISOString(),
     };
 
-    const next = formState.id
-      ? automations.map((item) => (item.id === formState.id ? payload : item))
-      : [payload, ...automations];
+    if (formState.id) {
+      await updateAutomation({ id: formState.id, ...payload });
+    } else {
+      await createAutomation(payload);
+    }
 
-    persistAutomations(next);
     setFormState(emptyForm);
-    toast({
-      title: formState.id ? 'Automação atualizada' : 'Automação criada',
-      description: 'A configuração foi guardada e está pronta para ligação ao workflow.',
-    });
   };
 
   const handleEditAutomation = (automation: Automation) => {
@@ -209,13 +181,11 @@ const AdminAutomation = () => {
     });
   };
 
-  const handleDeleteAutomation = (id: string) => {
-    const next = automations.filter((item) => item.id !== id);
-    persistAutomations(next);
+  const handleDeleteAutomation = async (id: string) => {
+    await deleteAutomation(id);
     if (formState.id === id) {
       setFormState(emptyForm);
     }
-    toast({ title: 'Automação removida', description: 'O registo local foi limpo da dashboard.' });
   };
 
   const handleWorkflowToggle = async (workflowId: string, shouldActivate: boolean) => {
@@ -320,7 +290,7 @@ const AdminAutomation = () => {
             <CardContent className="flex items-center gap-3 p-5">
               <Bot className="h-8 w-8 text-emerald-600" />
               <div>
-                <p className="text-sm text-muted-foreground">Automações locais</p>
+                <p className="text-sm text-muted-foreground">Automações</p>
                 <p className="text-2xl font-bold text-foreground">{automations.length}</p>
               </div>
             </CardContent>
@@ -352,7 +322,7 @@ const AdminAutomation = () => {
               <div>
                 <p className="font-semibold text-foreground">Ligação ao n8n com atenção</p>
                 <p className="text-muted-foreground">{n8nError}</p>
-                <p className="mt-1 text-muted-foreground">Confirme `VITE_N8N_BASE_URL` e `VITE_N8N_API_KEY` no ambiente.</p>
+                <p className="mt-1 text-muted-foreground">Confirme os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> em Supabase → Edge Functions → Manage Secrets.</p>
               </div>
             </CardContent>
           </Card>
@@ -566,9 +536,9 @@ const AdminAutomation = () => {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Button className="gap-2" onClick={handleSaveAutomation}>
+                <Button className="gap-2" onClick={() => void handleSaveAutomation()} disabled={isSaving}>
                   <Save className="h-4 w-4" />
-                  {formState.id ? 'Guardar alterações' : 'Criar automação'}
+                  {isSaving ? 'A guardar...' : formState.id ? 'Guardar alterações' : 'Criar automação'}
                 </Button>
                 <Button
                   type="button"
@@ -608,7 +578,7 @@ const AdminAutomation = () => {
 
               <div className="space-y-3">
                 {automations.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Ainda não existem automações registadas localmente.</p>
+                  <p className="text-sm text-muted-foreground">Ainda não existem automações registadas. Crie a primeira acima.</p>
                 ) : automations.map((automation) => (
                   <div key={automation.id} className="rounded-2xl border border-border p-4 shadow-sm">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -636,7 +606,7 @@ const AdminAutomation = () => {
                         <Button type="button" variant="outline" size="sm" onClick={() => void handleExecuteWorkflow(automation.workflowId, 'test')}>
                           Executar
                         </Button>
-                        <Button type="button" variant="destructive" size="sm" onClick={() => handleDeleteAutomation(automation.id)}>
+                        <Button type="button" variant="destructive" size="sm" onClick={() => void handleDeleteAutomation(automation.id)}>
                           Excluir
                         </Button>
                       </div>
