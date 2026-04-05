@@ -1,0 +1,153 @@
+{
+  "module": "CI/CD & DevOps",
+  "version": "0.3.0",
+  "owner": "Vision7 Core Team",
+  "status": "Em desenvolvimento",
+  "last_updated": "2026-04-05",
+  "objective": "Pipeline de CI/CD com lint, type-check, build, deploy e validação SDD integrada. Inclui GitHub Actions, Supabase CLI e n8n webhooks.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Lint automático (ESLint) em PRs e pushes",
+      "priority": "Crítica",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-002",
+      "description": "Type-check TypeScript em PRs",
+      "priority": "Crítica",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-003",
+      "description": "Build de produção Vite com análise de bundle",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-004",
+      "description": "Validação SDD antes de merge (sdd-validate script)",
+      "priority": "Alta",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-005",
+      "description": "Deploy preview para PRs",
+      "priority": "Média",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-006",
+      "description": "Supabase migrations CI com staging environment",
+      "priority": "Alta",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-007",
+      "description": "Notificação quando SDD desatualizado (stale check)",
+      "priority": "Média",
+      "status": "Pendente"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Pipeline completa deve completar em < 5 min",
+      "category": "Performance",
+      "status": "Pendente"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Secrets gerenciados via GitHub Secrets (nunca em código)",
+      "category": "Segurança",
+      "status": "Finalizado"
+    }
+  ],
+  "flows": {
+    "data_flow": "Git Push → GitHub Actions → Lint → Type-check → Build → SDD Validate → Deploy Preview → Merge → Production Deploy",
+    "user_flow": "Developer: Push Code → CI Feedback → Fix Issues → Merge Approved → Auto Deploy"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/cicd-arch.md",
+    "ui_wireframe": ""
+  },
+  "dependencies": {
+    "modules": ["Todos (CI valida todos os módulos)"],
+    "packages": ["eslint", "typescript", "vite"],
+    "supabase_tables": [],
+    "api_endpoints": ["GitHub Actions API", "Supabase CLI"]
+  },
+  "files": {
+    "components": [],
+    "hooks": [],
+    "pages": [],
+    "services": [],
+    "types": [],
+    "migrations": []
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "integration",
+      "description": "Testar que pipeline CI completa sem erros em PR sem problemas",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "integration",
+      "description": "Testar que pipeline falha corretamente com lint errors",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "ESLint check",
+      "tool": "GitHub Actions",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "TypeScript type-check",
+      "tool": "GitHub Actions",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "Vite build",
+      "tool": "GitHub Actions",
+      "trigger": "Push para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "SDD validation",
+      "tool": "sdd/scripts/sdd-validate.sh",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "SDD stale check",
+      "tool": "sdd/scripts/sdd-stale-check.sh",
+      "trigger": "Semanal (cron)",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [
+    "GitHub Actions com caching de node_modules para speed",
+    "Parallel jobs para lint, type-check, build",
+    "Deploy previews para cada PR"
+  ],
+  "security_considerations": [
+    "Secrets nunca em código ou logs",
+    "Branch protection rules no main",
+    "Minimum 1 review para merge (futuro)",
+    "SDD validation previne regressões não documentadas"
+  ],
+  "change_history": [
+    {
+      "date": "2026-04-05",
+      "version": "0.3.0",
+      "author": "Vision7 Team",
+      "description": "SDD spec criado; scripts de validação planejados"
+    }
+  ]
+}

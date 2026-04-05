@@ -1,22 +1,39 @@
-# Welcome to your Lovable project
+# Vision
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/aee5afbb-12f3-4c48-a415-15049e766903
+Este repositório contém o portal digital premium Vision.
+
+**Marca atual**: Vision Premium
+
+## Estrutura do repositório
+
+- `src/` — aplicação React/Vite organizada por domínio:
+  - `components/layout/` — cabeçalho, rodapé e estrutura visual
+  - `components/content/` — cards, paginação, newsletter e blocos editoriais
+  - `components/media/` — componentes de podcast e mídia
+  - `components/system/` — favicon, erros e preferências globais
+  - `pages/site/` e `pages/admin/` — rotas públicas e administrativas
+- `public/` — assets públicos e arquivos estáticos.
+- `supabase/` — configuração, migrations e integrações de banco.
+  - `supabase/bootstrap_new_project.sql` — script idempotente para inicializar um projeto Supabase novo com schema e dados base.
+- `docs/visao-geral/` — índices, resumos e guias de navegação.
+- `docs/planejamento/` — roadmap, estrutura e execução.
+- `docs/seguranca/` — análises arquiteturais e plano de remediação.
+- `docs/referencia/` — referências técnicas e documentação de roles.
+- `docs/ai/` — agentes e skills do projeto.
+- `scripts/` — scripts utilitários do repositório.
+- `examples/` — exemplos isolados para consulta.
+
+Ponto de entrada recomendado para leitura: `docs/visao-geral/INDICE_DOCUMENTACAO.md`.
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/aee5afbb-12f3-4c48-a415-15049e766903) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,12 +79,12 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/aee5afbb-12f3-4c48-a415-15049e766903) and click on Share -> Publish.
+Use your normal Vite deployment path, e.g. Netlify, Vercel, or qualquer outro host de sua preferência.
 
-## Can I connect a custom domain to my Lovable project?
+## Posso conectar um domínio personalizado ao portal Vision?
 
 Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Consulte a documentação do seu provedor de hospedagem para configurar o domínio personalizado.

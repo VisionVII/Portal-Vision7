@@ -1,0 +1,157 @@
+{
+  "module": "Tags & Taxonomia",
+  "version": "1.0.1",
+  "owner": "Vision7 Core Team",
+  "status": "Finalizado",
+  "last_updated": "2026-04-05",
+  "objective": "Sistema de categorização e taxonomia de conteúdo com 5 categorias principais, tags livres em posts, badges coloridos e fallback offline.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "5 categorias fixas com color-coding: Tecnologia (blue), Desporto (green), Música (purple), Saúde (red), Mundo (orange)",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "CRUD de categorias via CategoryManager no admin",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Tags livres em posts como TEXT[] com autocomplete",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "CategoryBadge component para exibição consistente em cards",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Fallback com 5 categorias padrão quando BD está offline",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-006",
+      "description": "Filtro de posts por categoria e tag na listagem",
+      "priority": "Alta",
+      "status": "Finalizado"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Categorias cached com TanStack Query (staleTime longo)",
+      "category": "Performance",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Slugs de categoria para URLs SEO-friendly",
+      "category": "SEO",
+      "status": "Finalizado"
+    }
+  ],
+  "flows": {
+    "data_flow": "Supabase categories table → useCategories hook → CategoryBadge/CategorySection components",
+    "user_flow": "Post Card → Click Category Badge → Category Page (filtered) | Admin → CategoryManager → CRUD"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/taxonomy-arch.md",
+    "ui_wireframe": ""
+  },
+  "dependencies": {
+    "modules": [
+      "Supabase & Database",
+      "Agregador de Notícias"
+    ],
+    "packages": [
+      "@tanstack/react-query",
+      "@supabase/supabase-js"
+    ],
+    "supabase_tables": [
+      "categories",
+      "posts (tags column)"
+    ],
+    "api_endpoints": [
+      "supabase.from('categories')"
+    ]
+  },
+  "files": {
+    "components": [],
+    "hooks": [
+      "src/hooks/useCategories.ts"
+    ],
+    "pages": [],
+    "services": [],
+    "types": [
+      "src/integrations/supabase/types.ts"
+    ],
+    "migrations": [
+      "supabase/migrations/20260202183547_6d80e859-6e5c-4280-be42-4f0fb8d43b54.sql"
+    ]
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "unit",
+      "description": "Testar useCategories retorna 5 categorias padrão no fallback",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "unit",
+      "description": "Testar CategoryBadge renderiza cor correta para cada categoria",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "integration",
+      "description": "Testar filtro de posts por categoria na listagem",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "Type-check hooks e componentes de taxonomia",
+      "tool": "TypeScript",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [
+    "Categorias raramente mudam — staleTime longo é adequado",
+    "Tags como TEXT[] permite busca full-text futura",
+    "Novas categorias adicionáveis via admin sem deploy"
+  ],
+  "security_considerations": [
+    "Apenas admin pode criar/editar categorias (RLS)",
+    "Leitura pública permitida para categorias",
+    "Tags sanitizadas antes de inserção"
+  ],
+  "change_history": [
+    {
+      "date": "2026-02-02",
+      "version": "0.1.0",
+      "author": "Vision7 Team",
+      "description": "Schema de categorias com 5 default"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.0",
+      "author": "Vision7 Team",
+      "description": "SDD spec gerado; módulo completo"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.1",
+      "author": "sdd-sync",
+      "description": "Auto-sync: file list updated"
+    }
+  ]
+}

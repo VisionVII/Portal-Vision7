@@ -151,6 +151,45 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_invites: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          status: string | null
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string | null
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string | null
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string
@@ -172,24 +211,389 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
+      analytics_events: {
         Row: {
           created_at: string
+          event_data: Json | null
+          event_type: string
           id: string
+          ip_address: unknown | null
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          status: string | null
+          table_name: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          status?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          status?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      content_versions: {
+        Row: {
+          author_id: string | null
+          changes_description: string | null
+          content: string | null
+          content_id: string
+          content_type: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          title: string | null
+          version_number: number
+        }
+        Insert: {
+          author_id?: string | null
+          changes_description?: string | null
+          content?: string | null
+          content_id: string
+          content_type: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          title?: string | null
+          version_number: number
+        }
+        Update: {
+          author_id?: string | null
+          changes_description?: string | null
+          content?: string | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          title?: string | null
+          version_number?: number
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string
+          duration: string | null
+          id: string
+          instructor: string | null
+          level: string
+          published_at: string | null
+          slug: string
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description: string
+          duration?: string | null
+          id?: string
+          instructor?: string | null
+          level: string
+          published_at?: string | null
+          slug: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          duration?: string | null
+          id?: string
+          instructor?: string | null
+          level?: string
+          published_at?: string | null
+          slug?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monetization_settings: {
+        Row: {
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json | null
+          updated_at: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      podcasts: {
+        Row: {
+          audio_url: string | null
+          author_id: string | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          downloads: number
+          duration: number | null
+          id: string
+          post_id: string | null
+          published_at: string | null
+          slug: string
+          status: string
+          tags: string[] | null
+          title: string
+          transcript: string | null
+          updated_at: string
+          views: number
+        }
+        Insert: {
+          audio_url?: string | null
+          author_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          downloads?: number
+          duration?: number | null
+          id?: string
+          post_id?: string | null
+          published_at?: string | null
+          slug: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          transcript?: string | null
+          updated_at?: string
+          views?: number
+        }
+        Update: {
+          audio_url?: string | null
+          author_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          downloads?: number
+          duration?: number | null
+          id?: string
+          post_id?: string | null
+          published_at?: string | null
+          slug?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          transcript?: string | null
+          updated_at?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcasts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcasts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          reason: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
+          is_active?: boolean | null
+          reason?: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
+          is_active?: boolean | null
+          reason?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      security_codes: {
+        Row: {
+          id: string
+          email: string
+          code: string
+          type: string
+          used: boolean
+          attempts: number
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          code: string
+          type?: string
+          used?: boolean
+          attempts?: number
+          expires_at: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          code?: string
+          type?: string
+          used?: boolean
+          attempts?: number
+          expires_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          is_public: boolean | null
+          linkedin_url: string | null
+          role: string | null
+          twitter_handle: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          is_public?: boolean | null
+          linkedin_url?: string | null
+          role?: string | null
+          twitter_handle?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          is_public?: boolean | null
+          linkedin_url?: string | null
+          role?: string | null
+          twitter_handle?: string | null
+          updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }
@@ -198,6 +602,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bootstrap_first_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -207,7 +615,15 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role:
+        | "super_admin"
+        | "admin"
+        | "editor"
+        | "redator"
+        | "moderador"
+        | "analyst"
+        | "moderator"
+        | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -335,7 +751,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["super_admin", "admin", "editor", "redator", "moderador", "analyst", "moderator", "user"],
     },
   },
 } as const

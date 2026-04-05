@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
@@ -27,11 +28,31 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					50: 'hsl(var(--primary-50))',
+					100: 'hsl(var(--primary-100))',
+					200: 'hsl(var(--primary-200))',
+					300: 'hsl(var(--primary-300))',
+					400: 'hsl(var(--primary-400))',
+					500: 'hsl(var(--primary-500))',
+					600: 'hsl(var(--primary-600))',
+					700: 'hsl(var(--primary-700))',
+					800: 'hsl(var(--primary-800))',
+					900: 'hsl(var(--primary-900))',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					foreground: 'hsl(var(--secondary-foreground))',
+					50: 'hsl(var(--secondary-50))',
+					100: 'hsl(var(--secondary-100))',
+					200: 'hsl(var(--secondary-200))',
+					300: 'hsl(var(--secondary-300))',
+					400: 'hsl(var(--secondary-400))',
+					500: 'hsl(var(--secondary-500))',
+					600: 'hsl(var(--secondary-600))',
+					700: 'hsl(var(--secondary-700))',
+					800: 'hsl(var(--secondary-800))',
+					900: 'hsl(var(--secondary-900))',
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -62,12 +83,6 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				},
-				// Cores personalizadas para o blog português
-				portugal: {
-					green: '#146B3A',
-					red: '#CE1126',
-					gold: '#FFD700'
 				}
 			},
 			borderRadius: {
@@ -109,10 +124,10 @@ export default {
 				'fade-in': 'fade-in 0.6s ease-out'
 			},
 		fontFamily: {
-				'headline': ['"Playfair Display"', 'Georgia', 'serif'],
-				'body': ['Inter', 'system-ui', 'sans-serif']
+				'headline': ['"Space Grotesk"', 'Inter', 'system-ui', 'sans-serif'],
+				'body': ['Manrope', 'Inter', 'system-ui', 'sans-serif']
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate],
 } satisfies Config;

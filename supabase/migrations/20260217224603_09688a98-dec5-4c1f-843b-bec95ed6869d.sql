@@ -33,10 +33,11 @@ CREATE TABLE public.newsletter_subscribers (
 -- Enable RLS
 ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 
--- Anyone can subscribe (insert)
+-- Anyone can subscribe (insert) - restricted to valid email format
 CREATE POLICY "Anyone can subscribe to newsletter"
 ON public.newsletter_subscribers FOR INSERT
-WITH CHECK (true);
+TO anon, authenticated
+WITH CHECK (email IS NOT NULL AND email ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 -- Only admins can view subscribers
 CREATE POLICY "Admins can view subscribers"

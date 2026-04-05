@@ -1,0 +1,224 @@
+{
+  "module": "Auth & Segurança",
+  "version": "1.0.0",
+  "owner": "Vision7 Core Team",
+  "status": "Finalizado",
+  "last_updated": "2026-04-05",
+  "objective": "Sistema de autenticação e autorização com Supabase Auth, RBAC de 6 roles, login OTP por email, invite-based registration, Row Level Security, e audit logging.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Login admin via OTP por email (6 dígitos, sem password)",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "RBAC com 6 roles: super_admin, admin, editor, redator, moderador, analyst",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Permissions matrix JSON para controle granular por role",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Invite-based registration com token único e expiração",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Bootstrap automático: primeiro utilizador registrado recebe super_admin",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-006",
+      "description": "has_role() RPC para verificação de role em queries e policies",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-007",
+      "description": "Audit logs para ações administrativas sensíveis",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-008",
+      "description": "User profiles com nome, avatar, bio e role display",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-009",
+      "description": "AuthContext global com user state, loading, métodos auth",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "RLS deny-by-default em todas as tabelas",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Sessão Supabase com auto-refresh de JWT tokens",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-003",
+      "description": "OTP codes expiram em 60 segundos",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-004",
+      "description": "Rate limiting em endpoints de OTP e registro",
+      "category": "Segurança",
+      "status": "Pendente"
+    },
+    {
+      "id": "NFR-005",
+      "description": "Sem exposição de roles/permissions no frontend público",
+      "category": "Segurança",
+      "status": "Finalizado"
+    }
+  ],
+  "flows": {
+    "data_flow": "Email Input → requestAdminCode() → Supabase Auth signInWithOtp → Email Delivery → OTP Input → verifyAdminCode() → JWT Session → AuthContext → useAdminAccess() → Route Protection",
+    "user_flow": "AdminLogin → Inserir Email → Receber Código → Inserir OTP → Dashboard | Invite → Register → Auto-role → Login"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/auth-security-arch.md",
+    "ui_wireframe": "sdd/diagrams/auth-security-ui.md"
+  },
+  "dependencies": {
+    "modules": ["Supabase & Database"],
+    "packages": ["@supabase/supabase-js", "input-otp"],
+    "supabase_tables": ["auth.users", "user_roles", "user_profiles", "permissions_matrix", "registration_invites", "audit_logs"],
+    "api_endpoints": ["supabase.auth.signInWithOtp", "supabase.auth.verifyOtp", "supabase.rpc('has_role')"]
+  },
+  "files": {
+    "components": [
+      "src/components/admin/AccessManager.tsx"
+    ],
+    "hooks": [
+      "src/hooks/useAdminAccess.ts",
+      "src/hooks/useUserProfiles.ts"
+    ],
+    "pages": [
+      "src/pages/admin/AdminLogin.tsx"
+    ],
+    "services": [],
+    "types": [
+      "src/integrations/supabase/types.ts"
+    ],
+    "migrations": [
+      "supabase/migrations/20260323_expand_roles.sql",
+      "supabase/migrations/20260323_permissions_features.sql",
+      "supabase/migrations/20260323_audit_logs.sql"
+    ]
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "unit",
+      "description": "Testar requestAdminCode envia OTP para email válido",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "unit",
+      "description": "Testar verifyAdminCode aceita código correto e rejeita incorreto",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "security",
+      "description": "Testar RLS: utilizador sem role não acessa tabelas admin",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-004",
+      "type": "security",
+      "description": "Testar has_role() RPC retorna false para roles inexistentes",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-005",
+      "type": "integration",
+      "description": "Testar fluxo completo: invite → register → login OTP → dashboard access",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-006",
+      "type": "security",
+      "description": "Testar que rotas /admin/* redirecionam para login sem sessão",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "Validar migrations SQL syntax",
+      "tool": "SQL lint",
+      "trigger": "PR com alterações em supabase/migrations/",
+      "status": "Pendente"
+    },
+    {
+      "step": "Type-check AuthContext e hooks",
+      "tool": "TypeScript",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "Verificar RLS policies não têm gaps",
+      "tool": "Custom script",
+      "trigger": "PR com migrations",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [
+    "RBAC extensível: novas roles adicionáveis sem código",
+    "permissions_matrix JSONB permite granularidade sem schema changes",
+    "Invite system previne growth descontrolado",
+    "Audit logs particionáveis por data para performance"
+  ],
+  "security_considerations": [
+    "OTP elimina risco de password leak/brute force",
+    "shouldCreateUser: false previne auto-cadastro via OTP",
+    "RLS com has_role() em todas as tabelas sensíveis",
+    "Audit trail para accountability",
+    "Registration only via invite com token expirável",
+    "JWT auto-refresh mantém sessão segura",
+    "Separação clara entre dados públicos e admin"
+  ],
+  "change_history": [
+    {
+      "date": "2026-02-02",
+      "version": "0.1.0",
+      "author": "Vision7 Team",
+      "description": "Auth base com Supabase email/password"
+    },
+    {
+      "date": "2026-03-23",
+      "version": "0.7.0",
+      "author": "Vision7 Team",
+      "description": "RBAC 6 roles, RLS, audit logs, permissions matrix"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.0",
+      "author": "Vision7 Team",
+      "description": "OTP login, SDD spec, security hardening"
+    }
+  ]
+}

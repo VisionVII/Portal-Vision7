@@ -31,10 +31,10 @@ const AdminStatsCards = () => {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center">
-            <PenTool className="h-8 w-8 text-portugal-green" />
+            <PenTool className="h-8 w-8 text-primary-600 dark:text-primary-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total de Posts</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.total || 0}</p>
+              <p className="text-sm font-medium text-muted-foreground">Total de Posts</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.total || 0}</p>
             </div>
           </div>
         </CardContent>
@@ -43,10 +43,10 @@ const AdminStatsCards = () => {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center">
-            <Eye className="h-8 w-8 text-blue-600" />
+            <Eye className="h-8 w-8 text-secondary-600 dark:text-secondary-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Visualizações</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-muted-foreground">Visualizações</p>
+              <p className="text-2xl font-bold text-foreground">
                 {(stats?.totalViews || 0).toLocaleString('pt-PT')}
               </p>
             </div>
@@ -57,10 +57,10 @@ const AdminStatsCards = () => {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center">
-            <Edit className="h-8 w-8 text-yellow-600" />
+            <Edit className="h-8 w-8 text-primary-500 dark:text-primary-300" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Rascunhos</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.drafts || 0}</p>
+              <p className="text-sm font-medium text-muted-foreground">Rascunhos</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.drafts || 0}</p>
             </div>
           </div>
         </CardContent>
@@ -69,10 +69,10 @@ const AdminStatsCards = () => {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center">
-            <Plus className="h-8 w-8 text-green-600" />
+            <Plus className="h-8 w-8 text-primary-700 dark:text-primary-300" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Este Mês</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.thisMonth || 0}</p>
+              <p className="text-sm font-medium text-muted-foreground">Este Mês</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.thisMonth || 0}</p>
             </div>
           </div>
         </CardContent>

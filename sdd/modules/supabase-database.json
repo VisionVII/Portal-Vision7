@@ -1,0 +1,237 @@
+{
+  "module": "Supabase & Database",
+  "version": "1.0.1",
+  "owner": "Vision7 Core Team",
+  "status": "Finalizado",
+  "last_updated": "2026-04-05",
+  "objective": "Camada de infraestrutura de dados: PostgreSQL via Supabase com schema completo, RLS policies, RPC functions, Storage buckets, migrações versionadas e client SDK configurado.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Schema com 12+ tabelas: posts, categories, courses, podcasts, newsletter_subscribers, site_settings, user_profiles, user_roles, permissions_matrix, registration_invites, audit_logs, analytics_events, monetization_settings",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "RLS deny-by-default com policies explícitas para cada tabela",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "RPC function has_role(user_uuid, role_name) para verificação em queries e policies",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Storage buckets: post-images (public), podcasts (public), transcripts (admin)",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Migrações versionadas e incrementais (10 migration files)",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-006",
+      "description": "Bootstrap script para novo projeto Supabase com schema completo",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-007",
+      "description": "TypeScript types gerados a partir do schema (supabase/types.ts)",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-008",
+      "description": "Client SDK configurado com env vars para URL e anon key",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Queries otimizadas com indexes em campos filtráveis",
+      "category": "Performance",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Migrações devem ser aditivas e retrocompatíveis",
+      "category": "Manutenibilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-003",
+      "description": "Supabase anon key é safe para client-side (RLS protege dados)",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-004",
+      "description": "Backup e point-in-time recovery via Supabase managed",
+      "category": "Escalabilidade",
+      "status": "Finalizado"
+    }
+  ],
+  "flows": {
+    "data_flow": "React Component → TanStack Query → Supabase Client SDK → PostgREST API → PostgreSQL (with RLS) → Response → Cache → UI",
+    "user_flow": "N/A (infrastructure module)"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/database-arch.md",
+    "ui_wireframe": ""
+  },
+  "dependencies": {
+    "modules": [],
+    "packages": [
+      "@supabase/supabase-js"
+    ],
+    "supabase_tables": [
+      "ALL"
+    ],
+    "api_endpoints": [
+      "Supabase PostgREST (auto-generated)",
+      "Supabase Auth API",
+      "Supabase Storage API"
+    ]
+  },
+  "files": {
+    "components": [],
+    "hooks": [],
+    "pages": [],
+    "services": [
+      "src/integrations/supabase/client.ts"
+    ],
+    "types": [
+      "src/integrations/supabase/types.ts"
+    ],
+    "migrations": [
+      "supabase/migrations/20260202183547_6d80e859-6e5c-4280-be42-4f0fb8d43b54.sql",
+      "supabase/migrations/20260217224603_09688a98-dec5-4c1f-843b-bec95ed6869d.sql",
+      "supabase/migrations/20260316094654_3224bdbe-379b-4734-b305-0d8b553d2e43.sql",
+      "supabase/migrations/20260323081953_c76cd187-0f62-485d-994d-2e07856b1bc4.sql",
+      "supabase/migrations/20260323120000_add_podcast_system.sql",
+      "supabase/migrations/20260323_audit_logs.sql",
+      "supabase/migrations/20260323_expand_roles.sql",
+      "supabase/migrations/20260323_permissions_features.sql",
+      "supabase/migrations/20260323_permissions_validation.sql",
+      "supabase/migrations/20260323_remove_auto_admin.sql",
+      "supabase/migrations/20260323_user_role_assignments.sql",
+      "supabase/migrations/20260324090000_add_courses_table.sql"
+    ]
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "security",
+      "description": "Testar RLS: anon user não pode SELECT em tabelas admin",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "security",
+      "description": "Testar RLS: editor pode UPDATE posts mas não DELETE user_roles",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "integration",
+      "description": "Testar bootstrap_new_project.sql cria schema completo em BD limpo",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-004",
+      "type": "unit",
+      "description": "Testar has_role() RPC com combinações válidas e inválidas",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-005",
+      "type": "integration",
+      "description": "Testar que todas as migrações aplicam em sequência sem conflitos",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "Validar SQL syntax de novas migrações",
+      "tool": "pg_format / sqlfluff",
+      "trigger": "PR com alterações em supabase/migrations/",
+      "status": "Pendente"
+    },
+    {
+      "step": "Regenerar types.ts quando schema muda",
+      "tool": "supabase gen types typescript",
+      "trigger": "Após apply de migração",
+      "status": "Pendente"
+    },
+    {
+      "step": "Testar migrations em Supabase staging",
+      "tool": "supabase db push",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [
+    "Supabase managed PostgreSQL escala verticalmente",
+    "Connection pooling via Supavisor",
+    "Storage com CDN para assets estáticos",
+    "Partitioning possível para analytics_events e audit_logs",
+    "Read replicas disponíveis em planos Pro+"
+  ],
+  "security_considerations": [
+    "RLS deny-by-default em TODAS as tabelas",
+    "anon key seguro (RLS protege dados)",
+    "service_role key NUNCA no client-side",
+    "has_role() function com SECURITY DEFINER",
+    "Migrações revisadas para não criar gaps de segurança",
+    "Storage policies restringem upload por role",
+    "JWT tokens com expiração curta + auto-refresh"
+  ],
+  "change_history": [
+    {
+      "date": "2026-02-02",
+      "version": "0.1.0",
+      "author": "Vision7 Team",
+      "description": "Schema inicial: posts, categories, user_roles"
+    },
+    {
+      "date": "2026-02-17",
+      "version": "0.3.0",
+      "author": "Vision7 Team",
+      "description": "Analytics events, monetization settings"
+    },
+    {
+      "date": "2026-03-16",
+      "version": "0.6.0",
+      "author": "Vision7 Team",
+      "description": "Extended schema, storage buckets"
+    },
+    {
+      "date": "2026-03-23",
+      "version": "0.9.0",
+      "author": "Vision7 Team",
+      "description": "Audit logs, expanded roles, permissions matrix"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.0",
+      "author": "Vision7 Team",
+      "description": "SDD spec gerado; schema completo documentado"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.1",
+      "author": "sdd-sync",
+      "description": "Auto-sync: file list updated"
+    }
+  ]
+}

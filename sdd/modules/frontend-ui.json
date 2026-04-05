@@ -1,0 +1,282 @@
+{
+  "module": "Frontend & UI",
+  "version": "1.0.1",
+  "owner": "Vision7 Core Team",
+  "status": "Finalizado",
+  "last_updated": "2026-04-05",
+  "objective": "Interface pública do portal de notícias Vision7 com design responsivo, tema dark/light, navegação por categorias, visualização de posts, cursos, podcasts e páginas institucionais.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Homepage com hero banner customizável, seções de categoria, posts em destaque e newsletter signup",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "5 páginas de categoria (Tecnologia, Desporto, Música, Saúde, Mundo) com filtro e paginação",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Página de post individual com conteúdo sanitizado, metadata, e navegação entre posts",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Header sticky com logo, navegação, informações contextuais (data, hora, localização, temperatura) e toggle dark/light",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Menu mobile em Sheet com categorias e navegação simplificada",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-006",
+      "description": "Sistema de cookies com banner GDPR e preferências detalhadas",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-007",
+      "description": "Página de cursos com listagem e detalhes",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-008",
+      "description": "Páginas de podcast com player de áudio e listagem",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-009",
+      "description": "Página de política de privacidade",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-010",
+      "description": "Página 404 customizada com navegação de retorno",
+      "priority": "Baixa",
+      "status": "Finalizado"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Primeira carga sob 3s em 3G, Lighthouse Performance > 80",
+      "category": "Performance",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Design totalmente responsivo (mobile-first, breakpoints: sm, md, lg, xl)",
+      "category": "Acessibilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-003",
+      "description": "Dark/Light mode com transição suave via CSS variables",
+      "category": "Acessibilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-004",
+      "description": "Meta tags e Open Graph para compartilhamento social",
+      "category": "SEO",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "NFR-005",
+      "description": "Componentes UI reutilizáveis via shadcn/ui",
+      "category": "Manutenibilidade",
+      "status": "Finalizado"
+    }
+  ],
+  "flows": {
+    "data_flow": "Supabase → TanStack Query → Page Components → UI Components → DOM (+ DOMPurify para HTML)",
+    "user_flow": "Homepage → Navegar Categorias → Ler Post → Newsletter Signup | Cursos → Detalhe Curso | Podcast → Player"
+  },
+  "diagrams": {
+    "architecture": "sdd/diagrams/frontend-arch.md",
+    "ui_wireframe": "sdd/diagrams/frontend-ui.md"
+  },
+  "dependencies": {
+    "modules": [
+      "Agregador de Notícias",
+      "Tags & Taxonomia",
+      "Analytics",
+      "Supabase & Database"
+    ],
+    "packages": [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@tanstack/react-query",
+      "tailwindcss",
+      "lucide-react",
+      "dompurify",
+      "class-variance-authority",
+      "clsx",
+      "tailwind-merge"
+    ],
+    "supabase_tables": [
+      "posts",
+      "categories",
+      "courses",
+      "podcasts",
+      "site_settings",
+      "newsletter_subscribers",
+      "analytics_events"
+    ],
+    "api_endpoints": []
+  },
+  "files": {
+    "components": [
+      "src/components/layout/Footer.tsx",
+      "src/components/layout/Header.tsx",
+      "src/components/content/AdSpace.tsx",
+      "src/components/content/CategoryPage.tsx",
+      "src/components/content/NewsletterForm.tsx",
+      "src/components/content/PostCard.tsx",
+      "src/components/content/PostPagination.tsx",
+      "src/components/content/RelatedPosts.tsx",
+      "src/components/system/BrandLogo.tsx",
+      "src/components/system/CookieBanner.tsx",
+      "src/components/system/CookiePreferences.tsx",
+      "src/components/system/DynamicFavicon.tsx",
+      "src/components/system/ErrorBoundary.tsx",
+      "src/components/system/PortalAIAssistantButton.tsx",
+      "src/components/system/ScrollToTop.tsx",
+      "src/components/media/PodcastCard.tsx",
+      "src/components/media/PodcastPlayer.tsx"
+    ],
+    "hooks": [
+      "src/hooks/useTheme.ts",
+      "src/hooks/use-mobile.tsx",
+      "src/hooks/useSticky.ts",
+      "src/hooks/useUserLocation.ts"
+    ],
+    "pages": [
+      "src/pages/site/Course.tsx",
+      "src/pages/site/Desporto.tsx",
+      "src/pages/site/Index.tsx",
+      "src/pages/site/Mundo.tsx",
+      "src/pages/site/Musica.tsx",
+      "src/pages/site/NotFound.tsx",
+      "src/pages/site/Podcast.tsx",
+      "src/pages/site/Podcasts.tsx",
+      "src/pages/site/Post.tsx",
+      "src/pages/site/PrivacyPolicy.tsx",
+      "src/pages/site/Saude.tsx",
+      "src/pages/site/Tecnologia.tsx"
+    ],
+    "services": [],
+    "types": [],
+    "migrations": []
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "e2e",
+      "description": "Testar navegação completa: Home → Categoria → Post → Voltar",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "e2e",
+      "description": "Testar toggle dark/light mode persiste entre navegações",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "performance",
+      "description": "Lighthouse audit: Performance > 80, Accessibility > 90",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-004",
+      "type": "e2e",
+      "description": "Testar menu mobile abre/fecha corretamente em todos os breakpoints",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-005",
+      "type": "security",
+      "description": "Verificar XSS: conteúdo de post sanitizado antes de renderizar",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-006",
+      "type": "e2e",
+      "description": "Testar cookie banner GDPR: aceitar/rejeitar/configurar preferências",
+      "status": "Pendente"
+    }
+  ],
+  "ci_cd_integration": [
+    {
+      "step": "Lint e type-check de todos os componentes",
+      "tool": "ESLint + TypeScript",
+      "trigger": "PR para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "Build de produção",
+      "tool": "Vite",
+      "trigger": "Push para main",
+      "status": "Pendente"
+    },
+    {
+      "step": "Lighthouse CI audit",
+      "tool": "Lighthouse CI",
+      "trigger": "Deploy preview",
+      "status": "Pendente"
+    }
+  ],
+  "scalability_notes": [
+    "Componentes UI via shadcn/ui garantem consistência e reutilização",
+    "CSS variables para temas permite adição de novos temas facilmente",
+    "Homepage config em site_settings permite personalização sem deploy",
+    "Lazy loading de imagens e paginação reduzem payload inicial",
+    "TanStack Query staleTime otimizado por tipo de conteúdo"
+  ],
+  "security_considerations": [
+    "DOMPurify para todo HTML renderizado de posts",
+    "Cookie consent GDPR-compliant com preferências granulares",
+    "robots.txt configurado para restringir indexação de admin",
+    "Links externos com rel='noopener noreferrer'",
+    "Sem exposição de dados sensíveis no frontend público"
+  ],
+  "change_history": [
+    {
+      "date": "2026-02-02",
+      "version": "0.1.0",
+      "author": "Vision7 Team",
+      "description": "Layout base com header/footer e homepage"
+    },
+    {
+      "date": "2026-03-16",
+      "version": "0.7.0",
+      "author": "Vision7 Team",
+      "description": "Todas as páginas públicas implementadas"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.0",
+      "author": "Vision7 Team",
+      "description": "Dark/light toggle, cookie fix, palette refinement, SDD spec"
+    },
+    {
+      "date": "2026-04-05",
+      "version": "1.0.1",
+      "author": "sdd-sync",
+      "description": "Auto-sync: file list updated"
+    }
+  ]
+}

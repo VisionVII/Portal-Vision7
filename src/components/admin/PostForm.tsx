@@ -72,8 +72,9 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       setFormData({ ...formData, image_url: publicUrl });
       setImagePreview(publicUrl);
       toast({ title: "Sucesso", description: "Imagem carregada com sucesso!" });
-    } catch (error: any) {
-      toast({ title: "Erro", description: error.message || "Erro ao carregar imagem.", variant: "destructive" });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({ title: "Erro", description: message || "Erro ao carregar imagem.", variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -137,10 +138,11 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
         });
       }
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       toast({
         title: "Erro",
-        description: error.message || "Ocorreu um erro ao guardar o post.",
+        description: message || "Ocorreu um erro ao guardar o post.",
         variant: "destructive",
       });
     }
@@ -234,13 +236,13 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
               ) : (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-portugal-green transition-colors"
+                  className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary-600 dark:hover:border-primary-400 transition-colors"
                 >
-                  <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">
+                  <ImageIcon className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-foreground">
                     {isUploading ? 'A carregar...' : 'Clique para carregar uma imagem'}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">PNG, JPG até 5MB</p>
+                  <p className="text-xs text-muted-foreground mt-1">PNG, JPG até 5MB</p>
                 </div>
               )}
               <input
@@ -261,7 +263,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
                   <Upload className="w-4 h-4 mr-2" />
                   {isUploading ? 'A carregar...' : 'Carregar Imagem'}
                 </Button>
-                <span className="text-xs text-gray-500">ou</span>
+                <span className="text-xs text-muted-foreground">ou</span>
                 <Input
                   value={formData.image_url}
                   onChange={(e) => {
@@ -300,7 +302,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
               id="featured"
               checked={formData.featured}
               onChange={(e) => setFormData({...formData, featured: e.target.checked})}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-border"
             />
             <Label htmlFor="featured" className="text-sm font-normal">
               Destacar este post
@@ -311,7 +313,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
             <Button 
               type="button"
               onClick={(e) => handleSubmit(e, true)}
-              className="bg-portugal-green hover:bg-portugal-green/90"
+              className="bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600"
               disabled={createPost.isPending || updatePost.isPending}
             >
               {createPost.isPending || updatePost.isPending ? 'A guardar...' : 'Publicar Post'}
