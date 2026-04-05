@@ -1,224 +1,214 @@
+
 {
   "module": "Auth & Segurança",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
   "last_updated": "2026-04-05",
-  "objective": "Sistema de autenticação e autorização com Supabase Auth, RBAC de 6 roles, login OTP por email, invite-based registration, Row Level Security, e audit logging.",
+  "objective": "Sistema de autenticação e autorização robusto com OTP, RBAC extensível, RLS deny-by-default, proteção contra abuso, inteligência de sessão e observabilidade de segurança.",
+
   "functional_requirements": [
     {
-      "id": "FR-001",
-      "description": "Login admin via OTP por email (6 dígitos, sem password)",
-      "priority": "Crítica",
-      "status": "Finalizado"
-    },
-    {
-      "id": "FR-002",
-      "description": "RBAC com 6 roles: super_admin, admin, editor, redator, moderador, analyst",
-      "priority": "Crítica",
-      "status": "Finalizado"
-    },
-    {
-      "id": "FR-003",
-      "description": "Permissions matrix JSON para controle granular por role",
+      "id": "FR-010",
+      "description": "Audit logs com classificação de risco (low, medium, high, critical)",
       "priority": "Alta",
       "status": "Finalizado"
     },
     {
-      "id": "FR-004",
-      "description": "Invite-based registration com token único e expiração",
+      "id": "FR-011",
+      "description": "Detecção de comportamento anômalo (auth e ações administrativas)",
       "priority": "Alta",
       "status": "Finalizado"
     },
     {
-      "id": "FR-005",
-      "description": "Bootstrap automático: primeiro utilizador registrado recebe super_admin",
+      "id": "FR-012",
+      "description": "Invite vinculado a email específico, uso único e token armazenado como hash",
       "priority": "Alta",
       "status": "Finalizado"
     },
     {
-      "id": "FR-006",
-      "description": "has_role() RPC para verificação de role em queries e policies",
-      "priority": "Crítica",
-      "status": "Finalizado"
-    },
-    {
-      "id": "FR-007",
-      "description": "Audit logs para ações administrativas sensíveis",
+      "id": "FR-013",
+      "description": "Suporte a MFA (TOTP/WebAuthn) para roles críticas (admin/super_admin)",
       "priority": "Alta",
-      "status": "Finalizado"
-    },
-    {
-      "id": "FR-008",
-      "description": "User profiles com nome, avatar, bio e role display",
-      "priority": "Média",
-      "status": "Finalizado"
-    },
-    {
-      "id": "FR-009",
-      "description": "AuthContext global com user state, loading, métodos auth",
-      "priority": "Crítica",
-      "status": "Finalizado"
+      "status": "Planejado"
     }
   ],
+
   "non_functional_requirements": [
     {
-      "id": "NFR-001",
-      "description": "RLS deny-by-default em todas as tabelas",
-      "category": "Segurança",
-      "status": "Finalizado"
-    },
-    {
-      "id": "NFR-002",
-      "description": "Sessão Supabase com auto-refresh de JWT tokens",
-      "category": "Segurança",
-      "status": "Finalizado"
-    },
-    {
-      "id": "NFR-003",
-      "description": "OTP codes expiram em 60 segundos",
-      "category": "Segurança",
-      "status": "Finalizado"
-    },
-    {
       "id": "NFR-004",
-      "description": "Rate limiting em endpoints de OTP e registro",
+      "description": "Rate limiting granular por IP, email e device fingerprint",
+      "rules": [
+        "Máx 5 OTP requests / minuto / email",
+        "Máx 10 OTP requests / hora / IP",
+        "Exponential backoff após falhas",
+        "Bloqueio temporário após 10 falhas"
+      ],
       "category": "Segurança",
-      "status": "Pendente"
+      "status": "Finalizado"
     },
     {
-      "id": "NFR-005",
-      "description": "Sem exposição de roles/permissions no frontend público",
+      "id": "NFR-006",
+      "description": "Session fingerprinting e detecção de anomalias (IP, user-agent, região)",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-007",
+      "description": "JWT com rotação, curta duração e invalidação ativa de sessão",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-008",
+      "description": "Respostas genéricas para evitar enumeração de usuários",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-009",
+      "description": "Criptografia de dados sensíveis (PII) no banco",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-010",
+      "description": "Observabilidade de segurança com métricas de autenticação",
+      "category": "Observabilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-011",
+      "description": "Timeout de sessão por inatividade (30 minutos)",
       "category": "Segurança",
       "status": "Finalizado"
     }
   ],
+
   "flows": {
-    "data_flow": "Email Input → requestAdminCode() → Supabase Auth signInWithOtp → Email Delivery → OTP Input → verifyAdminCode() → JWT Session → AuthContext → useAdminAccess() → Route Protection",
-    "user_flow": "AdminLogin → Inserir Email → Receber Código → Inserir OTP → Dashboard | Invite → Register → Auto-role → Login"
+    "data_flow": "Email Input → CAPTCHA → requestAdminCode() → Rate Limit Check → Supabase OTP → Email → OTP Input → verifyAdminCode() → Session Fingerprint → JWT → AuthContext → Access Control",
+    
+    "user_flow": "AdminLogin → Email → CAPTCHA → Receber Código → Inserir OTP → Validação → Dashboard",
+    
+    "security_flow": "OTP Request → Rate Limit → Behavior Analysis → Risk Score → Allow | Block | Challenge (MFA)"
   },
-  "diagrams": {
-    "architecture": "sdd/diagrams/auth-security-arch.md",
-    "ui_wireframe": "sdd/diagrams/auth-security-ui.md"
+
+  "security_intelligence": {
+    "risk_engine": {
+      "inputs": [
+        "IP",
+        "User-Agent",
+        "Geolocation",
+        "OTP attempts",
+        "Admin actions frequency"
+      ],
+      "rules": [
+        "Mudança de país → risco médio",
+        "Múltiplas falhas OTP → risco alto",
+        "Mudança de role frequente → risco crítico"
+      ],
+      "actions": [
+        "Forçar novo OTP",
+        "Bloqueio temporário",
+        "Flag em audit_logs",
+        "Exigir MFA"
+      ]
+    }
   },
-  "dependencies": {
-    "modules": ["Supabase & Database"],
-    "packages": ["@supabase/supabase-js", "input-otp"],
-    "supabase_tables": ["auth.users", "user_roles", "user_profiles", "permissions_matrix", "registration_invites", "audit_logs"],
-    "api_endpoints": ["supabase.auth.signInWithOtp", "supabase.auth.verifyOtp", "supabase.rpc('has_role')"]
+
+  "audit_logs_model": {
+    "fields": [
+      "id",
+      "actor_id",
+      "target_id",
+      "action",
+      "old_value",
+      "new_value",
+      "ip",
+      "user_agent",
+      "risk_level",
+      "created_at"
+    ],
+    "risk_levels": ["low", "medium", "high", "critical"]
   },
-  "files": {
-    "components": [
-      "src/components/admin/AccessManager.tsx"
-    ],
-    "hooks": [
-      "src/hooks/useAdminAccess.ts",
-      "src/hooks/useUserProfiles.ts"
-    ],
-    "pages": [
-      "src/pages/admin/AdminLogin.tsx"
-    ],
-    "services": [],
-    "types": [
-      "src/integrations/supabase/types.ts"
-    ],
-    "migrations": [
-      "supabase/migrations/20260323_expand_roles.sql",
-      "supabase/migrations/20260323_permissions_features.sql",
-      "supabase/migrations/20260323_audit_logs.sql"
+
+  "invite_security": {
+    "features": [
+      "Token único (UUID)",
+      "Armazenamento com hash",
+      "Vinculado a email",
+      "Expiração (24h)",
+      "Uso único obrigatório",
+      "Limite de invites por role"
     ]
   },
-  "qa_tests": [
-    {
-      "id": "QA-001",
-      "type": "unit",
-      "description": "Testar requestAdminCode envia OTP para email válido",
-      "status": "Pendente"
+
+  "session_security": {
+    "jwt": {
+      "expiration": "5-15 minutos",
+      "refresh_rotation": true,
+      "revocation": true
     },
-    {
-      "id": "QA-002",
-      "type": "unit",
-      "description": "Testar verifyAdminCode aceita código correto e rejeita incorreto",
-      "status": "Pendente"
-    },
-    {
-      "id": "QA-003",
-      "type": "security",
-      "description": "Testar RLS: utilizador sem role não acessa tabelas admin",
-      "status": "Pendente"
-    },
-    {
-      "id": "QA-004",
-      "type": "security",
-      "description": "Testar has_role() RPC retorna false para roles inexistentes",
-      "status": "Pendente"
-    },
-    {
-      "id": "QA-005",
-      "type": "integration",
-      "description": "Testar fluxo completo: invite → register → login OTP → dashboard access",
-      "status": "Pendente"
-    },
-    {
-      "id": "QA-006",
-      "type": "security",
-      "description": "Testar que rotas /admin/* redirecionam para login sem sessão",
-      "status": "Pendente"
-    }
-  ],
+    "fingerprinting": [
+      "IP",
+      "User-Agent",
+      "Device pattern"
+    ]
+  },
+
+  "observability": {
+    "metrics": [
+      "OTP requests/min",
+      "Login success rate",
+      "Failed OTP attempts",
+      "Admin actions per user",
+      "Logins por país"
+    ]
+  },
+
+  "abuse_protection": {
+    "mechanisms": [
+      "Rate limiting",
+      "CAPTCHA invisível",
+      "Behavior analysis",
+      "Temporary blocking"
+    ]
+  },
+
   "ci_cd_integration": [
     {
-      "step": "Validar migrations SQL syntax",
-      "tool": "SQL lint",
-      "trigger": "PR com alterações em supabase/migrations/",
-      "status": "Pendente"
-    },
-    {
-      "step": "Type-check AuthContext e hooks",
-      "tool": "TypeScript",
-      "trigger": "PR para main",
-      "status": "Pendente"
-    },
-    {
-      "step": "Verificar RLS policies não têm gaps",
-      "tool": "Custom script",
-      "trigger": "PR com migrations",
+      "step": "Detectar vazamento de secrets",
+      "tool": "Gitleaks / GitHub Security",
+      "trigger": "PR",
       "status": "Pendente"
     }
   ],
+
   "scalability_notes": [
-    "RBAC extensível: novas roles adicionáveis sem código",
-    "permissions_matrix JSONB permite granularidade sem schema changes",
-    "Invite system previne growth descontrolado",
-    "Audit logs particionáveis por data para performance"
+    "Sistema preparado para multi-tenant",
+    "Security layer desacoplado (risk engine)",
+    "Audit logs particionáveis",
+    "RBAC dinâmico via JSONB",
+    "Rate limit distribuído (Redis-ready)"
   ],
+
   "security_considerations": [
-    "OTP elimina risco de password leak/brute force",
-    "shouldCreateUser: false previne auto-cadastro via OTP",
-    "RLS com has_role() em todas as tabelas sensíveis",
-    "Audit trail para accountability",
-    "Registration only via invite com token expirável",
-    "JWT auto-refresh mantém sessão segura",
-    "Separação clara entre dados públicos e admin"
+    "OTP elimina senha e reduz vetor de ataque",
+    "Rate limit evita brute force",
+    "Fingerprint detecta sessões suspeitas",
+    "JWT rotativo reduz risco de hijack",
+    "Audit logs com risco permitem investigação",
+    "Invite-only previne acesso indevido",
+    "Respostas genéricas evitam enumeração",
+    "Criptografia protege dados sensíveis"
   ],
+
   "change_history": [
     {
-      "date": "2026-02-02",
-      "version": "0.1.0",
-      "author": "Vision7 Team",
-      "description": "Auth base com Supabase email/password"
-    },
-    {
-      "date": "2026-03-23",
-      "version": "0.7.0",
-      "author": "Vision7 Team",
-      "description": "RBAC 6 roles, RLS, audit logs, permissions matrix"
-    },
-    {
       "date": "2026-04-05",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Vision7 Team",
-      "description": "OTP login, SDD spec, security hardening"
+      "description": "Security hardening: rate limit, session intelligence, JWT rotation, audit risk, anti-abuse, observability"
     }
   ]
 }
