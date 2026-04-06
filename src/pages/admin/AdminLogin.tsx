@@ -30,7 +30,15 @@ const AdminLogin = () => {
 
     setIsSubmitting(true);
 
-    const { error, isAdmin, canAccessDashboard: hasAccess } = await signIn(email, password);
+    let result;
+    try {
+      result = await signIn(email, password);
+    } catch (err) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { error, isAdmin, canAccessDashboard: hasAccess } = result;
 
     setIsSubmitting(false);
 

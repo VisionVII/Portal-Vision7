@@ -25,7 +25,17 @@ import PrivacyPolicy from "@/pages/site/PrivacyPolicy";
 import Course from "@/pages/site/Course";
 import Podcasts from "@/pages/site/Podcasts";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: (failureCount, error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return false;
+        return failureCount < 2;
+      },
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
