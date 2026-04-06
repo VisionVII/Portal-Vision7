@@ -61,8 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ── Load roles from user_roles table ──────────────────────────────────────
 
-  const getUserAccessProfile = useCallback(async (userId: string) => {
-    const empty = { roles: [] as AppRole[], isAdmin: false, canAccessDashboard: false };
+  const getUserAccessProfile = useCallback(async (userId: string, retries = 1): Promise<{ roles: AppRole[]; isAdmin: boolean; canAccessDashboard: boolean; queryFailed: boolean }> => {
+    const empty = { roles: [] as AppRole[], isAdmin: false, canAccessDashboard: false, queryFailed: false };
 
     const { data, error } = await supabase
       .from('user_roles')
@@ -73,11 +73,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) {
       if (isSchemaMissingError(error)) {
         console.warn('[Auth] user_roles table not ready:', error.message);
-        return empty;
+        return { ...empty, queryFailed: true };
       }
-      if (isAbortError(error)) return empty;
+      if (isAbortError(error)) {
+        if (retries > 0) {
+          await new Promise((r) => setTimeout(r, 500));
+          return getUserAccessProfile(userId, retries - 1);
+        }
+        return { ...empty, queryFailed: true };
+      }
       console.error('[Auth] Error loading roles:', error);
-      return empty;
+      return { ...empty, queryFailed: true };
     }
 
     const activeRoles = Array.from(
@@ -88,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       roles: activeRoles,
       isAdmin: activeRoles.some((r) => ['admin', 'super_admin'].includes(r)),
       canAccessDashboard: activeRoles.some((r) => DASHBOARD_ROLES.includes(r)),
+      queryFailed: false,
     };
   }, []);
 
@@ -201,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: new Error('Credenciais inválidas.'), ...fail };
     }
 
-    let access = { roles: [] as AppRole[], isAdmin: false, canAccessDashboard: false };
+    let access = { roles: [] as AppRole[], isAdmin: false, canAccessDashboard: false, queryFailed: false };
 
     try {
       access = await getUserAccessProfile(data.user.id);
@@ -210,9 +217,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       applyAccess(access);
     } catch (err) {
       console.error('[Auth] Error after sign-in:', err);
+      access = { ...access, queryFailed: true };
     } finally {
       setIsAccessReady(true);
       setIsLoading(false);
+    }
+
+    // If the role query failed (AbortError, network issue), don't sign out.
+    // Let the auth state listener retry role loading on its own.
+    if (access.queryFailed) {
+      return { error: null, isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
     }
 
     if (!access.canAccessDashboard) {
