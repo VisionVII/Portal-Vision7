@@ -54,24 +54,11 @@ const AdminLogin = () => {
       return;
     }
 
-    // Auth succeeded. If roles loaded and user has access, navigate now.
-    // If roles failed to load (queryFailed scenario), the auth state listener
-    // will eventually resolve roles and the useEffect redirect will kick in.
+    // Auth succeeded - the useEffect will handle redirect when canAccessDashboard becomes true
     if (hasAccess) {
       navigate('/admin/dashboard', { replace: true });
-      return;
     }
-
-    // If signIn returned no error and isAdmin/hasAccess are false,
-    // it may be because roles query failed transiently.
-    // Wait briefly for the auth listener to resolve roles.
-    if (!isAdmin && !hasAccess) {
-      // Give the auth state listener time to load roles
-      await new Promise((r) => setTimeout(r, 1500));
-      // The useEffect [user, canAccessDashboard] will handle redirect if roles resolve
-      // If still no access after wait, show message
-      return;
-    }
+    // If !hasAccess but no error, roles are still loading via listener - useEffect handles it
   };
 
   return (
