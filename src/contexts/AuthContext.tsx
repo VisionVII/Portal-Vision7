@@ -35,6 +35,22 @@ const isSchemaMissingError = (error: unknown) => {
   return /PGRST205|user_roles|schema cache|does not exist/i.test(message);
 };
 
+const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+
+const buildDeviceFingerprint = async () => {
+  const base = [
+    navigator.userAgent,
+    navigator.language,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    String(screen.width),
+    String(screen.height),
+  ].join('|');
+
+  const encoded = new TextEncoder().encode(base);
+  const digest = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -231,9 +247,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const requestAdminCode = async (email: string) => {
     setIsLoading(true);
+    const deviceFingerprint = await buildDeviceFingerprint();
 
     const { data, error } = await supabase.functions.invoke('send-login-code', {
       body: { email },
+      headers: {
+        'x-device-fingerprint': deviceFingerprint,
+      },
     });
 
     setIsLoading(false);
@@ -247,10 +267,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyAdminCode = async (email: string, token: string) => {
     setIsLoading(true);
+    const deviceFingerprint = await buildDeviceFingerprint();
 
     // Step 1: verify the custom 6-digit code via Edge Function
     const { data: verifyData, error: invokeError } = await supabase.functions.invoke('verify-login-code', {
       body: { email, code: token },
+      headers: {
+        'x-device-fingerprint': deviceFingerprint,
+      },
     });
 
     if (invokeError) {
@@ -315,6 +339,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRoles([]);
     setIsAdmin(false);
   };
+
+  useEffect(() => {
+    if (!session) return;
+
+    let timeout: number;
+
+    const resetTimer = () => {
+      window.clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
+        void signOut();
+      }, SESSION_IDLE_TIMEOUT_MS);
+    };
+
+    const trackedEvents: Array<keyof WindowEventMap> = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'click',
+    ];
+
+    trackedEvents.forEach((eventName) => window.addEventListener(eventName, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      window.clearTimeout(timeout);
+      trackedEvents.forEach((eventName) => window.removeEventListener(eventName, resetTimer));
+    };
+  }, [session]);
 
   return (
     <AuthContext.Provider value={{ user, session, roles, primaryRole, isAdmin, isSuperAdmin, canAccessDashboard, isLoading, hasRole, signIn, requestAdminCode, verifyAdminCode, signUp, signOut }}>
