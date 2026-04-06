@@ -251,12 +251,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data, error } = await supabase.functions.invoke('send-login-code', {
       body: { email },
-<<<<<<< HEAD
-=======
       headers: {
         'x-device-fingerprint': deviceFingerprint,
       },
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     });
 
     setIsLoading(false);
@@ -275,12 +272,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Step 1: verify the custom 6-digit code via Edge Function
     const { data: verifyData, error: invokeError } = await supabase.functions.invoke('verify-login-code', {
       body: { email, code: token },
-<<<<<<< HEAD
-=======
       headers: {
         'x-device-fingerprint': deviceFingerprint,
       },
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     });
 
     if (invokeError) {

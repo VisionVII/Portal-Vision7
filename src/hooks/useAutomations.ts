@@ -47,20 +47,12 @@ const QUERY_KEY = ['automations'] as const;
 export function useAutomations() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-<<<<<<< HEAD
-  const supabaseAny = supabase as any;
-=======
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
 
   /* Fetch */
   const { data: automations = [], isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async (): Promise<Automation[]> => {
-<<<<<<< HEAD
-      const { data, error } = await supabaseAny
-=======
       const { data, error } = await supabase
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
         .from('automations')
         .select('*')
         .order('created_at', { ascending: false });
@@ -79,11 +71,7 @@ export function useAutomations() {
   /* Create */
   const createMutation = useMutation({
     mutationFn: async (payload: Omit<Automation, 'id' | 'createdAt'>) => {
-<<<<<<< HEAD
-      const { data, error } = await supabaseAny
-=======
       const { data, error } = await supabase
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
         .from('automations')
         .insert(automationToRow(payload))
         .select()
@@ -104,11 +92,7 @@ export function useAutomations() {
   /* Update */
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...payload }: Omit<Automation, 'createdAt'>) => {
-<<<<<<< HEAD
-      const { data, error } = await supabaseAny
-=======
       const { data, error } = await supabase
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
         .from('automations')
         .update(automationToRow(payload))
         .eq('id', id)
@@ -130,11 +114,7 @@ export function useAutomations() {
   /* Delete */
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-<<<<<<< HEAD
-      const { error } = await supabaseAny.from('automations').delete().eq('id', id);
-=======
       const { error } = await supabase.from('automations').delete().eq('id', id);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
