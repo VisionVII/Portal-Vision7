@@ -4,6 +4,9 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Enums } from '@/integrations/supabase/types';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+
 export type AppRole = Enums<'app_role'>;
 
 const DASHBOARD_ROLES: AppRole[] = ['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst'];
@@ -59,35 +62,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const primaryRole = roles[0] ?? null;
   const hasRole = useCallback((role: AppRole) => roles.includes(role), [roles]);
 
-  // ── Load roles from user_roles table ──────────────────────────────────────
+  // ── Load roles from user_roles table (direct fetch to avoid AbortController) ──
 
-  const getUserAccessProfile = useCallback(async (userId: string, retries = 1): Promise<{ roles: AppRole[]; isAdmin: boolean; canAccessDashboard: boolean; queryFailed: boolean }> => {
+  const getUserAccessProfile = useCallback(async (userId: string): Promise<{ roles: AppRole[]; isAdmin: boolean; canAccessDashboard: boolean; queryFailed: boolean }> => {
     const empty = { roles: [] as AppRole[], isAdmin: false, canAccessDashboard: false, queryFailed: false };
 
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role, is_active')
-      .eq('user_id', userId)
-      .eq('is_active', true);
+    // Use direct fetch to PostgREST to avoid Supabase JS AbortController issues
+    const fetchRoles = async (): Promise<Array<{ role: string; is_active: boolean }> | null> => {
+      const session = (await supabase.auth.getSession()).data.session;
+      const token = session?.access_token || SUPABASE_ANON_KEY;
+      const url = `${SUPABASE_URL}/rest/v1/user_roles?select=role,is_active&user_id=eq.${userId}&is_active=eq.true`;
 
-    if (error) {
-      if (isSchemaMissingError(error)) {
-        console.warn('[Auth] user_roles table not ready:', error.message);
-        return { ...empty, queryFailed: true };
+      const res = await fetch(url, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) return null;
+      return res.json();
+    };
+
+    let data: Array<{ role: string; is_active: boolean }> | null = null;
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        data = await fetchRoles();
+        if (data !== null) break;
+      } catch {
+        // retry
       }
-      if (isAbortError(error)) {
-        if (retries > 0) {
-          await new Promise((r) => setTimeout(r, 500));
-          return getUserAccessProfile(userId, retries - 1);
-        }
-        return { ...empty, queryFailed: true };
-      }
-      console.error('[Auth] Error loading roles:', error);
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
+    }
+
+    if (data === null) {
+      console.warn('[Auth] Failed to load roles after retries');
       return { ...empty, queryFailed: true };
     }
 
     const activeRoles = Array.from(
-      new Set((data ?? []).map((r) => r.role as AppRole).filter(Boolean)),
+      new Set(data.map((r) => r.role as AppRole).filter(Boolean)),
     );
 
     return {
