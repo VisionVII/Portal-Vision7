@@ -140,13 +140,13 @@ const Index = () => {
           <section key="latest">
             <h2 className="section-title">{sectionLabel}</h2>
             {isLoading ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[1, 2, 3, 4].map((item) => (
-                  <Skeleton key={item} className="h-72 w-full rounded-xl" />
+                  <Skeleton key={item} className="h-56 w-full rounded-xl" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {latestPosts.map((post) => (
                   <PostCard
                     key={post.id}
@@ -296,11 +296,11 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top,rgba(30,78,214,0.16),transparent_34%),linear-gradient(135deg,#020817_0%,#071127_48%,#020d20_100%)] py-0 text-white md:py-4 lg:py-8">
+      <section className="relative overflow-hidden bg-[#020817] py-0 text-white md:py-3 lg:py-6">
         <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="container relative mx-auto px-0 sm:px-4">
-          <div className="overflow-hidden border-y border-white/10 bg-slate-950/72 shadow-[0_30px_90px_rgba(8,18,44,0.45)] backdrop-blur-xl sm:rounded-[28px] sm:border md:rounded-[32px]">
-            <div className="relative min-h-[60svh] sm:min-h-[380px] md:min-h-[400px] lg:min-h-[460px]">
+          <div className="overflow-hidden border-y border-white/10 bg-slate-950/72 shadow-[0_30px_90px_rgba(8,18,44,0.45)] backdrop-blur-xl sm:rounded-2xl sm:border md:rounded-3xl">
+            <div className="relative min-h-[44svh] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[420px]">
               <img
                 src={activeBanner.imageUrl}
                 alt={activeBanner.title}
@@ -309,19 +309,19 @@ const Index = () => {
                   event.currentTarget.src = homeConfig.bannerUrl || defaultHomePageConfig.bannerUrl;
                 }}
               />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.22),transparent_28%),linear-gradient(180deg,rgba(2,6,23,0.18)_0%,rgba(2,6,23,0.58)_44%,rgba(2,6,23,0.88)_100%)]" />
-              <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(2,6,23,0.9)_0%,rgba(2,6,23,0.4)_36%,rgba(2,6,23,0.84)_100%)]" />
-              <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:26px_26px]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.25)_0%,rgba(2,6,23,0.65)_50%,rgba(2,6,23,0.92)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(2,6,23,0.85)_0%,rgba(2,6,23,0.3)_40%,rgba(2,6,23,0.8)_100%)]" />
+              <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:26px_26px]" />
 
-              <div className="relative z-10 mx-auto flex min-h-[60svh] max-w-4xl flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[380px] sm:px-8 md:min-h-[400px] lg:min-h-[460px] lg:px-12">
-                <h2 className="max-w-[16ch] text-[clamp(1.75rem,5.8vw,4.2rem)] font-headline font-bold leading-[0.94] text-white sm:max-w-[14ch] md:max-w-[12ch]">
+              <div className="relative z-10 mx-auto flex min-h-[44svh] max-w-4xl flex-col items-center justify-center px-4 py-6 text-center sm:min-h-[320px] sm:px-8 md:min-h-[360px] lg:min-h-[420px] lg:px-12">
+                <h2 className="max-w-3xl text-[clamp(1.25rem,3.2vw,2.25rem)] font-headline font-bold leading-tight text-white [text-wrap:balance]">
                   {activeBanner.title}
                 </h2>
-                <p className="mt-4 max-w-[85vw] text-[clamp(0.875rem,2.4vw,1.125rem)] leading-relaxed text-slate-100 sm:max-w-2xl lg:max-w-3xl">
+                <p className="mt-2 max-w-2xl text-[clamp(0.8rem,1.8vw,1rem)] leading-relaxed text-slate-200/85 sm:mt-3 lg:max-w-3xl [text-wrap:balance]">
                   {bannerDescription}
                 </p>
 
-                <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
+                <div className="mt-5 flex flex-col items-center gap-3 sm:mt-6 sm:flex-row">
                   {isExternalBannerHref ? (
                     <a
                       href={bannerHref}
@@ -390,9 +390,9 @@ const Index = () => {
         </div>
       </section>
 
-      <div className="container mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:py-10">
-        <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-12 lg:gap-10" id="noticias">
-          <div className="space-y-8 sm:space-y-10 lg:col-span-8 xl:col-span-9">
+      <div className="container mx-auto px-3 py-4 sm:px-4 sm:py-6 lg:py-8">
+        <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-12 lg:gap-8" id="noticias">
+          <div className="space-y-6 sm:space-y-8 lg:col-span-8 xl:col-span-9">
             {homeConfig.sections
               .filter((section) => section.enabled && section.id !== 'newsletter')
               .map((section) => renderSection(section))}

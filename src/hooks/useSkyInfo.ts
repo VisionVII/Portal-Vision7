@@ -52,19 +52,27 @@ function getTemperatureStyle(temp: number | null): {
 } {
   if (temp === null)
     return { color: 'text-slate-500', bg: 'bg-slate-100 dark:bg-slate-800', icon: 'unknown' };
+  if (temp <= -10)
+    return { color: 'text-blue-700', bg: 'bg-blue-100 dark:bg-blue-950/80', icon: 'freezing' };
   if (temp <= 0)
     return { color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/60', icon: 'freezing' };
+  if (temp <= 5)
+    return { color: 'text-sky-600', bg: 'bg-sky-50 dark:bg-sky-950/60', icon: 'cold' };
   if (temp <= 10)
     return { color: 'text-cyan-600', bg: 'bg-cyan-50 dark:bg-cyan-950/60', icon: 'cold' };
-  if (temp <= 17)
+  if (temp <= 15)
     return { color: 'text-teal-600', bg: 'bg-teal-50 dark:bg-teal-950/60', icon: 'cool' };
-  if (temp <= 24)
+  if (temp <= 20)
     return { color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/60', icon: 'mild' };
-  if (temp <= 32)
+  if (temp <= 25)
+    return { color: 'text-yellow-600', bg: 'bg-yellow-50 dark:bg-yellow-950/60', icon: 'mild' };
+  if (temp <= 30)
     return { color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/60', icon: 'warm' };
-  if (temp <= 38)
+  if (temp <= 35)
     return { color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/60', icon: 'hot' };
-  return { color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-950/60', icon: 'extreme' };
+  if (temp <= 40)
+    return { color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-950/60', icon: 'hot' };
+  return { color: 'text-rose-700', bg: 'bg-rose-100 dark:bg-rose-950/60', icon: 'extreme' };
 }
 
 function getSeason(date: Date): { name: string; emoji: string } {
