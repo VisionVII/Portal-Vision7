@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_FUNCTIONS_URL, SUPABASE_ANON } from '@/integrations/supabase/client';
 import { Enums } from '@/integrations/supabase/types';
 
 type AppRole = Enums<'app_role'>;
@@ -249,42 +249,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     const deviceFingerprint = await buildDeviceFingerprint();
 
-    const { data, error } = await supabase.functions.invoke('send-login-code', {
-      body: { email },
-      headers: {
-        'x-device-fingerprint': deviceFingerprint,
-      },
-    });
+    try {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/send-login-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'apikey': SUPABASE_ANON,
+          'x-device-fingerprint': deviceFingerprint,
+        },
+        body: JSON.stringify({ email }),
+      });
 
-    setIsLoading(false);
+      const data = await res.json().catch(() => null);
 
-    if (error) return { error: error as Error };
+      setIsLoading(false);
 
-    if (data?.error) return { error: new Error(data.error) };
+      if (!res.ok) {
+        const msg = data?.error || `Erro ${res.status} ao enviar código.`;
+        console.error('[requestAdminCode]', res.status, data);
+        return { error: new Error(msg) };
+      }
 
-    return { error: null };
+      if (data?.error) return { error: new Error(data.error) };
+
+      return { error: null };
+    } catch (err) {
+      setIsLoading(false);
+      console.error('[requestAdminCode] Network error:', err);
+      return { error: new Error('Erro de rede ao contactar o servidor. Verifique a ligação.') };
+    }
   };
 
   const verifyAdminCode = async (email: string, token: string) => {
     setIsLoading(true);
     const deviceFingerprint = await buildDeviceFingerprint();
+    const failResult = { isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
 
     // Step 1: verify the custom 6-digit code via Edge Function
-    const { data: verifyData, error: invokeError } = await supabase.functions.invoke('verify-login-code', {
-      body: { email, code: token },
-      headers: {
-        'x-device-fingerprint': deviceFingerprint,
-      },
-    });
+    let verifyData: { token_hash?: string; error?: string } | null = null;
+    try {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/verify-login-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'apikey': SUPABASE_ANON,
+          'x-device-fingerprint': deviceFingerprint,
+        },
+        body: JSON.stringify({ email, code: token }),
+      });
 
-    if (invokeError) {
+      verifyData = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        const msg = verifyData?.error || `Erro ${res.status} ao verificar código.`;
+        console.error('[verifyAdminCode]', res.status, verifyData);
+        setIsLoading(false);
+        return { error: new Error(msg), ...failResult };
+      }
+    } catch (err) {
+      console.error('[verifyAdminCode] Network error:', err);
       setIsLoading(false);
-      return { error: invokeError as Error, isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
+      return { error: new Error('Erro de rede ao contactar o servidor.'), ...failResult };
     }
 
     if (verifyData?.error) {
       setIsLoading(false);
-      return { error: new Error(verifyData.error), isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
+      return { error: new Error(verifyData.error), ...failResult };
+    }
+
+    if (!verifyData?.token_hash) {
+      setIsLoading(false);
+      return { error: new Error('Resposta inválida do servidor.'), ...failResult };
     }
 
     // Step 2: exchange the hashed token for a real Supabase session
