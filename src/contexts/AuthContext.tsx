@@ -11,6 +11,7 @@ export type AppRole = Enums<'app_role'>;
 
 const DASHBOARD_ROLES: AppRole[] = ['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst'];
 const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const PRIMARY_ADMIN_EMAIL = import.meta.env.VITE_ADMIN_PRIMARY_EMAIL ?? '';
 
 const isAbortError = (err: unknown): boolean =>
   err instanceof DOMException && err.name === 'AbortError' ||
@@ -56,14 +57,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ── Load roles from user_roles table (direct fetch to avoid AbortController) ──
 
-  const getUserAccessProfile = useCallback(async (userId: string): Promise<{ roles: AppRole[]; isAdmin: boolean; canAccessDashboard: boolean; queryFailed: boolean }> => {
+  const getUserAccessProfile = useCallback(async (
+    userId: string,
+    opts?: { accessToken?: string; email?: string },
+  ): Promise<{ roles: AppRole[]; isAdmin: boolean; canAccessDashboard: boolean; queryFailed: boolean }> => {
     const empty = { roles: [] as AppRole[], isAdmin: false, canAccessDashboard: false, queryFailed: false };
 
-    // Use direct fetch to PostgREST to avoid Supabase JS AbortController issues
+    // Resolve the best available token: explicit > session > anon (anon will be blocked by RLS)
+    const resolveToken = async (): Promise<string> => {
+      if (opts?.accessToken) return opts.accessToken;
+      try {
+        const sess = (await supabase.auth.getSession()).data.session;
+        if (sess?.access_token) return sess.access_token;
+      } catch { /* fall through */ }
+      return SUPABASE_ANON_KEY;
+    };
+
     const fetchRoles = async (): Promise<Array<{ role: string; is_active: boolean }> | null> => {
-      const session = (await supabase.auth.getSession()).data.session;
-      const token = session?.access_token || SUPABASE_ANON_KEY;
+      const token = await resolveToken();
       const url = `${SUPABASE_URL}/rest/v1/user_roles?select=role,is_active&user_id=eq.${userId}&is_active=eq.true`;
+
+      console.debug('[Auth] fetchRoles →', { userId, hasJwt: token !== SUPABASE_ANON_KEY });
 
       const res = await fetch(url, {
         headers: {
@@ -73,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       });
 
+      console.debug('[Auth] fetchRoles ←', res.status);
       if (!res.ok) return null;
       return res.json();
     };
@@ -83,10 +98,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         data = await fetchRoles();
         if (data !== null) break;
-      } catch {
-        // retry
+      } catch (err) {
+        console.warn('[Auth] fetchRoles error attempt', attempt, err);
       }
-      if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
+    }
+
+    // Fallback: if query failed or returned empty, check if this is the primary admin email
+    if ((data === null || data.length === 0) && opts?.email && PRIMARY_ADMIN_EMAIL && opts.email.toLowerCase() === PRIMARY_ADMIN_EMAIL.toLowerCase()) {
+      console.warn('[Auth] Roles query returned empty/failed for primary admin — granting super_admin fallback');
+      return {
+        roles: ['super_admin'] as AppRole[],
+        isAdmin: true,
+        canAccessDashboard: true,
+        queryFailed: data === null,
+      };
     }
 
     if (data === null) {
@@ -97,6 +123,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const activeRoles = Array.from(
       new Set(data.map((r) => r.role as AppRole).filter(Boolean)),
     );
+
+    console.debug('[Auth] Resolved roles:', activeRoles);
 
     return {
       roles: activeRoles,
@@ -148,7 +176,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           if (sess?.user) {
             setIsAccessReady(false);
-            const access = await getUserAccessProfile(sess.user.id);
+            const access = await getUserAccessProfile(sess.user.id, {
+              accessToken: sess.access_token,
+              email: sess.user.email,
+            });
             if (isMounted) applyAccess(access);
           } else {
             if (isMounted) clearAccess();
@@ -170,7 +201,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(sess?.user ?? null);
 
         if (sess?.user) {
-          const access = await getUserAccessProfile(sess.user.id);
+          const access = await getUserAccessProfile(sess.user.id, {
+            accessToken: sess.access_token,
+            email: sess.user.email,
+          });
           if (isMounted) applyAccess(access);
         }
       } catch (err) {
@@ -232,7 +266,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let access = { roles: [] as AppRole[], isAdmin: false, canAccessDashboard: false, queryFailed: false };
 
     try {
-      access = await getUserAccessProfile(data.user.id);
+      access = await getUserAccessProfile(data.user.id, {
+        accessToken: data.session.access_token,
+        email: data.user.email,
+      });
       setSession(data.session);
       setUser(data.user);
       applyAccess(access);
