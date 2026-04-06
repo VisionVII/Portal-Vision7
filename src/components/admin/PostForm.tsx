@@ -4,12 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
-import { useCategories } from '@/hooks/useCategories';
+import { Upload, X, Image as ImageIcon, Plus } from 'lucide-react';
+import { useCategories, useCreateCategory } from '@/hooks/useCategories';
 import RichTextEditor from './RichTextEditor';
 import { useCreatePost, useUpdatePost, CreatePostData, Post } from '@/hooks/usePosts';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PostFormProps {
   post?: Post | null;
@@ -32,12 +33,16 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
 
   const [isUploading, setIsUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(post?.image_url || null);
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categories } = useCategories();
   const createPost = useCreatePost();
   const updatePost = useUpdatePost();
+  const createCategory = useCreateCategory();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -97,6 +102,21 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       .trim();
   };
 
+  const ensureUniqueSlug = async (baseSlug: string, currentPostId?: string) => {
+    let slug = baseSlug;
+    let suffix = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const candidate = suffix === 0 ? slug : `${slug}-${suffix}`;
+      let query = supabase.from('posts').select('id').eq('slug', candidate).limit(1);
+      if (currentPostId) query = query.neq('id', currentPostId);
+      const { data } = await query;
+      if (!data || data.length === 0) return candidate;
+      suffix++;
+      if (suffix > 50) return `${slug}-${Date.now()}`;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent, publish = false) => {
     e.preventDefault();
     
@@ -109,13 +129,16 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       return;
     }
 
+    const uniqueSlug = await ensureUniqueSlug(generateSlug(formData.title), post?.id);
+
     const postData: CreatePostData = {
       title: formData.title,
-      slug: generateSlug(formData.title),
+      slug: uniqueSlug,
       excerpt: formData.excerpt,
       content: formData.content,
       category_id: formData.category_id || undefined,
       image_url: formData.image_url || undefined,
+      author_id: user?.id,
       author_name: formData.author_name,
       tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
       read_time: formData.read_time,
@@ -172,17 +195,54 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
             
             <div className="space-y-2">
               <Label htmlFor="category">Categoria</Label>
-              <select
-                id="category"
-                value={formData.category_id}
-                onChange={(e) => setFormData({...formData, category_id: e.target.value})}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Selecione uma categoria</option>
-                {categories?.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  id="category"
+                  value={formData.category_id}
+                  onChange={(e) => setFormData({...formData, category_id: e.target.value})}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {categories?.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+                <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => setShowNewCategory(!showNewCategory)} title="Nova categoria">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {showNewCategory && (
+                <div className="flex gap-2">
+                  <Input
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="Nome da nova categoria"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={!newCategoryName.trim() || createCategory.isPending}
+                    onClick={async () => {
+                      const name = newCategoryName.trim();
+                      if (!name) return;
+                      try {
+                        const slug = generateSlug(name);
+                        const result = await createCategory.mutateAsync({ name, slug, color: 'bg-blue-600' });
+                        setFormData({ ...formData, category_id: result.id });
+                        setNewCategoryName('');
+                        setShowNewCategory(false);
+                        toast({ title: 'Categoria criada', description: `"${name}" adicionada.` });
+                      } catch (err) {
+                        const message = err instanceof Error ? err.message : 'Erro ao criar categoria.';
+                        toast({ title: 'Erro', description: message, variant: 'destructive' });
+                      }
+                    }}
+                  >
+                    {createCategory.isPending ? 'A criar...' : 'Criar'}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 

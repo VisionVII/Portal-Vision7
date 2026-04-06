@@ -35,6 +35,7 @@ export interface CreatePostData {
   content: string;
   image_url?: string;
   category_id?: string;
+  author_id?: string;
   author_name?: string;
   status?: string;
   featured?: boolean;
@@ -117,14 +118,14 @@ export const usePosts = (adminView = false) => {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
           console.warn('usePosts query failed, using fallback content:', error.message);
         }
-        return fallbackPosts;
+        return adminView ? [] : fallbackPosts;
       }
       
       if (!data || data.length === 0) {
-        return fallbackPosts;
+        return adminView ? [] : fallbackPosts;
       }
 
-      return (data as Post[]) ?? fallbackPosts;
+      return (data as Post[]) ?? (adminView ? [] : fallbackPosts);
     },
     retry: 1,
   });

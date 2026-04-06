@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Edit, Trash2, Eye, Search } from 'lucide-react';
 import { Post, useDeletePost } from '@/hooks/usePosts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
@@ -19,6 +20,18 @@ interface PostsTableProps {
 const PostsTable: React.FC<PostsTableProps> = ({ posts, isLoading, onEdit }) => {
   const deletePost = useDeletePost();
   const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
+
+  const filteredPosts = useMemo(() => {
+    if (!posts) return [];
+    return posts.filter((p) => {
+      const matchesSearch = !searchQuery || p.title.toLowerCase().includes(searchQuery.toLowerCase()) || (p.categories?.name ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [posts, searchQuery, statusFilter]);
+
   const totalPosts = posts?.length ?? 0;
   const publishedCount = posts?.filter((post) => post.status === 'published').length ?? 0;
   const draftCount = totalPosts - publishedCount;
@@ -75,14 +88,37 @@ const PostsTable: React.FC<PostsTableProps> = ({ posts, isLoading, onEdit }) => 
         </div>
       </CardHeader>
       <CardContent>
-        {!posts || posts.length === 0 ? (
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar por título ou categoria..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex gap-1.5">
+            {(['all', 'published', 'draft'] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${statusFilter === s ? 'bg-primary-600 text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
+              >
+                {s === 'all' ? 'Todos' : s === 'published' ? 'Publicados' : 'Rascunhos'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {!filteredPosts || filteredPosts.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">
             Nenhum post encontrado. Crie o seu primeiro post!
           </p>
         ) : (
           <>
             <div className="space-y-3 md:hidden">
-              {posts.map((post) => (
+              {filteredPosts.map((post) => (
                 <div key={post.id} className="rounded-xl border border-border bg-card p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -146,7 +182,7 @@ const PostsTable: React.FC<PostsTableProps> = ({ posts, isLoading, onEdit }) => 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {posts.map((post) => (
+                  {filteredPosts.map((post) => (
                     <TableRow key={post.id}>
                       <TableCell className="max-w-[300px] font-medium truncate">
                         {post.title}
