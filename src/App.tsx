@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import DynamicFavicon from "@/components/system/DynamicFavicon";
 import ErrorBoundary from "@/components/system/ErrorBoundary";
 import ScrollToTop from "@/components/system/ScrollToTop";
+import ThemeProvider from "@/components/system/ThemeProvider";
 import Index from "@/pages/site/Index";
 import Tecnologia from "@/pages/site/Tecnologia";
 import Desporto from "@/pages/site/Desporto";
@@ -16,28 +17,38 @@ import Mundo from "@/pages/site/Mundo";
 import Post from "@/pages/site/Post";
 import Podcast from "@/pages/site/Podcast";
 import NotFound from "@/pages/site/NotFound";
-import AdminLogin from "@/pages/admin/AdminLogin";
-import AdminRegister from "@/pages/admin/AdminRegister";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
-import AdminAccessControlled from "@/pages/admin/AdminAccessControlled";
+import AdminLogin from "@/pages/admin/AdminLogin";
+import UserLogin from "@/pages/admin/UserLogin";
 import ProtectedRoute from "@/components/system/ProtectedRoute";
 import PrivacyPolicy from "@/pages/site/PrivacyPolicy";
 import Course from "@/pages/site/Course";
 import Podcasts from "@/pages/site/Podcasts";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: (failureCount, error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return false;
+        return failureCount < 2;
+      },
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <DynamicFavicon />
-        <Toaster />
-        <Sonner />
-        <ErrorBoundary>
-          <BrowserRouter>
-            <ScrollToTop />
-            <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <DynamicFavicon />
+          <Toaster />
+          <Sonner />
+          <ErrorBoundary>
+            <BrowserRouter>
+              <ScrollToTop />
+              <Routes>
               <Route path="/" element={<Index />} />
             <Route path="/tecnologia" element={<Tecnologia />} />
             <Route path="/desporto" element={<Desporto />} />
@@ -49,8 +60,18 @@ const App = () => (
             <Route path="/post/:slug" element={<Post />} />
             <Route path="/curso/:slug" element={<Course />} />
             <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
+
+            {/* ── Auth routes ── */}
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/register" element={<AdminRegister />} />
+            <Route path="/acesso/equipa" element={<UserLogin />} />
+
+            {/* ── Legacy redirects ── */}
+            <Route path="/validar/entrada/tipodeuser" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/acesso/admin/controlado" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/admin/register" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/acesso/convidado" element={<Navigate to="/acesso/equipa" replace />} />
+
+            {/* ── Protected admin routes ── */}
             <Route
               path="/admin/dashboard"
               element={(
@@ -60,14 +81,14 @@ const App = () => (
               )}
             />
             <Route path="/admin/automation" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/acesso/admin/controlado" element={<AdminAccessControlled />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </ErrorBoundary>
-      </TooltipProvider>
-    </AuthProvider>
+              </Routes>
+            </BrowserRouter>
+          </ErrorBoundary>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

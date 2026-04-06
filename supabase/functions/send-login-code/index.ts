@@ -31,6 +31,18 @@ const fallbackAllowedOrigins = [
 
 const ALLOWED_ORIGINS = new Set([...configuredOrigins, ...fallbackAllowedOrigins]);
 
+const privilegedEmails = (Deno.env.get('ADMIN_LOGIN_EMAIL') ?? Deno.env.get('ADMIN_NOTIFY_EMAIL') ?? '')
+  .split(',')
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
+const DASHBOARD_ROLES = new Set(['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst']);
+const ADMIN_ROLES = new Set(['super_admin', 'admin']);
+
+function isPrivilegedLoginEmail(email: string): boolean {
+  return privilegedEmails.includes(email.trim().toLowerCase());
+}
+
 function getRequestOrigin(req: Request): string {
   return req.headers.get('origin')?.trim() ?? '';
 }
@@ -78,6 +90,66 @@ function jsonResponse(payload: Record<string, unknown>, status: number, corsHead
       'Content-Type': 'application/json',
     },
   });
+}
+
+async function getAuthUserByEmail(adminClient: ReturnType<typeof createClient>, email: string) {
+  let page = 1;
+
+  while (page <= 10) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: 200 });
+
+    if (error) {
+      throw error;
+    }
+
+    const user = data.users.find((entry) => entry.email?.toLowerCase() === email);
+    if (user) {
+      return user;
+    }
+
+    if (data.users.length < 200) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return null;
+}
+
+async function getUserAccessContext(
+  adminClient: ReturnType<typeof createClient>,
+  email: string,
+  scope: 'admin' | 'dashboard',
+) {
+  const user = await getAuthUserByEmail(adminClient, email);
+
+  if (!user?.id) {
+    return {
+      isAuthorized: false,
+      errorMessage: 'Este email ainda não possui conta ativa para entrar no portal.',
+    };
+  }
+
+  const { data: rolesData, error: rolesError } = await adminClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('is_active', true);
+
+  if (rolesError) {
+    throw rolesError;
+  }
+
+  const roles = Array.from(new Set((rolesData ?? []).map((entry) => String(entry.role))));
+  const allowedRoles = scope === 'admin' ? ADMIN_ROLES : DASHBOARD_ROLES;
+
+  return {
+    isAuthorized: roles.some((role) => allowedRoles.has(role)),
+    errorMessage: scope === 'admin'
+      ? 'Este email não possui privilégio administrativo ativo.'
+      : 'Este email ainda não possui permissões ativas para entrar no dashboard.',
+  };
 }
 
 function generateCode(length = 6): string {
@@ -199,7 +271,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { email } = await req.json();
+    const { email, scope: rawScope } = await req.json();
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return jsonResponse({ error: 'Email inválido.' }, 400, corsHeaders);
@@ -208,6 +280,15 @@ Deno.serve(async (req: Request) => {
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const scope = rawScope === 'admin' ? 'admin' : 'dashboard';
+    const accessContext = await getUserAccessContext(adminClient, normalizedEmail, scope);
+
+    if (!accessContext.isAuthorized) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      return jsonResponse({ error: accessContext.errorMessage }, 403, corsHeaders);
+    }
 
     const { data: siteSettings } = await adminClient
       .from('site_settings')
@@ -218,32 +299,34 @@ Deno.serve(async (req: Request) => {
     const brandName = settingsMap.get('site_name')?.trim() || 'Vision VII';
     const logoUrl = settingsMap.get('logo_url')?.trim() || `${DEFAULT_SITE_URL}/vision-logo-premium-default.png`;
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const isPrivilegedEmail = isPrivilegedLoginEmail(normalizedEmail);
     const now = Date.now();
     const oneMinuteAgo = new Date(now - 60 * 1000).toISOString();
     const oneHourAgo = new Date(now - 60 * 60 * 1000).toISOString();
 
-    const { data: activeBlocks, error: blockedError } = await adminClient
-      .from('security_codes')
-      .select('blocked_until')
-      .eq('type', 'login')
-      .or(`email.eq.${normalizedEmail},request_ip.eq.${clientIp},device_fingerprint.eq.${deviceFingerprint}`)
-      .not('blocked_until', 'is', null)
-      .order('blocked_until', { ascending: false })
-      .limit(1);
+    if (!isPrivilegedEmail) {
+      const { data: activeBlocks, error: blockedError } = await adminClient
+        .from('security_codes')
+        .select('blocked_until')
+        .eq('type', 'login')
+        .or(`email.eq.${normalizedEmail},request_ip.eq.${clientIp},device_fingerprint.eq.${deviceFingerprint}`)
+        .not('blocked_until', 'is', null)
+        .order('blocked_until', { ascending: false })
+        .limit(1);
 
-    if (blockedError) {
-      console.error('[send-login-code] Block-check error:', blockedError);
-      return jsonResponse({ error: 'Erro ao processar pedido de login.' }, 500, corsHeaders);
-    }
+      if (blockedError) {
+        console.error('[send-login-code] Block-check error:', blockedError);
+        return jsonResponse({ error: 'Erro ao processar pedido de login.' }, 500, corsHeaders);
+      }
 
-    const blockedUntil = activeBlocks?.[0]?.blocked_until;
-    if (blockedUntil && new Date(blockedUntil).getTime() > now) {
-      return jsonResponse(
-        { error: 'Acesso temporariamente bloqueado por tentativas excessivas. Tente novamente mais tarde.' },
-        429,
-        corsHeaders,
-      );
+      const blockedUntil = activeBlocks?.[0]?.blocked_until;
+      if (blockedUntil && new Date(blockedUntil).getTime() > now) {
+        return jsonResponse(
+          { error: 'Acesso temporariamente bloqueado por tentativas excessivas. Tente novamente mais tarde.' },
+          429,
+          corsHeaders,
+        );
+      }
     }
 
     const { count: emailCount, error: emailRateError } = await adminClient
@@ -258,7 +341,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'Erro ao processar pedido de login.' }, 500, corsHeaders);
     }
 
-    if ((emailCount ?? 0) >= MAX_CODE_REQUESTS_PER_MINUTE_PER_EMAIL) {
+    if (!isPrivilegedEmail && (emailCount ?? 0) >= MAX_CODE_REQUESTS_PER_MINUTE_PER_EMAIL) {
       return jsonResponse(
         { error: 'Muitas tentativas. Aguarde alguns instantes antes de tentar novamente.' },
         429,
@@ -278,7 +361,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'Erro ao processar pedido de login.' }, 500, corsHeaders);
     }
 
-    if ((ipCount ?? 0) >= MAX_CODE_REQUESTS_PER_HOUR_PER_IP) {
+    if (!isPrivilegedEmail && (ipCount ?? 0) >= MAX_CODE_REQUESTS_PER_HOUR_PER_IP) {
       const blockedUntilIso = new Date(now + BLOCK_WINDOW_MINUTES * 60 * 1000).toISOString();
       await adminClient.from('security_codes').insert({
         email: normalizedEmail,
@@ -311,7 +394,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'Erro ao processar pedido de login.' }, 500, corsHeaders);
     }
 
-    if ((deviceCount ?? 0) >= MAX_CODE_REQUESTS_PER_HOUR_PER_DEVICE) {
+    if (!isPrivilegedEmail && (deviceCount ?? 0) >= MAX_CODE_REQUESTS_PER_HOUR_PER_DEVICE) {
       return jsonResponse(
         { error: 'Muitas tentativas neste dispositivo. Tente novamente mais tarde.' },
         429,
@@ -328,7 +411,7 @@ Deno.serve(async (req: Request) => {
       .limit(1)
       .maybeSingle();
 
-    if (latestCode?.created_at) {
+    if (!isPrivilegedEmail && latestCode?.created_at) {
       const elapsedSeconds = Math.floor((Date.now() - new Date(latestCode.created_at).getTime()) / 1000);
       if (elapsedSeconds < MIN_SECONDS_BETWEEN_CODE_REQUESTS) {
         return jsonResponse(
@@ -342,25 +425,21 @@ Deno.serve(async (req: Request) => {
     const code = generateCode(6);
     const expiresAt = new Date(Date.now() + CODE_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
-    // Invalidate any existing active codes for this email
-    await adminClient
-      .from('security_codes')
-      .update({ used: true })
-      .eq('email', normalizedEmail)
-      .eq('type', 'login')
-      .eq('used', false);
-
     // Insert new code
-    const { error: insertError } = await adminClient.from('security_codes').insert({
-      email: normalizedEmail,
-      code,
-      type: 'login',
-      expires_at: expiresAt,
-      attempts: 0,
-      request_ip: clientIp,
-      user_agent: userAgent,
-      device_fingerprint: deviceFingerprint,
-    });
+    const { data: insertedCode, error: insertError } = await adminClient
+      .from('security_codes')
+      .insert({
+        email: normalizedEmail,
+        code,
+        type: 'login',
+        expires_at: expiresAt,
+        attempts: 0,
+        request_ip: clientIp,
+        user_agent: userAgent,
+        device_fingerprint: deviceFingerprint,
+      })
+      .select('id')
+      .single();
 
     if (insertError) {
       console.error('[send-login-code] Insert error:', insertError);
@@ -391,6 +470,9 @@ Deno.serve(async (req: Request) => {
     const resData = await res.json();
 
     if (!res.ok) {
+      if (insertedCode?.id) {
+        await adminClient.from('security_codes').update({ used: true }).eq('id', insertedCode.id);
+      }
       console.error('[send-login-code] Resend error:', resData);
       return jsonResponse({ error: 'Erro ao enviar email. Tente novamente.' }, 500, corsHeaders);
     }

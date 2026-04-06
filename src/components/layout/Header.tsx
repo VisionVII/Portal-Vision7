@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { CalendarDays, Clock3, CloudSnow, Flame, MapPin, Menu, Moon, Sun, Thermometer, Wind } from 'lucide-react';
+import { CalendarDays, Clock3, CloudSnow, Flame, MapPin, Menu, Sun, Thermometer, Wind } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -13,11 +13,11 @@ import {
 import { useCategories } from '@/hooks/useCategories';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useUserLocation } from '@/hooks/useUserLocation';
-import { useTheme } from '@/hooks/useTheme';
 import { useSkyInfo } from '@/hooks/useSkyInfo';
 import BrandLogo from '@/components/system/BrandLogo';
 import PortalAIAssistantButton from '@/components/system/PortalAIAssistantButton';
 import CalendarPopover from '@/components/system/CalendarPopover';
+import ThemeToggle from '@/components/system/ThemeToggle';
 
 const fallbackCategories = [
   { name: 'Tecnologia', path: '/tecnologia' },
@@ -60,7 +60,6 @@ const Header = () => {
   const { data: dbCategories } = useCategories();
   const { data: siteSettings } = useSiteSettings();
   const { region, timezone, localTime, temperatureC, hasConsent, isLoading: locationLoading } = useUserLocation();
-  const { theme, toggleTheme } = useTheme();
   const skyInfo = useSkyInfo(temperatureC, localTime);
   const [isScrolled, setIsScrolled] = useState(false);
   const [hideTopBar, setHideTopBar] = useState(false);
@@ -148,7 +147,7 @@ const Header = () => {
       {/* Top brand bar — always rendered but hidden visually when scrolled down.
           Uses overflow:hidden + max-height with a fixed ceiling so it never triggers layout reflow loops. */}
       <div
-        className="overflow-hidden border-b border-white/10 bg-[#030d1f]"
+        className="overflow-hidden border-b border-border/60 bg-[linear-gradient(135deg,hsl(var(--neutral-950)),hsl(var(--primary-900)))] text-white dark:bg-[linear-gradient(135deg,hsl(var(--neutral-950)),hsl(var(--primary-800)))]"
         style={{
           maxHeight: hideTopBar ? 0 : 80,
           opacity: hideTopBar ? 0 : 1,
@@ -172,7 +171,7 @@ const Header = () => {
       </div>
 
       <nav
-        className={`border-t border-slate-200/80 bg-white/95 text-slate-800 backdrop-blur transition-shadow duration-200 supports-[backdrop-filter]:bg-white/90 dark:border-white/10 dark:bg-[#03112d]/95 dark:text-white ${
+        className={`border-t border-border/70 bg-background/95 text-foreground backdrop-blur transition-shadow duration-200 supports-[backdrop-filter]:bg-background/90 dark:border-white/10 dark:bg-background/95 dark:text-white ${
           isScrolled ? 'shadow-[0_16px_36px_rgba(5,12,32,0.14)]' : 'shadow-[0_10px_30px_rgba(5,12,32,0.08)]'
         }`}
       >
@@ -230,16 +229,7 @@ const Header = () => {
                 {skyInfo.isDaytime ? 'Dia' : skyInfo.moonPhaseName}
               </span>
 
-              {/* Theme toggle */}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition-colors hover:border-primary-200 hover:text-primary-700 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                title={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
-              >
-                {theme === 'dark' ? <Sun className="h-3.5 w-3.5 text-amber-500" /> : <Moon className="h-3.5 w-3.5 text-indigo-500" />}
-                {theme === 'dark' ? 'Claro' : 'Escuro'}
-              </button>
+              <ThemeToggle compact />
             </div>
           </div>
 
@@ -282,33 +272,7 @@ const Header = () => {
                 </SheetHeader>
 
                 <div className="flex flex-1 flex-col gap-3 overflow-hidden pt-3">
-                  {/* ─── Theme toggle (top, no label) ─── */}
-                  <div className="grid shrink-0 grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => theme === 'dark' && toggleTheme()}
-                      className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
-                        theme === 'light'
-                          ? 'border-amber-400/40 bg-amber-500/10 text-foreground'
-                          : 'border-border bg-card text-foreground'
-                      }`}
-                    >
-                      <Sun className="h-4 w-4" />
-                      Claro
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => theme === 'light' && toggleTheme()}
-                      className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
-                        theme === 'dark'
-                          ? 'border-indigo-400/40 bg-indigo-600 text-white'
-                          : 'border-border bg-card text-foreground'
-                      }`}
-                    >
-                      <Moon className="h-4 w-4" />
-                      Escuro
-                    </button>
-                  </div>
+                  <ThemeToggle className="shrink-0" />
 
                   {/* ─── Context info (compact horizontal strip) ─── */}
                   <div className="shrink-0 rounded-2xl border border-border bg-card p-3">

@@ -57,7 +57,7 @@ export const useCourses = (adminView = false) => {
       const { data, error } = await query;
 
       if (error) {
-        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
+        if (error.code !== 'PGRST116' && !error.message?.includes('404') && !/AbortError|signal is aborted/i.test(error.message ?? '')) {
           console.warn('useCourses supabase query error', error);
         }
         return adminView ? [] : fallbackCourses;
@@ -69,7 +69,8 @@ export const useCourses = (adminView = false) => {
 
       return (data as unknown as Course[]) ?? (adminView ? [] : fallbackCourses);
     },
-    retry: false,
+    retry: 1,
+    staleTime: 120_000,
   });
 };
 

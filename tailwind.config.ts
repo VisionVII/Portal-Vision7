@@ -125,7 +125,8 @@ export default {
 			},
 		fontFamily: {
 				'headline': ['"Space Grotesk"', 'Inter', 'system-ui', 'sans-serif'],
-				'body': ['Manrope', 'Inter', 'system-ui', 'sans-serif']
+				'body': ['Manrope', 'Inter', 'system-ui', 'sans-serif'],
+				'editorial': ['Fraunces', 'Georgia', 'serif']
 			}
 		}
 	},

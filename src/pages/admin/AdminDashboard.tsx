@@ -36,6 +36,7 @@ import { useCourses } from '@/hooks/useCourses';
 import { useNewsletterStats } from '@/hooks/useNewsletter';
 import { usePodcasts } from '@/hooks/usePodcasts';
 import { useCategories } from '@/hooks/useCategories';
+import ThemeToggle from '@/components/system/ThemeToggle';
 
 type AdminView = 'overview' | 'content' | 'builder' | 'automations' | 'courses' | 'crm' | 'access' | 'developer' | 'settings';
 
@@ -65,7 +66,7 @@ const AdminDashboard = () => {
   const [showPostForm, setShowPostForm] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [activeView, setActiveView] = useState<AdminView>('overview');
-  const { user, isAdmin, canAccessDashboard, primaryRole, roles, isLoading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, canAccessDashboard, primaryRole, roles, isLoading: authLoading, isAccessReady, signOut } = useAuth();
   const { data: posts, isLoading: postsLoading } = usePosts(true);
   const { data: postStats } = usePostStats();
   const { data: courses = [] } = useCourses(true);
@@ -75,10 +76,10 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authLoading && (!user || !canAccessDashboard)) {
+    if (!authLoading && isAccessReady && (!user || !canAccessDashboard)) {
       navigate('/admin/login');
     }
-  }, [user, canAccessDashboard, authLoading, navigate]);
+  }, [user, canAccessDashboard, authLoading, isAccessReady, navigate]);
 
   const allowedViews = useMemo(() => {
     if (isAdmin) return Object.keys(VIEW_ACCESS_RULES) as AdminView[];
@@ -288,7 +289,7 @@ const AdminDashboard = () => {
     settings: { title: 'Identidade visual', description: 'Logo, branding e site settings.' },
   };
 
-  if (authLoading) {
+  if (authLoading || !isAccessReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
@@ -302,7 +303,7 @@ const AdminDashboard = () => {
   if (!user || !canAccessDashboard) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50/80 dark:bg-neutral-950">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_28%),linear-gradient(180deg,rgba(248,250,252,0.94),rgba(241,245,249,0.92))] dark:bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_22%),linear-gradient(180deg,rgba(2,8,23,0.98),rgba(3,13,31,0.94))]">
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
@@ -313,9 +314,13 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle compact className="hidden sm:inline-flex" />
             <div className="hidden text-right lg:block">
               <p className="text-sm text-foreground">{user.email}</p>
               <p className="text-[11px] text-muted-foreground">{roles.join(', ')}</p>
+            </div>
+            <div className="text-right lg:hidden">
+              <p className="max-w-[120px] truncate text-[11px] text-muted-foreground sm:max-w-[180px]">{user.email}</p>
             </div>
             {primaryRole && <Badge variant="secondary" className="hidden sm:inline-flex">{primaryRole.replace('_', ' ')}</Badge>}
             <Button onClick={handleNewPost} size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /><span className="hidden sm:inline">Post</span></Button>
@@ -343,7 +348,7 @@ const AdminDashboard = () => {
 
         <aside className="hidden self-start lg:sticky lg:top-16 lg:block">
           <Card className="overflow-hidden border-primary-200/60 shadow-sm">
-            <div className="bg-[#030d1f] px-4 py-3 text-white">
+            <div className="bg-[linear-gradient(135deg,hsl(var(--neutral-950)),hsl(var(--primary-900)))] px-4 py-3 text-white dark:bg-[linear-gradient(135deg,hsl(var(--neutral-950)),hsl(var(--primary-800)))]">
               <p className="text-xs font-semibold">Painel de controlo</p>
               <p className="text-[10px] text-white/60">{navigationItems.length} áreas disponíveis</p>
             </div>

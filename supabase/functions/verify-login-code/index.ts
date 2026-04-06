@@ -24,6 +24,18 @@ const fallbackAllowedOrigins = [
 
 const ALLOWED_ORIGINS = new Set([...configuredOrigins, ...fallbackAllowedOrigins]);
 
+const privilegedEmails = (Deno.env.get('ADMIN_LOGIN_EMAIL') ?? Deno.env.get('ADMIN_NOTIFY_EMAIL') ?? '')
+  .split(',')
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
+const DASHBOARD_ROLES = new Set(['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst']);
+const ADMIN_ROLES = new Set(['super_admin', 'admin']);
+
+function isPrivilegedLoginEmail(email: string): boolean {
+  return privilegedEmails.includes(email.trim().toLowerCase());
+}
+
 function getRequestOrigin(req: Request): string {
   return req.headers.get('origin')?.trim() ?? '';
 }
@@ -73,6 +85,139 @@ function jsonResponse(payload: Record<string, unknown>, status: number, corsHead
   });
 }
 
+async function exchangeOtpForSession({
+  supabaseUrl,
+  anonKey,
+  email,
+  tokenHash,
+  emailOtp,
+  verificationType,
+}: {
+  supabaseUrl: string;
+  anonKey: string;
+  email: string;
+  tokenHash?: string | null;
+  emailOtp?: string | null;
+  verificationType: 'recovery' | 'magiclink';
+}) {
+  const publicClient = createClient(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const attempts: Array<() => Promise<{
+    data: { user: unknown; session: { access_token: string; refresh_token: string } | null };
+    error: Error | null;
+  }>> = [];
+
+  if (tokenHash) {
+    attempts.push(async () => {
+      const { data, error } = await publicClient.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: verificationType,
+      });
+      return { data, error: error as Error | null };
+    });
+
+    attempts.push(async () => {
+      const { data, error } = await publicClient.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: 'email',
+      });
+      return { data, error: error as Error | null };
+    });
+  }
+
+  if (emailOtp) {
+    attempts.push(async () => {
+      const { data, error } = await publicClient.auth.verifyOtp({
+        email,
+        token: emailOtp,
+        type: verificationType,
+      });
+      return { data, error: error as Error | null };
+    });
+  }
+
+  let lastError: Error | null = null;
+
+  for (const attempt of attempts) {
+    const { data, error } = await attempt();
+
+    if (!error && data?.session?.access_token && data?.session?.refresh_token) {
+      return { data, error: null };
+    }
+
+    lastError = error;
+  }
+
+  return {
+    data: null,
+    error: lastError ?? new Error('Não foi possível converter o código numa sessão autenticada.'),
+  };
+}
+
+async function getAuthUserByEmail(adminClient: ReturnType<typeof createClient>, email: string) {
+  let page = 1;
+
+  while (page <= 10) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: 200 });
+
+    if (error) {
+      throw error;
+    }
+
+    const user = data.users.find((entry) => entry.email?.toLowerCase() === email);
+    if (user) {
+      return user;
+    }
+
+    if (data.users.length < 200) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return null;
+}
+
+async function getUserAccessContext(
+  adminClient: ReturnType<typeof createClient>,
+  email: string,
+  scope: 'admin' | 'dashboard',
+) {
+  const user = await getAuthUserByEmail(adminClient, email);
+
+  if (!user?.id) {
+    return {
+      user: null,
+      isAuthorized: false,
+      errorMessage: 'Este email ainda não possui conta ativa para entrar no portal.',
+    };
+  }
+
+  const { data: rolesData, error: rolesError } = await adminClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('is_active', true);
+
+  if (rolesError) {
+    throw rolesError;
+  }
+
+  const roles = Array.from(new Set((rolesData ?? []).map((entry) => String(entry.role))));
+  const allowedRoles = scope === 'admin' ? ADMIN_ROLES : DASHBOARD_ROLES;
+
+  return {
+    user,
+    isAuthorized: roles.some((role) => allowedRoles.has(role)),
+    errorMessage: scope === 'admin'
+      ? 'Este email não possui privilégio administrativo ativo.'
+      : 'Este email ainda não possui permissões ativas para entrar no dashboard.',
+  };
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -114,10 +259,16 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { email, code } = await req.json();
+    const anonKey = req.headers.get('apikey')?.trim() || Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const { email, code, scope: rawScope } = await req.json();
 
     if (!email || !code || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
       return jsonResponse({ error: 'Email e código são obrigatórios.' }, 400, corsHeaders);
+    }
+
+    if (!anonKey) {
+      console.error('[verify-login-code] Missing anon key for session exchange');
+      return jsonResponse({ error: 'Configuração de autenticação incompleta.' }, 500, corsHeaders);
     }
 
     const normalizedCode = String(code).trim();
@@ -131,58 +282,78 @@ Deno.serve(async (req: Request) => {
     });
 
     const normalizedEmail = email.toLowerCase().trim();
+    const scope = rawScope === 'admin' ? 'admin' : 'dashboard';
+    const isPrivilegedEmail = isPrivilegedLoginEmail(normalizedEmail);
     const now = Date.now();
 
-    const { data: activeBlocks, error: blockedError } = await adminClient
-      .from('security_codes')
-      .select('blocked_until')
-      .eq('type', 'login')
-      .or(`email.eq.${normalizedEmail},request_ip.eq.${clientIp},device_fingerprint.eq.${deviceFingerprint}`)
-      .not('blocked_until', 'is', null)
-      .order('blocked_until', { ascending: false })
-      .limit(1);
+    const accessContext = await getUserAccessContext(adminClient, normalizedEmail, scope);
 
-    if (blockedError) {
-      console.error('[verify-login-code] Block-check error:', blockedError);
-      return jsonResponse({ error: 'Erro interno do servidor.' }, 500, corsHeaders);
+    if (!accessContext.isAuthorized) {
+      await sleep(250);
+      return jsonResponse({ error: accessContext.errorMessage }, 403, corsHeaders);
     }
 
-    const blockedUntil = activeBlocks?.[0]?.blocked_until;
-    if (blockedUntil && new Date(blockedUntil).getTime() > now) {
-      await sleep(300);
-      return jsonResponse({ error: 'Acesso temporariamente bloqueado. Solicite um novo código mais tarde.' }, 429, corsHeaders);
+    if (!isPrivilegedEmail) {
+      const { data: activeBlocks, error: blockedError } = await adminClient
+        .from('security_codes')
+        .select('blocked_until')
+        .eq('type', 'login')
+        .or(`email.eq.${normalizedEmail},request_ip.eq.${clientIp},device_fingerprint.eq.${deviceFingerprint}`)
+        .not('blocked_until', 'is', null)
+        .order('blocked_until', { ascending: false })
+        .limit(1);
+
+      if (blockedError) {
+        console.error('[verify-login-code] Block-check error:', blockedError);
+        return jsonResponse({ error: 'Erro interno do servidor.' }, 500, corsHeaders);
+      }
+
+      const blockedUntil = activeBlocks?.[0]?.blocked_until;
+      if (blockedUntil && new Date(blockedUntil).getTime() > now) {
+        await sleep(300);
+        return jsonResponse({ error: 'Acesso temporariamente bloqueado. Solicite um novo código mais tarde.' }, 429, corsHeaders);
+      }
     }
 
-    // Fetch most recent active code for this email
-    const { data, error: queryError } = await adminClient
+    // Fetch recent active codes for this email.
+    // This avoids false negatives when the user requested a second code before the first email arrived.
+    const { data: activeCodes, error: queryError } = await adminClient
       .from('security_codes')
-      .select('id, code, expires_at, attempts')
+      .select('id, code, expires_at, attempts, created_at')
       .eq('email', normalizedEmail)
       .eq('type', 'login')
       .eq('used', false)
       .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(5);
 
-    if (queryError || !data) {
+    if (queryError || !activeCodes?.length) {
       await sleep(220);
       return jsonResponse({ error: 'Código inválido ou expirado.' }, 401, corsHeaders);
     }
 
-    // Check expiry
-    if (new Date(data.expires_at) < new Date()) {
-      await adminClient.from('security_codes').update({ used: true }).eq('id', data.id);
+    const unexpiredCodes = activeCodes.filter((entry) => new Date(entry.expires_at).getTime() >= now);
+
+    const expiredCodes = activeCodes
+      .filter((entry) => new Date(entry.expires_at).getTime() < now)
+      .map((entry) => entry.id);
+
+    if (expiredCodes.length > 0) {
+      await adminClient.from('security_codes').update({ used: true }).in('id', expiredCodes);
+    }
+
+    if (!unexpiredCodes.length) {
       await sleep(220);
       return jsonResponse({ error: 'Código inválido ou expirado.' }, 401, corsHeaders);
     }
 
-    // Check max attempts
-    if ((data.attempts ?? 0) >= 5) {
+    const latestActiveCode = unexpiredCodes[0];
+
+    if (!isPrivilegedEmail && (latestActiveCode.attempts ?? 0) >= 5) {
       const blockedUntilIso = new Date(now + BLOCK_WINDOW_MINUTES * 60 * 1000).toISOString();
       await adminClient
         .from('security_codes')
         .update({ used: true, blocked_until: blockedUntilIso })
-        .eq('id', data.id);
+        .eq('id', latestActiveCode.id);
       await sleep(220);
       return jsonResponse(
         { error: 'Acesso temporariamente bloqueado. Solicite um novo código mais tarde.' },
@@ -191,12 +362,19 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Validate in constant time to reduce timing side-channel leakage.
-    const isCodeValid = await secureCompare(String(data.code), normalizedCode);
-    if (!isCodeValid) {
-      const nextAttempts = (data.attempts ?? 0) + 1;
+    let matchedCode = null;
+    for (const entry of unexpiredCodes) {
+      const isMatch = await secureCompare(String(entry.code), normalizedCode);
+      if (isMatch) {
+        matchedCode = entry;
+        break;
+      }
+    }
+
+    if (!matchedCode) {
+      const nextAttempts = (latestActiveCode.attempts ?? 0) + 1;
       const backoffMs = Math.min(1500, 100 * 2 ** Math.max(0, nextAttempts - 1));
-      const blockedUntilIso = nextAttempts >= MAX_FAILED_ATTEMPTS
+      const blockedUntilIso = !isPrivilegedEmail && nextAttempts >= MAX_FAILED_ATTEMPTS
         ? new Date(now + BLOCK_WINDOW_MINUTES * 60 * 1000).toISOString()
         : null;
 
@@ -207,13 +385,13 @@ Deno.serve(async (req: Request) => {
           request_ip: clientIp,
           device_fingerprint: deviceFingerprint,
           blocked_until: blockedUntilIso,
-          used: nextAttempts >= MAX_FAILED_ATTEMPTS,
+          used: !isPrivilegedEmail && nextAttempts >= MAX_FAILED_ATTEMPTS,
         })
-        .eq('id', data.id);
+        .eq('id', latestActiveCode.id);
 
       await sleep(backoffMs);
 
-      if (nextAttempts >= MAX_FAILED_ATTEMPTS) {
+      if (!isPrivilegedEmail && nextAttempts >= MAX_FAILED_ATTEMPTS) {
         return jsonResponse(
           { error: 'Acesso temporariamente bloqueado. Solicite um novo código mais tarde.' },
           429,
@@ -224,12 +402,17 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'Código inválido. Tente novamente.' }, 401, corsHeaders);
     }
 
-    // Mark as used immediately to prevent replay attacks
-    await adminClient.from('security_codes').update({ used: true }).eq('id', data.id);
+    // Mark all current active login codes for this email as used after a successful match.
+    await adminClient
+      .from('security_codes')
+      .update({ used: true })
+      .eq('email', normalizedEmail)
+      .eq('type', 'login')
+      .eq('used', false);
 
     // Generate a Supabase session token using the admin API (service role — does NOT send email)
     const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-      type: 'magiclink',
+      type: 'recovery',
       email: normalizedEmail,
     });
 
@@ -238,11 +421,23 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'Erro ao gerar sessão. Contacte o administrador.' }, 500, corsHeaders);
     }
 
-    // Return the raw OTP token — frontend will call verifyOtp({ email, token: email_otp, type: 'magiclink' })
-    // Using email_otp (raw token) is more reliable than token_hash for session exchange
+    const { data: authData, error: exchangeError } = await exchangeOtpForSession({
+      supabaseUrl: SUPABASE_URL,
+      anonKey,
+      email: normalizedEmail,
+      tokenHash: linkData.properties.hashed_token,
+      emailOtp: linkData.properties.email_otp,
+      verificationType: 'recovery',
+    });
+
+    if (exchangeError || !authData?.session?.access_token || !authData?.session?.refresh_token) {
+      console.error('[verify-login-code] exchange session error:', exchangeError);
+      return jsonResponse({ error: 'Erro ao concluir a sessão autenticada.' }, 500, corsHeaders);
+    }
+
     return jsonResponse({
-      email_otp: linkData.properties.email_otp,
-      token_hash: linkData.properties.hashed_token,
+      access_token: authData.session.access_token,
+      refresh_token: authData.session.refresh_token,
     }, 200, corsHeaders);
   } catch (err) {
     console.error('[verify-login-code] Error:', err);
