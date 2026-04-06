@@ -45,7 +45,10 @@ function getDeviceFingerprint(req: Request): string {
 
 function isOriginAllowed(origin: string): boolean {
   if (!origin) return false;
-  return ALLOWED_ORIGINS.has(origin);
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  // Accept Vercel preview/production URLs for the project
+  if (/^https:\/\/portal-vision7[\w-]*\.vercel\.app$/.test(origin)) return true;
+  return false;
 }
 
 function buildCorsHeaders(origin: string): HeadersInit {
