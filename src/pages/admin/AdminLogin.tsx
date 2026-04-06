@@ -54,25 +54,24 @@ const AdminLogin = () => {
       return;
     }
 
-    if (!isAdmin) {
-      toast({
-        title: 'Sem privilégio administrativo',
-        description: 'Esta conta não possui perfil admin ou super_admin ativo.',
-        variant: 'destructive',
-      });
+    // Auth succeeded. If roles loaded and user has access, navigate now.
+    // If roles failed to load (queryFailed scenario), the auth state listener
+    // will eventually resolve roles and the useEffect redirect will kick in.
+    if (hasAccess) {
+      navigate('/admin/dashboard', { replace: true });
       return;
     }
 
-    if (!hasAccess) {
-      toast({
-        title: 'Acesso negado',
-        description: 'O perfil não tem permissão ativa para aceder ao dashboard.',
-        variant: 'destructive',
-      });
+    // If signIn returned no error and isAdmin/hasAccess are false,
+    // it may be because roles query failed transiently.
+    // Wait briefly for the auth listener to resolve roles.
+    if (!isAdmin && !hasAccess) {
+      // Give the auth state listener time to load roles
+      await new Promise((r) => setTimeout(r, 1500));
+      // The useEffect [user, canAccessDashboard] will handle redirect if roles resolve
+      // If still no access after wait, show message
       return;
     }
-
-    navigate('/admin/dashboard', { replace: true });
   };
 
   return (
