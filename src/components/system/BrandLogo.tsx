@@ -13,8 +13,8 @@ const DEFAULT_LOGO = '/vision-logo-premium-default.png';
 
 const getBrandName = (siteName?: string | null) => {
   const value = siteName?.trim();
-  if (!value || /porto\s+not[ií]cias|vision\s*7/i.test(value)) {
-    return 'Vision';
+  if (!value || /porto\s+not[ií]cias|vision\s*7?/i.test(value)) {
+    return 'Vision7';
   }
 
   return value;
@@ -37,10 +37,10 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
           src={activeLogo}
           alt={`${brandName} premium logo`}
           className={cn(
-            'w-auto object-contain drop-shadow-[0_12px_34px_rgba(34,211,238,0.24)]',
+            'w-auto object-contain drop-shadow-[0_4px_14px_rgba(34,211,238,0.18)]',
             compact
               ? 'h-10 max-w-[132px] sm:h-11 sm:max-w-[150px]'
-              : 'h-[46px] max-w-[132px] sm:h-[64px] sm:max-w-[190px] lg:h-[82px] lg:max-w-[250px]'
+              : 'h-[40px] max-w-[132px] sm:h-[50px] sm:max-w-[170px] lg:h-[60px] lg:max-w-[200px]'
           )}
         />
         <span className="sr-only">{brandName}</span>

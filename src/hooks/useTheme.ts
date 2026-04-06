@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useLayoutEffect } from 'react';
 
 export const useTheme = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -10,14 +10,14 @@ export const useTheme = () => {
     return 'light';
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
     root.style.colorScheme = theme;
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const toggleTheme = useCallback(() => setTheme(prev => prev === 'light' ? 'dark' : 'light'), []);
 
   return { theme, toggleTheme };
 };

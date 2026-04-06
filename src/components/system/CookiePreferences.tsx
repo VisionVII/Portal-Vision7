@@ -138,188 +138,133 @@ const CookiePreferences: React.FC<CookiePreferencesProps> = ({ isOpen, onClose }
     }
   };
 
+  const toggleClasses = (active: boolean) =>
+    `relative inline-flex h-6 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors ${
+      active ? 'bg-primary-600' : 'bg-slate-300 dark:bg-slate-700'
+    }`;
+
+  const toggleKnob = (active: boolean) =>
+    `absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+      active ? 'translate-x-[18px]' : 'translate-x-0.5'
+    }`;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-[720px] overflow-hidden rounded-[28px] border border-slate-200 bg-white p-0 shadow-[0_24px_80px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-[#020817]">
-        <DialogHeader className="space-y-3 border-b border-border bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_35%),linear-gradient(135deg,rgba(248,250,252,0.98)_0%,rgba(239,246,255,0.95)_100%)] px-5 py-5 sm:px-6 dark:bg-[linear-gradient(135deg,rgba(2,6,23,0.98)_0%,rgba(3,17,45,0.96)_100%)]">
-          <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300">
-              <Shield className="h-5 w-5" />
-            </div>
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-[540px] overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-[0_16px_48px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-[#020817] sm:rounded-3xl">
+        <DialogHeader className="border-b border-border bg-slate-50/80 px-4 py-3 sm:px-5 sm:py-4 dark:bg-slate-900/60">
+          <div className="flex items-center gap-2.5">
+            <Shield className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             <div>
-              <DialogTitle className="text-left text-xl font-bold text-foreground">Centro de Privacidade</DialogTitle>
-              <DialogDescription className="mt-1 text-left">
-                Controle cookies, localização e personalização com um painel mais claro, elegante e responsivo.
+              <DialogTitle className="text-left text-base font-bold text-foreground sm:text-lg">Privacidade</DialogTitle>
+              <DialogDescription className="mt-0.5 text-left text-xs sm:text-sm">
+                Controle cookies, localização e personalização.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="max-h-[65svh] space-y-4 overflow-y-auto bg-white px-4 py-4 dark:bg-[#020817] sm:px-6">
-          <div className="rounded-[20px] border border-primary-100/80 bg-primary-50/70 p-4 shadow-sm dark:border-primary-900/40 dark:bg-primary-950/20">
-            <p className="text-sm font-semibold text-foreground">Escolha rápida</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Pode ativar um conjunto recomendado ou manter apenas o essencial com um toque.
-            </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="border-primary-200 bg-white text-primary-700 hover:bg-primary-50 dark:border-primary-800 dark:bg-primary-950/30 dark:text-primary-300"
-                onClick={() =>
-                  setPreferences((prev) => ({
-                    ...prev,
-                    analytics: true,
-                    marketing: false,
-                    personalization: true,
-                    consentDate: new Date().toISOString(),
-                  }))
-                }
-              >
-                Configuração recomendada
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setPreferences((prev) => ({
-                    ...prev,
-                    analytics: false,
-                    marketing: false,
-                    personalization: false,
-                    consentDate: new Date().toISOString(),
-                  }))
-                }
-              >
-                Somente essenciais
-              </Button>
-            </div>
+        <div className="max-h-[55svh] space-y-2.5 overflow-y-auto px-3 py-3 sm:space-y-3 sm:px-5 sm:py-4">
+          {/* Quick choice */}
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-primary-200 text-xs text-primary-700 hover:bg-primary-50 dark:border-primary-800 dark:text-primary-300"
+              onClick={() =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  analytics: true,
+                  marketing: false,
+                  personalization: true,
+                  consentDate: new Date().toISOString(),
+                }))
+              }
+            >
+              Recomendado
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={() =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  analytics: false,
+                  marketing: false,
+                  personalization: false,
+                  consentDate: new Date().toISOString(),
+                }))
+              }
+            >
+              Só essenciais
+            </Button>
           </div>
 
-          <div className="rounded-[22px] border border-emerald-200/70 bg-emerald-50/70 p-4 shadow-sm dark:border-emerald-900/30 dark:bg-emerald-950/10">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-1 items-start gap-3">
-                <Lock className="mt-1 h-5 w-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
-                <div>
-                  <h4 className="mb-1 font-semibold text-foreground">Cookies Essenciais</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Necessários para o funcionamento básico do site, segurança e preferências mínimas.
-                  </p>
-                </div>
-              </div>
-              <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
-                Sempre ativo
-              </span>
+          {/* Essential */}
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/60 px-3 py-2.5 dark:border-emerald-900/30 dark:bg-emerald-950/10">
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-sm font-medium text-foreground">Essenciais</span>
             </div>
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
+              Ativo
+            </span>
           </div>
 
-          <div className="rounded-[22px] border border-border bg-card/80 p-4 shadow-sm transition-colors hover:bg-accent/30">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-1 items-start gap-3">
-                <Zap className="mt-1 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-                <div>
-                  <h4 className="mb-1 font-semibold text-foreground">Cookies de Análise</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Ajudam-nos a perceber como o site é utilizado para melhorar a experiência geral.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleToggle('analytics')}
-                aria-pressed={preferences.analytics}
-                className={`relative inline-flex h-7 w-12 flex-shrink-0 rounded-full transition-colors ${
-                  preferences.analytics ? 'bg-primary-600' : 'bg-slate-300 dark:bg-slate-700'
-                }`}
-              >
-                <span
-                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                    preferences.analytics ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+          {/* Analytics */}
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card/80 px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-foreground">Análise</span>
             </div>
+            <button type="button" onClick={() => handleToggle('analytics')} aria-pressed={preferences.analytics} className={toggleClasses(preferences.analytics)}>
+              <span className={toggleKnob(preferences.analytics)} />
+            </button>
           </div>
 
-          <div className="rounded-[22px] border border-border bg-card/80 p-4 shadow-sm transition-colors hover:bg-accent/30">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-1 items-start gap-3">
-                <Shield className="mt-1 h-5 w-5 flex-shrink-0 text-violet-600 dark:text-violet-400" />
-                <div>
-                  <h4 className="mb-1 font-semibold text-foreground">Cookies de Marketing</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Utilizados para medir campanhas e apresentar conteúdos promocionais relevantes.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleToggle('marketing')}
-                aria-pressed={preferences.marketing}
-                className={`relative inline-flex h-7 w-12 flex-shrink-0 rounded-full transition-colors ${
-                  preferences.marketing ? 'bg-primary-600' : 'bg-slate-300 dark:bg-slate-700'
-                }`}
-              >
-                <span
-                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                    preferences.marketing ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+          {/* Marketing */}
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card/80 px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 flex-shrink-0 text-violet-600 dark:text-violet-400" />
+              <span className="text-sm font-medium text-foreground">Marketing</span>
             </div>
+            <button type="button" onClick={() => handleToggle('marketing')} aria-pressed={preferences.marketing} className={toggleClasses(preferences.marketing)}>
+              <span className={toggleKnob(preferences.marketing)} />
+            </button>
           </div>
 
-          <div className="rounded-[22px] border border-border bg-card/80 p-4 shadow-sm transition-colors hover:bg-accent/30">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-1 items-start gap-3">
-                <MapPin className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 dark:text-primary-400" />
-                <div>
-                  <h4 className="mb-1 font-semibold text-foreground">Personalização por Localização</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Mostra a sua região e a temperatura real no menu apenas quando der consentimento explícito.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleToggle('personalization')}
-                aria-pressed={preferences.personalization}
-                className={`relative inline-flex h-7 w-12 flex-shrink-0 rounded-full transition-colors ${
-                  preferences.personalization ? 'bg-primary-600' : 'bg-slate-300 dark:bg-slate-700'
-                }`}
-              >
-                <span
-                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                    preferences.personalization ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+          {/* Personalization */}
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card/80 px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 flex-shrink-0 text-primary-600 dark:text-primary-400" />
+              <span className="text-sm font-medium text-foreground">Localização</span>
             </div>
+            <button type="button" onClick={() => handleToggle('personalization')} aria-pressed={preferences.personalization} className={toggleClasses(preferences.personalization)}>
+              <span className={toggleKnob(preferences.personalization)} />
+            </button>
           </div>
 
-          <div className="rounded-[20px] border border-blue-200/80 bg-blue-50/80 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
-            <p className="text-sm text-blue-900 dark:text-blue-100">
-              <strong>ℹ️ Nota:</strong> As preferências ficam guardadas localmente no navegador e podem ser alteradas ou removidas a qualquer momento.
-            </p>
-          </div>
+          <p className="px-1 text-[11px] text-muted-foreground">
+            As preferências ficam guardadas localmente e podem ser alteradas a qualquer momento.
+          </p>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-border bg-slate-50 px-4 py-4 dark:bg-slate-950 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Button
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-slate-50 px-3 py-2.5 dark:bg-slate-950 sm:px-5 sm:py-3">
+          <button
             type="button"
-            variant="outline"
             onClick={handleResetAll}
-            className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950"
+            className="text-xs font-medium text-red-500 hover:text-red-600 dark:text-red-400"
           >
-            <X className="mr-2 h-4 w-4" />
-            Resetar tudo
-          </Button>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button variant="ghost" onClick={onClose}>
+            Resetar
+          </button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-xs">
               Fechar
             </Button>
-            <Button onClick={() => void handleSave()} className="bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600">
-              Guardar escolhas
+            <Button size="sm" onClick={() => void handleSave()} className="bg-primary-600 text-xs hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600">
+              Guardar
             </Button>
           </div>
         </div>

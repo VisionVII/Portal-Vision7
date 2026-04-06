@@ -45,7 +45,10 @@ function getDeviceFingerprint(req: Request): string {
 
 function isOriginAllowed(origin: string): boolean {
   if (!origin) return false;
-  return ALLOWED_ORIGINS.has(origin);
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  // Accept any Vercel preview/production URL
+  if (/^https:\/\/[\w-]+\.vercel\.app$/.test(origin)) return true;
+  return false;
 }
 
 function buildCorsHeaders(origin: string): HeadersInit {
@@ -53,7 +56,7 @@ function buildCorsHeaders(origin: string): HeadersInit {
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-device-fingerprint',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
