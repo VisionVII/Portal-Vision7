@@ -6,17 +6,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-<<<<<<< HEAD
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-=======
 const DEFAULT_SITE_URL = Deno.env.get('SITE_URL') ?? 'https://www.vision7.pt';
 const MAX_FAILED_ATTEMPTS = 10;
 const BLOCK_WINDOW_MINUTES = 15;
@@ -119,19 +108,11 @@ Deno.serve(async (req: Request) => {
 
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Método não permitido.' }, 405, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
   }
 
   try {
     const { email, code } = await req.json();
 
-<<<<<<< HEAD
-    if (!email || !code) {
-      return new Response(
-        JSON.stringify({ error: 'Email e código são obrigatórios.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-=======
     if (!email || !code || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
       return jsonResponse({ error: 'Email e código são obrigatórios.' }, 400, corsHeaders);
     }
@@ -140,7 +121,6 @@ Deno.serve(async (req: Request) => {
     if (!/^\d{6}$/.test(normalizedCode)) {
       await sleep(200);
       return jsonResponse({ error: 'Código inválido. Tente novamente.' }, 401, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     }
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -148,8 +128,6 @@ Deno.serve(async (req: Request) => {
     });
 
     const normalizedEmail = email.toLowerCase().trim();
-<<<<<<< HEAD
-=======
     const now = Date.now();
 
     const { data: activeBlocks, error: blockedError } = await adminClient
@@ -171,7 +149,6 @@ Deno.serve(async (req: Request) => {
       await sleep(300);
       return jsonResponse({ error: 'Acesso temporariamente bloqueado. Solicite um novo código mais tarde.' }, 429, corsHeaders);
     }
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
 
     // Fetch most recent active code for this email
     const { data, error: queryError } = await adminClient
@@ -185,52 +162,19 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (queryError || !data) {
-<<<<<<< HEAD
-      return new Response(
-        JSON.stringify({ error: 'Código não encontrado ou já utilizado.' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-=======
       await sleep(220);
       return jsonResponse({ error: 'Código inválido ou expirado.' }, 401, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     }
 
     // Check expiry
     if (new Date(data.expires_at) < new Date()) {
       await adminClient.from('security_codes').update({ used: true }).eq('id', data.id);
-<<<<<<< HEAD
-      return new Response(
-        JSON.stringify({ error: 'Código expirado. Solicite um novo código.' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-=======
       await sleep(220);
       return jsonResponse({ error: 'Código inválido ou expirado.' }, 401, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     }
 
     // Check max attempts
     if ((data.attempts ?? 0) >= 5) {
-<<<<<<< HEAD
-      await adminClient.from('security_codes').update({ used: true }).eq('id', data.id);
-      return new Response(
-        JSON.stringify({ error: 'Número máximo de tentativas atingido. Solicite um novo código.' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
-
-    // Validate code (constant-time comparison to prevent timing attacks)
-    if (data.code !== code.trim()) {
-      await adminClient
-        .from('security_codes')
-        .update({ attempts: (data.attempts ?? 0) + 1 })
-        .eq('id', data.id);
-      return new Response(
-        JSON.stringify({ error: 'Código inválido. Tente novamente.' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-=======
       const blockedUntilIso = new Date(now + BLOCK_WINDOW_MINUTES * 60 * 1000).toISOString();
       await adminClient
         .from('security_codes')
@@ -275,7 +219,6 @@ Deno.serve(async (req: Request) => {
       }
 
       return jsonResponse({ error: 'Código inválido. Tente novamente.' }, 401, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     }
 
     // Mark as used immediately to prevent replay attacks
@@ -290,25 +233,6 @@ Deno.serve(async (req: Request) => {
 
     if (linkError || !linkData?.properties?.hashed_token) {
       console.error('[verify-login-code] generateLink error:', linkError);
-<<<<<<< HEAD
-      return new Response(
-        JSON.stringify({ error: 'Erro ao gerar sessão. Contacte o administrador.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
-
-    // Return the hashed token — frontend will call verifyOtp({ token_hash, type: 'email' })
-    return new Response(
-      JSON.stringify({ token_hash: linkData.properties.hashed_token }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
-  } catch (err) {
-    console.error('[verify-login-code] Error:', err);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
-=======
       return jsonResponse({ error: 'Erro ao gerar sessão. Contacte o administrador.' }, 500, corsHeaders);
     }
 
@@ -317,6 +241,5 @@ Deno.serve(async (req: Request) => {
   } catch (err) {
     console.error('[verify-login-code] Error:', err);
     return jsonResponse({ error: 'Erro interno do servidor.' }, 500, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
   }
 });

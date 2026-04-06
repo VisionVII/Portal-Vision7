@@ -8,15 +8,6 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
 const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'Vision VII <noreply@vision7.pt>';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-<<<<<<< HEAD
-
-const CODE_EXPIRY_MINUTES = 10;
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-=======
 const DEFAULT_SITE_URL = Deno.env.get('SITE_URL') ?? 'https://www.vision7.pt';
 
 const CODE_EXPIRY_MINUTES = 10;
@@ -85,7 +76,6 @@ function jsonResponse(payload: Record<string, unknown>, status: number, corsHead
     },
   });
 }
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
 
 function generateCode(length = 6): string {
   const array = new Uint32Array(length);
@@ -93,9 +83,6 @@ function generateCode(length = 6): string {
   return Array.from(array, (n) => (n % 10).toString()).join('');
 }
 
-<<<<<<< HEAD
-function renderEmail(code: string, expiresInMinutes: number): string {
-=======
 function escapeHtml(value: string): string {
   return value
     .replaceAll('&', '&amp;')
@@ -109,27 +96,12 @@ function renderEmail(code: string, expiresInMinutes: number, brandName: string, 
   const safeBrandName = escapeHtml(brandName);
   const safeLogoUrl = escapeHtml(logoUrl);
 
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
   return `<!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-<<<<<<< HEAD
-    body { margin:0; padding:0; background:#f4f6f9; font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif; }
-    .code-block {
-      font-family: 'SF Mono','Fira Code','Courier New',monospace;
-      font-size: 40px;
-      letter-spacing: 14px;
-      font-weight: 700;
-      color: #2563EB;
-      background: #EFF6FF;
-      border-radius: 12px;
-      padding: 20px 36px;
-      display: inline-block;
-      border: 2px dashed rgba(37,99,235,0.3);
-=======
     body { margin:0; padding:0; background:#f8fafc; font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif; }
     .code-block {
       font-family: 'SF Mono','Fira Code','Courier New',monospace;
@@ -143,33 +115,10 @@ function renderEmail(code: string, expiresInMinutes: number, brandName: string, 
       display: inline-block;
       border: 1px solid rgba(37,99,235,0.22);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     }
   </style>
 </head>
 <body>
-<<<<<<< HEAD
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;">
-    <tr>
-      <td align="center" style="padding:40px 16px;">
-        <table role="presentation" width="560" cellpadding="0" cellspacing="0"
-          style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
-
-          <!-- Header -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#020817,#071d49);padding:28px 32px;text-align:center;">
-              <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;letter-spacing:-0.02em;">Vision VII</h1>
-              <p style="margin:6px 0 0;color:rgba(255,255,255,0.6);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;">Portal de Informação</p>
-            </td>
-          </tr>
-
-          <!-- Body -->
-          <tr>
-            <td style="padding:40px 36px;">
-              <h2 style="margin:0 0 10px;font-size:20px;color:#1e293b;font-weight:600;">O seu código de acesso</h2>
-              <p style="margin:0 0 32px;font-size:15px;color:#475569;line-height:1.65;">
-                Introduza o código abaixo no painel de administração para iniciar sessão:
-=======
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;">
     <tr>
       <td align="center" style="padding:40px 16px;">
@@ -188,25 +137,12 @@ function renderEmail(code: string, expiresInMinutes: number, brandName: string, 
               <h2 style="margin:0 0 10px;font-size:24px;color:#0f172a;font-weight:800;letter-spacing:-0.02em;">O seu codigo de acesso</h2>
               <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.65;">
                 Introduza este codigo no portal para iniciar sessao no painel administrativo do ${safeBrandName}.
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
               </p>
 
               <div style="text-align:center;margin:0 0 32px;">
                 <span class="code-block">${code}</span>
               </div>
 
-<<<<<<< HEAD
-              <p style="margin:0 0 0;font-size:14px;color:#64748b;text-align:center;">
-                Este código expira em <strong style="color:#1e293b;">${expiresInMinutes} minutos</strong>.<br/>
-                Se não solicitou este acesso, ignore este email.
-              </p>
-
-              <hr style="margin:28px 0;border:none;border-top:1px solid #e2e8f0;" />
-
-              <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
-                🔒 Nunca partilhe este código com ninguém.<br/>
-                A equipa Vision VII nunca solicitará o seu código de acesso.
-=======
               <p style="margin:0 0 22px;font-size:14px;color:#475569;text-align:center;line-height:1.7;">
                 Este codigo expira em <strong style="color:#0f172a;">${expiresInMinutes} minutos</strong>.<br/>
                 Se nao solicitou este acesso, ignore este email.
@@ -220,23 +156,14 @@ function renderEmail(code: string, expiresInMinutes: number, brandName: string, 
 
               <p style="margin:0;font-size:12px;color:#64748b;line-height:1.6;text-align:center;">
                 Nunca partilhe este codigo com terceiros. A equipa ${safeBrandName} nunca solicitara este codigo por email, telefone ou chat.
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
               </p>
             </td>
           </tr>
 
-<<<<<<< HEAD
-          <!-- Footer -->
-          <tr>
-            <td style="padding:20px 36px;background:#f8fafc;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;line-height:1.6;">
-                &copy; ${new Date().getFullYear()} Vision VII. Todos os direitos reservados.
-=======
           <tr>
             <td style="padding:18px 36px;background:#f8fafc;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;line-height:1.6;">
                 &copy; ${new Date().getFullYear()} ${safeBrandName}. Todos os direitos reservados.
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
               </p>
             </td>
           </tr>
@@ -250,10 +177,6 @@ function renderEmail(code: string, expiresInMinutes: number, brandName: string, 
 }
 
 Deno.serve(async (req: Request) => {
-<<<<<<< HEAD
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-=======
   const origin = getRequestOrigin(req);
   const clientIp = getClientIp(req);
   const deviceFingerprint = getDeviceFingerprint(req);
@@ -270,30 +193,19 @@ Deno.serve(async (req: Request) => {
 
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Método não permitido.' }, 405, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
   }
 
   try {
     const { email } = await req.json();
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-<<<<<<< HEAD
-      return new Response(
-        JSON.stringify({ error: 'Email inválido' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-=======
       return jsonResponse({ error: 'Email inválido.' }, 400, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     }
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-<<<<<<< HEAD
-    const normalizedEmail = email.toLowerCase().trim();
-=======
     const { data: siteSettings } = await adminClient
       .from('site_settings')
       .select('key, value')
@@ -424,7 +336,6 @@ Deno.serve(async (req: Request) => {
       }
     }
 
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     const code = generateCode(6);
     const expiresAt = new Date(Date.now() + CODE_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
@@ -443,37 +354,20 @@ Deno.serve(async (req: Request) => {
       type: 'login',
       expires_at: expiresAt,
       attempts: 0,
-<<<<<<< HEAD
-=======
       request_ip: clientIp,
       user_agent: userAgent,
       device_fingerprint: deviceFingerprint,
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     });
 
     if (insertError) {
       console.error('[send-login-code] Insert error:', insertError);
-<<<<<<< HEAD
-      return new Response(
-        JSON.stringify({ error: 'Erro ao gerar código de acesso' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-=======
       return jsonResponse({ error: 'Erro ao gerar código de acesso.' }, 500, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     }
 
     // Dev mode: no API key
     if (!RESEND_API_KEY) {
       console.log(`[send-login-code] DEV — OTP ${code} for ${normalizedEmail}`);
-<<<<<<< HEAD
-      return new Response(
-        JSON.stringify({ success: true, expiresInMinutes: CODE_EXPIRY_MINUTES }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-=======
       return jsonResponse({ success: true, expiresInMinutes: CODE_EXPIRY_MINUTES }, 200, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     }
 
     // Send via Resend
@@ -486,13 +380,8 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [normalizedEmail],
-<<<<<<< HEAD
-        subject: `${code} — Código de Acesso Vision VII`,
-        html: renderEmail(code, CODE_EXPIRY_MINUTES),
-=======
         subject: `${code} - Codigo de Acesso ${brandName}`,
         html: renderEmail(code, CODE_EXPIRY_MINUTES, brandName, logoUrl),
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
       }),
     });
 
@@ -500,34 +389,14 @@ Deno.serve(async (req: Request) => {
 
     if (!res.ok) {
       console.error('[send-login-code] Resend error:', resData);
-<<<<<<< HEAD
-      return new Response(
-        JSON.stringify({ error: 'Erro ao enviar email. Tente novamente.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-=======
       return jsonResponse({ error: 'Erro ao enviar email. Tente novamente.' }, 500, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
     }
 
     console.log(`[send-login-code] Sent to ${normalizedEmail}, id: ${resData.id}`);
 
-<<<<<<< HEAD
-    return new Response(
-      JSON.stringify({ success: true, expiresInMinutes: CODE_EXPIRY_MINUTES }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
-  } catch (err) {
-    console.error('[send-login-code] Error:', err);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
-=======
     return jsonResponse({ success: true, expiresInMinutes: CODE_EXPIRY_MINUTES }, 200, corsHeaders);
   } catch (err) {
     console.error('[send-login-code] Error:', err);
     return jsonResponse({ error: 'Erro interno do servidor.' }, 500, corsHeaders);
->>>>>>> aa640ec (security(auth): align SDD hardening with OTP abuse controls and session safeguards)
   }
 });
