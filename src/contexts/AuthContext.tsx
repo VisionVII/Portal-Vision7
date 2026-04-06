@@ -9,6 +9,10 @@ export type AppRole = Enums<'app_role'>;
 const DASHBOARD_ROLES: AppRole[] = ['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst'];
 const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
+const isAbortError = (err: unknown): boolean =>
+  err instanceof DOMException && err.name === 'AbortError' ||
+  (typeof err === 'object' && err !== null && 'message' in err && /AbortError|signal is aborted/i.test(String((err as { message?: string }).message)));
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -71,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('[Auth] user_roles table not ready:', error.message);
         return empty;
       }
+      if (isAbortError(error)) return empty;
       console.error('[Auth] Error loading roles:', error);
       return empty;
     }
@@ -145,7 +150,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (isMounted) applyAccess(access);
         }
       } catch (err) {
-        console.error('[Auth] Error initializing session:', err);
+        if (!isAbortError(err)) {
+          console.error('[Auth] Error initializing session:', err);
+        }
       } finally {
         window.clearTimeout(safetyTimer);
         if (isMounted) { setIsAccessReady(true); setIsLoading(false); }
@@ -169,15 +176,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     setIsAccessReady(false);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
-
-    if (error) {
+    let data;
+    try {
+      const result = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      data = result.data;
+      if (result.error) {
+        setIsAccessReady(true);
+        setIsLoading(false);
+        return { error: result.error as Error, ...fail };
+      }
+    } catch (err) {
       setIsAccessReady(true);
       setIsLoading(false);
-      return { error: error as Error, ...fail };
+      if (isAbortError(err)) return { error: new Error('Pedido cancelado. Tente novamente.'), ...fail };
+      return { error: err instanceof Error ? err : new Error(String(err)), ...fail };
     }
 
     if (!data.user || !data.session) {
