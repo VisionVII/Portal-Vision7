@@ -141,7 +141,6 @@ const Header = () => {
   const locationLabel = hasConsent ? (region || timezone || 'Localização ativa') : 'Ative a localização';
   const temperatureLabel = hasConsent && temperatureC !== null ? `${temperatureC}°C` : locationLoading ? 'A carregar...' : 'Ative a localização';
 
-  const mobileQuickNavItems = primaryNavItems.slice(0, 2);
   const mobileCategoryItems = primaryNavItems.slice(2);
 
   return (
@@ -149,7 +148,7 @@ const Header = () => {
       {/* Top brand bar — always rendered but hidden visually when scrolled down.
           Uses overflow:hidden + max-height with a fixed ceiling so it never triggers layout reflow loops. */}
       <div
-        className="overflow-hidden border-b border-primary-500/20 bg-gradient-to-r from-[#020817] via-[#04173a] to-[#071d49]"
+        className="overflow-hidden border-b border-white/10 bg-[#030d1f]"
         style={{
           maxHeight: hideTopBar ? 0 : 80,
           opacity: hideTopBar ? 0 : 1,
@@ -157,16 +156,16 @@ const Header = () => {
           willChange: 'max-height',
         }}
       >
-        <div className={`container mx-auto flex items-center justify-between gap-4 px-4 transition-[padding] duration-200 ${isScrolled ? 'py-2.5 sm:py-3' : 'py-3 sm:py-3.5'}`}>
-          <Link to="/" className="flex-shrink-0 transition-opacity hover:opacity-95">
+        <div className={`container mx-auto flex items-center justify-between gap-3 px-4 transition-[padding] duration-200 ${isScrolled ? 'py-2 sm:py-2.5' : 'py-2.5 sm:py-3'}`}>
+          <Link to="/" className="flex shrink-0 items-center transition-opacity hover:opacity-95">
             <BrandLogo siteName={siteSettings?.site_name} showTagline={false} />
           </Link>
 
-          <div className="hidden items-center md:flex">
+          <div className="hidden shrink-0 items-center md:flex">
             <PortalAIAssistantButton />
           </div>
 
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex shrink-0 items-center gap-2 md:hidden">
             <PortalAIAssistantButton compact />
           </div>
         </div>
@@ -255,8 +254,8 @@ const Header = () => {
                   className={({ isActive }) =>
                     `flex-shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
                       isActive
-                        ? 'border-primary-300 bg-primary-600 text-white shadow-sm'
-                        : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10'
+                        ? 'border-primary/30 bg-primary text-white shadow-sm'
+                        : 'border-border bg-card text-foreground hover:border-primary/30 hover:bg-muted'
                     }`
                   }
                 >
@@ -271,124 +270,96 @@ const Header = () => {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-10 w-10 rounded-xl border-slate-200 bg-white/90 text-slate-700 shadow-sm hover:bg-slate-100 hover:text-primary dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+                  className="h-10 w-10 rounded-xl border-border bg-card text-foreground shadow-sm hover:bg-muted"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[88vw] overflow-y-auto border-l border-primary-100/70 bg-background/95 px-4 sm:max-w-sm">
-                <SheetHeader className="border-b border-border pb-4 text-left">
+              <SheetContent side="right" className="flex w-[88vw] flex-col border-l border-border bg-background px-4 sm:max-w-sm">
+                <SheetHeader className="shrink-0 border-b border-border pb-3 text-left">
                   <SheetTitle className="sr-only">Menu Vision</SheetTitle>
                   <BrandLogo compact showTagline={false} logoUrl="/logo7.jpg" className="items-start" />
                 </SheetHeader>
 
-                <div className="mt-5 space-y-4">
-                  {/* ─── Info Contextual Card (mobile) ─── */}
-                  <div className="rounded-2xl border border-border bg-card/95 p-4 shadow-sm dark:bg-slate-900">
-                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                      Contexto &amp; Ferramentas
-                    </p>
+                <div className="flex flex-1 flex-col gap-3 overflow-hidden pt-3">
+                  {/* ─── Theme toggle (top, no label) ─── */}
+                  <div className="grid shrink-0 grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => theme === 'dark' && toggleTheme()}
+                      className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
+                        theme === 'light'
+                          ? 'border-amber-400/40 bg-amber-500/10 text-foreground'
+                          : 'border-border bg-card text-foreground'
+                      }`}
+                    >
+                      <Sun className="h-4 w-4" />
+                      Claro
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => theme === 'light' && toggleTheme()}
+                      className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
+                        theme === 'dark'
+                          ? 'border-indigo-400/40 bg-indigo-600 text-white'
+                          : 'border-border bg-card text-foreground'
+                      }`}
+                    >
+                      <Moon className="h-4 w-4" />
+                      Escuro
+                    </button>
+                  </div>
 
-                    <div className="grid gap-1 text-sm">
-                      {/* Day/Night indicator */}
-                      <div className="flex items-center gap-3 rounded-xl px-3 py-2">
-                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/10">
-                          <SkyIcon isDaytime={skyInfo.isDaytime} moonEmoji={skyInfo.moonEmoji} className="h-4 w-4" />
+                  {/* ─── Context info (compact horizontal strip) ─── */}
+                  <div className="shrink-0 rounded-2xl border border-border bg-card p-3">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
+                      {/* Day/Night */}
+                      <div className="flex items-center gap-2">
+                        <SkyIcon isDaytime={skyInfo.isDaytime} moonEmoji={skyInfo.moonEmoji} className="h-4 w-4 shrink-0" />
+                        <span className="truncate font-medium text-foreground">
+                          {skyInfo.isDaytime ? 'Dia' : skyInfo.moonPhaseName}
                         </span>
-                        <div className="min-w-0 flex-1">
-                          <span className="block text-[13px] font-semibold leading-tight text-foreground">
-                            {skyInfo.isDaytime ? 'Período diurno' : 'Período noturno'}
-                          </span>
-                          {!skyInfo.isDaytime && (
-                            <span className="text-[11px] leading-tight text-muted-foreground">{skyInfo.moonEmoji} {skyInfo.moonPhaseName}</span>
-                          )}
-                        </div>
                       </div>
 
-                      {/* Temperature (colour-coded) */}
-                      <div className={`flex items-center gap-3 rounded-xl px-3 py-2 ${skyInfo.temperatureBg}`}>
-                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/80 dark:bg-white/10">
-                          <TemperatureIcon icon={skyInfo.temperatureIcon} className={`h-4 w-4 ${skyInfo.temperatureColor}`} />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <span className={`block text-[13px] font-bold leading-tight ${skyInfo.temperatureColor}`}>{temperatureLabel}</span>
-                          <span className="text-[11px] leading-tight text-muted-foreground">{skyInfo.seasonEmoji} {skyInfo.seasonName}</span>
-                        </div>
+                      {/* Temperature */}
+                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1 ${skyInfo.temperatureBg}`}>
+                        <TemperatureIcon icon={skyInfo.temperatureIcon} className={`h-4 w-4 shrink-0 ${skyInfo.temperatureColor}`} />
+                        <span className={`truncate font-bold ${skyInfo.temperatureColor}`}>{temperatureLabel}</span>
                       </div>
 
-                      {/* Calendar */}
-                      <div className="flex items-center gap-3 rounded-xl px-3 py-2">
-                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/10">
-                          <CalendarDays className="h-4 w-4 text-primary-600" />
-                        </span>
-                        <CalendarPopover
-                          localDateLabel={localDateLabel}
-                          className="text-[13px] font-medium text-foreground transition-colors hover:text-primary-600"
-                        />
+                      {/* Date */}
+                      <div className="flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="truncate font-medium text-foreground">{localDateLabel}</span>
                       </div>
 
                       {/* Clock */}
-                      <div className="flex items-center gap-3 rounded-xl px-3 py-2">
-                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/10">
-                          <Clock3 className="h-4 w-4 text-primary-600" />
-                        </span>
-                        <span className="text-[13px] font-medium text-foreground">{localTime}</span>
+                      <div className="flex items-center gap-2">
+                        <Clock3 className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="truncate font-medium text-foreground">{localTime}</span>
                       </div>
 
-                      {/* Location */}
-                      <div className="flex items-center gap-3 rounded-xl px-3 py-2">
-                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/10">
-                          <MapPin className="h-4 w-4 text-primary-600" />
-                        </span>
-                        <span className="text-[13px] font-medium text-foreground">{locationLabel}</span>
+                      {/* Location — full width */}
+                      <div className="col-span-2 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="truncate font-medium text-foreground">{locationLabel}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* ─── Theme toggle card (mobile) ─── */}
-                  <div className="rounded-2xl border border-border bg-card/95 p-4 shadow-sm dark:bg-slate-900">
-                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Tema visível</p>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => theme === 'dark' && toggleTheme()}
-                        className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-all ${
-                          theme === 'light'
-                            ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
-                            : 'border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-white'
-                        }`}
-                      >
-                        <Sun className="h-4 w-4" />
-                        Claro
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => theme === 'light' && toggleTheme()}
-                        className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-all ${
-                          theme === 'dark'
-                            ? 'border-indigo-300 bg-indigo-600 text-white'
-                            : 'border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-white'
-                        }`}
-                      >
-                        <Moon className="h-4 w-4" />
-                        Escuro
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* ─── Categories grid (mobile) ─── */}
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Categorias</p>
+                  {/* ─── Categories grid ─── */}
+                  <div className="flex flex-1 flex-col gap-2 overflow-hidden">
+                    <p className="shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/60">Categorias</p>
                     <div className="grid grid-cols-2 gap-2">
                       {mobileCategoryItems.map((item) => (
                         <SheetClose asChild key={item.path}>
                           <NavLink
                             to={item.path}
                             className={({ isActive }) =>
-                              `flex min-h-[44px] items-center justify-start rounded-xl border px-4 py-2.5 text-left text-[13px] font-medium transition-all ${
+                              `flex min-h-[40px] items-center justify-start rounded-xl border px-4 py-2 text-left text-[13px] font-medium transition-colors ${
                                 isActive
-                                  ? 'border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-300'
-                                  : 'border-slate-200 bg-slate-50 text-slate-800 hover:border-primary-200 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white'
+                                  ? 'border-primary/30 bg-primary/10 text-foreground'
+                                  : 'border-border bg-card text-foreground hover:border-primary/30 hover:bg-muted'
                               }`
                             }
                           >
