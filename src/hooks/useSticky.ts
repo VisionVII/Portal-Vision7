@@ -9,6 +9,7 @@ interface UseStickyOptions {
 export const useSticky = (options: UseStickyOptions = {}) => {
   const { offset = 0, topBuffer = 100, bottomBuffer = 100 } = options;
   const ref = useRef<HTMLDivElement>(null);
+  const isStickyRef = useRef(false);
   const [isSticky, setIsSticky] = useState(false);
   const [translateY, setTranslateY] = useState(0);
 
@@ -18,7 +19,8 @@ export const useSticky = (options: UseStickyOptions = {}) => {
 
       // Disable sticky behavior on mobile/tablet viewports
       if (window.innerWidth < 1024) {
-        if (isSticky) {
+        if (isStickyRef.current) {
+          isStickyRef.current = false;
           setIsSticky(false);
           setTranslateY(0);
         }
@@ -40,10 +42,12 @@ export const useSticky = (options: UseStickyOptions = {}) => {
       const shouldUnstick = elementBottomScroll + bottomBuffer > viewportBottom;
 
       if (shouldStick && !shouldUnstick) {
+        isStickyRef.current = true;
         setIsSticky(true);
         // Calculate parallax offset - subtle movement
         setTranslateY(Math.min(scrollY * 0.1, 50));
       } else {
+        isStickyRef.current = false;
         setIsSticky(false);
         setTranslateY(0);
       }

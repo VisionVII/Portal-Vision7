@@ -168,7 +168,7 @@ export async function sendInviteEmail(
   inviterName?: string,
   expiresAt?: string,
 ): Promise<{ error: Error | null }> {
-  const activationUrl = `${window.location.origin}/admin/register?invite=${token}&email=${encodeURIComponent(email)}&role=${role}`;
+  const activationUrl = `${window.location.origin}/validar/entrada/tipodeuser?mode=convite&invite=${token}&email=${encodeURIComponent(email)}&role=${role}`;
   return sendEmail({
     to: email,
     template: 'invite',

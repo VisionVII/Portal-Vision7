@@ -15,12 +15,13 @@ interface AuthContextType {
   isSuperAdmin: boolean;
   canAccessDashboard: boolean;
   isLoading: boolean;
+  isAccessReady: boolean;
   hasRole: (role: AppRole) => boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; isAdmin: boolean; canAccessDashboard: boolean; roles: AppRole[] }>;
   requestAdminCode: (email: string) => Promise<{ error: Error | null }>;
   verifyAdminCode: (email: string, token: string) => Promise<{ error: Error | null; isAdmin: boolean; canAccessDashboard: boolean; roles: AppRole[] }>;
   sendOtpCode: (email: string) => Promise<{ error: Error | null }>;
-  verifyOtpCode: (email: string, token: string) => Promise<{ error: Error | null }>;
+  verifyOtpCode: (email: string, token: string) => Promise<{ error: Error | null; isAdmin: boolean; canAccessDashboard: boolean; roles: AppRole[] }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -38,6 +39,25 @@ const isSchemaMissingError = (error: unknown) => {
 };
 
 const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const AUTH_REQUEST_TIMEOUT_MS = 20000;
+
+const withTimeout = async <T,>(promise: Promise<T>, message: string, timeoutMs = AUTH_REQUEST_TIMEOUT_MS): Promise<T> => {
+  let timeoutId: number | undefined;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => {
+      reject(new Error(message));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      window.clearTimeout(timeoutId);
+    }
+  }
+};
 
 const buildDeviceFingerprint = async () => {
   const base = [
@@ -59,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAccessReady, setIsAccessReady] = useState(false);
   const isDevelopment = import.meta.env.DEV;
 
   const isSuperAdmin = useMemo(() => roles.includes('super_admin'), [roles]);
@@ -70,6 +91,197 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const primaryRole = roles[0] ?? null;
 
   const hasRole = useCallback((role: AppRole) => roles.includes(role), [roles]);
+
+  const requestCustomCode = useCallback(async (
+    email: string,
+    timeoutMessage: string,
+    scope: 'admin' | 'dashboard',
+  ) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const deviceFingerprint = await buildDeviceFingerprint();
+
+    const res = await withTimeout(
+      fetch(`${SUPABASE_FUNCTIONS_URL}/send-login-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'apikey': SUPABASE_ANON,
+          'x-device-fingerprint': deviceFingerprint,
+        },
+        body: JSON.stringify({ email: normalizedEmail, scope }),
+      }),
+      timeoutMessage,
+    );
+
+    const payload = await res.json().catch(() => null);
+
+    if (!res.ok || payload?.error) {
+      return {
+        error: new Error(payload?.error || `Erro ${res.status} ao enviar código.`),
+      };
+    }
+
+    return { error: null };
+  }, []);
+
+  const verifyCustomCodeSession = useCallback(async ({
+    email,
+    token,
+    timeoutMessage,
+    scope,
+  }: {
+    email: string;
+    token: string;
+    timeoutMessage: string;
+    scope: 'admin' | 'dashboard';
+  }) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedToken = token.trim();
+    const deviceFingerprint = await buildDeviceFingerprint();
+
+    const res = await withTimeout(
+      fetch(`${SUPABASE_FUNCTIONS_URL}/verify-login-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'apikey': SUPABASE_ANON,
+          'x-device-fingerprint': deviceFingerprint,
+        },
+        body: JSON.stringify({ email: normalizedEmail, code: normalizedToken, scope }),
+      }),
+      timeoutMessage,
+    );
+
+    const payload = await res.json().catch(() => null);
+
+    if (!res.ok || payload?.error) {
+      return {
+        data: null,
+        error: new Error(payload?.error || `Erro ${res.status} ao verificar código.`),
+      };
+    }
+
+    if (payload?.email_otp || payload?.token_hash) {
+      const attempts: Array<() => Promise<{
+        data: { user: User | null; session: Session | null };
+        error: Error | null;
+      }>> = [];
+
+      if (payload?.token_hash) {
+        attempts.push(async () => {
+          const { data, error } = await withTimeout(
+            supabase.auth.verifyOtp({
+              token_hash: payload.token_hash,
+              type: 'recovery',
+            }),
+            'A validação da sessão demorou demasiado tempo. Solicite um novo código.',
+          );
+
+          return { data, error: error as Error | null };
+        });
+
+        attempts.push(async () => {
+          const { data, error } = await withTimeout(
+            supabase.auth.verifyOtp({
+              token_hash: payload.token_hash,
+              type: 'email',
+            }),
+            'A validação da sessão demorou demasiado tempo. Solicite um novo código.',
+          );
+
+          return { data, error: error as Error | null };
+        });
+      }
+
+      if (payload?.email_otp) {
+        attempts.push(async () => {
+          const { data, error } = await withTimeout(
+            supabase.auth.verifyOtp({
+              email: normalizedEmail,
+              token: payload.email_otp,
+              type: 'recovery',
+            }),
+            'A validação da sessão demorou demasiado tempo. Solicite um novo código.',
+          );
+
+          return { data, error: error as Error | null };
+        });
+
+        attempts.push(async () => {
+          const { data, error } = await withTimeout(
+            supabase.auth.verifyOtp({
+              email: normalizedEmail,
+              token: payload.email_otp,
+              type: 'email',
+            }),
+            'A validação da sessão demorou demasiado tempo. Solicite um novo código.',
+          );
+
+          return { data, error: error as Error | null };
+        });
+
+        attempts.push(async () => {
+          const { data, error } = await withTimeout(
+            supabase.auth.verifyOtp({
+              email: normalizedEmail,
+              token: payload.email_otp,
+              type: 'magiclink',
+            }),
+            'A validação da sessão demorou demasiado tempo. Solicite um novo código.',
+          );
+
+          return { data, error: error as Error | null };
+        });
+      }
+
+      let lastError: Error | null = null;
+
+      for (const attempt of attempts) {
+        const { data, error } = await attempt();
+
+        if (!error && data?.user && data?.session) {
+          return { data, error: null };
+        }
+
+        lastError = error;
+      }
+
+      return {
+        data: null,
+        error: lastError ?? new Error('Não foi possível concluir a sessão. Solicite um novo código.'),
+      };
+    }
+
+    if (!payload?.access_token || !payload?.refresh_token) {
+      return {
+        data: null,
+        error: new Error('Resposta de autenticação inválida. Solicite um novo código.'),
+      };
+    }
+
+    const { data, error } = await withTimeout(
+      supabase.auth.setSession({
+        access_token: payload.access_token,
+        refresh_token: payload.refresh_token,
+      }),
+      'A criação da sessão demorou demasiado tempo. Solicite um novo código.',
+    );
+
+    if (error) {
+      return { data: null, error: error as Error };
+    }
+
+    if (!data?.user || !data?.session) {
+      return {
+        data: null,
+        error: new Error('Não foi possível concluir a sessão. Solicite um novo código.'),
+      };
+    }
+
+    return { data, error: null };
+  }, []);
 
   const bootstrapFirstAdmin = useCallback(async () => {
     const { data, error } = await supabase.rpc('bootstrap_first_admin');
@@ -171,7 +383,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let isMounted = true;
     // Safety net: if auth never settles (DB timeout, RPC hang), unblock after 8s
     const safetyTimer = window.setTimeout(() => {
-      if (isMounted) setIsLoading(false);
+      if (isMounted) {
+        setIsAccessReady(true);
+        setIsLoading(false);
+      }
     }, 8000);
 
     // Auth state listener — skip INITIAL_SESSION (handled by initializeSession below)
@@ -181,6 +396,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Skip INITIAL_SESSION — initializeSession handles the first load
         if (event === 'INITIAL_SESSION') return;
 
+        setIsAccessReady(false);
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -190,16 +406,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (isMounted) {
               setRoles(access.roles);
               setIsAdmin(access.isAdmin);
+              setIsAccessReady(true);
             }
           } else {
             setRoles([]);
             setIsAdmin(false);
+            setIsAccessReady(true);
           }
         } catch (error) {
           console.error('Error checking admin role:', error);
           if (isMounted) {
             setRoles([]);
             setIsAdmin(false);
+            setIsAccessReady(true);
           }
         }
       }
@@ -211,6 +430,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
 
+        setIsAccessReady(false);
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -219,16 +439,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (isMounted) {
             setRoles(access.roles);
             setIsAdmin(access.isAdmin);
+            setIsAccessReady(true);
           }
         } else {
           setRoles([]);
           setIsAdmin(false);
+          setIsAccessReady(true);
         }
       } catch (error) {
         console.error('Error initializing session:', error);
         if (isMounted) {
           setRoles([]);
           setIsAdmin(false);
+          setIsAccessReady(true);
         }
       } finally {
         window.clearTimeout(safetyTimer);
@@ -247,6 +470,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
+    setIsAccessReady(false);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -254,6 +478,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) {
+      setIsAccessReady(true);
       setIsLoading(false);
       return { error: error as Error | null, isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
     }
@@ -275,7 +500,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRoles([]);
       setIsAdmin(false);
     } finally {
+      setIsAccessReady(true);
       setIsLoading(false);
+    }
+
+    if (!accessProfile.canAccessDashboard && data.session) {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setRoles([]);
+      setIsAdmin(false);
     }
 
     return { error: null, isAdmin: accessProfile.isAdmin, canAccessDashboard: accessProfile.canAccessDashboard, roles: accessProfile.roles };
@@ -283,174 +517,116 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const requestAdminCode = async (email: string) => {
     setIsLoading(true);
-    const deviceFingerprint = await buildDeviceFingerprint();
-
-    // Try custom edge function first; fall back to native Supabase OTP
     try {
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/send-login-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
-          'apikey': SUPABASE_ANON,
-          'x-device-fingerprint': deviceFingerprint,
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json().catch(() => null);
+      const { error } = await requestCustomCode(email, 'O envio do código administrativo expirou. Tente novamente.', 'admin');
       setIsLoading(false);
 
-      if (res.ok && !data?.error) {
-        return { error: null };
+      if (error) {
+        return { error: new Error(error.message) };
       }
 
-      // Edge function failed — fall back to native Supabase magic link OTP
-      console.warn('[requestAdminCode] Edge function failed, falling back to native OTP', res.status, data);
+      return { error: null };
     } catch (err) {
-      console.warn('[requestAdminCode] Edge function unreachable, falling back to native OTP:', err);
       setIsLoading(false);
+      return { error: err as Error };
     }
-
-    // Native Supabase OTP fallback (sends 6-digit code)
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    });
-
-    setIsLoading(false);
-
-    if (otpError) {
-      return { error: new Error(otpError.message) };
-    }
-
-    return { error: null };
   };
 
   const verifyAdminCode = async (email: string, token: string) => {
     setIsLoading(true);
-    const deviceFingerprint = await buildDeviceFingerprint();
+    setIsAccessReady(false);
     const failResult = { isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
 
-    let useNativeOtp = false;
-
-    // Step 1: try custom edge function to verify 6-digit code
-    let verifyData: { token_hash?: string; error?: string } | null = null;
     try {
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/verify-login-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
-          'apikey': SUPABASE_ANON,
-          'x-device-fingerprint': deviceFingerprint,
-        },
-        body: JSON.stringify({ email, code: token }),
-      });
-
-      verifyData = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        const msg = verifyData?.error || `Erro ${res.status} ao verificar código.`;
-        // If edge function returned 4xx (not a network/server issue), it's a real code error
-        if (res.status < 500) {
-          setIsLoading(false);
-          return { error: new Error(msg), ...failResult };
-        }
-        // 5xx: edge function is down → fall back to native Supabase OTP
-        console.warn('[verifyAdminCode] Edge function 5xx, trying native OTP fallback');
-        useNativeOtp = true;
-      } else if (verifyData?.error) {
-        setIsLoading(false);
-        return { error: new Error(verifyData.error), ...failResult };
-      }
-    } catch (err) {
-      console.warn('[verifyAdminCode] Edge function unreachable, trying native OTP:', err);
-      useNativeOtp = true;
-    }
-
-    let otpSession: { user: import('@supabase/supabase-js').User | null; session: import('@supabase/supabase-js').Session | null } | null = null;
-
-    if (useNativeOtp || !verifyData?.token_hash) {
-      // Native Supabase OTP: email + token (6-digit code)
-      const { data, error } = await supabase.auth.verifyOtp({
+      const { data: otpSession, error } = await verifyCustomCodeSession({
         email,
         token,
-        type: 'email',
+        timeoutMessage: 'A verificação do código administrativo expirou. Tente novamente.',
+        scope: 'admin',
       });
+
       if (error) {
+        setIsAccessReady(true);
         setIsLoading(false);
-        return { error: error as Error, ...failResult };
+        return { error, ...failResult };
       }
-      otpSession = data;
-    } else {
-      // Exchange edge-function token_hash for a Supabase session
-      // Try magiclink first (most common for link-based tokens), then email
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: verifyData.token_hash,
-        type: 'magiclink',
-      });
-      if (error) {
-        // Fallback: try type 'email'
-        const { data: data2, error: error2 } = await supabase.auth.verifyOtp({
-          token_hash: verifyData.token_hash,
-          type: 'email',
-        });
-        if (error2) {
-          setIsLoading(false);
-          return { error: error2 as Error, ...failResult };
-        }
-        otpSession = data2;
-      } else {
-        otpSession = data;
+
+      if (!otpSession?.user || !otpSession?.session) {
+        setIsAccessReady(true);
+        setIsLoading(false);
+        return {
+          error: new Error('Não foi possível concluir a sessão administrativa. Solicite um novo código.'),
+          ...failResult,
+        };
       }
-    }
 
-    let accessProfile = {
-      roles: [] as AppRole[],
-      isAdmin: false,
-      canAccessDashboard: false,
-    };
+      let accessProfile = {
+        roles: [] as AppRole[],
+        isAdmin: false,
+        canAccessDashboard: false,
+      };
 
-    try {
-      accessProfile = otpSession?.user ? await getUserAccessProfile(otpSession.user.id) : accessProfile;
-      setSession(otpSession?.session ?? null);
-      setUser(otpSession?.user ?? null);
-      setRoles(accessProfile.roles);
-      setIsAdmin(accessProfile.isAdmin);
-    } catch (roleError) {
-      console.error('Error verifying admin code:', roleError);
-      setRoles([]);
-      setIsAdmin(false);
-    } finally {
+      try {
+        accessProfile = await getUserAccessProfile(otpSession.user.id);
+        setSession(otpSession.session ?? null);
+        setUser(otpSession.user ?? null);
+        setRoles(accessProfile.roles);
+        setIsAdmin(accessProfile.isAdmin);
+      } catch (roleError) {
+        console.error('Error verifying admin code:', roleError);
+        setRoles([]);
+        setIsAdmin(false);
+      } finally {
+        setIsAccessReady(true);
+        setIsLoading(false);
+      }
+
+      if (!accessProfile.isAdmin && otpSession.session) {
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setRoles([]);
+        setIsAdmin(false);
+        return {
+          error: new Error('O email autenticado não possui privilégio administrativo ativo.'),
+          isAdmin: false,
+          canAccessDashboard: false,
+          roles: [] as AppRole[],
+        };
+      }
+
+      if (!accessProfile.canAccessDashboard && otpSession.session) {
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setRoles([]);
+        setIsAdmin(false);
+        return {
+          error: new Error('A conta autenticada não tem acesso ativo ao dashboard.'),
+          isAdmin: false,
+          canAccessDashboard: false,
+          roles: [] as AppRole[],
+        };
+      }
+
+      return { error: null, isAdmin: accessProfile.isAdmin, canAccessDashboard: accessProfile.canAccessDashboard, roles: accessProfile.roles };
+    } catch (err) {
+      setIsAccessReady(true);
       setIsLoading(false);
+      return { error: err as Error, ...failResult };
     }
-
-    return { error: null, isAdmin: accessProfile.isAdmin, canAccessDashboard: accessProfile.canAccessDashboard, roles: accessProfile.roles };
   };
 
   // ── Admin OTP via Resend (send-login-code / verify-login-code edge functions) ──
   const sendOtpCode = async (email: string) => {
     setIsLoading(true);
-    const deviceFingerprint = await buildDeviceFingerprint();
 
     try {
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/send-login-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
-          'apikey': SUPABASE_ANON,
-          'x-device-fingerprint': deviceFingerprint,
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json().catch(() => null);
+      const { error } = await requestCustomCode(email, 'O envio do código expirou. Tente novamente.', 'dashboard');
       setIsLoading(false);
 
-      if (!res.ok || data?.error) {
-        return { error: new Error(data?.error || `Erro ${res.status} ao enviar código.`) };
+      if (error) {
+        return { error: new Error(error.message) };
       }
 
       return { error: null };
@@ -462,65 +638,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyOtpCode = async (email: string, token: string) => {
     setIsLoading(true);
-    const deviceFingerprint = await buildDeviceFingerprint();
+    setIsAccessReady(false);
+    const failResult = { isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
 
     try {
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/verify-login-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
-          'apikey': SUPABASE_ANON,
-          'x-device-fingerprint': deviceFingerprint,
-        },
-        body: JSON.stringify({ email, code: token }),
+      const { data, error } = await verifyCustomCodeSession({
+        email,
+        token,
+        timeoutMessage: 'A verificação do código expirou. Tente novamente.',
+        scope: 'dashboard',
       });
 
-      const verifyData = await res.json().catch(() => null);
-
-      if (!res.ok) {
+      if (error) {
+        setIsAccessReady(true);
         setIsLoading(false);
-        return { error: new Error(verifyData?.error || `Erro ${res.status} ao verificar código.`) };
-      }
-
-      if (verifyData?.error) {
-        setIsLoading(false);
-        return { error: new Error(verifyData.error) };
-      }
-
-      // Exchange token for session — prefer email_otp (raw token) for reliability
-      // Fall back to token_hash if email_otp is not available
-      let data: { user: import('@supabase/supabase-js').User | null; session: import('@supabase/supabase-js').Session | null } | null = null;
-
-      if (verifyData?.email_otp) {
-        const { data: d, error: e } = await supabase.auth.verifyOtp({
-          email,
-          token: verifyData.email_otp,
-          type: 'magiclink',
-        });
-        if (e) {
-          setIsLoading(false);
-          return { error: e as Error };
-        }
-        data = d;
-      } else if (verifyData?.token_hash) {
-        const { data: d, error: e } = await supabase.auth.verifyOtp({
-          token_hash: verifyData.token_hash,
-          type: 'magiclink',
-        });
-        if (e) {
-          setIsLoading(false);
-          return { error: e as Error };
-        }
-        data = d;
-      } else {
-        setIsLoading(false);
-        return { error: new Error('Resposta de verificação inválida. Tente novamente.') };
+        return { error, ...failResult };
       }
 
       if (!data?.user || !data?.session) {
+        setIsAccessReady(true);
         setIsLoading(false);
-        return { error: new Error('Não foi possível criar sessão. Solicite um novo código.') };
+        return { error: new Error('Não foi possível criar sessão. Solicite um novo código.'), ...failResult };
       }
 
       let accessProfile = { roles: [] as AppRole[], isAdmin: false, canAccessDashboard: false };
@@ -531,18 +669,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(data.user ?? null);
         setRoles(accessProfile.roles);
         setIsAdmin(accessProfile.isAdmin);
+
+        if (!accessProfile.canAccessDashboard) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setRoles([]);
+          setIsAdmin(false);
+          setIsLoading(false);
+          setIsAccessReady(true);
+          return {
+            error: new Error('A conta autenticada não tem acesso ativo ao dashboard.'),
+            isAdmin: false,
+            canAccessDashboard: false,
+            roles: [] as AppRole[],
+          };
+        }
       } catch (roleError) {
         console.error('Error loading roles after OTP verify:', roleError);
         setRoles([]);
         setIsAdmin(false);
       } finally {
+        setIsAccessReady(true);
         setIsLoading(false);
       }
 
-      return { error: null };
+      return {
+        error: null,
+        isAdmin: accessProfile.isAdmin,
+        canAccessDashboard: accessProfile.canAccessDashboard,
+        roles: accessProfile.roles,
+      };
     } catch (err) {
+      setIsAccessReady(true);
       setIsLoading(false);
-      return { error: err as Error };
+      return { error: err as Error, isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
     }
   };
 
@@ -560,9 +721,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    setIsAccessReady(false);
     await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
     setRoles([]);
     setIsAdmin(false);
+    setIsAccessReady(true);
   };
 
   useEffect(() => {
@@ -596,7 +761,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [session]);
 
   return (
-    <AuthContext.Provider value={{ user, session, roles, primaryRole, isAdmin, isSuperAdmin, canAccessDashboard, isLoading, hasRole, signIn, requestAdminCode, verifyAdminCode, sendOtpCode, verifyOtpCode, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, roles, primaryRole, isAdmin, isSuperAdmin, canAccessDashboard, isLoading, isAccessReady, hasRole, signIn, requestAdminCode, verifyAdminCode, sendOtpCode, verifyOtpCode, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
