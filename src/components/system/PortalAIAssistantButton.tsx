@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Bot, Compass, Newspaper, Sparkles } from 'lucide-react';
+import { Bot, Compass, MessageCircle, Newspaper, Search, Sparkles, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,6 @@ import { useCourses } from '@/hooks/useCourses';
 import { usePosts } from '@/hooks/usePosts';
 import {
   buildPortalAssistantReply,
-  portalAssistantConfig,
-  portalAssistantSkills,
 } from '@/modules/portal-ai';
 
 interface PortalAIAssistantButtonProps {
@@ -62,6 +60,11 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     setSubmittedQuestion(question.trim() || 'Quais conteúdos do Vision7 eu devo ver primeiro?');
   };
 
+  const handleQuickAction = (q: string) => {
+    setQuestion(q);
+    setSubmittedQuestion(q);
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -80,89 +83,102 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       <SheetContent side="right" className="w-[95vw] overflow-y-auto sm:max-w-xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary-500" />
+            <Sparkles className="h-5 w-5 text-primary-500" />
             Assistente Vision7
           </SheetTitle>
           <SheetDescription>
-            Módulo fechado para notícias, ferramentas e orientação do portal sem sair do escopo da plataforma.
+            Descubra notícias, cursos e conteúdos do portal. Pergunte-me qualquer coisa!
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Escopo controlado</CardTitle>
-              <CardDescription>
-                O botão já usa um módulo interno preparado para futura conexão com API de modelo de IA.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                {portalAssistantSkills.map((skill) => (
-                  <Badge key={skill.id} variant="secondary">
-                    {skill.label}
-                  </Badge>
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Estado atual: <span className="font-medium text-foreground">modo local</span>. Para um provedor externo,
-                basta configurar a API neste módulo interno do portal.
-              </p>
-              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-3 text-sm text-muted-foreground">
-                Arquivos-base: <code>src/modules/portal-ai/*</code>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuickAction('Quais são as notícias mais recentes?')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <Newspaper className="h-4 w-4 shrink-0 text-primary-500" />
+              Notícias recentes
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickAction('Quais cursos estão disponíveis?')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <TrendingUp className="h-4 w-4 shrink-0 text-primary-500" />
+              Cursos disponíveis
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickAction('Quais são as categorias do portal?')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <Search className="h-4 w-4 shrink-0 text-primary-500" />
+              Explorar categorias
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickAction('Quais são os conteúdos mais populares?')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <MessageCircle className="h-4 w-4 shrink-0 text-primary-500" />
+              Mais populares
+            </button>
+          </div>
 
+          {/* Search */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Consultar o portal</CardTitle>
-              <CardDescription>
-                Pergunte sobre notícias, categorias, cursos, podcasts e conteúdos publicados.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-3">
+            <CardContent className="pt-5">
+              <form onSubmit={handleSubmit} className="flex gap-2">
                 <Input
                   value={question}
                   onChange={(event) => setQuestion(event.target.value)}
-                  placeholder="Ex.: mostre notícias recentes sobre tecnologia"
+                  placeholder="Pergunte sobre notícias, cursos, categorias…"
+                  className="flex-1"
                 />
-                <Button type="submit" className="w-full">
-                  Consultar Vision7 AI
+                <Button type="submit" size="icon" className="shrink-0">
+                  <Search className="h-4 w-4" />
                 </Button>
               </form>
             </CardContent>
           </Card>
 
+          {/* Results */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Resposta guiada</CardTitle>
-              <CardDescription>Pergunta atual: {submittedQuestion}</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Compass className="h-4 w-4 text-primary-500" />
+                Resultado
+              </CardTitle>
+              <CardDescription className="text-xs">{submittedQuestion}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-foreground">{reply.summary}</p>
 
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Sugestões
-                </p>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  {reply.suggestions.map((suggestion) => (
-                    <li key={suggestion} className="flex items-start gap-2">
-                      <Compass className="mt-0.5 h-4 w-4 text-primary-500" />
-                      <span>{suggestion}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {reply.suggestions.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                    Sugestões
+                  </p>
+                  <ul className="space-y-1.5 text-sm text-muted-foreground">
+                    {reply.suggestions.map((suggestion) => (
+                      <li key={suggestion} className="flex items-start gap-2">
+                        <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-500" />
+                        <span>{suggestion}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Conteúdos encontrados
-                </p>
-                {reply.links.length ? (
-                  <div className="space-y-2">
+              {reply.links.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                    Conteúdos relacionados
+                  </p>
+                  <div className="space-y-1.5">
                     {reply.links.map((link) => (
                       <Link
                         key={`${link.type}-${link.href}`}
@@ -173,14 +189,16 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                           <Newspaper className="h-4 w-4 text-primary-500" />
                           {link.label}
                         </span>
-                        <span className="text-xs uppercase text-muted-foreground">{link.type}</span>
+                        <Badge variant="secondary" className="text-[10px]">{link.type}</Badge>
                       </Link>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Nenhum link contextual disponível para esta pergunta.</p>
-                )}
-              </div>
+                </div>
+              )}
+
+              {reply.links.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum conteúdo encontrado para esta pergunta. Tente outra busca.</p>
+              )}
             </CardContent>
           </Card>
         </div>

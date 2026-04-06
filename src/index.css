@@ -187,13 +187,13 @@
   }
 
   .section-title {
-    @apply font-headline font-bold text-foreground mb-6 relative;
-    font-size: clamp(1.35rem, 3.6vw, 1.875rem);
+    @apply font-headline font-bold text-foreground mb-4 relative;
+    font-size: clamp(1.25rem, 3.2vw, 1.75rem);
   }
 
   .section-title::after {
     content: '';
-    @apply block w-16 h-1.5 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-full mt-3;
+    @apply block w-12 h-1 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-full mt-2;
   }
 
   .prose,

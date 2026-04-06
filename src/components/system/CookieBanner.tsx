@@ -148,102 +148,85 @@ const CookieBanner = () => {
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-6">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[26px] border border-slate-200/80 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-xl dark:border-slate-800 dark:bg-[#020817]">
+      <div className="fixed inset-x-0 bottom-0 z-50 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-4">
+        <div className="relative mx-auto max-w-lg overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_16px_48px_rgba(15,23,42,0.2)] sm:max-w-2xl sm:rounded-3xl dark:border-slate-800 dark:bg-[#020817]">
           <button
             onClick={() => setIsVisible(false)}
-            className="absolute right-4 top-4 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-neutral-100"
+            className="absolute right-2.5 top-2.5 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title="Fechar"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
 
-          <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex-1">
-              <div className="mb-3 flex items-start gap-3 pr-8">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-primary-500/25 dark:text-primary-200">
-                  <Shield className="h-5 w-5" />
+          <div className="px-3.5 pb-2 pt-3 sm:px-5 sm:pt-4">
+            <div className="mb-2 flex items-center gap-2 pr-6">
+              <Shield className="h-4 w-4 flex-shrink-0 text-primary-600 dark:text-primary-300" />
+              <h3 className="text-sm font-bold text-foreground sm:text-base">Privacidade</h3>
+            </div>
+
+            <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
+              Utilizamos cookies essenciais e, com o seu consentimento, ativamos análise, marketing e localização.
+            </p>
+
+            {showDetails && (
+              <div className="mt-2.5 grid gap-2 rounded-xl border border-primary-100/80 bg-primary-50/80 p-3 text-xs dark:border-primary-900/40 dark:bg-slate-900 sm:grid-cols-2 sm:text-sm">
+                <div>
+                  <h4 className="mb-1 flex items-center gap-1.5 font-semibold text-foreground">
+                    <Lock className="h-3.5 w-3.5 text-primary-600 dark:text-primary-400" />
+                    Cookies
+                  </h4>
+                  <ul className="space-y-0.5 text-muted-foreground">
+                    <li><strong>✓</strong> Essenciais: sessão e segurança</li>
+                    <li><strong>📊</strong> Análise: métricas de uso</li>
+                    <li><strong>📢</strong> Marketing: conteúdos relevantes</li>
+                  </ul>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-foreground sm:text-lg">Centro de Privacidade</h3>
-                  <p className="text-xs text-muted-foreground sm:text-sm">Defina o nível de personalização com transparência, segurança e controlo total.</p>
+                  <h4 className="mb-1 flex items-center gap-1.5 font-semibold text-foreground">
+                    <MapPin className="h-3.5 w-3.5 text-primary-600 dark:text-primary-400" />
+                    Localização
+                  </h4>
+                  <p className="text-muted-foreground">
+                    Região e temperatura só com autorização explícita.
+                  </p>
+                  <a
+                    href="/politica-privacidade"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-flex text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
+                  >
+                    Política de privacidade
+                  </a>
                 </div>
               </div>
-
-              <p className="text-sm leading-relaxed text-muted-foreground md:text-[15px]">
-                Utilizamos apenas os cookies necessários e, com o seu consentimento, ativamos análise, marketing e localização para tornar o portal mais útil e relevante.
-              </p>
-
-              {showDetails && (
-                <div className="mt-4 grid gap-3 rounded-[20px] border border-primary-100/80 bg-primary-50 p-4 text-sm shadow-sm dark:border-primary-900/40 dark:bg-slate-900 md:grid-cols-2">
-                  <div>
-                    <h4 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
-                      <Lock className="h-4 w-4 text-primary-600 dark:text-primary-400" />
-                      Tipos de Cookies
-                    </h4>
-                    <ul className="space-y-2 text-xs text-muted-foreground md:text-sm">
-                      <li><strong>✓ Essenciais:</strong> sessão, segurança e preferências mínimas.</li>
-                      <li><strong>📊 Análise:</strong> métricas de uso para melhorar o portal.</li>
-                      <li><strong>📢 Marketing:</strong> campanhas e conteúdos promocionais relevantes.</li>
-                      <li><strong>🌐 Terceiros:</strong> serviços como Google, Supabase e CDN.</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
-                      <MapPin className="h-4 w-4 text-primary-600 dark:text-primary-400" />
-                      Localização opcional
-                    </h4>
-                    <p className="text-xs text-muted-foreground md:text-sm">
-                      A sua região, hora local e temperatura só aparecem no menu com autorização explícita e podem ser desativadas a qualquer momento.
-                    </p>
-                    <a
-                      href="/politica-privacidade"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-flex text-xs font-medium text-primary-600 hover:underline dark:text-primary-400 md:text-sm"
-                    >
-                      📄 Ler política de privacidade
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
-          <div className="border-t border-border bg-slate-50 px-4 py-4 dark:bg-slate-950 sm:px-5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={acceptAllCookies}
-                  className="rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
-                >
-                  Aceitar todos
-                </button>
-                <button
-                  onClick={acceptEssentialOnly}
-                  className="rounded-xl bg-secondary-100 px-4 py-2 text-sm font-semibold text-secondary-700 transition-colors hover:bg-secondary-200 dark:bg-neutral-700 dark:text-secondary-400 dark:hover:bg-neutral-600"
-                >
-                  Apenas essenciais
-                </button>
-                <button
-                  onClick={() => setShowPreferences(true)}
-                  className="rounded-xl border border-primary-600 px-4 py-2 text-sm font-semibold text-primary-600 transition-colors hover:bg-primary-50 dark:border-primary-500 dark:text-primary-400 dark:hover:bg-neutral-800"
-                >
-                  Personalizar
-                </button>
-                <button
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="px-2 py-2 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400"
-                >
-                  {showDetails ? 'Ocultar detalhes' : 'Ver detalhes'}
-                </button>
-              </div>
-
-              <p className="text-xs text-muted-foreground lg:max-w-xs lg:text-right">
-                O consentimento fica guardado no seu dispositivo e pode ser alterado a qualquer momento.
-              </p>
-            </div>
+          <div className="flex flex-wrap items-center gap-2 border-t border-border bg-slate-50 px-3.5 py-2.5 dark:bg-slate-950 sm:px-5 sm:py-3">
+            <button
+              onClick={acceptAllCookies}
+              className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700 sm:text-sm"
+            >
+              Aceitar todos
+            </button>
+            <button
+              onClick={acceptEssentialOnly}
+              className="rounded-lg bg-secondary-100 px-3 py-1.5 text-xs font-semibold text-secondary-700 transition-colors hover:bg-secondary-200 dark:bg-neutral-700 dark:text-secondary-400 sm:text-sm"
+            >
+              Essenciais
+            </button>
+            <button
+              onClick={() => setShowPreferences(true)}
+              className="rounded-lg border border-primary-600 px-3 py-1.5 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 dark:border-primary-500 dark:text-primary-400 sm:text-sm"
+            >
+              Personalizar
+            </button>
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="ml-auto px-1 py-1 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400"
+            >
+              {showDetails ? 'Ocultar' : 'Detalhes'}
+            </button>
           </div>
         </div>
       </div>

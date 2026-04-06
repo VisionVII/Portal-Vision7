@@ -40,9 +40,9 @@ const PostCard: React.FC<PostCardProps> = ({
 
   if (featured) {
     return (
-      <article className="blog-card group overflow-hidden rounded-[24px] border border-border/80 bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/5">
+      <article className="blog-card group overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5">
         <div className="grid grid-cols-1 lg:grid-cols-2">
-          <div className="relative aspect-[16/10] overflow-hidden lg:aspect-auto lg:h-full lg:min-h-[320px]">
+          <div className="relative aspect-[16/9] overflow-hidden lg:aspect-auto lg:h-full lg:min-h-[280px]">
             <img
               src={imageUrl}
               alt={title}
@@ -54,19 +54,19 @@ const PostCard: React.FC<PostCardProps> = ({
               <span className={`category-badge ${categoryColor}`}>{category}</span>
             </div>
           </div>
-          <div className="flex flex-col justify-between p-6 lg:p-8">
+          <div className="flex flex-col justify-between p-5 sm:p-6 lg:p-7">
             <div>
               <Link to={linkPath}>
-                <h2 className="mb-3 text-xl font-headline font-bold leading-tight text-card-foreground transition-colors hover:text-primary sm:text-2xl lg:text-3xl">
+                <h2 className="mb-2 text-lg font-headline font-bold leading-tight text-card-foreground transition-colors hover:text-primary sm:text-xl lg:text-2xl">
                   {title}
                 </h2>
               </Link>
-              <p className="mb-4 line-clamp-3 text-sm leading-6 text-muted-foreground sm:text-base">{safeExcerpt}</p>
+              <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground sm:line-clamp-3">{safeExcerpt}</p>
               <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                 Ler destaque completo
               </span>
             </div>
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-sm text-muted-foreground">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3 text-sm text-muted-foreground">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-1.5"><User size={14} /><span>{author}</span></div>
                 <div className="flex items-center gap-1.5"><Calendar size={14} /><span>{date}</span></div>
@@ -82,8 +82,8 @@ const PostCard: React.FC<PostCardProps> = ({
   }
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-border/80 bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/5 hover:ring-1 hover:ring-primary/10">
-      <div className="relative aspect-[16/10] overflow-hidden">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5">
+      <div className="relative aspect-[16/9] overflow-hidden">
         <img
           src={imageUrl}
           alt={title}
@@ -91,25 +91,23 @@ const PostCard: React.FC<PostCardProps> = ({
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
-        <div className="absolute left-3 top-3">
-          <span className={`category-badge ${categoryColor}`}>{category}</span>
+        <div className="absolute left-2.5 top-2.5 sm:left-3 sm:top-3">
+          <span className={`category-badge ${categoryColor} !px-2 !py-0.5 !text-[10px]`}>{category}</span>
         </div>
       </div>
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <div className="flex-1">
           <Link to={linkPath}>
-            <h2 className="mb-2 line-clamp-2 text-lg font-headline font-bold leading-snug text-card-foreground transition-colors hover:text-primary">
+            <h2 className="mb-1.5 line-clamp-2 text-[clamp(0.8125rem,2.2vw,1.0625rem)] font-headline font-bold leading-snug text-card-foreground transition-colors hover:text-primary">
               {title}
             </h2>
           </Link>
-          <p className="mb-4 line-clamp-3 text-sm leading-6 text-muted-foreground">{safeExcerpt}</p>
+          <p className="mb-2 line-clamp-2 hidden text-[13px] leading-relaxed text-muted-foreground sm:block">{safeExcerpt}</p>
         </div>
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3 text-xs text-muted-foreground">
-          <div className="flex min-w-0 flex-wrap items-center gap-3">
-            <span className="flex items-center gap-1"><User size={12} />{author}</span>
-            <span className="flex items-center gap-1"><Calendar size={12} />{date}</span>
-          </div>
-          <span className="flex items-center gap-1 whitespace-nowrap font-medium text-primary"><Clock size={12} />{readTime}</span>
+        <div className="mt-auto flex items-center gap-2 border-t border-border pt-2.5 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1 truncate"><User size={11} />{author}</span>
+          <span className="hidden items-center gap-1 sm:flex"><Calendar size={11} />{date}</span>
+          <span className="ml-auto flex items-center gap-1 whitespace-nowrap font-medium text-primary"><Clock size={11} />{readTime}</span>
         </div>
       </div>
     </article>

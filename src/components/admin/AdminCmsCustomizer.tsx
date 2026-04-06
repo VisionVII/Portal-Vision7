@@ -43,7 +43,7 @@ const HOME_PAGE_CONFIG_KEY = 'home_page_config';
 const defaultConfig: HomePageConfig = {
   heroBadge: '',
   heroTitle: 'Vision7',
-  heroDescription: 'Seu portal tecnológico com notícias, cultura, negócios, saúde e tendências globais — com curadoria inteligente, leitura clara e visão de futuro.',
+  heroDescription: 'portal tecnológico com notícias, cultura, negócios, saúde e tendências globais — com curadoria inteligente, leitura clara e visão de futuro.',
   heroAlignment: 'left',
   primaryCtaLabel: 'Explorar Notícias',
   secondaryCtaLabel: '',

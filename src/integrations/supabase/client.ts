@@ -20,8 +20,8 @@ export const SUPABASE_ANON = SUPABASE_ANON_KEY;
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: sessionStorage,
-    persistSession: false,
+    storage: localStorage,
+    persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
