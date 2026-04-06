@@ -43,6 +43,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isAccessReady, setIsAccessReady] = useState(false);
 
+  // Guard: when signIn() is running, the listener should skip role loading
+  const signingInRef = React.useRef(false);
+
   const isSuperAdmin = useMemo(() => roles.includes('super_admin'), [roles]);
   const canAccessDashboard = useMemo(
     () => roles.some((role) => DASHBOARD_ROLES.includes(role)),
@@ -136,15 +139,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, sess) => {
         if (!isMounted || event === 'INITIAL_SESSION') return;
 
-        setIsAccessReady(false);
+        // If signIn() is handling this flow, skip to avoid race condition
+        if (signingInRef.current) return;
+
         setSession(sess);
         setUser(sess?.user ?? null);
 
-        if (sess?.user) {
-          const access = await getUserAccessProfile(sess.user.id);
-          if (isMounted) { applyAccess(access); setIsAccessReady(true); }
-        } else {
-          if (isMounted) { clearAccess(); setIsAccessReady(true); }
+        try {
+          if (sess?.user) {
+            setIsAccessReady(false);
+            const access = await getUserAccessProfile(sess.user.id);
+            if (isMounted) applyAccess(access);
+          } else {
+            if (isMounted) clearAccess();
+          }
+        } catch (err) {
+          console.error('[Auth] onAuthStateChange error:', err);
+        } finally {
+          if (isMounted) setIsAccessReady(true);
         }
       },
     );
@@ -187,6 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setIsLoading(true);
     setIsAccessReady(false);
+    signingInRef.current = true;
 
     let data;
     try {
@@ -196,11 +209,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       data = result.data;
       if (result.error) {
+        signingInRef.current = false;
         setIsAccessReady(true);
         setIsLoading(false);
         return { error: result.error as Error, ...fail };
       }
     } catch (err) {
+      signingInRef.current = false;
       setIsAccessReady(true);
       setIsLoading(false);
       if (isAbortError(err)) return { error: new Error('Pedido cancelado. Tente novamente.'), ...fail };
@@ -208,6 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (!data.user || !data.session) {
+      signingInRef.current = false;
       setIsAccessReady(true);
       setIsLoading(false);
       return { error: new Error('Credenciais inválidas.'), ...fail };
@@ -224,14 +240,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('[Auth] Error after sign-in:', err);
       access = { ...access, queryFailed: true };
     } finally {
+      signingInRef.current = false;
       setIsAccessReady(true);
       setIsLoading(false);
     }
 
-    // If the role query failed (AbortError, network issue), don't sign out.
-    // Let the auth state listener retry role loading on its own.
+    // If the role query failed, don't sign out — return explicit error so UI can show feedback
     if (access.queryFailed) {
-      return { error: null, isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
+      return { error: new Error('Não foi possível verificar permissões. Tente novamente.'), ...fail };
     }
 
     if (!access.canAccessDashboard) {
