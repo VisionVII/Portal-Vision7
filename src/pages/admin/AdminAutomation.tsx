@@ -89,7 +89,7 @@ const AdminAutomation = () => {
 
   useEffect(() => {
     if (!authLoading && isAccessReady && (!user || !canAccessDashboard || !hasAllowedRole)) {
-      navigate('/validar/entrada/tipodeuser');
+      navigate('/admin/login');
     }
   }, [authLoading, canAccessDashboard, hasAllowedRole, isAccessReady, navigate, user]);
 

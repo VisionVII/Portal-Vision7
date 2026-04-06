@@ -26,9 +26,6 @@ const AuthShell = ({ title, description, children, footer, note }: AuthShellProp
               <div className="mb-6 flex justify-center">
                 <BrandLogo showTagline={false} className="items-center" />
               </div>
-              <p className="font-editorial text-sm italic text-primary-700 dark:text-primary-300">
-                Acesso editorial Vision7
-              </p>
               <h1 className="mt-3 text-2xl font-headline font-bold tracking-tight text-foreground sm:text-3xl">
                 {title}
               </h1>

@@ -77,7 +77,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!authLoading && isAccessReady && (!user || !canAccessDashboard)) {
-      navigate('/validar/entrada/tipodeuser');
+      navigate('/admin/login');
     }
   }, [user, canAccessDashboard, authLoading, isAccessReady, navigate]);
 
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/validar/entrada/tipodeuser');
+    navigate('/admin/login');
   };
 
   const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);

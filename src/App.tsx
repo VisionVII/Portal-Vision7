@@ -18,9 +18,8 @@ import Post from "@/pages/site/Post";
 import Podcast from "@/pages/site/Podcast";
 import NotFound from "@/pages/site/NotFound";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
-import AdminAccessControlled from "@/pages/admin/AdminAccessControlled";
-import TeamAccess from "@/pages/admin/TeamAccess";
-import EntryTypeValidation from "@/pages/admin/EntryTypeValidation";
+import AdminLogin from "@/pages/admin/AdminLogin";
+import UserLogin from "@/pages/admin/UserLogin";
 import ProtectedRoute from "@/components/system/ProtectedRoute";
 import PrivacyPolicy from "@/pages/site/PrivacyPolicy";
 import Course from "@/pages/site/Course";
@@ -51,10 +50,18 @@ const App = () => (
             <Route path="/post/:slug" element={<Post />} />
             <Route path="/curso/:slug" element={<Course />} />
             <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
-            <Route path="/acesso/convidado" element={<TeamAccess />} />
-            <Route path="/validar/entrada/tipodeuser" element={<EntryTypeValidation />} />
-            <Route path="/admin/login" element={<Navigate to="/validar/entrada/tipodeuser" replace />} />
-            <Route path="/admin/register" element={<Navigate to="/validar/entrada/tipodeuser?mode=convite" replace />} />
+
+            {/* ── Auth routes ── */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/acesso/equipa" element={<UserLogin />} />
+
+            {/* ── Legacy redirects ── */}
+            <Route path="/validar/entrada/tipodeuser" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/acesso/admin/controlado" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/admin/register" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/acesso/convidado" element={<Navigate to="/acesso/equipa" replace />} />
+
+            {/* ── Protected admin routes ── */}
             <Route
               path="/admin/dashboard"
               element={(
@@ -64,7 +71,6 @@ const App = () => (
               )}
             />
             <Route path="/admin/automation" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/acesso/admin/controlado" element={<AdminAccessControlled />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
               </Routes>
