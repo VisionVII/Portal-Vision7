@@ -8,9 +8,9 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requireDashboardAccess = true }: ProtectedRouteProps) => {
-  const { user, isLoading, canAccessDashboard } = useAuth();
+  const { user, isLoading, isAccessReady, canAccessDashboard } = useAuth();
 
-  if (isLoading) {
+  if (isLoading || !isAccessReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
@@ -22,11 +22,11 @@ const ProtectedRoute = ({ children, requireDashboardAccess = true }: ProtectedRo
   }
 
   if (!user) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/validar/entrada/tipodeuser" replace />;
   }
 
   if (requireDashboardAccess && !canAccessDashboard) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/validar/entrada/tipodeuser" replace />;
   }
 
   return children;

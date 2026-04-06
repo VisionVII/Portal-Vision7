@@ -72,7 +72,7 @@ const normalizeExecutionStatus = (execution: N8nExecution) => {
 const AdminAutomation = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, roles, canAccessDashboard, isLoading: authLoading } = useAuth();
+  const { user, roles, canAccessDashboard, isLoading: authLoading, isAccessReady } = useAuth();
 
   const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
   const [executions, setExecutions] = useState<N8nExecution[]>([]);
@@ -88,10 +88,10 @@ const AdminAutomation = () => {
   const hasAllowedRole = useMemo(() => roles.some((role) => ALLOWED_ROLES.includes(role)), [roles]);
 
   useEffect(() => {
-    if (!authLoading && (!user || !canAccessDashboard || !hasAllowedRole)) {
-      navigate('/admin/login');
+    if (!authLoading && isAccessReady && (!user || !canAccessDashboard || !hasAllowedRole)) {
+      navigate('/validar/entrada/tipodeuser');
     }
-  }, [authLoading, canAccessDashboard, hasAllowedRole, navigate, user]);
+  }, [authLoading, canAccessDashboard, hasAllowedRole, isAccessReady, navigate, user]);
 
   const refreshN8nData = useCallback(async (showToast = false) => {
     setIsBusy(true);

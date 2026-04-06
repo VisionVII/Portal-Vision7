@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, RefreshCcw, ShieldCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import BrandLogo from '@/components/system/BrandLogo';
+import AuthShell from '@/components/admin/AuthShell';
 
 // Email do administrador — nunca exibido na UI
 const ADMIN_EMAIL =
-  (import.meta.env.VITE_ADMIN_PRIMARY_EMAIL as string | undefined) ||
-  'Visiondevgrid@proton.me';
+  ((import.meta.env.VITE_ADMIN_PRIMARY_EMAIL as string | undefined) ||
+  'Visiondevgrid@proton.me').trim().toLowerCase();
 
 const AdminAccessControlled = () => {
   const [step, setStep] = useState<'send' | 'verify'>('send');
@@ -19,7 +19,7 @@ const AdminAccessControlled = () => {
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const { sendOtpCode, verifyOtpCode, user, canAccessDashboard } = useAuth();
+  const { requestAdminCode, verifyAdminCode, user, canAccessDashboard } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -32,7 +32,7 @@ const AdminAccessControlled = () => {
 
   const handleSend = async () => {
     setIsSending(true);
-    const { error } = await sendOtpCode(ADMIN_EMAIL);
+    const { error } = await requestAdminCode(ADMIN_EMAIL);
     setIsSending(false);
 
     if (error) {
@@ -56,7 +56,7 @@ const AdminAccessControlled = () => {
     if (code.length < 6) return;
 
     setIsVerifying(true);
-    const { error } = await verifyOtpCode(ADMIN_EMAIL, code);
+    const { error, canAccessDashboard: hasAccess, isAdmin } = await verifyAdminCode(ADMIN_EMAIL, code);
     setIsVerifying(false);
 
     if (error) {
@@ -69,13 +69,32 @@ const AdminAccessControlled = () => {
       return;
     }
 
-    // Sessão criada — navega imediatamente; o dashboard fará a verificação de roles
+    if (!isAdmin) {
+      toast({
+        title: 'Perfil sem privilégio administrativo',
+        description: 'O código foi validado, mas este email não possui role admin ou super_admin ativa no portal.',
+        variant: 'destructive',
+      });
+      setCode('');
+      return;
+    }
+
+    if (!hasAccess) {
+      toast({
+        title: 'Acesso pendente',
+        description: 'O email autenticado ainda não tem um perfil administrativo ativo.',
+        variant: 'destructive',
+      });
+      setCode('');
+      return;
+    }
+
     navigate('/admin/dashboard', { replace: true });
   };
 
   const handleResend = async () => {
     setCode('');
-    const { error } = await sendOtpCode(ADMIN_EMAIL);
+    const { error } = await requestAdminCode(ADMIN_EMAIL);
     if (error) {
       toast({ title: 'Erro ao reenviar', description: error.message, variant: 'destructive' });
     } else {
@@ -84,98 +103,83 @@ const AdminAccessControlled = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-neutral-950 via-primary-950 to-neutral-900 p-4">
-      <div className="w-full max-w-[380px]">
-
-        <div className="rounded-2xl border border-white/10 bg-card/95 p-8 shadow-2xl backdrop-blur-sm">
-
-          {/* Brand + ícone de segurança */}
-          <div className="mb-7 text-center">
-            <div className="mb-3 flex justify-center">
-              <BrandLogo showTagline={false} />
-            </div>
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary-600/10">
-              <ShieldCheck className="h-5 w-5 text-primary-500" />
-            </div>
-            <h1 className="text-lg font-bold tracking-tight text-foreground">Acesso administrativo</h1>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {step === 'send'
-                ? 'Envie um código de verificação para o email do administrador.'
-                : 'Insira o código de 6 dígitos recebido no email.'}
-            </p>
+    <AuthShell
+      title="Acesso administrativo"
+      description={step === 'send'
+        ? 'Solicite um código de acesso único para validar a sessão administrativa.'
+        : 'Introduza o código de 6 dígitos recebido no email protegido do administrador.'}
+      note="Área protegida do sistema"
+    >
+      {step === 'send' ? (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm leading-6 text-muted-foreground">
+            O código é de uso único, expira em poucos minutos e só libera acesso quando o perfil administrativo está ativo.
           </div>
 
-          {step === 'send' ? (
-            /* ── Passo 1: enviar código ── */
-            <Button
-              className="h-11 w-full font-semibold"
-              onClick={handleSend}
-              disabled={isSending}
-            >
-              {isSending
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />A enviar código…</>
-                : 'Enviar código de acesso'}
-            </Button>
-          ) : (
-            /* ── Passo 2: verificar código ── */
-            <form onSubmit={handleVerify} className="space-y-5">
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Código recebido</Label>
-                <div className="flex justify-center">
-                  <InputOTP
-                    maxLength={6}
-                    value={code}
-                    onChange={setCode}
-                    autoFocus
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="h-11 w-full font-semibold"
-                disabled={isVerifying || code.length < 6}
-              >
-                {isVerifying
-                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />A verificar…</>
-                  : 'Verificar e entrar'}
-              </Button>
-
-              <div className="flex items-center justify-between pt-1 text-xs">
-                <button
-                  type="button"
-                  onClick={() => { setStep('send'); setCode(''); }}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  ← Voltar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  className="flex items-center gap-1 text-primary-400 hover:text-primary-300"
-                >
-                  <RefreshCcw className="h-3 w-3" />
-                  Reenviar código
-                </button>
-              </div>
-            </form>
-          )}
+          <Button
+            className="h-12 w-full rounded-2xl text-base font-semibold"
+            onClick={handleSend}
+            disabled={isSending}
+          >
+            {isSending
+              ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />A enviar código…</>
+              : 'Enviar código de acesso'}
+          </Button>
         </div>
+      ) : (
+        <form onSubmit={handleVerify} className="space-y-5">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Código recebido</Label>
+            <div className="rounded-2xl border border-border bg-muted/30 px-3 py-5">
+              <div className="flex justify-center">
+                <InputOTP
+                  maxLength={6}
+                  value={code}
+                  onChange={setCode}
+                  autoFocus
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+            </div>
+          </div>
 
-        <p className="mt-4 text-center text-[11px] text-white/20">
-          Acesso restrito · Área protegida do sistema
-        </p>
-      </div>
-    </div>
+          <Button
+            type="submit"
+            className="h-12 w-full rounded-2xl text-base font-semibold"
+            disabled={isVerifying || code.length < 6}
+          >
+            {isVerifying
+              ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />A verificar…</>
+              : 'Validar e entrar'}
+          </Button>
+
+          <div className="flex items-center justify-between pt-1 text-sm">
+            <button
+              type="button"
+              onClick={() => { setStep('send'); setCode(''); }}
+              className="font-medium text-muted-foreground hover:text-foreground"
+            >
+              Voltar
+            </button>
+            <button
+              type="button"
+              onClick={handleResend}
+              className="font-medium text-primary hover:text-primary/80"
+            >
+              Reenviar código
+            </button>
+          </div>
+        </form>
+      )}
+    </AuthShell>
   );
 };
 

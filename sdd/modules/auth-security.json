@@ -1,11 +1,11 @@
 
 {
   "module": "Auth & Segurança",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-05",
-  "objective": "Sistema de autenticação e autorização robusto com OTP, RBAC extensível, RLS deny-by-default, proteção contra abuso, inteligência de sessão e observabilidade de segurança.",
+  "last_updated": "2026-04-06",
+  "objective": "Sistema de autenticação e autorização robusto com OTP, RBAC extensível, fluxos distintos para admin e equipa, proteção contra abuso, inteligência de sessão e observabilidade de segurança.",
 
   "functional_requirements": [
     {
@@ -31,6 +31,18 @@
       "description": "Suporte a MFA (TOTP/WebAuthn) para roles críticas (admin/super_admin)",
       "priority": "Alta",
       "status": "Planejado"
+    },
+    {
+      "id": "FR-014",
+      "description": "Entrada hierárquica: admin apenas em /acesso/admin/controlado e equipa/parceiros em /validar/entrada/tipodeuser",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-015",
+      "description": "Pedido público de acesso/parceria com triagem manual antes de qualquer convite para o dashboard",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
     }
   ],
 
@@ -86,9 +98,9 @@
   ],
 
   "flows": {
-    "data_flow": "Email Input → CAPTCHA → requestAdminCode() → Rate Limit Check → Supabase OTP → Email → OTP Input → verifyAdminCode() → Session Fingerprint → JWT → AuthContext → Access Control",
+    "data_flow": "Pedido de acesso público → triagem manual → convite por papel → validação em /validar/entrada/tipodeuser → OTP/email ou código de convite → Session Fingerprint → JWT → AuthContext → Access Control",
     
-    "user_flow": "AdminLogin → Email → CAPTCHA → Receber Código → Inserir OTP → Validação → Dashboard",
+    "user_flow": "Admin → /acesso/admin/controlado → OTP → Dashboard | Equipa/Parceiro → /validar/entrada/tipodeuser → código por email → Dashboard conforme role",
     
     "security_flow": "OTP Request → Rate Limit → Behavior Analysis → Risk Score → Allow | Block | Challenge (MFA)"
   },
@@ -158,6 +170,7 @@
 
   "observability": {
     "metrics": [
+      "Pedidos de acesso/parceria",
       "OTP requests/min",
       "Login success rate",
       "Failed OTP attempts",
@@ -209,6 +222,12 @@
       "version": "1.1.0",
       "author": "Vision7 Team",
       "description": "Security hardening: rate limit, session intelligence, JWT rotation, audit risk, anti-abuse, observability"
+    },
+    {
+      "date": "2026-04-06",
+      "version": "1.2.0",
+      "author": "Vision7 Team",
+      "description": "Arquitetura de entradas separadas por hierarquia, pedido público de acesso e validação central para equipa/parceiros"
     }
   ]
 }

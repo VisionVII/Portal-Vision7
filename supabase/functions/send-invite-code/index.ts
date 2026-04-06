@@ -295,7 +295,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ success: true }, 200, corsHeaders);
     }
 
-    const registerUrl = `${DEFAULT_SITE_URL}/admin/register?email=${encodeURIComponent(normalizedEmail)}&role=${encodeURIComponent(role)}`;
+    const registerUrl = `${DEFAULT_SITE_URL}/validar/entrada/tipodeuser?mode=convite&email=${encodeURIComponent(normalizedEmail)}&role=${encodeURIComponent(role)}`;
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -306,7 +306,7 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [normalizedEmail],
-        subject: `Convite para a equipa ${brandName}`,
+        subject: `Convite de acesso Vision7 - ${brandName}`,
         html: renderInviteEmail(code, role, brandName, logoUrl, registerUrl, CODE_EXPIRY_HOURS),
       }),
     });

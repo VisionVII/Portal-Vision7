@@ -1,5 +1,11 @@
 project_id = "stpusdeqwbckvfsitsld"
 
+[functions.activate-invite]
+verify_jwt = false
+
+[functions.request-team-access]
+verify_jwt = false
+
 [functions.send-login-code]
 verify_jwt = false
 
