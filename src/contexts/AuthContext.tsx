@@ -235,13 +235,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAccessReady(false);
     signingInRef.current = true;
 
+    // Clear any stale session before attempting login (prevents refresh-token conflicts)
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch { /* ignore — just ensuring clean slate */ }
+
     let data;
     try {
+      console.debug('[Auth] signIn → calling signInWithPassword for', email.trim().toLowerCase());
       const result = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
       });
       data = result.data;
+      console.debug('[Auth] signIn ← result:', { hasUser: !!result.data.user, error: result.error?.message });
       if (result.error) {
         signingInRef.current = false;
         setIsAccessReady(true);

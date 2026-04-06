@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import AuthShell from '@/components/admin/AuthShell';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const { signIn, user, canAccessDashboard } = useAuth();
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ const AdminLogin = () => {
     if (!email.trim() || !password) return;
 
     setIsSubmitting(true);
+    setLoginError(null);
 
     let result;
     try {
@@ -50,11 +53,13 @@ const AdminLogin = () => {
     if (error) {
       const msg = error.message ?? '';
       const isCredentialError = /invalid.*credentials|invalid.*login|email.*not.*confirmed/i.test(msg);
+      const displayMsg = isCredentialError
+        ? 'Email ou password incorretos. Verifique e tente novamente.'
+        : msg || 'Não foi possível iniciar sessão.';
+      setLoginError(displayMsg);
       toast({
         title: isCredentialError ? 'Credenciais inválidas' : 'Erro ao iniciar sessão',
-        description: isCredentialError
-          ? 'Email ou password incorretos. Verifique e tente novamente.'
-          : msg || 'Não foi possível iniciar sessão.',
+        description: displayMsg,
         variant: 'destructive',
       });
       return;
@@ -123,6 +128,24 @@ const AdminLogin = () => {
             ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />A validar…</>
             : 'Entrar no dashboard'}
         </Button>
+
+        {loginError && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-center">
+            <p className="text-sm text-destructive">{loginError}</p>
+            <button
+              type="button"
+              className="mt-2 text-xs text-muted-foreground underline hover:text-foreground"
+              onClick={async () => {
+                await supabase.auth.signOut({ scope: 'local' });
+                localStorage.clear();
+                setLoginError(null);
+                toast({ title: 'Sessão limpa', description: 'Tente iniciar sessão novamente.' });
+              }}
+            >
+              Limpar sessão e tentar novamente
+            </button>
+          </div>
+        )}
       </form>
     </AuthShell>
   );
