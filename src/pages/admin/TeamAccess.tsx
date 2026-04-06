@@ -168,16 +168,16 @@ const TeamAccess = () => {
 
       <div className="mt-6 space-y-3 border-t border-border/80 pt-5 text-center">
         <Link
-          to="/validar/entrada/tipodeuser"
+          to="/acesso/equipa"
           className="block text-sm font-semibold text-primary hover:text-primary/80"
         >
-          Recebeu um convite? Validar entrada por tipo de utilizador
+          Recebeu um convite? Aceder ao login de equipa
         </Link>
         <Link
-          to="/acesso/admin/controlado"
+          to="/admin/login"
           className="block text-sm font-semibold text-foreground hover:text-primary"
         >
-          É administrador? Use o acesso controlado
+          É administrador? Use o login admin
         </Link>
         <Link
           to="/"
