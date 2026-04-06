@@ -33,17 +33,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-const isSchemaMissingError = (error: unknown) => {
-  const message = typeof error === 'object' && error !== null && 'message' in error
-    ? String((error as { message?: string }).message)
-    : error instanceof Error
-      ? error.message
-      : String(error ?? '');
-  return /PGRST205|user_roles|schema cache|does not exist/i.test(message);
-};
-
 // ── Provider ─────────────────────────────────────────────────────────────────
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
