@@ -103,9 +103,8 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   };
 
   const ensureUniqueSlug = async (baseSlug: string, currentPostId?: string) => {
-    let slug = baseSlug;
+    const slug = baseSlug;
     let suffix = 0;
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const candidate = suffix === 0 ? slug : `${slug}-${suffix}`;
       let query = supabase.from('posts').select('id').eq('slug', candidate).limit(1);
