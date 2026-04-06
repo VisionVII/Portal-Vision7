@@ -26,7 +26,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
   defaultCategoryColor,
   otherCategories,
 }) => {
-  const { data: posts, isLoading } = usePostsByCategory(slug);
+  const { data: posts, isLoading, isError, refetch } = usePostsByCategory(slug);
   const { paginatedItems, currentPage, totalPages, goToPage } = usePagination(posts, { pageSize: 6 });
   const totalPosts = posts?.length ?? 0;
 
@@ -75,6 +75,12 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
                 {[1, 2, 3, 4].map((i) => (
                   <Skeleton key={i} className="h-72 w-full rounded-xl" />
                 ))}
+              </div>
+            ) : isError ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center dark:border-red-800 dark:bg-red-950">
+                <p className="font-medium text-red-700 dark:text-red-300">Erro ao carregar artigos de {title}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">Verifique a conexão e tente novamente.</p>
+                <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700">Tentar novamente</button>
               </div>
             ) : paginatedItems.length > 0 ? (
               <>

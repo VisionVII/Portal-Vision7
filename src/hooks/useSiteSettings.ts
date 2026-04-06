@@ -18,7 +18,7 @@ export const useSiteSettings = () => {
         .from('site_settings')
         .select('*');
       if (error) {
-        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
+        if (error.code !== 'PGRST116' && !error.message?.includes('404') && !/AbortError|signal is aborted/i.test(error.message ?? '')) {
           console.warn('useSiteSettings supabase query error', error);
         }
         return {} as SiteSettingsMap;
@@ -27,7 +27,8 @@ export const useSiteSettings = () => {
       (data as SiteSetting[])?.forEach(s => { settings[s.key] = s.value; });
       return settings;
     },
-    retry: false,
+    retry: 1,
+    staleTime: 120_000,
   });
 };
 

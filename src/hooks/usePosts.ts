@@ -74,7 +74,9 @@ export const usePosts = (adminView = false) => {
 
       return (data as Post[]) ?? [];
     },
-    retry: 1,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    staleTime: 60_000,
   });
 };
 
@@ -103,7 +105,9 @@ export const usePostsByCategory = (categorySlug: string) => {
       return (data as Post[]) ?? [];
     },
     enabled: !!categorySlug,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    staleTime: 60_000,
   });
 };
 

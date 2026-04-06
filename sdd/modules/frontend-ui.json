@@ -1,10 +1,10 @@
 {
   "module": "Frontend & UI",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-05",
-  "objective": "Interface pública do portal de notícias Vision7 com design responsivo, tema dark/light, navegação por categorias, visualização de posts, cursos, podcasts e páginas institucionais.",
+  "last_updated": "2026-04-06",
+  "objective": "Interface pública do portal Vision7 com design responsivo, tema dark/light, navegação por categorias e jornadas específicas para pedidos de acesso, convites e validação hierárquica de entrada.",
   "functional_requirements": [
     {
       "id": "FR-001",
@@ -65,6 +65,18 @@
       "description": "Página 404 customizada com navegação de retorno",
       "priority": "Baixa",
       "status": "Finalizado"
+    },
+    {
+      "id": "FR-011",
+      "description": "Página pública /acesso/convidado para solicitação de parceria ou acesso com aviso claro de triagem manual",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-012",
+      "description": "Página /validar/entrada/tipodeuser para validar acesso por código de email e primeiro acesso por convite",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
     }
   ],
   "non_functional_requirements": [
@@ -101,7 +113,7 @@
   ],
   "flows": {
     "data_flow": "Supabase → TanStack Query → Page Components → UI Components → DOM (+ DOMPurify para HTML)",
-    "user_flow": "Homepage → Navegar Categorias → Ler Post → Newsletter Signup | Cursos → Detalhe Curso | Podcast → Player"
+    "user_flow": "Homepage → Navegar Categorias → Ler Post → Newsletter Signup | /acesso/convidado → solicitar acesso | /validar/entrada/tipodeuser → validar entrada da equipa"
   },
   "diagrams": {
     "architecture": "sdd/diagrams/frontend-arch.md",
@@ -154,6 +166,7 @@
       "src/components/system/ErrorBoundary.tsx",
       "src/components/system/PortalAIAssistantButton.tsx",
       "src/components/system/ScrollToTop.tsx",
+      "src/components/admin/AuthShell.tsx",
       "src/components/media/PodcastCard.tsx",
       "src/components/media/PodcastPlayer.tsx"
     ],
@@ -175,7 +188,9 @@
       "src/pages/site/Post.tsx",
       "src/pages/site/PrivacyPolicy.tsx",
       "src/pages/site/Saude.tsx",
-      "src/pages/site/Tecnologia.tsx"
+      "src/pages/site/Tecnologia.tsx",
+      "src/pages/admin/TeamAccess.tsx",
+      "src/pages/admin/EntryTypeValidation.tsx"
     ],
     "services": [],
     "types": [],
@@ -277,6 +292,12 @@
       "version": "1.0.1",
       "author": "sdd-sync",
       "description": "Auto-sync: file list updated"
+    },
+    {
+      "date": "2026-04-06",
+      "version": "1.1.0",
+      "author": "Vision7 Team",
+      "description": "Jornadas de acesso público, validação por tipo de utilizador e alinhamento visual das entradas do portal"
     }
   ]
 }

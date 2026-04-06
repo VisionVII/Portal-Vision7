@@ -41,7 +41,7 @@ const parseCourseMeta = (rawValue?: string | null): Record<string, CourseMeta> =
 };
 
 const Index = () => {
-  const { data: posts = [], isLoading, isError } = usePosts();
+  const { data: posts = [], isLoading, isError, refetch } = usePosts();
   const { data: categories } = useCategories();
   const { data: courses = [] } = useCourses();
   const { data: siteSettings } = useSiteSettings();
@@ -114,6 +114,18 @@ const Index = () => {
           );
         }
 
+        if (isError) {
+          return (
+            <section key="featured">
+              <h2 className="section-title">{sectionLabel}</h2>
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center dark:border-red-800 dark:bg-red-950">
+                <p className="font-medium text-red-700 dark:text-red-300">Não foi possível carregar o destaque</p>
+                <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700">Tentar novamente</button>
+              </div>
+            </section>
+          );
+        }
+
         if (!featuredPost) return null;
 
         return (
@@ -144,6 +156,11 @@ const Index = () => {
                 {[1, 2, 3, 4].map((item) => (
                   <Skeleton key={item} className="h-56 w-full rounded-xl" />
                 ))}
+              </div>
+            ) : isError ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center dark:border-red-800 dark:bg-red-950">
+                <p className="font-medium text-red-700 dark:text-red-300">Erro ao carregar últimas notícias</p>
+                <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700">Tentar novamente</button>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -241,7 +258,8 @@ const Index = () => {
             ) : isError ? (
               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center dark:border-red-800 dark:bg-red-950">
                 <p className="font-medium text-red-700 dark:text-red-300">Erro ao carregar notícias</p>
-                <p className="mt-2 text-sm text-red-600 dark:text-red-400">Tente atualizar a página mais tarde.</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">Verifique a conexão e tente novamente.</p>
+                <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700">Tentar novamente</button>
               </div>
             ) : paginatedRegularPosts.length === 0 ? (
               <div className="rounded-xl border border-border bg-muted/30 px-4 py-12 text-center">

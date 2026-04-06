@@ -141,9 +141,9 @@ const PostsTable: React.FC<PostsTableProps> = ({ posts, isLoading, onEdit }) => 
                     <span>{post.views || 0} views</span>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="mt-4 flex flex-col gap-2 min-[360px]:grid min-[360px]:grid-cols-2">
                     {post.status === 'published' && (
-                      <Link to={`/post/${post.slug}`} target="_blank" className="col-span-2">
+                      <Link to={`/post/${post.slug}`} target="_blank" className="min-[360px]:col-span-2">
                         <Button variant="outline" size="sm" className="w-full gap-1.5">
                           <Eye className="h-4 w-4" />
                           Ver publicação

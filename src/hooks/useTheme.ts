@@ -1,23 +1,23 @@
-import { useState, useCallback, useLayoutEffect } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useTheme as useNextTheme } from 'next-themes';
+
+type ThemeMode = 'light' | 'dark';
 
 export const useTheme = () => {
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('theme');
-      if (stored === 'dark' || stored === 'light') return stored;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
+  const { theme, resolvedTheme, setTheme: setNextTheme } = useNextTheme();
+
+  const activeTheme = useMemo<ThemeMode>(() => {
+    if (resolvedTheme === 'dark' || theme === 'dark') return 'dark';
     return 'light';
-  });
+  }, [resolvedTheme, theme]);
 
-  useLayoutEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle('dark', theme === 'dark');
-    root.style.colorScheme = theme;
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+  const setTheme = useCallback((nextTheme: ThemeMode) => {
+    setNextTheme(nextTheme);
+  }, [setNextTheme]);
 
-  const toggleTheme = useCallback(() => setTheme(prev => prev === 'light' ? 'dark' : 'light'), []);
+  const toggleTheme = useCallback(() => {
+    setNextTheme(activeTheme === 'light' ? 'dark' : 'light');
+  }, [activeTheme, setNextTheme]);
 
-  return { theme, toggleTheme };
+  return { theme: activeTheme, setTheme, toggleTheme };
 };
