@@ -35,20 +35,26 @@ const AdminLogin = () => {
       result = await signIn(email, password);
     } catch (err) {
       setIsSubmitting(false);
+      toast({
+        title: 'Erro ao iniciar sessão',
+        description: err instanceof Error ? err.message : 'Erro inesperado. Tente novamente.',
+        variant: 'destructive',
+      });
       return;
     }
 
-    const { error, isAdmin, canAccessDashboard: hasAccess } = result;
+    const { error, canAccessDashboard: hasAccess } = result;
 
     setIsSubmitting(false);
 
     if (error) {
-      const isCredentialError = /invalid.*credentials|invalid.*login|email.*not.*confirmed/i.test(error.message);
+      const msg = error.message ?? '';
+      const isCredentialError = /invalid.*credentials|invalid.*login|email.*not.*confirmed/i.test(msg);
       toast({
         title: isCredentialError ? 'Credenciais inválidas' : 'Erro ao iniciar sessão',
         description: isCredentialError
           ? 'Email ou password incorretos. Verifique e tente novamente.'
-          : error.message,
+          : msg || 'Não foi possível iniciar sessão.',
         variant: 'destructive',
       });
       return;
