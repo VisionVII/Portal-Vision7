@@ -55,6 +55,7 @@ function isOriginAllowed(origin: string): boolean {
   if (ALLOWED_ORIGINS.has(origin)) return true;
   // Accept Vercel preview/production URLs for the project
   if (/^https:\/\/portal-vision7[\w-]*\.vercel\.app$/.test(origin)) return true;
+  if (/^https:\/\/portal-vision7[\w-]*-visionvll-team\.vercel\.app$/.test(origin)) return true;
   return false;
 }
 
