@@ -319,6 +319,9 @@ const AdminDashboard = () => {
               <p className="text-sm text-foreground">{user.email}</p>
               <p className="text-[11px] text-muted-foreground">{roles.join(', ')}</p>
             </div>
+            <div className="text-right lg:hidden">
+              <p className="max-w-[120px] truncate text-[11px] text-muted-foreground sm:max-w-[180px]">{user.email}</p>
+            </div>
             {primaryRole && <Badge variant="secondary" className="hidden sm:inline-flex">{primaryRole.replace('_', ' ')}</Badge>}
             <Button onClick={handleNewPost} size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /><span className="hidden sm:inline">Post</span></Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut} title="Sair"><LogOut className="h-4 w-4" /></Button>
