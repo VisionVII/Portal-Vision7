@@ -20,10 +20,16 @@ export const SUPABASE_ANON = SUPABASE_ANON_KEY;
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: localStorage,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-  }
+    storageKey: 'v7-auth-token',
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'vision7-portal',
+    },
+  },
 });
