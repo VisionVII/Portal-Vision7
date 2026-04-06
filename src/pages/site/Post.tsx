@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import Header from '@/components/layout/Header';
@@ -6,7 +6,7 @@ import Footer from '@/components/layout/Footer';
 import AdSpace from '@/components/content/AdSpace';
 import RelatedPosts from '@/components/content/RelatedPosts';
 import { usePost, usePosts, useTrackPostView } from '@/hooks/usePosts';
-import { Calendar, User, ArrowLeft } from 'lucide-react';
+import { Calendar, User, ArrowLeft, Share2, Check } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Post = () => {
@@ -15,6 +15,7 @@ const Post = () => {
   const { data: allPosts } = usePosts();
   const trackPostView = useTrackPostView();
   const trackedPostIdRef = useRef<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -67,6 +68,24 @@ const Post = () => {
     p => p.categories?.id === post.category_id && p.id !== post.id
   ).slice(0, 3) || [];
 
+  const categoryPath = post.categories?.slug ? `/${post.categories.slug}` : '/';
+  const categoryLabel = post.categories?.name ?? 'Notícias';
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: post.title, text: post.excerpt, url });
+        return;
+      } catch {
+        // fallback to clipboard
+      }
+    }
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const formattedDate = new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', {
     day: 'numeric',
     month: 'long',
@@ -80,14 +99,22 @@ const Post = () => {
       <article id="post-top" className="container mx-auto px-4 py-6 sm:py-8 lg:py-10">
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto max-w-5xl">
-            <div className="mb-6">
+            <div className="mb-6 flex items-center justify-between gap-3">
               <Link
-                to="/"
+                to={categoryPath}
                 className="inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar às notícias
+                {categoryLabel}
               </Link>
+              <button
+                onClick={() => void handleShare()}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                title="Partilhar artigo"
+              >
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Share2 className="h-3.5 w-3.5" />}
+                {copied ? 'Copiado!' : 'Partilhar'}
+              </button>
             </div>
 
             <header className="scroll-mt-28 mb-8 md:mb-10">

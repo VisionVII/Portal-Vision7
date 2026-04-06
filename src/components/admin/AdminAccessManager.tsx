@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Copy, KeyRound, Mail, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { CheckCircle2, KeyRound, Loader2, Mail, Send, ShieldCheck, UserPlus, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import {
   useRoleAssignments,
 } from '@/hooks/useAdminAccess';
 import { useToast } from '@/hooks/use-toast';
+import { supabase, SUPABASE_FUNCTIONS_URL } from '@/integrations/supabase/client';
 
 const ROLE_BLUEPRINTS: Array<{
   role: AppRole;
@@ -80,6 +81,8 @@ const AdminAccessManager = () => {
   const [role, setRole] = useState<AppRole>('editor');
   const [scopeNote, setScopeNote] = useState('');
   const [expiresAt, setExpiresAt] = useState(() => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
+  const [isSending, setIsSending] = useState(false);
+  const [lastSentEmail, setLastSentEmail] = useState<string | null>(null);
 
   const selectedBlueprint = useMemo(
     () => ROLE_BLUEPRINTS.find((item) => item.role === role),
@@ -98,41 +101,82 @@ const AdminAccessManager = () => {
 
   const handleCreateInvite = async (event: React.FormEvent) => {
     event.preventDefault();
+    setIsSending(true);
+    setLastSentEmail(null);
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const normalizedScope = scopeNote.trim();
 
-      const invite = await createInvite.mutateAsync({
+      // 1) Register invite in DB (for tracking)
+      await createInvite.mutateAsync({
         email: normalizedEmail,
         role,
         expiresAt: new Date(expiresAt).toISOString(),
       });
 
-      const inviteLink = `${window.location.origin}/admin/register?invite=${invite.token}&email=${encodeURIComponent(invite.email)}&role=${invite.role}`;
-      const message = `${inviteLink}${normalizedScope ? `\n\nEscopo sugerido: ${normalizedScope}` : ''}`;
-      await navigator.clipboard.writeText(message);
+      // 2) Send invite email with 6-digit code via edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      const jwt = sessionData?.session?.access_token ?? '';
 
-      toast({
-        title: 'Convite criado',
-        description: 'O link do convite foi copiado para a área de transferência.',
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/send-invite-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({ email: normalizedEmail, role }),
       });
 
+      const resData = await res.json().catch(() => null);
+
+      if (!res.ok || resData?.error) {
+        toast({
+          title: 'Convite registado, mas falha no envio do email',
+          description: resData?.error ?? 'O convite foi guardado. Tente reenviar o email.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setLastSentEmail(normalizedEmail);
       setEmail('');
       setScopeNote('');
+
+      toast({
+        title: 'Convite enviado',
+        description: `Email de convite com código de ativação enviado para ${normalizedEmail}.`,
+      });
     } catch (error) {
       toast({
         title: 'Erro ao criar convite',
         description: error instanceof Error ? error.message : 'Não foi possível gerar o convite.',
         variant: 'destructive',
       });
+    } finally {
+      setIsSending(false);
     }
   };
 
-  const handleCopyInvite = async (token: string, inviteRole: AppRole, inviteEmail?: string) => {
-    const link = `${window.location.origin}/admin/register?invite=${token}${inviteEmail ? `&email=${encodeURIComponent(inviteEmail)}` : ''}&role=${inviteRole}`;
-    await navigator.clipboard.writeText(link);
-    toast({ title: 'Link copiado', description: 'O convite está pronto para ser enviado ao utilizador.' });
+  const handleResendInvite = async (inviteEmail: string, inviteRole: AppRole) => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const jwt = sessionData?.session?.access_token ?? '';
+
+    const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/send-invite-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+      body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+    });
+
+    const resData = await res.json().catch(() => null);
+
+    if (!res.ok || resData?.error) {
+      toast({ title: 'Erro ao reenviar', description: resData?.error ?? 'Falha ao reenviar o convite.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Convite reenviado', description: `Novo código enviado para ${inviteEmail}.` });
+    }
   };
 
   return (
@@ -208,9 +252,17 @@ const AdminAccessManager = () => {
                 </ul>
               </div>
 
-              <Button type="submit" className="w-full gap-2">
-                <Mail className="h-4 w-4" />
-                Gerar convite com permissões
+              {lastSentEmail && (
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  Email enviado para <strong>{lastSentEmail}</strong>
+                </div>
+              )}
+
+              <Button type="submit" className="w-full gap-2" disabled={isSending}>
+                {isSending
+                  ? <><Loader2 className="h-4 w-4 animate-spin" />A enviar convite…</>
+                  : <><Send className="h-4 w-4" />Enviar convite por email</>}
               </Button>
             </form>
           </CardContent>
@@ -295,9 +347,15 @@ const AdminAccessManager = () => {
                       <p className="text-xs text-muted-foreground">{getRoleTitle(invite.role)} • {invite.status || 'pending'} • expira em {new Date(invite.expires_at).toLocaleDateString('pt-PT')}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleCopyInvite(invite.token, invite.role, invite.email)} className="gap-1.5">
-                        <Copy className="h-4 w-4" />
-                        Copiar
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleResendInvite(invite.email, invite.role)}
+                        className="gap-1.5"
+                        disabled={invite.status === 'used'}
+                      >
+                        <Send className="h-4 w-4" />
+                        Reenviar
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => expireInvite.mutate(invite.id)} className="gap-1.5">
                         <KeyRound className="h-4 w-4" />
