@@ -1,6 +1,5 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
 import DashboardHeader from '@/components/admin/DashboardHeader';
 import DashboardSidebar from '@/components/admin/DashboardSidebar';
 import type { AdminView } from '@/components/admin/dashboard-types';
@@ -20,20 +19,6 @@ const AccessView = lazy(() => import('@/components/admin/views/AccessView'));
 const DeveloperView = lazy(() => import('@/components/admin/views/DeveloperView'));
 const SettingsView = lazy(() => import('@/components/admin/views/SettingsView'));
 const MediaGalleryView = lazy(() => import('@/components/admin/views/MediaGalleryView'));
-
-const PANEL_META: Record<AdminView, { title: string; description: string }> = {
-  overview: { title: 'Cockpit editorial', description: 'Vista central com KPIs, posts recentes e acesso rápido.' },
-  content: { title: 'Gestão de conteúdo', description: 'Crie, edite e publique posts. Organize o fluxo editorial.' },
-  builder: { title: 'Homepage builder', description: 'Controle banner, secções e ordem visual da homepage.' },
-  media: { title: 'Galeria de media', description: 'Upload, gestão e URLs de imagens do portal.' },
-  automations: { title: 'Automações e N8N', description: 'Workflows 24/7, RSS, IA e integrações de produtividade.' },
-  audiocasts: { title: 'Audiocasts', description: 'Gerir episódios de áudio, upload e categorias.' },
-  courses: { title: 'Cursos e parcerias', description: 'Vitrine comercial com afiliados e links gerenciados.' },
-  crm: { title: 'CRM e audiência', description: 'Newsletter, subscritores e relacionamento com leads.' },
-  access: { title: 'Acessos e convites', description: 'Roles, permissões e convites de equipa.' },
-  developer: { title: 'Console developer', description: 'Diagnósticos de infra, DB e sessão.' },
-  settings: { title: 'Identidade visual', description: 'Logo, branding e site settings.' },
-};
 
 const ViewSkeleton = () => (
   <div className="space-y-4">
@@ -145,20 +130,6 @@ const AdminDashboard = () => {
         {/* Main content — grows to fill remaining width */}
         <main className="min-w-0 flex-1 overflow-x-hidden">
           <div className="mx-auto max-w-6xl px-3 py-6 sm:px-5 sm:py-7 lg:px-6 xl:px-8">
-            {/* View title bar */}
-            <div className="mb-6 flex flex-col gap-3 rounded-xl border border-border/30 bg-card/60 p-4 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:p-5 dark:bg-card/40">
-              <div className="min-w-0">
-                <h2 className="truncate text-xl font-bold tracking-tight text-foreground">{PANEL_META[activeView].title}</h2>
-                <p className="mt-0.5 text-sm text-neutral-400 dark:text-neutral-500">{PANEL_META[activeView].description}</p>
-              </div>
-              <div className="flex shrink-0 flex-wrap gap-1.5">
-                {roles.map((role) => (
-                  <Badge key={role} variant="outline" className="text-[10px]">
-                    {role.replace('_', ' ')}
-                  </Badge>
-                ))}
-              </div>
-            </div>
 
             <Suspense fallback={<ViewSkeleton />}>
               <Panel view="overview">
