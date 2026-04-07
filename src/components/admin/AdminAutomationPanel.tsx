@@ -98,14 +98,26 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
 
     setIsBusy(true);
     try {
-      const [workflowData, executionData, health] = await Promise.all([
+      // Health check never throws — always completes
+      const health = await checkN8nHealth();
+      setN8nHealthy(health.status === 'connected');
+
+      if (health.status !== 'connected') {
+        const detail = (health as { detail?: string }).detail || 'Instância n8n inacessível.';
+        consecutiveErrorsRef.current += 1;
+        setN8nError(detail);
+        if (showToast) {
+          toast({ title: 'n8n offline', description: detail, variant: 'destructive' });
+        }
+        return;
+      }
+
+      const [workflowData, executionData] = await Promise.all([
         getWorkflows(),
         getExecutions(),
-        checkN8nHealth(),
       ]);
       setWorkflows(workflowData);
       setExecutions(executionData);
-      setN8nHealthy(health.status === 'connected');
       setSelectedExecution((current) => {
         if (!current) return executionData[0] ?? null;
         return executionData.find((item) => String(item.id) === String(current.id)) ?? current;
@@ -283,11 +295,25 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
       {n8nError && (
         <Card className="border-amber-200 bg-amber-50/80 dark:border-amber-900/40 dark:bg-amber-950/20">
           <CardContent className="flex items-start gap-3 p-4 text-sm">
-            <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
-            <div>
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <div className="space-y-1">
               <p className="font-semibold text-foreground">Ligação ao n8n com atenção</p>
               <p className="text-muted-foreground">{n8nError}</p>
-              <p className="mt-1 text-muted-foreground">Confirme os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> em Supabase → Edge Functions.</p>
+              {n8nError.includes('not configured') && (
+                <p className="text-muted-foreground">Os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> não estão definidos. Vá a <strong>Supabase → Edge Functions → n8n-proxy → Secrets</strong>.</p>
+              )}
+              {n8nError.includes('Forbidden') && (
+                <p className="text-muted-foreground">O seu utilizador não tem role <code>admin</code> ou <code>super_admin</code> ativa na tabela <code>user_roles</code>.</p>
+              )}
+              {n8nError.includes('Unauthorized') && (
+                <p className="text-muted-foreground">Token JWT expirado ou inválido. Tente fazer <strong>logout/login</strong>.</p>
+              )}
+              {(n8nError.includes('unreachable') || n8nError.includes('inacessível') || n8nError.includes('Failed to fetch')) && (
+                <p className="text-muted-foreground">A Edge Function <code>n8n-proxy</code> pode não estar deployed ou a instância n8n está offline. Verifique o deploy no Supabase e o estado da instância.</p>
+              )}
+              {!n8nError.includes('not configured') && !n8nError.includes('Forbidden') && !n8nError.includes('Unauthorized') && !n8nError.includes('unreachable') && !n8nError.includes('inacessível') && !n8nError.includes('Failed to fetch') && (
+                <p className="text-muted-foreground">Confirme os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> em Supabase → Edge Functions.</p>
+              )}
             </div>
           </CardContent>
         </Card>
