@@ -7,7 +7,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const N8N_BASE_URL = (Deno.env.get('N8N_BASE_URL') ?? '').replace(/\/$/, '');
 const N8N_API_KEY = Deno.env.get('N8N_API_KEY') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 // CORS — restrict to known origins (production + preview + local dev)
@@ -28,6 +27,20 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     Vary: 'Origin',
   };
+}
+
+// ─── JWT payload parser (gateway already validated the signature) ─────────────
+function parseJwtPayload(token: string): { sub?: string; role?: string; exp?: number } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    // JWT uses base64url encoding
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
 }
 
 // ─── Rate Limiter (in-memory, per user) ──────────────────────────────────────
@@ -82,6 +95,8 @@ function jsonResponse(data: unknown, status: number, cors: Record<string, string
 }
 
 // ─── Main handler ────────────────────────────────────────────────────────────
+// NOTE: Deploy WITHOUT --no-verify-jwt so Supabase gateway validates the JWT.
+// We only parse the payload to extract the user ID (no network call needed).
 Deno.serve(async (req: Request) => {
   const cors = getCorsHeaders(req);
 
@@ -95,35 +110,37 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // ── 1. Validate JWT and get authenticated user ──────────────────────────
+    // ── 1. Extract user ID from JWT (already validated by Supabase gateway) ─
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return jsonResponse({ error: 'Unauthorized — missing token' }, 401, cors);
     }
 
     const token = authHeader.slice(7);
-    if (!token || token.length < 20) {
-      return jsonResponse({ error: 'Unauthorized — invalid token' }, 401, cors);
+    const jwt = parseJwtPayload(token);
+    if (!jwt?.sub) {
+      return jsonResponse({ error: 'Unauthorized — malformed token' }, 401, cors);
     }
 
-    // Use Supabase client to validate the JWT and retrieve the user
+    const userId = jwt.sub;
+
+    // ── 2. Verify user has an allowed admin role (via service-role client) ──
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !user) {
-      return jsonResponse({ error: 'Unauthorized — invalid or expired token' }, 401, cors);
-    }
-
-    // ── 2. Verify user has an allowed admin role ────────────────────────────
     const { data: roles, error: rolesError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('is_active', true);
 
-    if (rolesError || !roles?.length) {
+    if (rolesError) {
+      console.error('[n8n-proxy] Roles query error:', rolesError.message);
+      return jsonResponse({ error: 'Internal error checking roles' }, 500, cors);
+    }
+
+    if (!roles?.length) {
       return jsonResponse({ error: 'Forbidden — no active role' }, 403, cors);
     }
 
@@ -134,7 +151,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── 3. Rate limit by user ID ────────────────────────────────────────────
-    if (isRateLimited(user.id)) {
+    if (isRateLimited(userId)) {
       return jsonResponse(
         { error: 'Too many requests — limit is 30/min' },
         429,
