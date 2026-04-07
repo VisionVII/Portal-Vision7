@@ -70,19 +70,20 @@ export const checkN8nHealth = async (): Promise<{
   httpStatus?: number;
 }> => {
   try {
-    const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+    const { data, error, response } = await supabase.functions.invoke('n8n-proxy', {
       body: { path: '/health' },
     });
     if (error) {
       const detail = await extractEdgeFunctionError(error);
       const httpStatus = error.context instanceof Response ? error.context.status : undefined;
-      console.warn('[n8n-health]', detail);
+      console.warn('[n8n-health] error:', { detail, httpStatus, errorName: error.name, errorMessage: error.message });
       return { status: 'unreachable', detail, httpStatus };
     }
+    console.info('[n8n-health] success:', data);
     return data as { status: 'connected' | 'error' | 'unreachable' };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
-    console.warn('[n8n-health]', msg);
+    console.warn('[n8n-health] exception:', msg);
     return { status: 'unreachable', detail: msg };
   }
 };
