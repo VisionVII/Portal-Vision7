@@ -3,6 +3,7 @@ export type AdminView =
   | 'content'
   | 'audiocasts'
   | 'builder'
+  | 'media'
   | 'automations'
   | 'courses'
   | 'crm'
@@ -15,6 +16,7 @@ export const VIEW_ACCESS_RULES: Record<AdminView, string[]> = {
   builder: ['super_admin', 'admin', 'editor'],
   content: ['super_admin', 'admin', 'editor', 'redator', 'moderador'],
   audiocasts: ['super_admin', 'admin', 'editor'],
+  media: ['super_admin', 'admin', 'editor', 'redator'],
   automations: ['super_admin', 'admin', 'editor'],
   courses: ['super_admin', 'admin', 'editor'],
   crm: ['super_admin', 'admin', 'editor', 'analyst'],

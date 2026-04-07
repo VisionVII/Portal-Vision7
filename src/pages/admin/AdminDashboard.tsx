@@ -19,11 +19,13 @@ const CrmView = lazy(() => import('@/components/admin/views/CrmView'));
 const AccessView = lazy(() => import('@/components/admin/views/AccessView'));
 const DeveloperView = lazy(() => import('@/components/admin/views/DeveloperView'));
 const SettingsView = lazy(() => import('@/components/admin/views/SettingsView'));
+const MediaGalleryView = lazy(() => import('@/components/admin/views/MediaGalleryView'));
 
 const PANEL_META: Record<AdminView, { title: string; description: string }> = {
   overview: { title: 'Cockpit editorial', description: 'Vista central com KPIs, posts recentes e acesso rápido.' },
   content: { title: 'Gestão de conteúdo', description: 'Crie, edite e publique posts. Organize o fluxo editorial.' },
   builder: { title: 'Homepage builder', description: 'Controle banner, secções e ordem visual da homepage.' },
+  media: { title: 'Galeria de media', description: 'Upload, gestão e URLs de imagens do portal.' },
   automations: { title: 'Automações e N8N', description: 'Workflows 24/7, RSS, IA e integrações de produtividade.' },
   audiocasts: { title: 'Audiocasts', description: 'Gerir episódios de áudio, upload e categorias.' },
   courses: { title: 'Cursos e parcerias', description: 'Vitrine comercial com afiliados e links gerenciados.' },
@@ -166,6 +168,7 @@ const AdminDashboard = () => {
                 <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />
               </Panel>
               <Panel view="builder"><BuilderView /></Panel>
+              <Panel view="media"><MediaGalleryView /></Panel>
               <Panel view="automations"><AutomationsView isActive={activeView === 'automations'} /></Panel>
               <Panel view="audiocasts"><AudiocastsView /></Panel>
               <Panel view="courses"><CoursesView /></Panel>
