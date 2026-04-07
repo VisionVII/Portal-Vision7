@@ -62,20 +62,20 @@ const AdminStatsCards = () => {
       {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <Card key={card.label} className="group overflow-hidden border-border/60 transition-shadow hover:shadow-md">
+          <Card key={card.label} className="group overflow-hidden border-border/50 transition-shadow hover:shadow-md dark:border-border/30">
             <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 space-y-1">
+                  <p className="truncate text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                     {card.label}
                   </p>
-                  <p className="text-2xl font-bold text-foreground sm:text-3xl">
+                  <p className="truncate text-2xl font-bold text-foreground sm:text-3xl">
                     {card.format
                       ? card.value.toLocaleString('pt-PT')
                       : card.value}
                   </p>
                 </div>
-                <div className={`rounded-xl ${card.bgLight} p-2.5 transition-transform group-hover:scale-110`}>
+                <div className={`shrink-0 rounded-xl ${card.bgLight} p-2.5 transition-transform group-hover:scale-105`}>
                   <Icon className={`h-5 w-5 ${card.textColor}`} />
                 </div>
               </div>

@@ -107,7 +107,7 @@ const NewsletterManager = () => {
                   <div key={sub.id} className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="break-all font-medium text-foreground">{sub.email}</p>
+                        <p className="truncate font-medium text-foreground" title={sub.email}>{sub.email}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {format(new Date(sub.subscribed_at), 'dd MMM yyyy', { locale: pt })}
                         </p>
