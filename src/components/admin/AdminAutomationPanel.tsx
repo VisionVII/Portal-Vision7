@@ -88,9 +88,9 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   const consecutiveErrorsRef = React.useRef(0);
 
   const refreshN8nData = useCallback(async (showToast = false) => {
-    // Skip if no active session (avoids 401 spam)
-    const { data: { session: sess } } = await supabase.auth.getSession();
-    if (!sess?.access_token) {
+    // Ensure a fresh session token (avoids stale JWT → 401 from gateway)
+    const { data: { session: sess }, error: sessError } = await supabase.auth.refreshSession();
+    if (sessError || !sess?.access_token) {
       setN8nError('Sem sessão ativa — faça login novamente.');
       setN8nHealthy(false);
       return;
