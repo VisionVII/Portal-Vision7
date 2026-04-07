@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import ThemeToggle from '@/components/system/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardHeaderProps {
@@ -20,7 +19,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 border-b border-border/40 bg-gradient-to-r from-background via-background to-primary-50/30 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 dark:from-background dark:via-background dark:to-primary-950/20">
       <div className="flex items-center justify-between px-4 py-2.5 sm:px-6">
         <div className="flex items-center gap-3">
           <Link
@@ -38,8 +37,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle compact />
-
           <div className="hidden text-right lg:block">
             <p className="text-xs text-foreground">{user?.email}</p>
             <p className="text-[10px] text-muted-foreground">{roles.join(', ')}</p>

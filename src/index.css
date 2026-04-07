@@ -113,28 +113,28 @@
     --neutral-900: 224 57% 8%;
     --neutral-950: 226 58% 6%;
 
-    --muted: 223 26% 16%;
+    --muted: 223 26% 18%;
     --muted-foreground: 215 20% 72%;
-    --accent: 223 32% 17%;
+    --accent: 223 28% 19%;
     --accent-foreground: var(--neutral-50);
-    --background: 224 58% 7%;
+    --background: 222 40% 12%;
     --foreground: var(--neutral-50);
-    --card: 223 34% 11%;
+    --card: 222 32% 15%;
     --card-foreground: var(--neutral-50);
-    --popover: 223 34% 11%;
+    --popover: 222 32% 15%;
     --popover-foreground: var(--neutral-50);
-    --border: 223 22% 18%;
-    --input: 223 24% 16%;
+    --border: 222 22% 22%;
+    --input: 222 26% 18%;
     --ring: var(--primary-500);
 
     /* Sidebar - Dark */
-    --sidebar-background: 223 39% 10%;
+    --sidebar-background: 222 36% 14%;
     --sidebar-foreground: var(--neutral-50);
     --sidebar-primary: var(--primary-500);
     --sidebar-primary-foreground: var(--neutral-900);
-    --sidebar-accent: 223 32% 17%;
+    --sidebar-accent: 222 28% 19%;
     --sidebar-accent-foreground: var(--neutral-50);
-    --sidebar-border: 223 24% 20%;
+    --sidebar-border: 222 22% 22%;
     --sidebar-ring: var(--primary-400);
   }
 }
@@ -193,6 +193,17 @@
   
   .ad-space {
     @apply bg-neutral-100 dark:bg-neutral-800 border border-dashed border-neutral-300 dark:border-neutral-700 rounded-xl flex items-center justify-center text-muted-foreground;
+  }
+
+  /* Premium soft shadow override for cards */
+  .blog-card,
+  [class*="shadow-md"] {
+    --tw-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.06), 0 1px 3px -1px rgb(0 0 0 / 0.04);
+  }
+
+  .dark .blog-card,
+  .dark [class*="shadow-md"] {
+    --tw-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.25), 0 1px 3px -1px rgb(0 0 0 / 0.15);
   }
 
   .section-title {
