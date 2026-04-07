@@ -32,7 +32,7 @@
       "id": "cms",
       "name": "CMS",
       "spec_file": "sdd/modules/cms.json",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [
@@ -54,7 +54,7 @@
       "id": "frontend-ui",
       "name": "Frontend & UI",
       "spec_file": "sdd/modules/frontend-ui.json",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [
