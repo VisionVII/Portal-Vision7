@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Play, Clock, Calendar, Headphones, Download } from 'lucide-react';
 import { formatDuration } from '@/lib/utils';
+import { useAudioPlayerOptional } from '@/contexts/AudioPlayerContext';
 
 interface AudiocastCardProps {
   podcast: {
@@ -10,6 +11,7 @@ interface AudiocastCardProps {
     title: string;
     slug: string;
     description: string | null;
+    audio_url?: string | null;
     cover_url?: string | null;
     duration: number | null;
     status: string;
@@ -27,7 +29,7 @@ interface AudiocastCardProps {
   featured?: boolean;
 }
 
-const FALLBACK_GRADIENT = 'bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950';
+const FALLBACK_GRADIENT = 'bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800';
 
 const AudiocastCard: React.FC<AudiocastCardProps> = ({
   podcast,
@@ -35,6 +37,9 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
   compact = false,
   featured = false,
 }) => {
+  const player = useAudioPlayerOptional();
+  const navigate = useNavigate();
+
   const formattedDate = new Date(podcast.published_at || podcast.created_at).toLocaleDateString('pt-PT', {
     day: 'numeric',
     month: 'short',
@@ -42,6 +47,24 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
   });
 
   const hasCover = !!podcast.cover_url;
+
+  const handlePlay = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (player && podcast.audio_url) {
+      player.play({
+        id: podcast.id,
+        title: podcast.title,
+        audio_url: podcast.audio_url,
+        cover_url: podcast.cover_url,
+        duration: podcast.duration,
+        description: podcast.description,
+        slug: podcast.slug,
+      });
+    } else {
+      navigate(`/audiocast/${podcast.slug}`);
+    }
+  };
 
   // ─── Compact: sidebar / related section ─────────────────────────────────
   if (compact) {
@@ -57,9 +80,9 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
                 <Headphones className="h-5 w-5 text-white/60" />
               </div>
             )}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+            <button onClick={handlePlay} className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
               <Play className="h-4 w-4 fill-white text-white" />
-            </div>
+            </button>
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="line-clamp-2 text-sm font-semibold leading-tight text-foreground group-hover:text-primary transition-colors">
@@ -92,11 +115,11 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
             {/* Play button */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <button onClick={handlePlay} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:scale-110">
                 <Play className="ml-1 h-7 w-7 fill-white text-white" />
               </div>
-            </div>
+            </button>
 
             {/* Content overlay */}
             <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 md:p-8">
@@ -152,11 +175,11 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
           {/* Play button */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100 scale-75">
+          <button onClick={handlePlay} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100 scale-75">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg">
               <Play className="ml-0.5 h-5 w-5 fill-white text-white" />
             </div>
-          </div>
+          </button>
 
           {/* Category badge */}
           {podcast.categories && (

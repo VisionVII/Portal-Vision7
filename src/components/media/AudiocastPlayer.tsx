@@ -16,6 +16,7 @@ import {
 import { useTrackAudiocastPlay, useTrackAudiocastDownload } from '@/hooks/useAudiocasts';
 import { useToast } from '@/hooks/use-toast';
 import { formatDuration } from '@/lib/utils';
+import { useAudioPlayerOptional } from '@/contexts/AudioPlayerContext';
 
 interface AudiocastPlayerProps {
   podcast: {
@@ -50,6 +51,7 @@ const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
   const trackPlay = useTrackAudiocastPlay();
   const trackDownload = useTrackAudiocastDownload();
   const { toast } = useToast();
+  const globalPlayer = useAudioPlayerOptional();
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -102,9 +104,20 @@ const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
       if (isPlaying) {
         audio.pause();
         setIsPlaying(false);
+        globalPlayer?.pause();
       } else {
         await audio.play();
         setIsPlaying(true);
+        // Sync to global player for mini-player persistence
+        if (globalPlayer && podcast.audio_url) {
+          globalPlayer.play({
+            id: podcast.id,
+            title: podcast.title,
+            audio_url: podcast.audio_url,
+            duration: podcast.duration,
+            description: podcast.description,
+          });
+        }
       }
     } catch (error) {
       toast({

@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
+import MiniPlayer from "@/components/media/MiniPlayer";
 import DynamicFavicon from "@/components/system/DynamicFavicon";
 import ErrorBoundary from "@/components/system/ErrorBoundary";
 import ScrollToTop from "@/components/system/ScrollToTop";
@@ -45,6 +47,7 @@ const App = () => (
           <DynamicFavicon />
           <Toaster />
           <Sonner />
+          <AudioPlayerProvider>
           <ErrorBoundary>
             <BrowserRouter>
               <ScrollToTop />
@@ -86,8 +89,10 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
               </Routes>
+              <MiniPlayer />
             </BrowserRouter>
           </ErrorBoundary>
+          </AudioPlayerProvider>
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -14,7 +14,6 @@ import { Headphones } from 'lucide-react';
 const Audiocasts = () => {
   const { data: podcasts, isLoading } = useAudiocasts();
   const { data: categories } = useCategories();
-  const totalAudiocasts = podcasts?.length ?? 0;
   const featuredAudiocast = podcasts?.[0];
   const restAudiocasts = podcasts?.slice(1) ?? [];
   const { paginatedItems, currentPage, totalPages, goToPage } = usePagination(restAudiocasts, { pageSize: 9 });
@@ -24,19 +23,10 @@ const Audiocasts = () => {
       <Header />
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-primary-900/80 to-secondary-900/60 py-12 text-white md:py-16">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800 py-12 text-white md:py-16">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvc3ZnPg==')] opacity-50" />
         <div className="container relative mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 backdrop-blur-sm">
-              <Headphones className="h-4 w-4 text-primary-300" />
-              <span className="text-[12px] font-semibold uppercase tracking-[0.2em] text-white/80">
-                Biblioteca em áudio
-              </span>
-              <span className="rounded-full bg-primary/30 px-2.5 py-0.5 text-[11px] font-bold text-white">
-                {totalAudiocasts}
-              </span>
-            </div>
             <h1 className="mb-3 text-4xl font-headline font-bold sm:text-5xl md:text-6xl">
               Audiocasts
             </h1>

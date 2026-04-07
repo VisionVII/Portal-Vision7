@@ -142,7 +142,7 @@ const Post = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-12 sm:py-16 lg:py-20">
+          <div className="bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800 py-12 sm:py-16 lg:py-20">
             <div className="container mx-auto px-4">
               <div className="mx-auto max-w-4xl">
                 <div className="mb-4 flex flex-wrap items-center gap-2">
