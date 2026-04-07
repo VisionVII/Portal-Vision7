@@ -12,7 +12,7 @@ import {
   ChevronUp,
   Zap,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import AdminStatsCards from '@/components/admin/AdminStatsCards';
 import PostsTable from '@/components/admin/PostsTable';
@@ -22,16 +22,6 @@ import { useNewsletterStats } from '@/hooks/useNewsletter';
 import { useAudiocasts } from '@/hooks/useAudiocasts';
 import { useCategories } from '@/hooks/useCategories';
 import type { AdminView } from '@/components/admin/dashboard-types';
-
-const PORTAL_SECTIONS = [
-  { label: 'Homepage', path: '/', description: 'Últimas notícias e destaques' },
-  { label: 'Tecnologia', path: '/tecnologia', description: 'Posts tecnologia' },
-  { label: 'Desporto', path: '/desporto', description: 'Posts desporto' },
-  { label: 'Música', path: '/musica', description: 'Posts música' },
-  { label: 'Saúde', path: '/saude', description: 'Posts saúde' },
-  { label: 'Mundo', path: '/mundo', description: 'Posts mundo' },
-  { label: 'Audiocasts', path: '/audiocasts', description: 'Audiocasts e áudio' },
-];
 
 interface OverviewViewProps {
   onNewPost: () => void;
@@ -48,6 +38,8 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
   const { data: audiocasts = [] } = useAudiocasts(true);
   const { data: categories } = useCategories();
   const [showEcosystem, setShowEcosystem] = useState(false);
+  const [showChart, setShowChart] = useState(true);
+  const [showCategories, setShowCategories] = useState(true);
 
   const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);
   const draftPosts = useMemo(() => posts?.filter((p) => p.status === 'draft') ?? [], [posts]);
@@ -183,10 +175,14 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
         {/* Sidebar analytics */}
         <div className="space-y-5 xl:col-span-5">
-          {/* Weekly chart */}
+          {/* Weekly chart — collapsible on mobile */}
           <Card className="border-border/30 dark:border-border/20">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setShowChart((v) => !v)}
+              className="flex w-full items-center justify-between px-6 py-3 text-left xl:cursor-default"
+            >
+              <div className="flex items-center gap-2">
                 <CardTitle className="text-sm font-semibold">Publicações semanais</CardTitle>
                 {weeklyChange !== 0 && (
                   <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold ${
@@ -199,53 +195,63 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                   </span>
                 )}
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end gap-2">
-                {weeklyPosts.map((count, i) => {
-                  const isLatest = i === 3;
-                  return (
-                    <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                      <span className={`text-xs font-bold ${isLatest ? 'text-primary-600 dark:text-primary-400' : 'text-foreground/50'}`}>{count}</span>
-                      <div
-                        className={`w-full rounded-md transition-all duration-300 ${
-                          isLatest ? 'bg-primary-500 dark:bg-primary-400/80' : 'bg-muted/80 dark:bg-muted/40'
-                        }`}
-                        style={{ height: `${Math.max((count / maxWeekly) * 56, 4)}px` }}
-                      />
-                      <span className="text-[9px] font-medium text-muted-foreground">S{i + 1}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              {weeklyPosts.every((w) => w === 0) && (
-                <p className="mt-3 text-center text-xs text-muted-foreground">
-                  Sem publicações nas últimas 4 semanas
-                </p>
-              )}
-            </CardContent>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 xl:hidden ${showChart ? 'rotate-180' : ''}`} />
+            </button>
+            <div className={`overflow-hidden transition-all duration-200 ${showChart ? 'max-h-96' : 'max-h-0 xl:max-h-96'}`}>
+              <CardContent className="pt-0">
+                <div className="flex items-end gap-2">
+                  {weeklyPosts.map((count, i) => {
+                    const isLatest = i === 3;
+                    return (
+                      <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                        <span className={`text-xs font-bold ${isLatest ? 'text-primary-600 dark:text-primary-400' : 'text-foreground/50'}`}>{count}</span>
+                        <div
+                          className={`w-full rounded-md transition-all duration-300 ${
+                            isLatest ? 'bg-primary-500 dark:bg-primary-400/80' : 'bg-muted/80 dark:bg-muted/40'
+                          }`}
+                          style={{ height: `${Math.max((count / maxWeekly) * 56, 4)}px` }}
+                        />
+                        <span className="text-[9px] font-medium text-muted-foreground">S{i + 1}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {weeklyPosts.every((w) => w === 0) && (
+                  <p className="mt-3 text-center text-xs text-muted-foreground">
+                    Sem publicações nas últimas 4 semanas
+                  </p>
+                )}
+              </CardContent>
+            </div>
           </Card>
 
-          {/* Posts by category — collapsed by default on mobile */}
+          {/* Posts by category — collapsible on mobile */}
           {postsByCategory.length > 0 && (
             <Card className="border-border/30 dark:border-border/20">
-              <CardHeader className="pb-2">
+              <button
+                type="button"
+                onClick={() => setShowCategories((v) => !v)}
+                className="flex w-full items-center justify-between px-6 py-3 text-left xl:cursor-default"
+              >
                 <CardTitle className="text-sm font-semibold">Top categorias</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {postsByCategory.map(([cat, count]) => (
-                  <div key={cat} className="flex items-center gap-3">
-                    <span className="min-w-0 flex-1 truncate text-sm text-foreground/80">{cat}</span>
-                    <div className="h-1.5 w-24 shrink-0 overflow-hidden rounded-full bg-muted/50 dark:bg-muted/25">
-                      <div
-                        className="h-full rounded-full bg-primary-500/80 dark:bg-primary-400/60"
-                        style={{ width: `${Math.round((count / Math.max(publishedPosts.length, 1)) * 100)}%` }}
-                      />
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 xl:hidden ${showCategories ? 'rotate-180' : ''}`} />
+              </button>
+              <div className={`overflow-hidden transition-all duration-200 ${showCategories ? 'max-h-96' : 'max-h-0 xl:max-h-96'}`}>
+                <CardContent className="space-y-2 pt-0">
+                  {postsByCategory.map(([cat, count]) => (
+                    <div key={cat} className="flex items-center gap-3">
+                      <span className="min-w-0 flex-1 truncate text-sm text-foreground/80">{cat}</span>
+                      <div className="h-1.5 w-24 shrink-0 overflow-hidden rounded-full bg-muted/50 dark:bg-muted/25">
+                        <div
+                          className="h-full rounded-full bg-primary-500/80 dark:bg-primary-400/60"
+                          style={{ width: `${Math.round((count / Math.max(publishedPosts.length, 1)) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="w-5 shrink-0 text-right text-xs font-bold text-muted-foreground">{count}</span>
                     </div>
-                    <span className="w-5 shrink-0 text-right text-xs font-bold text-muted-foreground">{count}</span>
-                  </div>
-                ))}
-              </CardContent>
+                  ))}
+                </CardContent>
+              </div>
             </Card>
           )}
 
