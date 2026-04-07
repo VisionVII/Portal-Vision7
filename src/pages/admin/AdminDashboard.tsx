@@ -51,8 +51,15 @@ const AdminDashboard = () => {
 
   const draftCount = useMemo(() => posts?.filter((p) => p.status === 'draft').length ?? 0, [posts]);
 
+  // Only redirect ONCE after the initial auth check resolves.
+  // Subsequent auth state changes (token refresh, etc.) should not cause navigation.
+  const hasCheckedAccessRef = React.useRef(false);
+
   useEffect(() => {
-    if (!authLoading && isAccessReady && (!user || !canAccessDashboard)) {
+    if (authLoading || !isAccessReady) return; // still loading
+    if (hasCheckedAccessRef.current) return;   // already checked once
+    hasCheckedAccessRef.current = true;
+    if (!user || !canAccessDashboard) {
       navigate('/admin/login');
     }
   }, [user, canAccessDashboard, authLoading, isAccessReady, navigate]);
