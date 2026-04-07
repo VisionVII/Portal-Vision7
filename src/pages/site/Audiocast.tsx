@@ -2,18 +2,18 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import PodcastPlayer from '@/components/media/PodcastPlayer';
+import AudiocastPlayer from '@/components/media/AudiocastPlayer';
 import RelatedPosts from '@/components/content/RelatedPosts';
 import AdSpace from '@/components/content/AdSpace';
-import { usePodcast, usePodcasts } from '@/hooks/usePodcasts';
+import { useAudiocast, useAudiocasts } from '@/hooks/useAudiocasts';
 import { ArrowLeft, Calendar, User, Clock, Eye, Download } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 
-const Podcast = () => {
+const Audiocast = () => {
   const { id } = useParams();
-  const { data: podcast, isLoading } = usePodcast(id || '');
-  const { data: allPodcasts } = usePodcasts();
+  const { data: podcast, isLoading } = useAudiocast(id || '');
+  const { data: allAudiocasts } = useAudiocasts();
 
   if (isLoading) {
     return (
@@ -36,8 +36,8 @@ const Podcast = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Podcast não encontrado</h1>
-          <p className="text-muted-foreground mb-8">O podcast que procura não existe ou foi removido.</p>
+          <h1 className="text-4xl font-bold text-foreground mb-4">Audiocast não encontrado</h1>
+          <p className="text-muted-foreground mb-8">O audiocast que procura não existe ou foi removido.</p>
           <Link
             to="/"
             className="inline-flex items-center text-primary hover:text-primary/80"
@@ -51,7 +51,7 @@ const Podcast = () => {
     );
   }
 
-  const relatedPodcasts = allPodcasts?.filter(
+  const relatedAudiocasts = allAudiocasts?.filter(
     p => p.categories?.id === podcast.category_id && p.id !== podcast.id
   ).slice(0, 3) || [];
 
@@ -118,7 +118,7 @@ const Podcast = () => {
           </div>
 
           <div className="mx-auto mb-8 max-w-5xl">
-            <PodcastPlayer
+            <AudiocastPlayer
               podcast={podcast}
               showTranscript={true}
               autoPlay={false}
@@ -151,25 +151,25 @@ const Podcast = () => {
                 </div>
               )}
 
-              {relatedPodcasts.length > 0 && (
+              {relatedAudiocasts.length > 0 && (
                 <div className="mb-8">
                   <h2 className="mb-6 text-2xl font-bold">Episódios Relacionados</h2>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {relatedPodcasts.map((relatedPodcast) => (
+                    {relatedAudiocasts.map((relatedAudiocast) => (
                       <Link
-                        key={relatedPodcast.id}
-                        to={`/podcast/${relatedPodcast.slug}`}
+                        key={relatedAudiocast.id}
+                        to={`/audiocast/${relatedAudiocast.slug}`}
                         className="block"
                       >
                         <div className="rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-md">
                           <h3 className="mb-2 line-clamp-2 text-sm font-semibold">
-                            {relatedPodcast.title}
+                            {relatedAudiocast.title}
                           </h3>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Clock className="h-3 w-3" />
-                            <span>{relatedPodcast.duration ? `${Math.floor(relatedPodcast.duration / 60)}:${(relatedPodcast.duration % 60).toString().padStart(2, '0')}` : 'N/A'}</span>
+                            <span>{relatedAudiocast.duration ? `${Math.floor(relatedAudiocast.duration / 60)}:${(relatedAudiocast.duration % 60).toString().padStart(2, '0')}` : 'N/A'}</span>
                             <span>•</span>
-                            <span>{relatedPodcast.views} plays</span>
+                            <span>{relatedAudiocast.views} plays</span>
                           </div>
                         </div>
                       </Link>
@@ -182,7 +182,7 @@ const Podcast = () => {
             </div>
 
             <aside className="min-w-0 xl:sticky xl:top-28 xl:self-start">
-              <AdSpace size="square" position="Lateral do Podcast" className="mx-auto mb-8" />
+              <AdSpace size="square" position="Lateral do Audiocast" className="mx-auto mb-8" />
 
               <div className="mb-6 rounded-2xl border border-border bg-card p-4 shadow-sm">
                 <h3 className="mb-3 font-semibold">Informações do Episódio</h3>
@@ -215,4 +215,4 @@ const Podcast = () => {
   );
 };
 
-export default Podcast;
+export default Audiocast;

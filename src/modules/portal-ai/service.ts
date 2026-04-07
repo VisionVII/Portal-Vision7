@@ -39,7 +39,7 @@ export const buildPortalAssistantReply = (
       ],
       links: [
         { label: 'Ir para a homepage', href: '/', type: 'action' },
-        { label: 'Abrir podcasts', href: '/podcasts', type: 'action' },
+        { label: 'Abrir audiocasts', href: '/audiocasts', type: 'action' },
       ],
     };
   }
@@ -87,7 +87,7 @@ export const buildPortalAssistantReply = (
       ],
       links: [
         { label: 'Ver notícias recentes', href: '/#noticias', type: 'action' },
-        { label: 'Abrir podcasts', href: '/podcasts', type: 'action' },
+        { label: 'Abrir audiocasts', href: '/audiocasts', type: 'action' },
       ],
     };
   }

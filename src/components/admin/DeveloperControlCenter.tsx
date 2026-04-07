@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useSiteSettings, useUpdateSiteSetting } from '@/hooks/useSiteSettings';
 import { usePosts } from '@/hooks/usePosts';
 import { useCourses } from '@/hooks/useCourses';
-import { usePodcasts } from '@/hooks/usePodcasts';
+import { useAudiocasts } from '@/hooks/useAudiocasts';
 import { useNewsletterStats } from '@/hooks/useNewsletter';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +19,7 @@ const DeveloperControlCenter = () => {
   const { data: siteSettings } = useSiteSettings();
   const { data: posts = [] } = usePosts(true);
   const { data: courses = [] } = useCourses(true);
-  const { data: podcasts = [] } = usePodcasts(true);
+  const { data: audiocasts = [] } = useAudiocasts(true);
   const { data: newsletterStats } = useNewsletterStats();
   const { user, session } = useAuth();
   const updateSetting = useUpdateSiteSetting();
@@ -119,8 +119,8 @@ const DeveloperControlCenter = () => {
                 <p className="text-2xl font-bold text-foreground">{courses.length}</p>
               </div>
               <div className="rounded-xl border border-border p-4">
-                <p className="text-sm text-muted-foreground">Podcasts</p>
-                <p className="text-2xl font-bold text-foreground">{podcasts.length}</p>
+                <p className="text-sm text-muted-foreground">Audiocasts</p>
+                <p className="text-2xl font-bold text-foreground">{audiocasts.length}</p>
               </div>
               <div className="rounded-xl border border-border p-4">
                 <p className="text-sm text-muted-foreground">CRM / newsletter</p>
