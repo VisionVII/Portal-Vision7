@@ -72,8 +72,8 @@ const AdminStatsCards = () => {
         <div className="absolute -top-4 right-20 h-16 w-16 rounded-full bg-white/5" />
       </Card>
 
-      {/* ── SECONDARY KPIs: mobile=scroll horizontal, desktop=grid ── */}
-      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0">
+      {/* ── SECONDARY KPIs: 2-col mobile, 3-col sm+ ── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[
           {
             label: 'Total de posts',
@@ -102,7 +102,7 @@ const AdminStatsCards = () => {
           return (
             <Card
               key={card.label}
-              className="group min-w-[160px] shrink-0 border-border/30 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 sm:min-w-0 dark:border-border/20"
+              className="group border-border/30 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 dark:border-border/20"
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">

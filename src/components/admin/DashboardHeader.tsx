@@ -4,6 +4,7 @@ import { ArrowLeft, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface DashboardHeaderProps {
   onNewPost: () => void;
@@ -12,6 +13,8 @@ interface DashboardHeaderProps {
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
   const { user, primaryRole, roles, signOut } = useAuth();
   const navigate = useNavigate();
+  const { data: siteSettings } = useSiteSettings();
+  const logoUrl = siteSettings?.logo_url || '/vision-logo.svg';
 
   const handleSignOut = async () => {
     await signOut();
@@ -28,6 +31,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
+          <img src={logoUrl} alt="Vision7" className="h-8 w-auto object-contain sm:h-9" />
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary-600 dark:text-primary-400">
               Vision7

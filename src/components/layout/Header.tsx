@@ -291,11 +291,11 @@ const Header = () => {
                         <span className={`truncate font-bold ${skyInfo.temperatureColor}`}>{temperatureLabel}</span>
                       </div>
 
-                      {/* Date */}
-                      <div className="flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="truncate font-medium text-foreground">{localDateLabel}</span>
-                      </div>
+                      {/* Date — opens calendar */}
+                      <CalendarPopover
+                        localDateLabel={localDateLabel}
+                        className="flex items-center gap-2"
+                      />
 
                       {/* Clock */}
                       <div className="flex items-center gap-2">
