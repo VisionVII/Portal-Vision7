@@ -195,6 +195,17 @@
     @apply bg-neutral-100 dark:bg-neutral-800 border border-dashed border-neutral-300 dark:border-neutral-700 rounded-xl flex items-center justify-center text-muted-foreground;
   }
 
+  /* Premium soft shadow override for cards */
+  .blog-card,
+  [class*="shadow-md"] {
+    --tw-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.06), 0 1px 3px -1px rgb(0 0 0 / 0.04);
+  }
+
+  .dark .blog-card,
+  .dark [class*="shadow-md"] {
+    --tw-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.25), 0 1px 3px -1px rgb(0 0 0 / 0.15);
+  }
+
   .section-title {
     @apply font-headline font-bold text-foreground mb-4 relative;
     font-size: clamp(1.25rem, 3.2vw, 1.75rem);

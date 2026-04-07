@@ -9,8 +9,12 @@ import {
   TrendingUp,
   BarChart3,
   CalendarDays,
+  Lightbulb,
+  ArrowUpRight,
+  ArrowRight,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import AdminStatsCards from '@/components/admin/AdminStatsCards';
 import PostsTable from '@/components/admin/PostsTable';
 import { Post, usePosts, usePostStats } from '@/hooks/usePosts';
@@ -39,6 +43,7 @@ interface OverviewViewProps {
 
 const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEdit, allowedViews }) => {
   const { data: posts, isLoading: postsLoading } = usePosts(true);
+  const { data: stats } = usePostStats();
   const { data: courses = [] } = useCourses(true);
   const { data: newsletterStats } = useNewsletterStats();
   const { data: audiocasts = [] } = useAudiocasts(true);
@@ -71,109 +76,176 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
   const maxWeekly = Math.max(...weeklyPosts, 1);
 
+  // Change vs previous week
+  const weeklyChange = weeklyPosts[3] - weeklyPosts[2];
+
+  // Smart insights
+  const insights = useMemo(() => {
+    const tips: Array<{ text: string; type: 'success' | 'warning' | 'info' }> = [];
+
+    const thisMonth = stats?.thisMonth ?? 0;
+    if (thisMonth >= 4) {
+      tips.push({ text: `Publicou ${thisMonth} posts este mês — boa consistência!`, type: 'success' });
+    } else if (thisMonth > 0) {
+      tips.push({ text: `Apenas ${thisMonth} post${thisMonth > 1 ? 's' : ''} este mês. Publique mais ${4 - thisMonth} para manter ritmo.`, type: 'warning' });
+    } else {
+      tips.push({ text: 'Nenhuma publicação este mês. Comece com um rascunho!', type: 'warning' });
+    }
+
+    if (draftPosts.length > 3) {
+      tips.push({ text: `${draftPosts.length} rascunhos pendentes — revise e publique.`, type: 'info' });
+    }
+
+    const totalViews = stats?.totalViews ?? 0;
+    if (totalViews === 0 && publishedPosts.length > 0) {
+      tips.push({ text: 'Nenhum post teve visualizações ainda. Partilhe nas redes.', type: 'warning' });
+    }
+
+    return tips.slice(0, 2);
+  }, [stats, draftPosts.length, publishedPosts.length]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <AdminStatsCards />
 
-      {/* Quick action grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Smart insights */}
+      {insights.length > 0 && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {insights.map((insight, i) => (
+            <div
+              key={i}
+              className={`flex items-start gap-3 rounded-xl border p-4 transition-all duration-200 ${
+                insight.type === 'success'
+                  ? 'border-emerald-200/60 bg-emerald-50/50 dark:border-emerald-800/30 dark:bg-emerald-950/20'
+                  : insight.type === 'warning'
+                    ? 'border-amber-200/60 bg-amber-50/50 dark:border-amber-800/30 dark:bg-amber-950/20'
+                    : 'border-blue-200/60 bg-blue-50/50 dark:border-blue-800/30 dark:bg-blue-950/20'
+              }`}
+            >
+              <Lightbulb className={`mt-0.5 h-4 w-4 shrink-0 ${
+                insight.type === 'success'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : insight.type === 'warning'
+                    ? 'text-amber-500'
+                    : 'text-blue-600 dark:text-blue-400'
+              }`} />
+              <p className="text-sm text-foreground/80">{insight.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Primary action + secondary actions */}
+      <div className="flex flex-wrap items-center gap-3">
         {allowedViews.includes('content') && (
-          <button
-            onClick={onNewPost}
-            className="group flex flex-col items-center gap-2 rounded-xl border border-primary-200 bg-primary-50/80 p-4 text-center transition-all hover:shadow-md dark:border-primary-800/50 dark:bg-primary-950/20 dark:hover:bg-primary-950/30"
-          >
-            <div className="rounded-xl bg-primary-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-105">
-              <Plus className="h-4 w-4" />
-            </div>
-            <span className="text-xs font-semibold text-foreground">Novo Post</span>
-          </button>
+          <Button onClick={onNewPost} size="lg" className="gap-2 rounded-xl shadow-sm">
+            <Plus className="h-4 w-4" />
+            Novo Post
+          </Button>
         )}
-        {allowedViews.includes('builder') && (
-          <button
-            onClick={() => onNavigate('builder')}
-            className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-card p-4 text-center transition-all hover:shadow-md dark:border-border/40 dark:hover:bg-muted/30"
-          >
-            <div className="rounded-xl bg-secondary-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-105">
-              <LayoutTemplate className="h-4 w-4" />
-            </div>
-            <span className="text-xs font-semibold text-foreground">Homepage</span>
-          </button>
-        )}
-        {allowedViews.includes('automations') && (
-          <button
-            onClick={() => onNavigate('automations')}
-            className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-card p-4 text-center transition-all hover:shadow-md dark:border-border/40 dark:hover:bg-muted/30"
-          >
-            <div className="rounded-xl bg-violet-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-105">
-              <Bot className="h-4 w-4" />
-            </div>
-            <span className="text-xs font-semibold text-foreground">Automações</span>
-          </button>
-        )}
-        <Link
-          to="/"
-          target="_blank"
-          className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-card p-4 text-center transition-all hover:shadow-md dark:border-border/40 dark:hover:bg-muted/30"
-        >
-          <div className="rounded-xl bg-emerald-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-105">
-            <Globe className="h-4 w-4" />
-          </div>
-          <span className="text-xs font-semibold text-foreground">Ver Portal</span>
-        </Link>
+        <div className="flex gap-2">
+          {allowedViews.includes('builder') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onNavigate('builder')}
+              className="gap-1.5 rounded-lg text-muted-foreground"
+            >
+              <LayoutTemplate className="h-3.5 w-3.5" />
+              Homepage
+            </Button>
+          )}
+          {allowedViews.includes('automations') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onNavigate('automations')}
+              className="gap-1.5 rounded-lg text-muted-foreground"
+            >
+              <Bot className="h-3.5 w-3.5" />
+              Automações
+            </Button>
+          )}
+          <Link to="/" target="_blank">
+            <Button variant="ghost" size="sm" className="gap-1.5 rounded-lg text-muted-foreground">
+              <Globe className="h-3.5 w-3.5" />
+              Ver Portal
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Main content grid */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <PostsTable posts={recentPosts} isLoading={postsLoading} onEdit={onEdit} />
 
-        <div className="space-y-4">
-          {/* Weekly publishing chart */}
-          <Card>
+        <div className="space-y-5">
+          {/* Weekly publishing chart — with comparison */}
+          <Card className="border-border/40 dark:border-border/25">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <BarChart3 className="h-4 w-4 text-primary-600" />
-                Publicações semanais
-              </CardTitle>
-              <CardDescription className="text-xs">Últimas 4 semanas</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-semibold text-foreground">Publicações semanais</CardTitle>
+                  <CardDescription className="text-xs text-neutral-400 dark:text-neutral-500">Últimas 4 semanas</CardDescription>
+                </div>
+                {weeklyChange !== 0 && (
+                  <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                    weeklyChange > 0
+                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+                      : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                  }`}>
+                    {weeklyChange > 0 ? (
+                      <ArrowUpRight className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpRight className="h-3 w-3 rotate-90" />
+                    )}
+                    {weeklyChange > 0 ? '+' : ''}{weeklyChange} vs anterior
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-end gap-2">
-                {weeklyPosts.map((count, i) => (
-                  <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                    <span className="text-[10px] font-bold text-foreground">{count}</span>
-                    <div
-                      className="w-full rounded-t-md bg-primary-500/80 transition-all dark:bg-primary-400/60"
-                      style={{ height: `${Math.max((count / maxWeekly) * 48, 4)}px` }}
-                    />
-                    <span className="text-[9px] text-muted-foreground">S{i + 1}</span>
-                  </div>
-                ))}
+              <div className="flex items-end gap-3">
+                {weeklyPosts.map((count, i) => {
+                  const isLatest = i === 3;
+                  return (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+                      <span className={`text-xs font-bold ${isLatest ? 'text-primary-600 dark:text-primary-400' : 'text-foreground/70'}`}>{count}</span>
+                      <div
+                        className={`w-full rounded-md transition-all duration-300 ${
+                          isLatest
+                            ? 'bg-primary-500 dark:bg-primary-400/80'
+                            : 'bg-primary-200/80 dark:bg-primary-700/40'
+                        }`}
+                        style={{ height: `${Math.max((count / maxWeekly) * 56, 6)}px` }}
+                      />
+                      <span className="text-[10px] font-medium text-neutral-400 dark:text-neutral-500">S{i + 1}</span>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
 
           {/* Ecosystem stats */}
-          <Card>
+          <Card className="border-border/40 dark:border-border/25">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <TrendingUp className="h-4 w-4 text-primary-600" />
-                Ecossistema
-              </CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">Ecossistema</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-2.5">
+            <CardContent className="grid grid-cols-3 gap-2.5">
               {[
-                { label: 'Publicados', value: publishedPosts.length },
-                { label: 'Rascunhos', value: draftPosts.length },
-                { label: 'Newsletter', value: newsletterStats?.active || 0 },
-                { label: 'Cursos', value: courses.length },
-                { label: 'Audiocasts', value: audiocasts.length },
-                { label: 'Categorias', value: categories?.length || 0 },
+                { label: 'Publicados', value: publishedPosts.length, color: 'text-emerald-600 dark:text-emerald-400' },
+                { label: 'Rascunhos', value: draftPosts.length, color: 'text-amber-500' },
+                { label: 'Newsletter', value: newsletterStats?.active || 0, color: 'text-blue-600 dark:text-blue-400' },
+                { label: 'Cursos', value: courses.length, color: 'text-violet-600 dark:text-violet-400' },
+                { label: 'Audiocasts', value: audiocasts.length, color: 'text-pink-600 dark:text-pink-400' },
+                { label: 'Categorias', value: categories?.length || 0, color: 'text-foreground' },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-lg border border-border/60 bg-muted/30 p-3">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <div key={stat.label} className="rounded-lg bg-muted/40 p-3 dark:bg-muted/20">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
                     {stat.label}
                   </p>
-                  <p className="text-xl font-bold text-foreground">{stat.value}</p>
+                  <p className={`mt-1 text-xl font-bold ${stat.color}`}>{stat.value}</p>
                 </div>
               ))}
             </CardContent>
@@ -181,28 +253,23 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
           {/* Posts by category */}
           {postsByCategory.length > 0 && (
-            <Card>
+            <Card className="border-border/40 dark:border-border/25">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <CalendarDays className="h-4 w-4 text-primary-600" />
-                  Posts por categoria
-                </CardTitle>
+                <CardTitle className="text-sm font-semibold text-foreground">Posts por categoria</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-2.5">
                 {postsByCategory.map(([cat, count]) => (
-                  <div key={cat} className="flex items-center justify-between">
-                    <span className="min-w-0 truncate text-sm text-foreground">{cat}</span>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <div className="h-1.5 w-24 rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary-600 transition-all"
-                          style={{
-                            width: `${Math.round((count / Math.max(publishedPosts.length, 1)) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="w-6 text-right text-xs font-bold text-muted-foreground">{count}</span>
+                  <div key={cat} className="flex items-center gap-3">
+                    <span className="min-w-0 flex-1 truncate text-sm text-foreground/80">{cat}</span>
+                    <div className="h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-muted/60 dark:bg-muted/30">
+                      <div
+                        className="h-full rounded-full bg-primary-500 transition-all duration-300 dark:bg-primary-400/70"
+                        style={{
+                          width: `${Math.round((count / Math.max(publishedPosts.length, 1)) * 100)}%`,
+                        }}
+                      />
                     </div>
+                    <span className="w-6 shrink-0 text-right text-xs font-bold text-neutral-400 dark:text-neutral-500">{count}</span>
                   </div>
                 ))}
               </CardContent>
@@ -210,12 +277,9 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
           )}
 
           {/* Portal sections */}
-          <Card>
+          <Card className="border-border/40 dark:border-border/25">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Globe className="h-4 w-4 text-primary-600" />
-                Secções do portal
-              </CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">Secções do portal</CardTitle>
             </CardHeader>
             <CardContent className="space-y-0.5">
               {PORTAL_SECTIONS.map((s) => (
@@ -223,13 +287,13 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                   key={s.path}
                   to={s.path}
                   target="_blank"
-                  className="group flex items-center justify-between rounded-lg px-2.5 py-1.5 transition-colors hover:bg-muted/60"
+                  className="group flex items-center justify-between rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-muted/50"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">{s.label}</p>
-                    <p className="text-[10px] text-muted-foreground">{s.description}</p>
+                    <p className="text-[10px] text-neutral-400 dark:text-neutral-500">{s.description}</p>
                   </div>
-                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                  <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0.5 group-hover:opacity-100" />
                 </Link>
               ))}
             </CardContent>
