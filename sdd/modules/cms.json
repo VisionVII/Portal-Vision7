@@ -1,14 +1,14 @@
 {
   "module": "CMS",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-05",
+  "last_updated": "2026-04-06",
   "objective": "Sistema de gestão de conteúdo completo para administração do portal: posts, cursos, podcasts, categorias, newsletter, site settings, media uploads e developer tools.",
   "functional_requirements": [
     {
       "id": "FR-001",
-      "description": "Dashboard admin com 8 tabs: Overview, Builder, Conteúdo, Cursos, CRM, Acessos, Developer, Brand Settings",
+      "description": "Dashboard admin com 9 views: Overview, Builder, Conteúdo, Automações, Cursos, CRM, Acessos, Developer, Brand Settings",
       "priority": "Crítica",
       "status": "Finalizado"
     },
@@ -132,6 +132,7 @@
   },
   "files": {
     "components": [
+      "src/components/admin/AdminAutomationPanel.tsx",
       "src/components/admin/AdminAccessManager.tsx",
       "src/components/admin/AdminCmsCustomizer.tsx",
       "src/components/admin/AdminCoursesManager.tsx",
@@ -252,6 +253,12 @@
       "version": "1.0.1",
       "author": "sdd-sync",
       "description": "Auto-sync: file list updated"
+    },
+    {
+      "date": "2026-04-06",
+      "version": "1.1.0",
+      "author": "Vision7 Team",
+      "description": "Dashboard expandido para 9 views; Automações integradas inline; AdminAutomationPanel adicionado"
     }
   ]
 }

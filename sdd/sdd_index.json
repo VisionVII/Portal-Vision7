@@ -2,7 +2,7 @@
   "$schema": "./templates/module_schema.json",
   "project": "Vision7 Portal",
   "version": "1.0.0",
-  "last_updated": "2026-04-05",
+  "last_updated": "2026-04-06",
   "description": "Índice central SDD do projeto Vision7 — mapa de todos os módulos, dependências e status.",
   "modules": [
     {
@@ -310,8 +310,8 @@
     "finalized": 6,
     "in_development": 4,
     "pending": 0,
-    "total_functional_requirements": 64,
-    "total_qa_tests": 38,
+    "total_functional_requirements": 72,
+    "total_qa_tests": 42,
     "coverage_percentage": 0
   }
 }
