@@ -35,10 +35,23 @@ const normalizeCollection = <T>(payload: unknown): T[] => {
   return [];
 };
 
+/** Static info — the real connectivity is tested via checkN8nHealth(). */
 export const getN8nConfigStatus = () => ({
-  baseUrl: '(proxied via Edge Function)',
   apiKeyConfigured: true,
 });
+
+/** Pings the n8n instance through the Edge Function proxy. */
+export const checkN8nHealth = async (): Promise<{ status: 'connected' | 'error' | 'unreachable' }> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+      body: { path: '/health' },
+    });
+    if (error) return { status: 'unreachable' };
+    return data as { status: 'connected' | 'error' | 'unreachable' };
+  } catch {
+    return { status: 'unreachable' };
+  }
+};
 
 export const getWorkflows = async () => {
   const payload = await n8nRequest<unknown>('/rest/workflows');

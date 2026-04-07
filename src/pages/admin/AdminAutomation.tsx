@@ -5,14 +5,16 @@ import {
   AlertTriangle,
   ArrowLeft,
   Bot,
+  CheckCircle2,
   Clock3,
-  ExternalLink,
   Play,
   Plus,
   RefreshCcw,
   Save,
   ShieldCheck,
   Trash2,
+  Wifi,
+  WifiOff,
   Workflow,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +28,7 @@ import { useAutomations } from '@/hooks/useAutomations';
 import { useToast } from '@/hooks/use-toast';
 import {
   activateWorkflow,
+  checkN8nHealth,
   deactivateWorkflow,
   executeWorkflow,
   getExecutionById,
@@ -81,6 +84,7 @@ const AdminAutomation = () => {
   const [isBusy, setIsBusy] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [n8nError, setN8nError] = useState<string | null>(null);
+  const [n8nHealthy, setN8nHealthy] = useState<boolean | null>(null);
 
   const { automations, createAutomation, updateAutomation, deleteAutomation, isSaving } = useAutomations();
 
@@ -96,8 +100,9 @@ const AdminAutomation = () => {
   const refreshN8nData = useCallback(async (showToast = false) => {
     setIsBusy(true);
     try {
-      const [workflowData, executionData] = await Promise.all([getWorkflows(), getExecutions()]);
+      const [workflowData, executionData, health] = await Promise.all([getWorkflows(), getExecutions(), checkN8nHealth()]);
       setWorkflows(workflowData);
+      setN8nHealthy(health.status === 'connected');
       setExecutions(executionData);
       setSelectedExecution((current) => {
         if (!current) return executionData[0] ?? null;
@@ -260,17 +265,17 @@ const AdminAutomation = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {n8nHealthy !== null && (
+              <Badge variant={n8nHealthy ? 'default' : 'destructive'} className="gap-1.5">
+                {n8nHealthy ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                {n8nHealthy ? 'n8n conectado' : 'n8n offline'}
+              </Badge>
+            )}
             <Badge variant="secondary">{lastSync ? `Sync ${lastSync}` : 'Sem sync'}</Badge>
             <Button variant="outline" size="sm" className="gap-2" onClick={() => void refreshN8nData(true)} disabled={isBusy}>
               <RefreshCcw className={`h-4 w-4 ${isBusy ? 'animate-spin' : ''}`} />
               {isBusy ? 'A sincronizar...' : 'Atualizar'}
             </Button>
-            <a href={n8nConfig.baseUrl} target="_blank" rel="noreferrer" className="hidden sm:block">
-              <Button size="sm" className="gap-2">
-                <ExternalLink className="h-4 w-4" />
-                Abrir n8n
-              </Button>
-            </a>
           </div>
         </div>
       </header>
@@ -309,7 +314,13 @@ const AdminAutomation = () => {
               <ShieldCheck className="h-8 w-8 text-violet-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Segurança</p>
-                <p className="text-sm font-semibold text-foreground">{n8nConfig.apiKeyConfigured ? 'Bearer ativo' : 'Configuração pendente'}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {n8nHealthy === null ? 'A verificar...' : n8nHealthy ? (
+                    <span className="flex items-center gap-1 text-emerald-600"><CheckCircle2 className="h-3.5 w-3.5" />JWT + RBAC ativo</span>
+                  ) : (
+                    <span className="text-amber-600">Sem ligação</span>
+                  )}
+                </p>
               </div>
             </CardContent>
           </Card>
