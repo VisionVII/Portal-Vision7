@@ -38,14 +38,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle compact className="hidden sm:inline-flex" />
+          <ThemeToggle compact />
 
           <div className="hidden text-right lg:block">
             <p className="text-xs text-foreground">{user?.email}</p>
             <p className="text-[10px] text-muted-foreground">{roles.join(', ')}</p>
           </div>
-          <div className="text-right lg:hidden">
-            <p className="max-w-[120px] truncate text-[10px] text-muted-foreground sm:max-w-[180px]">
+          <div className="hidden text-right sm:block lg:hidden">
+            <p className="max-w-[180px] truncate text-xs text-muted-foreground">
               {user?.email}
             </p>
           </div>

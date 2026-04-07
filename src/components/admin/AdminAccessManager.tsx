@@ -324,7 +324,7 @@ const AdminAccessManager = () => {
                 ) : roleAssignments.map((assignment) => (
                   <div key={assignment.id} className="flex flex-col gap-2 rounded-xl border border-border p-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="font-medium text-foreground">{assignment.user_id}</p>
+                      <p className="max-w-[200px] truncate font-medium text-foreground sm:max-w-xs" title={assignment.user_id}>{assignment.user_id.slice(0, 8)}…</p>
                       <p className="text-xs text-muted-foreground">Role: {getRoleTitle(assignment.role)} • {assignment.is_active ? 'ativo' : 'inativo'}</p>
                     </div>
                     <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">

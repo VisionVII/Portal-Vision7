@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutomations } from '@/hooks/useAutomations';
 import { useToast } from '@/hooks/use-toast';
@@ -352,10 +353,14 @@ const AdminAutomationPanel = () => {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="panel-workflow-select" className="text-xs">Workflow</Label>
-                <select id="panel-workflow-select" value={formState.workflowId} onChange={(e) => setFormState((p) => ({ ...p, workflowId: e.target.value }))} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm">
-                  <option value="">Selecionar workflow</option>
-                  {workflows.map((wf) => <option key={String(wf.id)} value={String(wf.id)}>{wf.name} ({wf.id})</option>)}
-                </select>
+                <Select value={formState.workflowId} onValueChange={(v) => setFormState((p) => ({ ...p, workflowId: v }))}>
+                  <SelectTrigger id="panel-workflow-select">
+                    <SelectValue placeholder="Selecionar workflow" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workflows.map((wf) => <SelectItem key={String(wf.id)} value={String(wf.id)}>{wf.name} ({wf.id})</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="panel-interval" className="text-xs">Intervalo (min)</Label>
