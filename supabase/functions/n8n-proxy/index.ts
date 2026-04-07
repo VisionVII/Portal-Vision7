@@ -188,7 +188,7 @@ Deno.serve(async (req: Request) => {
         const pingRes = await fetch(`${N8N_BASE_URL}/rest/workflows?limit=1`, {
           method: 'GET',
           headers: { 'X-N8N-API-KEY': N8N_API_KEY },
-          signal: AbortSignal.timeout(5000),
+          signal: AbortSignal.timeout(25000), // 25s — Render free tier cold start can take 10-15s
         });
         return jsonResponse(
           { status: pingRes.ok ? 'connected' : 'error', httpStatus: pingRes.status },
