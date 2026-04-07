@@ -24,6 +24,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     content: post?.content || '',
     category_id: post?.category_id || '',
     image_url: post?.image_url || '',
+    banner_url: post?.banner_url || '',
     author_name: post?.author_name || 'Redação',
     tags: post?.tags?.join(', ') || '',
     read_time: post?.read_time || '5 min',
@@ -32,10 +33,13 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   });
 
   const [isUploading, setIsUploading] = useState(false);
+  const [isBannerUploading, setIsBannerUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(post?.image_url || null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(post?.banner_url || null);
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categories } = useCategories();
   const createPost = useCreatePost();
@@ -91,6 +95,52 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Erro', description: 'Selecione um ficheiro de imagem.', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Erro', description: 'O banner não pode ter mais de 5MB.', variant: 'destructive' });
+      return;
+    }
+
+    setIsBannerUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `banners/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('post-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('post-images')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, banner_url: publicUrl });
+      setBannerPreview(publicUrl);
+      toast({ title: 'Sucesso', description: 'Banner carregado!' });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({ title: 'Erro', description: message || 'Erro ao carregar banner.', variant: 'destructive' });
+    } finally {
+      setIsBannerUploading(false);
+    }
+  };
+
+  const removeBanner = () => {
+    setFormData({ ...formData, banner_url: '' });
+    setBannerPreview(null);
+    if (bannerInputRef.current) bannerInputRef.current.value = '';
+  };
+
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
@@ -137,6 +187,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       content: formData.content,
       category_id: formData.category_id || undefined,
       image_url: formData.image_url || undefined,
+      banner_url: formData.banner_url || undefined,
       author_id: user?.id,
       author_name: formData.author_name,
       tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
@@ -330,6 +381,65 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
                     setImagePreview(e.target.value || null);
                   }}
                   placeholder="Cole o URL de uma imagem"
+                  className="flex-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Banner do Post (fundo do card)</Label>
+            <p className="text-xs text-muted-foreground">Imagem panorâmica usada como fundo do card e hero da página. Recomendado: 1200×400px.</p>
+            <div className="space-y-3">
+              {bannerPreview ? (
+                <div className="relative inline-block w-full">
+                  <img src={bannerPreview} alt="Banner preview" className="w-full max-w-lg h-32 object-cover rounded-lg border" />
+                  <button
+                    type="button"
+                    onClick={removeBanner}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => bannerInputRef.current?.click()}
+                  className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary-600 dark:hover:border-primary-400 transition-colors"
+                >
+                  <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-foreground">
+                    {isBannerUploading ? 'A carregar...' : 'Clique para carregar um banner'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">PNG, JPG até 5MB — formato panorâmico</p>
+                </div>
+              )}
+              <input
+                ref={bannerInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleBannerUpload}
+                className="hidden"
+              />
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => bannerInputRef.current?.click()}
+                  disabled={isBannerUploading}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {isBannerUploading ? 'A carregar...' : 'Carregar Banner'}
+                </Button>
+                <span className="text-xs text-muted-foreground">ou</span>
+                <Input
+                  value={formData.banner_url}
+                  onChange={(e) => {
+                    setFormData({...formData, banner_url: e.target.value});
+                    setBannerPreview(e.target.value || null);
+                  }}
+                  placeholder="Cole o URL de um banner"
                   className="flex-1"
                 />
               </div>

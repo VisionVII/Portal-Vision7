@@ -5,158 +5,143 @@ import AudiocastCard from '@/components/media/AudiocastCard';
 import AdSpace from '@/components/content/AdSpace';
 import PostPagination from '@/components/content/PostPagination';
 import { useAudiocasts } from '@/hooks/useAudiocasts';
+import { useCategories } from '@/hooks/useCategories';
 import { usePagination } from '@/hooks/usePagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
+import { Headphones } from 'lucide-react';
 
 const Audiocasts = () => {
   const { data: podcasts, isLoading } = useAudiocasts();
-  const { paginatedItems, currentPage, totalPages, goToPage } = usePagination(podcasts, { pageSize: 9 });
+  const { data: categories } = useCategories();
   const totalAudiocasts = podcasts?.length ?? 0;
   const featuredAudiocast = podcasts?.[0];
+  const restAudiocasts = podcasts?.slice(1) ?? [];
+  const { paginatedItems, currentPage, totalPages, goToPage } = usePagination(restAudiocasts, { pageSize: 9 });
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-900 via-primary-700 to-secondary-600 py-8 text-white md:py-12">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-6xl rounded-[28px] border border-white/15 bg-slate-950/15 p-5 shadow-xl backdrop-blur md:p-8">
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/90">
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-primary-900/80 to-secondary-900/60 py-12 text-white md:py-16">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvc3ZnPg==')] opacity-50" />
+        <div className="container relative mx-auto px-4">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 backdrop-blur-sm">
+              <Headphones className="h-4 w-4 text-primary-300" />
+              <span className="text-[12px] font-semibold uppercase tracking-[0.2em] text-white/80">
                 Biblioteca em áudio
               </span>
-              <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-medium text-white/90">
-                {totalAudiocasts} episódio{totalAudiocasts === 1 ? '' : 's'}
+              <span className="rounded-full bg-primary/30 px-2.5 py-0.5 text-[11px] font-bold text-white">
+                {totalAudiocasts}
               </span>
             </div>
-            <h1 className="mb-2 text-3xl font-headline font-bold sm:text-4xl md:text-5xl">Audiocasts</h1>
-            <p className="max-w-2xl text-base opacity-90 sm:text-lg">
-              Conteúdo educativo em áudio sobre tecnologia, automação e inovação. Ouça quando quiser, com uma navegação mais limpa e confortável.
+            <h1 className="mb-3 text-4xl font-headline font-bold sm:text-5xl md:text-6xl">
+              Audiocasts
+            </h1>
+            <p className="mx-auto max-w-2xl text-base text-white/70 sm:text-lg">
+              Conteúdo educativo em áudio sobre tecnologia, automação e inovação.
+              Ouça quando quiser, onde quiser.
             </p>
           </div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-6 sm:py-8">
-        <div className="mx-auto max-w-6xl">
+      <div className="container mx-auto px-4 py-8 sm:py-10">
+        <div className="mx-auto max-w-7xl">
           {/* Top Ad */}
           <AdSpace size="leaderboard" position="Topo Audiocasts" className="mb-8" />
 
-          <div className="mb-6 rounded-2xl border border-border bg-card/80 p-4 shadow-sm">
-            <p className="text-sm font-semibold text-foreground">Seleção editorial em áudio</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Episódios organizados para escuta rápida, exploração por categoria e acesso mais fluido em qualquer ecrã.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_280px] xl:gap-8">
-            {/* Main */}
-            <div className="min-w-0">
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Skeleton key={i} className="h-72 w-full rounded-xl" />
-                ))}
+          {/* Featured Audiocast */}
+          {!isLoading && featuredAudiocast && (
+            <section className="mb-10">
+              <div className="mb-4 flex items-center gap-2">
+                <div className="h-1 w-8 rounded-full bg-primary" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Em destaque
+                </h2>
               </div>
-            ) : paginatedItems.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {paginatedItems.map((podcast) => (
-                    <AudiocastCard
-                      key={podcast.id}
-                      podcast={podcast}
-                      showStats={true}
-                    />
+              <AudiocastCard podcast={featuredAudiocast} featured showStats />
+            </section>
+          )}
+
+          <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_300px]">
+            {/* Main grid */}
+            <div className="min-w-0">
+              <div className="mb-5 flex items-center gap-2">
+                <div className="h-1 w-8 rounded-full bg-secondary-500" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Todos os episódios
+                </h2>
+              </div>
+
+              {isLoading ? (
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <Skeleton key={i} className="aspect-[4/5] w-full rounded-2xl" />
                   ))}
                 </div>
-                <PostPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
-              </>
-            ) : (
-              <div className="bg-card rounded-xl border border-border p-10 text-center">
-                <h3 className="text-xl font-bold text-card-foreground mb-2">Em breve mais audiocasts</h3>
-                <p className="text-muted-foreground">Estamos produzindo conteúdo educativo em áudio. Volte em breve!</p>
-              </div>
-            )}
-          </div>
+              ) : paginatedItems.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {paginatedItems.map((podcast) => (
+                      <AudiocastCard key={podcast.id} podcast={podcast} showStats />
+                    ))}
+                  </div>
+                  <PostPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+                </>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
+                  <Headphones className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+                  <h3 className="text-lg font-bold text-card-foreground">Em breve mais audiocasts</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Estamos a produzir conteúdo em áudio. Volta em breve!</p>
+                </div>
+              )}
+            </div>
 
             {/* Sidebar */}
             <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
               <AdSpace size="square" position="Lateral Audiocasts" className="mx-auto" />
 
-            {/* Featured Podcast */}
-            {featuredAudiocast && (
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="mb-4 text-lg font-headline font-bold text-card-foreground">
-                  Destaque da Semana
-                </h3>
-                <AudiocastCard
-                  podcast={featuredAudiocast}
-                  compact={true}
-                  showStats={false}
-                />
-              </div>
-            )}
+              {/* Categories */}
+              {categories && categories.length > 0 && (
+                <div className="rounded-2xl border border-border/60 bg-card p-5">
+                  <h3 className="mb-3 text-base font-bold text-card-foreground">Categorias</h3>
+                  <div className="space-y-0.5">
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        to={`/${cat.slug}`}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      >
+                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                        {cat.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            {/* Categories */}
-            <div className="bg-card rounded-xl border border-border p-5">
-              <h3 className="text-lg font-headline font-bold text-card-foreground mb-3">
-                Categorias
-              </h3>
-              <div className="space-y-1">
+              {/* Newsletter */}
+              <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary-700 via-primary-600 to-secondary-600 p-6 text-white shadow-lg">
+                <h3 className="mb-2 text-lg font-bold">Newsletter</h3>
+                <p className="mb-4 text-sm text-white/80">
+                  Receba notificações quando novos audiocasts forem publicados
+                </p>
                 <Link
-                  to="/tecnologia"
-                  className="block py-2 px-3 text-muted-foreground hover:bg-accent hover:text-primary transition-colors rounded-lg text-sm font-medium"
+                  to="/#newsletter"
+                  className="inline-flex w-full items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-white/90"
                 >
-                  Tecnologia
-                </Link>
-                <Link
-                  to="/desporto"
-                  className="block py-2 px-3 text-muted-foreground hover:bg-accent hover:text-primary transition-colors rounded-lg text-sm font-medium"
-                >
-                  Desporto
-                </Link>
-                <Link
-                  to="/musica"
-                  className="block py-2 px-3 text-muted-foreground hover:bg-accent hover:text-primary transition-colors rounded-lg text-sm font-medium"
-                >
-                  Música
-                </Link>
-                <Link
-                  to="/saude"
-                  className="block py-2 px-3 text-muted-foreground hover:bg-accent hover:text-primary transition-colors rounded-lg text-sm font-medium"
-                >
-                  Saúde
-                </Link>
-                <Link
-                  to="/mundo"
-                  className="block py-2 px-3 text-muted-foreground hover:bg-accent hover:text-primary transition-colors rounded-lg text-sm font-medium"
-                >
-                  Mundo
+                  Inscrever-se
                 </Link>
               </div>
-            </div>
 
-              <AdSpace size="square" position="Lateral Audiocasts 2" className="mx-auto hidden lg:flex" />
-
-            {/* Newsletter */}
-            <div className="rounded-2xl bg-gradient-to-br from-primary-700 via-primary-600 to-secondary-600 p-6 text-white shadow-lg">
-              <h3 className="mb-2 text-lg font-bold">Newsletter</h3>
-              <p className="mb-4 text-sm opacity-90">
-                Receba notificações quando novos audiocasts forem publicados
-              </p>
-              <Link
-                to="/#newsletter"
-                className="inline-flex w-full items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-white/90"
-              >
-                Inscrever-se
-              </Link>
-            </div>
-          </aside>
+              <AdSpace size="square" position="Lateral Audiocasts 2" className="mx-auto hidden xl:flex" />
+            </aside>
+          </div>
         </div>
       </div>
-    </div>
 
       <Footer />
     </div>

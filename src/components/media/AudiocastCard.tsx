@@ -1,9 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Play, Download, Calendar, User, Clock } from 'lucide-react';
+import { Play, Clock, Calendar, Headphones, Download } from 'lucide-react';
 import { formatDuration } from '@/lib/utils';
 
 interface AudiocastCardProps {
@@ -12,6 +10,7 @@ interface AudiocastCardProps {
     title: string;
     slug: string;
     description: string | null;
+    cover_url?: string | null;
     duration: number | null;
     status: string;
     published_at: string | null;
@@ -25,136 +24,184 @@ interface AudiocastCardProps {
   };
   showStats?: boolean;
   compact?: boolean;
+  featured?: boolean;
 }
+
+const FALLBACK_GRADIENT = 'bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950';
 
 const AudiocastCard: React.FC<AudiocastCardProps> = ({
   podcast,
   showStats = true,
-  compact = false
+  compact = false,
+  featured = false,
 }) => {
   const formattedDate = new Date(podcast.published_at || podcast.created_at).toLocaleDateString('pt-PT', {
     day: 'numeric',
     month: 'short',
-    year: 'numeric'
+    year: 'numeric',
   });
 
+  const hasCover = !!podcast.cover_url;
+
+  // ─── Compact: sidebar / related section ─────────────────────────────────
   if (compact) {
     return (
-      <Link to={`/audiocast/${podcast.slug}`}>
-        <Card className="hover:shadow-md transition-shadow group">
-          <CardContent className="p-4">
-            <div className="flex gap-3">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Play className="w-5 h-5 text-primary" />
-                </div>
+      <Link to={`/audiocast/${podcast.slug}`} className="group block">
+        <div className="flex gap-3 rounded-xl p-2 transition-colors hover:bg-accent/50">
+          {/* Thumbnail */}
+          <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg">
+            {hasCover ? (
+              <img src={podcast.cover_url!} alt="" className="h-full w-full object-cover" loading="lazy" />
+            ) : (
+              <div className={`${FALLBACK_GRADIENT} flex h-full w-full items-center justify-center`}>
+                <Headphones className="h-5 w-5 text-white/60" />
               </div>
-
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                  {podcast.title}
-                </h3>
-
-                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                  <span>{formatDuration(podcast.duration || 0)}</span>
-                  <span>•</span>
-                  <span>{formattedDate}</span>
-                </div>
-
-                {podcast.categories && (
-                  <Badge
-                    variant="secondary"
-                    className="mt-2 text-xs"
-                    style={{ backgroundColor: `${podcast.categories.color}20`, color: podcast.categories.color }}
-                  >
-                    {podcast.categories.name}
-                  </Badge>
-                )}
-              </div>
+            )}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+              <Play className="h-4 w-4 fill-white text-white" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h4 className="line-clamp-2 text-sm font-semibold leading-tight text-foreground group-hover:text-primary transition-colors">
+              {podcast.title}
+            </h4>
+            <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span>{formatDuration(podcast.duration || 0)}</span>
+              <span className="opacity-40">·</span>
+              <span>{formattedDate}</span>
+            </div>
+          </div>
+        </div>
       </Link>
     );
   }
 
-  return (
-    <Link to={`/audiocast/${podcast.slug}`}>
-      <Card className="hover:shadow-lg transition-all group overflow-hidden">
-        <CardContent className="p-0">
-          {/* Header with play button */}
-          <div className="relative bg-gradient-to-br from-primary/10 to-primary/5 p-6">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  {podcast.categories && (
-                    <Badge
-                      variant="secondary"
-                      className="text-xs"
-                      style={{ backgroundColor: `${podcast.categories.color}20`, color: podcast.categories.color }}
-                    >
-                      {podcast.categories.name}
-                    </Badge>
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    Audiocast
-                  </span>
-                </div>
+  // ─── Featured: hero-style wide card ─────────────────────────────────────
+  if (featured) {
+    return (
+      <Link to={`/audiocast/${podcast.slug}`} className="group block">
+        <article className="relative overflow-hidden rounded-2xl border border-border/50 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+          {/* Cover background */}
+          <div className="relative h-72 sm:h-80 md:h-96">
+            {hasCover ? (
+              <img src={podcast.cover_url!} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+            ) : (
+              <div className={`${FALLBACK_GRADIENT} h-full w-full`} />
+            )}
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-                <h3 className="text-xl font-bold line-clamp-2 group-hover:text-primary transition-colors">
-                  {podcast.title}
-                </h3>
+            {/* Play button */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:scale-110">
+                <Play className="ml-1 h-7 w-7 fill-white text-white" />
+              </div>
+            </div>
 
-                {podcast.description && (
-                  <p className="text-muted-foreground text-sm mt-2 line-clamp-2">
-                    {podcast.description}
-                  </p>
+            {/* Content overlay */}
+            <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 md:p-8">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                {podcast.categories && (
+                  <Badge className="border-0 text-xs font-semibold" style={{ backgroundColor: podcast.categories.color, color: '#fff' }}>
+                    {podcast.categories.name}
+                  </Badge>
+                )}
+                <Badge variant="outline" className="border-white/30 bg-white/10 text-[11px] text-white backdrop-blur-sm">
+                  Audiocast
+                </Badge>
+              </div>
+              <h2 className="mb-2 text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl">
+                {podcast.title}
+              </h2>
+              {podcast.description && (
+                <p className="mb-4 line-clamp-2 max-w-2xl text-sm text-white/80 sm:text-base">
+                  {podcast.description}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
+                <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{formatDuration(podcast.duration || 0)}</span>
+                <span className="flex items-center gap-1.5"><Calendar className="h-4 w-4" />{formattedDate}</span>
+                {showStats && (
+                  <>
+                    <span className="flex items-center gap-1.5"><Headphones className="h-4 w-4" />{podcast.views.toLocaleString()}</span>
+                    <span className="flex items-center gap-1.5"><Download className="h-4 w-4" />{podcast.downloads.toLocaleString()}</span>
+                  </>
                 )}
               </div>
+            </div>
+          </div>
+        </article>
+      </Link>
+    );
+  }
 
-              <Button
-                size="lg"
-                className="rounded-full h-12 w-12 flex-shrink-0 ml-4"
-                onClick={(e) => {
-                  e.preventDefault();
-                  // Navigate to podcast page
-                  window.location.href = `/audiocast/${podcast.slug}`;
-                }}
-              >
-                <Play className="h-5 w-5" />
-              </Button>
+  // ─── Regular: grid card with cover as background ────────────────────────
+  return (
+    <Link to={`/audiocast/${podcast.slug}`} className="group block h-full">
+      <article className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/50 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
+        {/* Cover image area */}
+        <div className="relative aspect-[16/10] overflow-hidden">
+          {hasCover ? (
+            <img src={podcast.cover_url!} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+          ) : (
+            <div className={`${FALLBACK_GRADIENT} flex h-full w-full items-center justify-center`}>
+              <Headphones className="h-12 w-12 text-white/20" />
+            </div>
+          )}
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+          {/* Play button */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100 scale-75">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg">
+              <Play className="ml-0.5 h-5 w-5 fill-white text-white" />
             </div>
           </div>
 
-          {/* Footer with metadata */}
-          <div className="p-4 border-t">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <span>{formatDuration(podcast.duration || 0)}</span>
-                </div>
+          {/* Category badge */}
+          {podcast.categories && (
+            <div className="absolute left-3 top-3">
+              <Badge className="border-0 text-[10px] font-semibold shadow-sm" style={{ backgroundColor: podcast.categories.color, color: '#fff' }}>
+                {podcast.categories.name}
+              </Badge>
+            </div>
+          )}
 
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>{formattedDate}</span>
-                </div>
+          {/* Duration pill */}
+          <div className="absolute bottom-3 right-3">
+            <span className="inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+              <Clock className="h-3 w-3" />
+              {formatDuration(podcast.duration || 0)}
+            </span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex flex-1 flex-col p-4">
+          <h3 className="mb-1.5 line-clamp-2 text-base font-bold leading-snug text-card-foreground transition-colors group-hover:text-primary">
+            {podcast.title}
+          </h3>
+          {podcast.description && (
+            <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
+              {podcast.description}
+            </p>
+          )}
+
+          {/* Footer */}
+          <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-3 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {formattedDate}
+            </span>
+            {showStats && (
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1"><Headphones className="h-3 w-3" />{podcast.views.toLocaleString()}</span>
+                <span className="flex items-center gap-1"><Download className="h-3 w-3" />{podcast.downloads.toLocaleString()}</span>
               </div>
-
-              {showStats && (
-                <div className="flex items-center gap-3">
-                  <span className="text-xs">
-                    {podcast.views.toLocaleString()} plays
-                  </span>
-                  <span className="text-xs">
-                    {podcast.downloads.toLocaleString()} downloads
-                  </span>
-                </div>
-              )}
-            </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </article>
     </Link>
   );
 };
