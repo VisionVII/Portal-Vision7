@@ -10,7 +10,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 // CORS — restrict to known origins (production + preview + local dev)
-const ALLOWED_ORIGINS = (Deno.env.get('N8N_PROXY_ALLOWED_ORIGINS') ?? '')
+const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? Deno.env.get('N8N_PROXY_ALLOWED_ORIGINS') ?? '')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
@@ -188,7 +188,7 @@ Deno.serve(async (req: Request) => {
         const pingRes = await fetch(`${N8N_BASE_URL}/rest/workflows?limit=1`, {
           method: 'GET',
           headers: { 'X-N8N-API-KEY': N8N_API_KEY },
-          signal: AbortSignal.timeout(5000),
+          signal: AbortSignal.timeout(25000), // 25s — Render free tier cold start can take 10-15s
         });
         return jsonResponse(
           { status: pingRes.ok ? 'connected' : 'error', httpStatus: pingRes.status },
