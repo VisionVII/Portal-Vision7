@@ -202,13 +202,33 @@ Deno.serve(async (req: Request) => {
           headers: { 'X-N8N-API-KEY': N8N_API_KEY },
           signal: AbortSignal.timeout(25000), // 25s — Render free tier cold start can take 10-15s
         });
+
+        let detail = '';
+        if (!pingRes.ok) {
+          try {
+            const body = await pingRes.clone().json();
+            detail = body?.message || body?.error || '';
+          } catch {
+            try {
+              detail = (await pingRes.clone().text()).slice(0, 180);
+            } catch {
+              detail = '';
+            }
+          }
+        }
+
         return jsonResponse(
-          { status: pingRes.ok ? 'connected' : 'error', httpStatus: pingRes.status },
+          {
+            status: pingRes.ok ? 'connected' : 'error',
+            httpStatus: pingRes.status,
+            source: 'n8n-api',
+            ...(detail ? { detail } : {}),
+          },
           200,
           cors,
         );
       } catch {
-        return jsonResponse({ status: 'unreachable' }, 200, cors);
+        return jsonResponse({ status: 'unreachable', source: 'n8n-api' }, 200, cors);
       }
     }
 
