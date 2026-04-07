@@ -125,10 +125,6 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
     }
   };
 
-  const totalPosts = recentPosts.length;
-  const publishedCount = recentPosts.filter((p) => p.status === 'published').length;
-  const draftCount = totalPosts - publishedCount;
-
   return (
     <div className="space-y-0">
       {/* ═══════════════════════════════════════════════════════
@@ -212,9 +208,9 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold tracking-tight">Posts Recentes</h3>
           <div className="flex gap-1.5">
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{totalPosts}</span>
-            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">{publishedCount}</span>
-            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">{draftCount}</span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{recentPosts.length}</span>
+            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">{publishedPosts.length}</span>
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">{draftPosts.length}</span>
           </div>
         </div>
 
