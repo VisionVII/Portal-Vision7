@@ -13,6 +13,7 @@ const OverviewView = lazy(() => import('@/components/admin/views/OverviewView'))
 const ContentView = lazy(() => import('@/components/admin/views/ContentView'));
 const BuilderView = lazy(() => import('@/components/admin/views/BuilderView'));
 const AutomationsView = lazy(() => import('@/components/admin/views/AutomationsView'));
+const AudiocastsView = lazy(() => import('@/components/admin/views/AudiocastsView'));
 const CoursesView = lazy(() => import('@/components/admin/views/CoursesView'));
 const CrmView = lazy(() => import('@/components/admin/views/CrmView'));
 const AccessView = lazy(() => import('@/components/admin/views/AccessView'));
@@ -24,6 +25,7 @@ const PANEL_META: Record<AdminView, { title: string; description: string }> = {
   content: { title: 'Gestão de conteúdo', description: 'Crie, edite e publique posts. Organize o fluxo editorial.' },
   builder: { title: 'Homepage builder', description: 'Controle banner, secções e ordem visual da homepage.' },
   automations: { title: 'Automações e N8N', description: 'Workflows 24/7, RSS, IA e integrações de produtividade.' },
+  audiocasts: { title: 'Audiocasts', description: 'Gerir episódios de áudio, upload e categorias.' },
   courses: { title: 'Cursos e parcerias', description: 'Vitrine comercial com afiliados e links gerenciados.' },
   crm: { title: 'CRM e audiência', description: 'Newsletter, subscritores e relacionamento com leads.' },
   access: { title: 'Acessos e convites', description: 'Roles, permissões e convites de equipa.' },
@@ -91,6 +93,7 @@ const AdminDashboard = () => {
         return <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />;
       case 'builder': return <BuilderView />;
       case 'automations': return <AutomationsView />;
+      case 'audiocasts': return <AudiocastsView />;
       case 'courses': return <CoursesView />;
       case 'crm': return <CrmView />;
       case 'access': return <AccessView />;

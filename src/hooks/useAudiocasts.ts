@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface Podcast {
+export interface Audiocast {
   id: string;
   title: string;
   slug: string;
@@ -32,7 +32,7 @@ export interface Podcast {
   } | null;
 }
 
-export interface CreatePodcastData {
+export interface CreateAudiocastData {
   title: string;
   slug: string;
   description?: string;
@@ -45,14 +45,14 @@ export interface CreatePodcastData {
   status?: string;
 }
 
-export interface UpdatePodcastData extends Partial<CreatePodcastData> {
+export interface UpdateAudiocastData extends Partial<CreateAudiocastData> {
   id: string;
 }
 
 // Fetch all podcasts (published for public, all for admin)
-export const usePodcasts = (adminView = false) => {
+export const useAudiocasts = (adminView = false) => {
   return useQuery({
-    queryKey: ['podcasts', adminView],
+    queryKey: ['audiocasts', adminView],
     queryFn: async () => {
       let query = supabase
         .from('podcasts')
@@ -80,20 +80,20 @@ export const usePodcasts = (adminView = false) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('usePodcasts supabase query error', error);
+          console.warn('useAudiocasts supabase query error', error);
         }
-        return [] as Podcast[];
+        return [] as Audiocast[];
       }
-      return (data as Podcast[]) ?? [];
+      return (data as Audiocast[]) ?? [];
     },
     retry: false,
   });
 };
 
 // Fetch podcasts by category
-export const usePodcastsByCategory = (categorySlug: string) => {
+export const useAudiocastsByCategory = (categorySlug: string) => {
   return useQuery({
-    queryKey: ['podcasts', 'category', categorySlug],
+    queryKey: ['audiocasts', 'category', categorySlug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('podcasts')
@@ -117,11 +117,11 @@ export const usePodcastsByCategory = (categorySlug: string) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('usePodcastsByCategory supabase query error', error);
+          console.warn('useAudiocastsByCategory supabase query error', error);
         }
-        return [] as Podcast[];
+        return [] as Audiocast[];
       }
-      return (data as Podcast[]) ?? [];
+      return (data as Audiocast[]) ?? [];
     },
     enabled: !!categorySlug,
     retry: false,
@@ -129,9 +129,9 @@ export const usePodcastsByCategory = (categorySlug: string) => {
 };
 
 // Fetch single podcast by slug
-export const usePodcast = (slug: string) => {
+export const useAudiocast = (slug: string) => {
   return useQuery({
-    queryKey: ['podcast', slug],
+    queryKey: ['audiocast', slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('podcasts')
@@ -154,11 +154,11 @@ export const usePodcast = (slug: string) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('usePodcast supabase query error', error);
+          console.warn('useAudiocast supabase query error', error);
         }
         return null;
       }
-      return data as Podcast | null;
+      return data as Audiocast | null;
     },
     enabled: !!slug,
     retry: false,
@@ -166,9 +166,9 @@ export const usePodcast = (slug: string) => {
 };
 
 // Fetch single podcast by ID
-export const usePodcastById = (id: string) => {
+export const useAudiocastById = (id: string) => {
   return useQuery({
-    queryKey: ['podcast', 'id', id],
+    queryKey: ['audiocast', 'id', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('podcasts')
@@ -191,11 +191,11 @@ export const usePodcastById = (id: string) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('usePodcastById supabase query error', error);
+          console.warn('useAudiocastById supabase query error', error);
         }
         return null;
       }
-      return data as Podcast | null;
+      return data as Audiocast | null;
     },
     enabled: !!id,
     retry: false,
@@ -203,9 +203,9 @@ export const usePodcastById = (id: string) => {
 };
 
 // Fetch podcasts by post ID (related podcasts)
-export const usePodcastsByPost = (postId: string) => {
+export const useAudiocastsByPost = (postId: string) => {
   return useQuery({
-    queryKey: ['podcasts', 'post', postId],
+    queryKey: ['audiocasts', 'post', postId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('podcasts')
@@ -224,11 +224,11 @@ export const usePodcastsByPost = (postId: string) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('usePodcastsByPost supabase query error', error);
+          console.warn('useAudiocastsByPost supabase query error', error);
         }
-        return [] as Podcast[];
+        return [] as Audiocast[];
       }
-      return (data as Podcast[]) ?? [];
+      return (data as Audiocast[]) ?? [];
     },
     enabled: !!postId,
     retry: false,
@@ -236,16 +236,16 @@ export const usePodcastsByPost = (postId: string) => {
 };
 
 // Create podcast mutation
-export const useCreatePodcast = () => {
+export const useCreateAudiocast = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (podcastData: CreatePodcastData) => {
+    mutationFn: async (audiocastData: CreateAudiocastData) => {
       const { data, error } = await supabase
         .from('podcasts')
         .insert([{
-          ...podcastData,
-          published_at: podcastData.status === 'published' ? new Date().toISOString() : null,
+          ...audiocastData,
+          published_at: audiocastData.status === 'published' ? new Date().toISOString() : null,
         }])
         .select()
         .single();
@@ -254,22 +254,22 @@ export const useCreatePodcast = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['podcasts'] });
+      queryClient.invalidateQueries({ queryKey: ['audiocasts'] });
     },
   });
 };
 
 // Update podcast mutation
-export const useUpdatePodcast = () => {
+export const useUpdateAudiocast = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...podcastData }: UpdatePodcastData) => {
+    mutationFn: async ({ id, ...audiocastData }: UpdateAudiocastData) => {
       const { data, error } = await supabase
         .from('podcasts')
         .update({
-          ...podcastData,
-          published_at: podcastData.status === 'published' ? new Date().toISOString() : undefined,
+          ...audiocastData,
+          published_at: audiocastData.status === 'published' ? new Date().toISOString() : undefined,
         })
         .eq('id', id)
         .select()
@@ -279,13 +279,13 @@ export const useUpdatePodcast = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['podcasts'] });
+      queryClient.invalidateQueries({ queryKey: ['audiocasts'] });
     },
   });
 };
 
 // Delete podcast mutation
-export const useDeletePodcast = () => {
+export const useDeleteAudiocast = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -298,7 +298,7 @@ export const useDeletePodcast = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['podcasts'] });
+      queryClient.invalidateQueries({ queryKey: ['audiocasts'] });
     },
   });
 };
@@ -308,12 +308,12 @@ type SupabaseRpc = <T = unknown>(fn: string, params?: unknown) => Promise<{ data
 const supabaseRpc = supabase.rpc as unknown as SupabaseRpc;
 
 // Track podcast play (increment views)
-export const useTrackPodcastPlay = () => {
+export const useTrackAudiocastPlay = () => {
   return useMutation({
-    mutationFn: async (podcastId: string) => {
+    mutationFn: async (audiocastId: string) => {
       const { error } = await supabaseRpc('increment_views', {
-        content_type: 'podcast',
-        content_id: podcastId,
+        content_type: 'audiocast',
+        content_id: audiocastId,
       });
 
       if (error) throw error;
@@ -322,11 +322,11 @@ export const useTrackPodcastPlay = () => {
 };
 
 // Track podcast download
-export const useTrackPodcastDownload = () => {
+export const useTrackAudiocastDownload = () => {
   return useMutation({
-    mutationFn: async (podcastId: string) => {
+    mutationFn: async (audiocastId: string) => {
       const { error } = await supabaseRpc('track_podcast_download', {
-        podcast_id: podcastId,
+        podcast_id: audiocastId,
       });
 
       if (error) throw error;
@@ -335,9 +335,9 @@ export const useTrackPodcastDownload = () => {
 };
 
 // Get podcast stats
-export const usePodcastStats = () => {
+export const useAudiocastStats = () => {
   return useQuery({
-    queryKey: ['podcasts', 'stats'],
+    queryKey: ['audiocasts', 'stats'],
     queryFn: async () => {
       const { data: allPodcasts, error: allError } = await supabase
         .from('podcasts')

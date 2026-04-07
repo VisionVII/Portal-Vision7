@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Play, Download, Calendar, User, Clock } from 'lucide-react';
 import { formatDuration } from '@/lib/utils';
 
-interface PodcastCardProps {
+interface AudiocastCardProps {
   podcast: {
     id: string;
     title: string;
@@ -27,7 +27,7 @@ interface PodcastCardProps {
   compact?: boolean;
 }
 
-const PodcastCard: React.FC<PodcastCardProps> = ({
+const AudiocastCard: React.FC<AudiocastCardProps> = ({
   podcast,
   showStats = true,
   compact = false
@@ -40,7 +40,7 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
 
   if (compact) {
     return (
-      <Link to={`/podcast/${podcast.slug}`}>
+      <Link to={`/audiocast/${podcast.slug}`}>
         <Card className="hover:shadow-md transition-shadow group">
           <CardContent className="p-4">
             <div className="flex gap-3">
@@ -79,7 +79,7 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
   }
 
   return (
-    <Link to={`/podcast/${podcast.slug}`}>
+    <Link to={`/audiocast/${podcast.slug}`}>
       <Card className="hover:shadow-lg transition-all group overflow-hidden">
         <CardContent className="p-0">
           {/* Header with play button */}
@@ -97,7 +97,7 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
                     </Badge>
                   )}
                   <span className="text-xs text-muted-foreground">
-                    Podcast
+                    Audiocast
                   </span>
                 </div>
 
@@ -118,7 +118,7 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   // Navigate to podcast page
-                  window.location.href = `/podcast/${podcast.slug}`;
+                  window.location.href = `/audiocast/${podcast.slug}`;
                 }}
               >
                 <Play className="h-5 w-5" />
@@ -159,4 +159,4 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
   );
 };
 
-export default PodcastCard;
+export default AudiocastCard;

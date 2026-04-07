@@ -4,6 +4,7 @@ import {
   FileText,
   Globe,
   GraduationCap,
+  Headphones,
   LayoutDashboard,
   LayoutTemplate,
   Mail,
@@ -40,6 +41,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const allItems: NavItem[] = [
     { id: 'overview', label: 'Visão geral', icon: LayoutDashboard, hint: 'KPIs e atalhos' },
     { id: 'content', label: 'Conteúdo', icon: FileText, hint: 'Posts e editorial', badge: draftCount || undefined },
+    { id: 'audiocasts', label: 'Audiocasts', icon: Headphones, hint: 'Áudio e episódios' },
     { id: 'builder', label: 'Homepage', icon: LayoutTemplate, hint: 'Builder visual' },
     { id: 'automations', label: 'Automações', icon: Bot, hint: 'N8N e workflows' },
     { id: 'courses', label: 'Cursos', icon: GraduationCap, hint: 'Afiliados e parcerias' },
