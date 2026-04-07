@@ -76,7 +76,7 @@ const Audiocast = () => {
           {hasCover ? (
             <img src={podcast.cover_url!} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-slate-900 via-primary-900/80 to-slate-950" />
+            <div className="h-full w-full bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-black/60 to-black/40 backdrop-blur-sm" />
         </div>
