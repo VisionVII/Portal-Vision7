@@ -31,7 +31,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <img src={logoUrl} alt="Vision7" className="h-7 w-auto object-contain sm:h-8" />
+          <img src={logoUrl} alt="Vision7" className="h-8 w-auto object-contain sm:h-9" />
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary-600 dark:text-primary-400">
               Vision7
