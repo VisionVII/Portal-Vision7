@@ -416,7 +416,7 @@ const AudiocastsView: React.FC = () => {
                   {form.audioPreview && (
                     <div className="mt-2 space-y-1 text-sm text-muted-foreground">
                       <p>Duração: {formatDuration(form.duration)}</p>
-                      {form.audioFile && <p>Ficheiro: {form.audioFile.name}</p>}
+                      {form.audioFile && <p className="max-w-xs truncate">Ficheiro: {form.audioFile.name}</p>}
                       <audio controls src={form.audioPreview} className="mx-auto mt-2 w-full max-w-md" />
                     </div>
                   )}
@@ -497,7 +497,15 @@ const AudiocastsView: React.FC = () => {
                   key={ac.id}
                   className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    {ac.cover_url ? (
+                      <img src={ac.cover_url} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+                    ) : (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <Headphones className="h-5 w-5 text-muted-foreground/50" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h4 className="truncate text-sm font-semibold">{ac.title}</h4>
                       <Badge
@@ -540,6 +548,7 @@ const AudiocastsView: React.FC = () => {
                         ))}
                       </div>
                     )}
+                  </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(ac)} title="Editar">

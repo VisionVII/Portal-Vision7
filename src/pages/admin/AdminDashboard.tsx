@@ -85,23 +85,13 @@ const AdminDashboard = () => {
     setActiveView('content');
   }, []);
 
-  const renderActiveView = () => {
-    switch (activeView) {
-      case 'overview':
-        return <OverviewView onNewPost={handleNewPost} onNavigate={setActiveView} onEdit={handleEdit} allowedViews={allowedViews} />;
-      case 'content':
-        return <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />;
-      case 'builder': return <BuilderView />;
-      case 'automations': return <AutomationsView />;
-      case 'audiocasts': return <AudiocastsView />;
-      case 'courses': return <CoursesView />;
-      case 'crm': return <CrmView />;
-      case 'access': return <AccessView />;
-      case 'developer': return <DeveloperView />;
-      case 'settings': return <SettingsView />;
-      default: return null;
-    }
-  };
+  // Helper: wrap lazy view in a div that hides when not active (keeps state mounted)
+  const Panel = useCallback(
+    ({ view, children }: { view: AdminView; children: React.ReactNode }) => (
+      <div className={activeView === view ? undefined : 'hidden'}>{children}</div>
+    ),
+    [activeView],
+  );
 
   if (authLoading || !isAccessReady) {
     return (
@@ -162,7 +152,20 @@ const AdminDashboard = () => {
             </div>
 
             <Suspense fallback={<ViewSkeleton />}>
-              {renderActiveView()}
+              <Panel view="overview">
+                <OverviewView onNewPost={handleNewPost} onNavigate={setActiveView} onEdit={handleEdit} allowedViews={allowedViews} />
+              </Panel>
+              <Panel view="content">
+                <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />
+              </Panel>
+              <Panel view="builder"><BuilderView /></Panel>
+              <Panel view="automations"><AutomationsView /></Panel>
+              <Panel view="audiocasts"><AudiocastsView /></Panel>
+              <Panel view="courses"><CoursesView /></Panel>
+              <Panel view="crm"><CrmView /></Panel>
+              <Panel view="access"><AccessView /></Panel>
+              <Panel view="developer"><DeveloperView /></Panel>
+              <Panel view="settings"><SettingsView /></Panel>
             </Suspense>
           </div>
         </main>
