@@ -8,6 +8,28 @@ type N8nRequestOptions = {
 };
 
 /**
+ * Extract a human-readable message from a Supabase FunctionsHttpError.
+ * error.context is a Response object — body must be read async.
+ */
+async function extractEdgeFunctionError(error: { message?: string; context?: unknown }): Promise<string> {
+  const resp = error.context;
+  if (resp instanceof Response) {
+    const status = resp.status;
+    try {
+      const body = await resp.clone().json();
+      const msg = body?.error ?? body?.message ?? body?.msg ?? '';
+      if (msg) return `[${status}] ${msg}`;
+    } catch { /* body not JSON */ }
+    try {
+      const text = await resp.clone().text();
+      if (text) return `[${status}] ${text.slice(0, 200)}`;
+    } catch { /* body already consumed */ }
+    return `Edge Function retornou HTTP ${status}`;
+  }
+  return error.message || 'Falha na API do n8n';
+}
+
+/**
  * All n8n calls go through the Supabase Edge Function "n8n-proxy".
  * The API key is kept server-side — never exposed to the browser.
  */
@@ -19,10 +41,8 @@ const n8nRequest = async <T>(path: string, options: N8nRequestOptions = {}): Pro
   });
 
   if (error) {
-    // FunctionsHttpError.context contains the parsed JSON body from the Edge Function
-    const ctx = (error as Record<string, unknown>).context as Record<string, unknown> | undefined;
-    const detail = ctx?.error ?? ctx?.message ?? error.message;
-    throw new Error(String(detail) || 'Falha na API do n8n');
+    const detail = await extractEdgeFunctionError(error);
+    throw new Error(detail);
   }
 
   return data as T;
@@ -47,16 +67,17 @@ export const getN8nConfigStatus = () => ({
 export const checkN8nHealth = async (): Promise<{
   status: 'connected' | 'error' | 'unreachable';
   detail?: string;
+  httpStatus?: number;
 }> => {
   try {
     const { data, error } = await supabase.functions.invoke('n8n-proxy', {
       body: { path: '/health' },
     });
     if (error) {
-      const ctx = (error as Record<string, unknown>).context as Record<string, unknown> | undefined;
-      const detail = String(ctx?.error ?? ctx?.message ?? error.message);
+      const detail = await extractEdgeFunctionError(error);
+      const httpStatus = error.context instanceof Response ? error.context.status : undefined;
       console.warn('[n8n-health]', detail);
-      return { status: 'unreachable', detail };
+      return { status: 'unreachable', detail, httpStatus };
     }
     return data as { status: 'connected' | 'error' | 'unreachable' };
   } catch (err) {
