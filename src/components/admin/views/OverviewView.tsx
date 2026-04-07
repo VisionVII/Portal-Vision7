@@ -16,7 +16,7 @@ import PostsTable from '@/components/admin/PostsTable';
 import { Post, usePosts, usePostStats } from '@/hooks/usePosts';
 import { useCourses } from '@/hooks/useCourses';
 import { useNewsletterStats } from '@/hooks/useNewsletter';
-import { usePodcasts } from '@/hooks/usePodcasts';
+import { useAudiocasts } from '@/hooks/useAudiocasts';
 import { useCategories } from '@/hooks/useCategories';
 import type { AdminView } from '@/components/admin/dashboard-types';
 
@@ -27,7 +27,7 @@ const PORTAL_SECTIONS = [
   { label: 'Música', path: '/musica', description: 'Posts música' },
   { label: 'Saúde', path: '/saude', description: 'Posts saúde' },
   { label: 'Mundo', path: '/mundo', description: 'Posts mundo' },
-  { label: 'Podcasts', path: '/podcasts', description: 'Podcasts e áudio' },
+  { label: 'Audiocasts', path: '/audiocasts', description: 'Audiocasts e áudio' },
 ];
 
 interface OverviewViewProps {
@@ -41,7 +41,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
   const { data: posts, isLoading: postsLoading } = usePosts(true);
   const { data: courses = [] } = useCourses(true);
   const { data: newsletterStats } = useNewsletterStats();
-  const { data: podcasts = [] } = usePodcasts(true);
+  const { data: audiocasts = [] } = useAudiocasts(true);
   const { data: categories } = useCategories();
 
   const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);
@@ -166,7 +166,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                 { label: 'Rascunhos', value: draftPosts.length },
                 { label: 'Newsletter', value: newsletterStats?.active || 0 },
                 { label: 'Cursos', value: courses.length },
-                { label: 'Podcasts', value: podcasts.length },
+                { label: 'Audiocasts', value: audiocasts.length },
                 { label: 'Categorias', value: categories?.length || 0 },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-lg border border-border/60 bg-muted/30 p-3">

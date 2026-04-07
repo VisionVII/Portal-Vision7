@@ -1,19 +1,19 @@
 import React from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import PodcastCard from '@/components/media/PodcastCard';
+import AudiocastCard from '@/components/media/AudiocastCard';
 import AdSpace from '@/components/content/AdSpace';
 import PostPagination from '@/components/content/PostPagination';
-import { usePodcasts } from '@/hooks/usePodcasts';
+import { useAudiocasts } from '@/hooks/useAudiocasts';
 import { usePagination } from '@/hooks/usePagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 
-const Podcasts = () => {
-  const { data: podcasts, isLoading } = usePodcasts();
+const Audiocasts = () => {
+  const { data: podcasts, isLoading } = useAudiocasts();
   const { paginatedItems, currentPage, totalPages, goToPage } = usePagination(podcasts, { pageSize: 9 });
-  const totalPodcasts = podcasts?.length ?? 0;
-  const featuredPodcast = podcasts?.[0];
+  const totalAudiocasts = podcasts?.length ?? 0;
+  const featuredAudiocast = podcasts?.[0];
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,10 +28,10 @@ const Podcasts = () => {
                 Biblioteca em áudio
               </span>
               <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-medium text-white/90">
-                {totalPodcasts} episódio{totalPodcasts === 1 ? '' : 's'}
+                {totalAudiocasts} episódio{totalAudiocasts === 1 ? '' : 's'}
               </span>
             </div>
-            <h1 className="mb-2 text-3xl font-headline font-bold sm:text-4xl md:text-5xl">Podcasts</h1>
+            <h1 className="mb-2 text-3xl font-headline font-bold sm:text-4xl md:text-5xl">Audiocasts</h1>
             <p className="max-w-2xl text-base opacity-90 sm:text-lg">
               Conteúdo educativo em áudio sobre tecnologia, automação e inovação. Ouça quando quiser, com uma navegação mais limpa e confortável.
             </p>
@@ -42,7 +42,7 @@ const Podcasts = () => {
       <div className="container mx-auto px-4 py-6 sm:py-8">
         <div className="mx-auto max-w-6xl">
           {/* Top Ad */}
-          <AdSpace size="leaderboard" position="Topo Podcasts" className="mb-8" />
+          <AdSpace size="leaderboard" position="Topo Audiocasts" className="mb-8" />
 
           <div className="mb-6 rounded-2xl border border-border bg-card/80 p-4 shadow-sm">
             <p className="text-sm font-semibold text-foreground">Seleção editorial em áudio</p>
@@ -64,7 +64,7 @@ const Podcasts = () => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {paginatedItems.map((podcast) => (
-                    <PodcastCard
+                    <AudiocastCard
                       key={podcast.id}
                       podcast={podcast}
                       showStats={true}
@@ -75,7 +75,7 @@ const Podcasts = () => {
               </>
             ) : (
               <div className="bg-card rounded-xl border border-border p-10 text-center">
-                <h3 className="text-xl font-bold text-card-foreground mb-2">Em breve mais podcasts</h3>
+                <h3 className="text-xl font-bold text-card-foreground mb-2">Em breve mais audiocasts</h3>
                 <p className="text-muted-foreground">Estamos produzindo conteúdo educativo em áudio. Volte em breve!</p>
               </div>
             )}
@@ -83,16 +83,16 @@ const Podcasts = () => {
 
             {/* Sidebar */}
             <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
-              <AdSpace size="square" position="Lateral Podcasts" className="mx-auto" />
+              <AdSpace size="square" position="Lateral Audiocasts" className="mx-auto" />
 
             {/* Featured Podcast */}
-            {featuredPodcast && (
+            {featuredAudiocast && (
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <h3 className="mb-4 text-lg font-headline font-bold text-card-foreground">
                   Destaque da Semana
                 </h3>
-                <PodcastCard
-                  podcast={featuredPodcast}
+                <AudiocastCard
+                  podcast={featuredAudiocast}
                   compact={true}
                   showStats={false}
                 />
@@ -138,13 +138,13 @@ const Podcasts = () => {
               </div>
             </div>
 
-              <AdSpace size="square" position="Lateral Podcasts 2" className="mx-auto hidden lg:flex" />
+              <AdSpace size="square" position="Lateral Audiocasts 2" className="mx-auto hidden lg:flex" />
 
             {/* Newsletter */}
             <div className="rounded-2xl bg-gradient-to-br from-primary-700 via-primary-600 to-secondary-600 p-6 text-white shadow-lg">
               <h3 className="mb-2 text-lg font-bold">Newsletter</h3>
               <p className="mb-4 text-sm opacity-90">
-                Receba notificações quando novos podcasts forem publicados
+                Receba notificações quando novos audiocasts forem publicados
               </p>
               <Link
                 to="/#newsletter"
@@ -163,4 +163,4 @@ const Podcasts = () => {
   );
 };
 
-export default Podcasts;
+export default Audiocasts;

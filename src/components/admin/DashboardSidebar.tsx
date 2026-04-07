@@ -4,6 +4,7 @@ import {
   FileText,
   Globe,
   GraduationCap,
+  Headphones,
   LayoutDashboard,
   LayoutTemplate,
   Mail,
@@ -11,10 +12,8 @@ import {
   Shield,
   TerminalSquare,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { AdminView } from '@/components/admin/dashboard-types';
-import { VIEW_ACCESS_RULES } from '@/components/admin/dashboard-types';
 
 type NavItem = {
   id: AdminView;
@@ -40,6 +39,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const allItems: NavItem[] = [
     { id: 'overview', label: 'Visão geral', icon: LayoutDashboard, hint: 'KPIs e atalhos' },
     { id: 'content', label: 'Conteúdo', icon: FileText, hint: 'Posts e editorial', badge: draftCount || undefined },
+    { id: 'audiocasts', label: 'Audiocasts', icon: Headphones, hint: 'Áudio e episódios' },
     { id: 'builder', label: 'Homepage', icon: LayoutTemplate, hint: 'Builder visual' },
     { id: 'automations', label: 'Automações', icon: Bot, hint: 'N8N e workflows' },
     { id: 'courses', label: 'Cursos', icon: GraduationCap, hint: 'Afiliados e parcerias' },
@@ -53,9 +53,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
   return (
     <>
-      {/* Mobile: horizontal scrollable chips */}
+      {/* ─── Mobile: horizontal scrollable pills ─── */}
       <div className="lg:hidden">
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeView === item.id;
@@ -64,16 +64,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 key={item.id}
                 type="button"
                 onClick={() => onViewChange(item.id)}
-                className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                className={`relative inline-flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all ${
                   isActive
-                    ? 'border-primary-300 bg-primary-50 text-primary-700 shadow-sm dark:border-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-                    : 'border-border bg-card text-foreground hover:bg-muted/70'
+                    ? 'border-primary/30 bg-primary/10 text-primary shadow-sm dark:border-primary/40 dark:bg-primary/15 dark:text-primary-300'
+                    : 'border-border/60 bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className="h-4 w-4" />
                 {item.label}
                 {item.badge ? (
-                  <span className="ml-0.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary-600 px-1 text-[10px] font-bold text-white">
+                  <span className="ml-0.5 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
                     {item.badge}
                   </span>
                 ) : null}
@@ -83,68 +83,64 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
       </div>
 
-      {/* Desktop: sidebar card */}
-      <aside className="hidden self-start lg:sticky lg:top-16 lg:block">
-        <Card className="overflow-hidden border-border/60 shadow-sm">
-          <div className="bg-gradient-to-br from-neutral-900 via-neutral-900 to-primary-900 px-4 py-3.5 text-white dark:from-neutral-950 dark:to-primary-950">
-            <p className="text-xs font-bold tracking-wide">Painel de controlo</p>
-            <p className="mt-0.5 text-[10px] text-white/50">{navigationItems.length} áreas</p>
-          </div>
-          <CardContent className="space-y-0.5 p-1.5">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeView === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => onViewChange(item.id)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all ${
+      {/* ─── Desktop: clean sidebar nav ─── */}
+      <nav className="hidden lg:block">
+        <div className="mb-4 rounded-xl bg-gradient-to-br from-neutral-900 via-neutral-900 to-primary-900 px-4 py-3 text-white dark:from-neutral-950 dark:to-primary-950">
+          <p className="text-xs font-bold tracking-wide">Painel de controlo</p>
+          <p className="mt-0.5 text-[10px] text-white/50">{navigationItems.length} áreas</p>
+        </div>
+
+        <div className="space-y-0.5">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeView === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onViewChange(item.id)}
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
+                  isActive
+                    ? 'bg-primary/10 text-primary shadow-sm dark:bg-primary/15 dark:text-primary-300'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                }`}
+              >
+                <div
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-primary-50 text-primary-700 shadow-sm dark:bg-primary-900/20 dark:text-primary-300'
-                      : 'text-foreground hover:bg-muted/50'
+                      ? 'bg-primary/15 text-primary dark:bg-primary/20 dark:text-primary-300'
+                      : 'bg-muted/50 text-muted-foreground'
                   }`}
                 >
-                  <div
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors ${
-                      isActive
-                        ? 'bg-primary-100 text-primary-700 dark:bg-primary-800/40 dark:text-primary-300'
-                        : 'bg-muted/60 text-muted-foreground'
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{item.label}</span>
-                    <span className="block truncate text-[10px] text-muted-foreground">{item.hint}</span>
-                  </div>
-                  {item.badge ? (
-                    <Badge variant="default" className="h-5 min-w-[20px] justify-center rounded-full px-1.5 text-[10px]">
-                      {item.badge}
-                    </Badge>
-                  ) : null}
-                </button>
-              );
-            })}
-          </CardContent>
-        </Card>
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{item.label}</span>
+                  <span className="block truncate text-[10px] text-muted-foreground">{item.hint}</span>
+                </div>
+                {item.badge ? (
+                  <Badge variant="default" className="h-5 min-w-[20px] justify-center rounded-full px-1.5 text-[10px]">
+                    {item.badge}
+                  </Badge>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
 
-        {/* Portal quick links */}
-        <div className="mt-3 rounded-lg border border-border/60 bg-card p-3">
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            Portal público
-          </p>
+        {/* Portal quick link */}
+        <div className="mt-6 border-t border-border/40 pt-4">
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/60"
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
           >
-            <Globe className="h-3.5 w-3.5 text-emerald-500" />
+            <Globe className="h-4 w-4 text-emerald-500" />
             Abrir portal
           </a>
         </div>
-      </aside>
+      </nav>
     </>
   );
 };
