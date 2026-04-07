@@ -1,24 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Plus, Edit, Trash2, Eye, PenTool } from 'lucide-react';
-import { usePosts, usePostStats } from '@/hooks/usePosts';
+import { Card, CardContent } from '@/components/ui/card';
+import { Eye, Edit, PenTool, TrendingUp } from 'lucide-react';
+import { usePostStats } from '@/hooks/usePosts';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
-import { pt } from 'date-fns/locale';
 
 const AdminStatsCards = () => {
   const { data: stats, isLoading } = usePostStats();
-  
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:gap-6 mb-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
-            <CardContent className="p-4 sm:p-6">
-              <Skeleton className="h-14 w-full sm:h-16" />
+          <Card key={i} className="overflow-hidden">
+            <CardContent className="p-4">
+              <Skeleton className="h-16 w-full rounded-lg" />
             </CardContent>
           </Card>
         ))}
@@ -26,57 +21,68 @@ const AdminStatsCards = () => {
     );
   }
 
+  const cards = [
+    {
+      label: 'Total de Posts',
+      value: stats?.total || 0,
+      icon: PenTool,
+      gradient: 'from-primary-500 to-primary-700',
+      bgLight: 'bg-primary-50 dark:bg-primary-950/30',
+      textColor: 'text-primary-700 dark:text-primary-300',
+    },
+    {
+      label: 'Visualizações',
+      value: stats?.totalViews || 0,
+      icon: Eye,
+      gradient: 'from-emerald-500 to-emerald-700',
+      bgLight: 'bg-emerald-50 dark:bg-emerald-950/30',
+      textColor: 'text-emerald-700 dark:text-emerald-300',
+      format: true,
+    },
+    {
+      label: 'Rascunhos',
+      value: stats?.drafts || 0,
+      icon: Edit,
+      gradient: 'from-amber-500 to-amber-700',
+      bgLight: 'bg-amber-50 dark:bg-amber-950/30',
+      textColor: 'text-amber-700 dark:text-amber-300',
+    },
+    {
+      label: 'Este Mês',
+      value: stats?.thisMonth || 0,
+      icon: TrendingUp,
+      gradient: 'from-violet-500 to-violet-700',
+      bgLight: 'bg-violet-50 dark:bg-violet-950/30',
+      textColor: 'text-violet-700 dark:text-violet-300',
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:gap-6 mb-6">
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-center">
-            <PenTool className="h-6 w-6 sm:h-8 sm:w-8 text-primary-600 dark:text-primary-400" />
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total de Posts</p>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{stats?.total || 0}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-center">
-            <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-secondary-600 dark:text-secondary-400" />
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-muted-foreground">Visualizações</p>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">
-                {(stats?.totalViews || 0).toLocaleString('pt-PT')}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-center">
-            <Edit className="h-6 w-6 sm:h-8 sm:w-8 text-primary-500 dark:text-primary-300" />
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-muted-foreground">Rascunhos</p>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{stats?.drafts || 0}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-center">
-            <Plus className="h-6 w-6 sm:h-8 sm:w-8 text-primary-700 dark:text-primary-300" />
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-muted-foreground">Este Mês</p>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{stats?.thisMonth || 0}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <Card key={card.label} className="group overflow-hidden border-border/60 transition-shadow hover:shadow-md">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {card.label}
+                  </p>
+                  <p className="text-2xl font-bold text-foreground sm:text-3xl">
+                    {card.format
+                      ? card.value.toLocaleString('pt-PT')
+                      : card.value}
+                  </p>
+                </div>
+                <div className={`rounded-xl ${card.bgLight} p-2.5 transition-transform group-hover:scale-110`}>
+                  <Icon className={`h-5 w-5 ${card.textColor}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };

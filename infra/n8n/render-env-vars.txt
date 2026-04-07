@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# n8n no Render — Persistência via PostgreSQL externo
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# PROBLEMA: O free tier do Render tem filesystem efémero.
+# Cada deploy/restart apaga o SQLite do n8n → workflows perdidos.
+#
+# SOLUÇÃO: Configurar o n8n para usar PostgreSQL externo (Supabase ou Neon)
+# em vez do SQLite default. Assim TODO o estado persiste no DB remoto.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# PASSO A PASSO
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# 1. CRIAR SCHEMA NO SUPABASE (executar 1x no SQL Editor):
+#
+#    CREATE SCHEMA IF NOT EXISTS n8n;
+#    CREATE ROLE n8n_service WITH LOGIN PASSWORD '<PASSWORD_FORTE>';
+#    GRANT USAGE, CREATE ON SCHEMA n8n TO n8n_service;
+#    ALTER DEFAULT PRIVILEGES IN SCHEMA n8n GRANT ALL ON TABLES TO n8n_service;
+#    ALTER DEFAULT PRIVILEGES IN SCHEMA n8n GRANT ALL ON SEQUENCES TO n8n_service;
+#
+#    -- OU, alternativamente, usar um Neon/Railway PostgreSQL gratuito
+#    -- para evitar partilhar o mesmo DB do Supabase.
+#
+# 2. COPIAR AS VARIÁVEIS ABAIXO para o Render Dashboard:
+#    Render → seu serviço n8n → Environment → adicionar cada chave/valor
+#
+# 3. REDEPLOY o serviço no Render
+#
+# 4. Todos os workflows, credenciais e execuções agora sobrevivem a restarts
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Persistência PostgreSQL (OBRIGATÓRIO) ─────────────────────────────────────
+DB_TYPE=postgresdb
+DB_POSTGRESDB_HOST=db.SEU-PROJECT-ID.supabase.co
+DB_POSTGRESDB_PORT=5432
+DB_POSTGRESDB_DATABASE=postgres
+DB_POSTGRESDB_USER=n8n_service
+DB_POSTGRESDB_PASSWORD=PASSWORD_DO_PASSO_1
+DB_POSTGRESDB_SCHEMA=n8n
+# Se usar conexão SSL (Supabase exige):
+DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED=false
+
+# ── Encriptação (OBRIGATÓRIO — gerar 1x e NUNCA mudar) ───────────────────────
+# Gerar: openssl rand -hex 16
+N8N_ENCRYPTION_KEY=GERAR_COM_OPENSSL_RAND_HEX_16
+
+# ── API para o Edge Function proxy ───────────────────────────────────────────
+N8N_API_ENABLED=true
+N8N_API_KEY=MESMA_KEY_DOS_SUPABASE_SECRETS
+
+# ── Webhook URL pública ──────────────────────────────────────────────────────
+WEBHOOK_URL=https://n8n-vision7.onrender.com
+
+# ── Execuções: salvar tudo no DB ─────────────────────────────────────────────
+EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+EXECUTIONS_DATA_SAVE_ON_ERROR=all
+EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=true
+
+# ── Limpeza automática (manter 30 dias) ──────────────────────────────────────
+EXECUTIONS_DATA_PRUNE=true
+EXECUTIONS_DATA_MAX_AGE=720
+
+# ── Timezone ──────────────────────────────────────────────────────────────────
+GENERIC_TIMEZONE=Europe/Lisbon
+TZ=Europe/Lisbon
+
+# ── Segurança: reduzir superfície de ataque ──────────────────────────────────
+N8N_TEMPLATES_ENABLED=false
+N8N_DIAGNOSTICS_ENABLED=false
+N8N_PERSONALIZATION_ENABLED=false
+N8N_VERSION_NOTIFICATIONS_ENABLED=false
+N8N_PAYLOAD_SIZE_MAX=2
+
+# ── Timeout de execuções ─────────────────────────────────────────────────────
+EXECUTIONS_TIMEOUT=300
+EXECUTIONS_TIMEOUT_MAX=600
+
+# ── Render: manter o serviço ativo (free tier dorme após 15min inatividade) ──
+# Opção 1: Usar um cron externo (UptimeRobot, cron-job.org) para pingar:
+#   GET https://n8n-vision7.onrender.com/healthz  a cada 14 minutos
+#
+# Opção 2: Workflow de auto-ping dentro do n8n (ver abaixo)

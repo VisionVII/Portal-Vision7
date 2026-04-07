@@ -1,14 +1,14 @@
 {
   "module": "Supabase & Database",
-  "version": "1.0.1",
+  "version": "1.2.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-05",
+  "last_updated": "2026-04-06",
   "objective": "Camada de infraestrutura de dados: PostgreSQL via Supabase com schema completo, RLS policies, RPC functions, Storage buckets, migrações versionadas e client SDK configurado.",
   "functional_requirements": [
     {
       "id": "FR-001",
-      "description": "Schema com 12+ tabelas: posts, categories, courses, podcasts, newsletter_subscribers, site_settings, user_profiles, user_roles, permissions_matrix, registration_invites, audit_logs, analytics_events, monetization_settings",
+      "description": "Schema com 15+ tabelas: posts, categories, courses, podcasts, newsletter_subscribers, site_settings, user_profiles, user_roles, permissions_matrix, registration_invites, audit_logs, analytics_events, monetization_settings, automations, security_codes, partner_access_requests",
       "priority": "Crítica",
       "status": "Finalizado"
     },
@@ -32,7 +32,7 @@
     },
     {
       "id": "FR-005",
-      "description": "Migrações versionadas e incrementais (10 migration files)",
+      "description": "Migrações versionadas e incrementais (17 migration files)",
       "priority": "Alta",
       "status": "Finalizado"
     },
@@ -125,7 +125,12 @@
       "supabase/migrations/20260323_permissions_validation.sql",
       "supabase/migrations/20260323_remove_auto_admin.sql",
       "supabase/migrations/20260323_user_role_assignments.sql",
-      "supabase/migrations/20260324090000_add_courses_table.sql"
+      "supabase/migrations/20260324090000_add_courses_table.sql",
+      "supabase/migrations/20260405100000_add_security_codes.sql",
+      "supabase/migrations/20260405200000_add_automations_table.sql",
+      "supabase/migrations/20260405223000_harden_security_codes_rate_limits.sql",
+      "supabase/migrations/20260406190000_add_partner_access_requests.sql",
+      "supabase/migrations/20260407000000_add_invite_type_security_codes.sql"
     ]
   },
   "qa_tests": [
