@@ -1,9 +1,9 @@
 {
   "module": "Frontend & UI",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-06",
+  "last_updated": "2026-04-07",
   "objective": "Interface pública do portal Vision7 com design responsivo, tema dark/light, navegação por categorias e jornadas específicas para pedidos de acesso, convites e validação hierárquica de entrada.",
   "functional_requirements": [
     {
@@ -160,13 +160,16 @@
       "src/components/content/PostPagination.tsx",
       "src/components/content/RelatedPosts.tsx",
       "src/components/system/BrandLogo.tsx",
+      "src/components/system/CalendarPopover.tsx",
       "src/components/system/CookieBanner.tsx",
       "src/components/system/CookiePreferences.tsx",
       "src/components/system/DynamicFavicon.tsx",
       "src/components/system/ErrorBoundary.tsx",
       "src/components/system/PortalAIAssistantButton.tsx",
+      "src/components/system/ProtectedRoute.tsx",
       "src/components/system/ScrollToTop.tsx",
-      "src/components/admin/AuthShell.tsx",
+      "src/components/system/ThemeProvider.tsx",
+      "src/components/system/ThemeToggle.tsx",
       "src/components/media/PodcastCard.tsx",
       "src/components/media/PodcastPlayer.tsx"
     ],
@@ -188,9 +191,7 @@
       "src/pages/site/Post.tsx",
       "src/pages/site/PrivacyPolicy.tsx",
       "src/pages/site/Saude.tsx",
-      "src/pages/site/Tecnologia.tsx",
-      "src/pages/admin/TeamAccess.tsx",
-      "src/pages/admin/EntryTypeValidation.tsx"
+      "src/pages/site/Tecnologia.tsx"
     ],
     "services": [],
     "types": [],
@@ -298,6 +299,12 @@
       "version": "1.1.0",
       "author": "Vision7 Team",
       "description": "Jornadas de acesso público, validação por tipo de utilizador e alinhamento visual das entradas do portal"
+    },
+    {
+      "date": "2026-04-07",
+      "version": "1.1.1",
+      "author": "sdd-sync",
+      "description": "Auto-sync: file list updated"
     }
   ]
 }

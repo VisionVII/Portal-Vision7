@@ -47,7 +47,7 @@
       "description": "Edge Function proxy para proteger API key n8n do client-side",
       "priority": "Crítica",
       "status": "Finalizado"
-    }
+    },
     {
       "id": "FR-008",
       "description": "Persistência n8n via PostgreSQL (em vez de SQLite) para guardar workflows e execuções entre restarts",
@@ -67,6 +67,7 @@
       "status": "Pendente"
     }
   ],
+  "non_functional_requirements": [
     {
       "id": "NFR-001",
       "description": "API key n8n não deve ser exposta no browser em produção",
