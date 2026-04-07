@@ -15,32 +15,37 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? Deno.env.get('N8N_PR
   .map((o) => o.trim())
   .filter(Boolean);
 
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get('Origin') ?? '';
-  const allowed =
-    ALLOWED_ORIGINS.length === 0 ||
-    ALLOWED_ORIGINS.includes(origin) ||
-    origin.endsWith('.supabase.co');
-  return {
-    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0] || '',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    Vary: 'Origin',
-  };
+const ALLOWED_ORIGIN_SUFFIXES = ['.vision7.pt'];
+
+function isAllowedOrigin(origin: string) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.length === 0) return true;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+
+  try {
+    const { hostname, protocol } = new URL(origin);
+    const isHttps = protocol === 'https:';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isVisionDomain = ALLOWED_ORIGIN_SUFFIXES.some((suffix) => hostname === suffix.slice(1) || hostname.endsWith(suffix));
+    if ((isHttps && isVisionDomain) || isLocalhost) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
 }
 
-// ─── JWT payload parser (gateway already validated the signature) ─────────────
-function parseJwtPayload(token: string): { sub?: string; role?: string; exp?: number } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    // JWT uses base64url encoding
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
-    return JSON.parse(atob(padded));
-  } catch {
-    return null;
-  }
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') ?? '';
+  const allowed = isAllowedOrigin(origin) || origin.endsWith('.supabase.co');
+  const fallbackOrigin = ALLOWED_ORIGINS[0] || 'https://www.vision7.pt';
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : fallbackOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  };
 }
 
 // ─── Rate Limiter (in-memory, per user) ──────────────────────────────────────
@@ -68,7 +73,7 @@ setInterval(() => {
 }, 120_000);
 
 // ─── Path whitelist ──────────────────────────────────────────────────────────
-const ALLOWED_PATHS = ['/rest/workflows', '/rest/executions'];
+const ALLOWED_PATHS = ['/api/v1/workflows', '/api/v1/executions'];
 
 function isAllowedPath(path: string): boolean {
   return ALLOWED_PATHS.some(
@@ -95,10 +100,14 @@ function jsonResponse(data: unknown, status: number, cors: Record<string, string
 }
 
 // ─── Main handler ────────────────────────────────────────────────────────────
-// NOTE: Deploy WITHOUT --no-verify-jwt so Supabase gateway validates the JWT.
-// We only parse the payload to extract the user ID (no network call needed).
+// NOTE: Deploy WITH no JWT verification in the gateway and validate the token here.
 Deno.serve(async (req: Request) => {
   const cors = getCorsHeaders(req);
+  const origin = req.headers.get('Origin') ?? '';
+
+  if (origin && !isAllowedOrigin(origin) && !origin.endsWith('.supabase.co')) {
+    return jsonResponse({ error: 'Origin not allowed', origin }, 403, cors);
+  }
 
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: cors });
@@ -110,25 +119,28 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // ── 1. Extract user ID from JWT (already validated by Supabase gateway) ─
+    // ── 1. Extract and validate user token ──────────────────────────────────
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return jsonResponse({ error: 'Unauthorized — missing token' }, 401, cors);
     }
 
     const token = authHeader.slice(7);
-    const jwt = parseJwtPayload(token);
-    if (!jwt?.sub) {
-      return jsonResponse({ error: 'Unauthorized — malformed token' }, 401, cors);
-    }
 
-    const userId = jwt.sub;
-
-    // ── 2. Verify user has an allowed admin role (via service-role client) ──
+    // ── 2. Verify token and resolve user via Supabase Auth ──────────────────
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !authData.user?.id) {
+      console.error('[n8n-proxy] Auth error:', authError?.message ?? 'Invalid token');
+      return jsonResponse({ error: 'Unauthorized — invalid or expired token' }, 401, cors);
+    }
+
+    const userId = authData.user.id;
+
+    // ── 3. Verify user has an allowed admin role (via service-role client) ──
     const { data: roles, error: rolesError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
@@ -150,7 +162,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'Forbidden — insufficient role' }, 403, cors);
     }
 
-    // ── 3. Rate limit by user ID ────────────────────────────────────────────
+    // ── 4. Rate limit by user ID ────────────────────────────────────────────
     if (isRateLimited(userId)) {
       return jsonResponse(
         { error: 'Too many requests — limit is 30/min' },
@@ -159,12 +171,12 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // ── 4. Check n8n config ─────────────────────────────────────────────────
+    // ── 5. Check n8n config ─────────────────────────────────────────────────
     if (!N8N_BASE_URL || !N8N_API_KEY) {
       return jsonResponse({ error: 'n8n not configured on server' }, 503, cors);
     }
 
-    // ── 5. Parse & validate request body ────────────────────────────────────
+    // ── 6. Parse & validate request body ────────────────────────────────────
     const contentLength = Number(req.headers.get('Content-Length') ?? '0');
     if (contentLength > MAX_BODY_SIZE) {
       return jsonResponse({ error: 'Payload too large' }, 413, cors);
@@ -185,7 +197,7 @@ Deno.serve(async (req: Request) => {
     // ── Health check shortcut (path = "/health") ────────────────────────────
     if (parsed.path === '/health') {
       try {
-        const pingRes = await fetch(`${N8N_BASE_URL}/rest/workflows?limit=1`, {
+        const pingRes = await fetch(`${N8N_BASE_URL}/api/v1/workflows?limit=1&excludePinnedData=true`, {
           method: 'GET',
           headers: { 'X-N8N-API-KEY': N8N_API_KEY },
           signal: AbortSignal.timeout(25000), // 25s — Render free tier cold start can take 10-15s
@@ -213,7 +225,7 @@ Deno.serve(async (req: Request) => {
     // Normalise method
     const httpMethod = String(method).toUpperCase();
 
-    // ── 6. Write operations require admin role ──────────────────────────────
+    // ── 7. Write operations require admin role ──────────────────────────────
     if (WRITE_METHODS.has(httpMethod)) {
       const canWrite = userRoles.some((r: string) => N8N_ADMIN_ROLES.has(r));
       if (!canWrite) {
@@ -225,7 +237,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ── 7. Build n8n URL ────────────────────────────────────────────────────
+    // ── 8. Build n8n URL ────────────────────────────────────────────────────
     const url = new URL(`${N8N_BASE_URL}${path}`);
     if (query && typeof query === 'object') {
       for (const [key, value] of Object.entries(query)) {
@@ -235,7 +247,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ── 8. Forward to n8n ───────────────────────────────────────────────────
+    // ── 9. Forward to n8n ───────────────────────────────────────────────────
     const n8nResponse = await fetch(url.toString(), {
       method: httpMethod,
       headers: {

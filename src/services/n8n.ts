@@ -1,5 +1,6 @@
 import type { N8nExecution, N8nWorkflow } from '@/types/automation';
 import { supabase } from '@/integrations/supabase/client';
+import { SUPABASE_FUNCTIONS_URL } from '@/integrations/supabase/client';
 
 type N8nRequestOptions = {
   method?: string;
@@ -11,7 +12,13 @@ type N8nRequestOptions = {
  * Extract a human-readable message from a Supabase FunctionsHttpError.
  * error.context is a Response object — body must be read async.
  */
-async function extractEdgeFunctionError(error: { message?: string; context?: unknown }): Promise<string> {
+async function extractEdgeFunctionError(error: { name?: string; message?: string; context?: unknown }): Promise<string> {
+  if (error?.name === 'FunctionsFetchError' || /Failed to send a request to the Edge Function/i.test(error?.message ?? '')) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'unknown-origin';
+    const endpoint = SUPABASE_FUNCTIONS_URL ? `${SUPABASE_FUNCTIONS_URL}/n8n-proxy` : 'unknown-functions-url';
+    return `Falha de rede/CORS ao contactar Edge Function. Verifique ALLOWED_ORIGINS e VITE_SUPABASE_URL. origin=${origin} endpoint=${endpoint}`;
+  }
+
   const resp = error.context;
   if (resp instanceof Response) {
     const status = resp.status;
@@ -70,7 +77,7 @@ export const checkN8nHealth = async (): Promise<{
   httpStatus?: number;
 }> => {
   try {
-    const { data, error, response } = await supabase.functions.invoke('n8n-proxy', {
+    const { data, error } = await supabase.functions.invoke('n8n-proxy', {
       body: { path: '/health' },
     });
     if (error) {
@@ -89,33 +96,37 @@ export const checkN8nHealth = async (): Promise<{
 };
 
 export const getWorkflows = async () => {
-  const payload = await n8nRequest<unknown>('/rest/workflows');
+  const payload = await n8nRequest<unknown>('/api/v1/workflows', {
+    query: { excludePinnedData: true },
+  });
   return normalizeCollection<N8nWorkflow>(payload);
 };
 
 export const getWorkflowById = async (id: string) => {
-  return n8nRequest<N8nWorkflow>(`/rest/workflows/${id}`);
+  return n8nRequest<N8nWorkflow>(`/api/v1/workflows/${id}`, {
+    query: { excludePinnedData: true },
+  });
 };
 
 export const activateWorkflow = async (id: string) => {
-  return n8nRequest(`/rest/workflows/${id}/activate`, { method: 'POST' });
+  return n8nRequest(`/api/v1/workflows/${id}/activate`, { method: 'POST' });
 };
 
 export const deactivateWorkflow = async (id: string) => {
-  return n8nRequest(`/rest/workflows/${id}/deactivate`, { method: 'POST' });
+  return n8nRequest(`/api/v1/workflows/${id}/deactivate`, { method: 'POST' });
 };
 
 export const executeWorkflow = async (id: string) => {
-  return n8nRequest(`/rest/workflows/${id}/run`, { method: 'POST' });
+  throw new Error('A API publica do n8n nao expoe execucao manual de workflow neste ambiente. Use um trigger/webhook do proprio workflow para disparo manual.');
 };
 
 export const getExecutions = async (limit = 20) => {
-  const payload = await n8nRequest<unknown>('/rest/executions', {
+  const payload = await n8nRequest<unknown>('/api/v1/executions', {
     query: { limit, includeData: true },
   });
   return normalizeCollection<N8nExecution>(payload);
 };
 
 export const getExecutionById = async (id: string) => {
-  return n8nRequest<N8nExecution>(`/rest/executions/${id}`);
+  return n8nRequest<N8nExecution>(`/api/v1/executions/${id}`);
 };
