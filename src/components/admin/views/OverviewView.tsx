@@ -1,19 +1,18 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bot,
-  ExternalLink,
   Globe,
   LayoutTemplate,
   Plus,
-  TrendingUp,
-  BarChart3,
-  CalendarDays,
   Lightbulb,
   ArrowUpRight,
   ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Zap,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import AdminStatsCards from '@/components/admin/AdminStatsCards';
 import PostsTable from '@/components/admin/PostsTable';
@@ -48,6 +47,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
   const { data: newsletterStats } = useNewsletterStats();
   const { data: audiocasts = [] } = useAudiocasts(true);
   const { data: categories } = useCategories();
+  const [showEcosystem, setShowEcosystem] = useState(false);
 
   const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);
   const draftPosts = useMemo(() => posts?.filter((p) => p.status === 'draft') ?? [], [posts]);
@@ -59,7 +59,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       const cat = p.categories?.name ?? 'Sem categoria';
       map[cat] = (map[cat] || 0) + 1;
     });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [publishedPosts]);
 
   // Weekly post counts for mini chart (last 4 weeks)
@@ -75,30 +75,29 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
   }, [publishedPosts]);
 
   const maxWeekly = Math.max(...weeklyPosts, 1);
-
-  // Change vs previous week
   const weeklyChange = weeklyPosts[3] - weeklyPosts[2];
 
-  // Smart insights
+  // Smart insights — context-aware recommendations
   const insights = useMemo(() => {
-    const tips: Array<{ text: string; type: 'success' | 'warning' | 'info' }> = [];
-
+    const tips: Array<{ text: string; type: 'success' | 'warning' | 'info'; action?: string }> = [];
     const thisMonth = stats?.thisMonth ?? 0;
+    const totalViews = stats?.totalViews ?? 0;
+
+    // Best performing insight
     if (thisMonth >= 4) {
-      tips.push({ text: `Publicou ${thisMonth} posts este mês — boa consistência!`, type: 'success' });
+      tips.push({ text: `${thisMonth} publicações este mês — excelente consistência!`, type: 'success' });
     } else if (thisMonth > 0) {
-      tips.push({ text: `Apenas ${thisMonth} post${thisMonth > 1 ? 's' : ''} este mês. Publique mais ${4 - thisMonth} para manter ritmo.`, type: 'warning' });
+      tips.push({ text: `Publique mais ${4 - thisMonth} posts para atingir a meta semanal.`, type: 'warning', action: 'Criar post' });
     } else {
-      tips.push({ text: 'Nenhuma publicação este mês. Comece com um rascunho!', type: 'warning' });
+      tips.push({ text: 'Sem publicações este mês. Comece agora.', type: 'warning', action: 'Criar post' });
     }
 
     if (draftPosts.length > 3) {
-      tips.push({ text: `${draftPosts.length} rascunhos pendentes — revise e publique.`, type: 'info' });
+      tips.push({ text: `${draftPosts.length} rascunhos aguardam revisão.`, type: 'info', action: 'Ver rascunhos' });
     }
 
-    const totalViews = stats?.totalViews ?? 0;
     if (totalViews === 0 && publishedPosts.length > 0) {
-      tips.push({ text: 'Nenhum post teve visualizações ainda. Partilhe nas redes.', type: 'warning' });
+      tips.push({ text: 'Os seus posts ainda não têm visualizações. Partilhe nas redes.', type: 'warning' });
     }
 
     return tips.slice(0, 2);
@@ -106,197 +105,191 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
   return (
     <div className="space-y-8">
+      {/* ═══ ZONE 1: DECISION — KPIs + Insights ═══ */}
       <AdminStatsCards />
 
-      {/* Smart insights */}
       {insights.length > 0 && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-2">
           {insights.map((insight, i) => (
             <div
               key={i}
-              className={`flex items-start gap-3 rounded-xl border p-4 transition-all duration-200 ${
+              className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${
                 insight.type === 'success'
-                  ? 'border-emerald-200/60 bg-emerald-50/50 dark:border-emerald-800/30 dark:bg-emerald-950/20'
+                  ? 'border-emerald-200/50 bg-emerald-50/40 dark:border-emerald-800/25 dark:bg-emerald-950/15'
                   : insight.type === 'warning'
-                    ? 'border-amber-200/60 bg-amber-50/50 dark:border-amber-800/30 dark:bg-amber-950/20'
-                    : 'border-blue-200/60 bg-blue-50/50 dark:border-blue-800/30 dark:bg-blue-950/20'
+                    ? 'border-amber-200/50 bg-amber-50/40 dark:border-amber-800/25 dark:bg-amber-950/15'
+                    : 'border-blue-200/50 bg-blue-50/40 dark:border-blue-800/25 dark:bg-blue-950/15'
               }`}
             >
-              <Lightbulb className={`mt-0.5 h-4 w-4 shrink-0 ${
-                insight.type === 'success'
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : insight.type === 'warning'
-                    ? 'text-amber-500'
-                    : 'text-blue-600 dark:text-blue-400'
+              <Lightbulb className={`h-4 w-4 shrink-0 ${
+                insight.type === 'success' ? 'text-emerald-500' : insight.type === 'warning' ? 'text-amber-500' : 'text-blue-500'
               }`} />
-              <p className="text-sm text-foreground/80">{insight.text}</p>
+              <p className="min-w-0 flex-1 text-sm text-foreground/80">{insight.text}</p>
+              {insight.action && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0 text-xs"
+                  onClick={() => {
+                    if (insight.action === 'Criar post') onNewPost();
+                    else if (insight.action === 'Ver rascunhos') onNavigate('content');
+                  }}
+                >
+                  {insight.action}
+                  <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* Primary action + secondary actions */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* ═══ ZONE 2: ACTION — Primary + secondary actions ═══ */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {allowedViews.includes('content') && (
-          <Button onClick={onNewPost} size="lg" className="gap-2 rounded-xl shadow-sm">
+          <Button onClick={onNewPost} size="lg" className="w-full gap-2 rounded-xl shadow-sm sm:w-auto">
             <Plus className="h-4 w-4" />
             Novo Post
           </Button>
         )}
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto scrollbar-none">
           {allowedViews.includes('builder') && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onNavigate('builder')}
-              className="gap-1.5 rounded-lg text-muted-foreground"
-            >
+            <Button variant="outline" size="sm" onClick={() => onNavigate('builder')} className="shrink-0 gap-1.5 rounded-lg">
               <LayoutTemplate className="h-3.5 w-3.5" />
-              Homepage
+              <span className="hidden min-[400px]:inline">Homepage</span>
             </Button>
           )}
           {allowedViews.includes('automations') && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onNavigate('automations')}
-              className="gap-1.5 rounded-lg text-muted-foreground"
-            >
+            <Button variant="outline" size="sm" onClick={() => onNavigate('automations')} className="shrink-0 gap-1.5 rounded-lg">
               <Bot className="h-3.5 w-3.5" />
-              Automações
+              <span className="hidden min-[400px]:inline">Automações</span>
             </Button>
           )}
           <Link to="/" target="_blank">
             <Button variant="ghost" size="sm" className="gap-1.5 rounded-lg text-muted-foreground">
               <Globe className="h-3.5 w-3.5" />
-              Ver Portal
+              <span className="hidden min-[400px]:inline">Portal</span>
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <PostsTable posts={recentPosts} isLoading={postsLoading} onEdit={onEdit} />
+      {/* ═══ ZONE 3: ANALYSIS — Content + Charts ═══ */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        {/* Main content — posts table */}
+        <div className="xl:col-span-7">
+          <PostsTable posts={recentPosts} isLoading={postsLoading} onEdit={onEdit} />
+        </div>
 
-        <div className="space-y-5">
-          {/* Weekly publishing chart — with comparison */}
-          <Card className="border-border/40 dark:border-border/25">
-            <CardHeader className="pb-3">
+        {/* Sidebar analytics */}
+        <div className="space-y-5 xl:col-span-5">
+          {/* Weekly chart */}
+          <Card className="border-border/30 dark:border-border/20">
+            <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-semibold text-foreground">Publicações semanais</CardTitle>
-                  <CardDescription className="text-xs text-neutral-400 dark:text-neutral-500">Últimas 4 semanas</CardDescription>
-                </div>
+                <CardTitle className="text-sm font-semibold">Publicações semanais</CardTitle>
                 {weeklyChange !== 0 && (
-                  <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold ${
                     weeklyChange > 0
                       ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
-                      : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                      : 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
                   }`}>
-                    {weeklyChange > 0 ? (
-                      <ArrowUpRight className="h-3 w-3" />
-                    ) : (
-                      <ArrowUpRight className="h-3 w-3 rotate-90" />
-                    )}
-                    {weeklyChange > 0 ? '+' : ''}{weeklyChange} vs anterior
-                  </div>
+                    <ArrowUpRight className={`h-2.5 w-2.5 ${weeklyChange < 0 ? 'rotate-90' : ''}`} />
+                    {weeklyChange > 0 ? '+' : ''}{weeklyChange}
+                  </span>
                 )}
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-end gap-3">
+              <div className="flex items-end gap-2">
                 {weeklyPosts.map((count, i) => {
                   const isLatest = i === 3;
                   return (
-                    <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-                      <span className={`text-xs font-bold ${isLatest ? 'text-primary-600 dark:text-primary-400' : 'text-foreground/70'}`}>{count}</span>
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                      <span className={`text-xs font-bold ${isLatest ? 'text-primary-600 dark:text-primary-400' : 'text-foreground/50'}`}>{count}</span>
                       <div
                         className={`w-full rounded-md transition-all duration-300 ${
-                          isLatest
-                            ? 'bg-primary-500 dark:bg-primary-400/80'
-                            : 'bg-primary-200/80 dark:bg-primary-700/40'
+                          isLatest ? 'bg-primary-500 dark:bg-primary-400/80' : 'bg-muted/80 dark:bg-muted/40'
                         }`}
-                        style={{ height: `${Math.max((count / maxWeekly) * 56, 6)}px` }}
+                        style={{ height: `${Math.max((count / maxWeekly) * 56, 4)}px` }}
                       />
-                      <span className="text-[10px] font-medium text-neutral-400 dark:text-neutral-500">S{i + 1}</span>
+                      <span className="text-[9px] font-medium text-muted-foreground">S{i + 1}</span>
                     </div>
                   );
                 })}
               </div>
+              {weeklyPosts.every((w) => w === 0) && (
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  Sem publicações nas últimas 4 semanas
+                </p>
+              )}
             </CardContent>
           </Card>
 
-          {/* Ecosystem stats */}
-          <Card className="border-border/40 dark:border-border/25">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-foreground">Ecossistema</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-2.5">
-              {[
-                { label: 'Publicados', value: publishedPosts.length, color: 'text-emerald-600 dark:text-emerald-400' },
-                { label: 'Rascunhos', value: draftPosts.length, color: 'text-amber-500' },
-                { label: 'Newsletter', value: newsletterStats?.active || 0, color: 'text-blue-600 dark:text-blue-400' },
-                { label: 'Cursos', value: courses.length, color: 'text-violet-600 dark:text-violet-400' },
-                { label: 'Audiocasts', value: audiocasts.length, color: 'text-pink-600 dark:text-pink-400' },
-                { label: 'Categorias', value: categories?.length || 0, color: 'text-foreground' },
-              ].map((stat) => (
-                <div key={stat.label} className="rounded-lg bg-muted/40 p-3 dark:bg-muted/20">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-                    {stat.label}
-                  </p>
-                  <p className={`mt-1 text-xl font-bold ${stat.color}`}>{stat.value}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Posts by category */}
+          {/* Posts by category — collapsed by default on mobile */}
           {postsByCategory.length > 0 && (
-            <Card className="border-border/40 dark:border-border/25">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-foreground">Posts por categoria</CardTitle>
+            <Card className="border-border/30 dark:border-border/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold">Top categorias</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2.5">
+              <CardContent className="space-y-2">
                 {postsByCategory.map(([cat, count]) => (
                   <div key={cat} className="flex items-center gap-3">
                     <span className="min-w-0 flex-1 truncate text-sm text-foreground/80">{cat}</span>
-                    <div className="h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-muted/60 dark:bg-muted/30">
+                    <div className="h-1.5 w-24 shrink-0 overflow-hidden rounded-full bg-muted/50 dark:bg-muted/25">
                       <div
-                        className="h-full rounded-full bg-primary-500 transition-all duration-300 dark:bg-primary-400/70"
-                        style={{
-                          width: `${Math.round((count / Math.max(publishedPosts.length, 1)) * 100)}%`,
-                        }}
+                        className="h-full rounded-full bg-primary-500/80 dark:bg-primary-400/60"
+                        style={{ width: `${Math.round((count / Math.max(publishedPosts.length, 1)) * 100)}%` }}
                       />
                     </div>
-                    <span className="w-6 shrink-0 text-right text-xs font-bold text-neutral-400 dark:text-neutral-500">{count}</span>
+                    <span className="w-5 shrink-0 text-right text-xs font-bold text-muted-foreground">{count}</span>
                   </div>
                 ))}
               </CardContent>
             </Card>
           )}
 
-          {/* Portal sections */}
-          <Card className="border-border/40 dark:border-border/25">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-foreground">Secções do portal</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-0.5">
-              {PORTAL_SECTIONS.map((s) => (
-                <Link
-                  key={s.path}
-                  to={s.path}
-                  target="_blank"
-                  className="group flex items-center justify-between rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-muted/50"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground">{s.label}</p>
-                    <p className="text-[10px] text-neutral-400 dark:text-neutral-500">{s.description}</p>
-                  </div>
-                  <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0.5 group-hover:opacity-100" />
-                </Link>
-              ))}
-            </CardContent>
+          {/* Ecosystem — progressive disclosure */}
+          <Card className="border-border/30 dark:border-border/20">
+            <button
+              type="button"
+              onClick={() => setShowEcosystem((v) => !v)}
+              className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-muted/30"
+            >
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-primary-500" />
+                <span className="text-sm font-semibold text-foreground">Ecossistema</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {publishedPosts.length + draftPosts.length + audiocasts.length + courses.length} itens
+                </span>
+                {showEcosystem ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
+            </button>
+            {showEcosystem && (
+              <CardContent className="border-t border-border/20 pt-4">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {[
+                    { label: 'Publicados', value: publishedPosts.length, color: 'text-emerald-600 dark:text-emerald-400' },
+                    { label: 'Rascunhos', value: draftPosts.length, color: 'text-amber-500' },
+                    { label: 'Newsletter', value: newsletterStats?.active || 0, color: 'text-blue-500' },
+                    { label: 'Cursos', value: courses.length, color: 'text-violet-500' },
+                    { label: 'Audiocasts', value: audiocasts.length, color: 'text-pink-500' },
+                    { label: 'Categorias', value: categories?.length || 0, color: 'text-foreground/70' },
+                  ].map((s) => (
+                    <div key={s.label} className="rounded-lg bg-muted/30 p-3 dark:bg-muted/15">
+                      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                      <p className={`mt-1 text-lg font-bold ${s.color}`}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            )}
           </Card>
         </div>
       </div>
