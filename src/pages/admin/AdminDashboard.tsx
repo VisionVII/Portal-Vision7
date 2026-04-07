@@ -166,7 +166,7 @@ const AdminDashboard = () => {
                 <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />
               </Panel>
               <Panel view="builder"><BuilderView /></Panel>
-              <Panel view="automations"><AutomationsView /></Panel>
+              <Panel view="automations"><AutomationsView isActive={activeView === 'automations'} /></Panel>
               <Panel view="audiocasts"><AudiocastsView /></Panel>
               <Panel view="courses"><CoursesView /></Panel>
               <Panel view="crm"><CrmView /></Panel>
