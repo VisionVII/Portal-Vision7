@@ -9,18 +9,45 @@ type N8nRequestOptions = {
   query?: Record<string, string | number | boolean | undefined>;
 };
 
+function getJwtExp(token: string): number | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload?.exp === 'number' ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
+
 async function getEdgeAuthHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();
-  const accessToken = session?.access_token;
+
+  let accessToken = session?.access_token;
+  const exp = accessToken ? getJwtExp(accessToken) : null;
+  const now = Math.floor(Date.now() / 1000);
+
+  if (!accessToken || (exp !== null && exp <= now + 30)) {
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      throw new Error(`Nao foi possivel renovar a sessao: ${refreshError.message}`);
+    }
+    accessToken = refreshed.session?.access_token;
+  }
 
   if (!accessToken) {
     throw new Error('Sessao invalida ou expirada. Inicie sessao novamente.');
   }
 
-  return {
+  const headers: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
-    apikey: SUPABASE_ANON,
   };
+
+  if (SUPABASE_ANON) {
+    headers.apikey = SUPABASE_ANON;
+  }
+
+  return headers;
 }
 
 /**
@@ -48,6 +75,13 @@ async function extractEdgeFunctionError(error: { name?: string; message?: string
     } catch { /* body already consumed */ }
     return `Edge Function retornou HTTP ${status}`;
   }
+
+  if (resp && typeof resp === 'object') {
+    const maybe = resp as { status?: number; error?: string; message?: string };
+    const msg = maybe.error || maybe.message;
+    if (msg) return maybe.status ? `[${maybe.status}] ${msg}` : msg;
+  }
+
   return error.message || 'Falha na API do n8n';
 }
 
@@ -102,7 +136,10 @@ export const checkN8nHealth = async (): Promise<{
     if (error) {
       const detail = await extractEdgeFunctionError(error);
       const httpStatus = error.context instanceof Response ? error.context.status : undefined;
-      console.warn('[n8n-health] error:', { detail, httpStatus, errorName: error.name, errorMessage: error.message });
+      console.warn(
+        `[n8n-health] error detail=${detail} httpStatus=${httpStatus ?? 'n/a'} name=${error.name ?? 'n/a'} message=${error.message ?? 'n/a'}`,
+      );
+      console.debug('[n8n-health] raw error object', error);
       return { status: 'unreachable', detail, httpStatus };
     }
     console.info('[n8n-health] success:', data);
