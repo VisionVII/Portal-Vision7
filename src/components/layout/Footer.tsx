@@ -4,15 +4,19 @@ import { Link } from 'react-router-dom';
 import NewsletterForm from '@/components/content/NewsletterForm';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import BrandLogo from '@/components/system/BrandLogo';
+import { useAudioPlayerOptional } from '@/contexts/AudioPlayerContext';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const { data: siteSettings } = useSiteSettings();
+  const player = useAudioPlayerOptional();
+  const hasMiniPlayer = !!player?.track;
 
   return (
+    <>
     <footer className="border-t border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.96))] text-foreground dark:bg-[linear-gradient(180deg,rgba(3,13,31,0.96),rgba(2,8,23,0.98))] dark:text-white">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {/* Logo e Descrição */}
           <div className="space-y-4">
             <Link to="/" className="hover:opacity-90 transition-opacity">
@@ -74,6 +78,9 @@ const Footer = () => {
         </div>
       </div>
     </footer>
+    {/* Spacer when mini-player is active */}
+    {hasMiniPlayer && <div className="h-16 sm:h-[72px]" />}
+    </>
   );
 };
 

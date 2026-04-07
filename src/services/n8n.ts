@@ -19,7 +19,10 @@ const n8nRequest = async <T>(path: string, options: N8nRequestOptions = {}): Pro
   });
 
   if (error) {
-    throw new Error(error.message || `Falha na API do n8n`);
+    // FunctionsHttpError.context contains the parsed JSON body from the Edge Function
+    const ctx = (error as Record<string, unknown>).context as Record<string, unknown> | undefined;
+    const detail = ctx?.error ?? ctx?.message ?? error.message;
+    throw new Error(String(detail) || 'Falha na API do n8n');
   }
 
   return data as T;
@@ -41,15 +44,25 @@ export const getN8nConfigStatus = () => ({
 });
 
 /** Pings the n8n instance through the Edge Function proxy. */
-export const checkN8nHealth = async (): Promise<{ status: 'connected' | 'error' | 'unreachable' }> => {
+export const checkN8nHealth = async (): Promise<{
+  status: 'connected' | 'error' | 'unreachable';
+  detail?: string;
+}> => {
   try {
     const { data, error } = await supabase.functions.invoke('n8n-proxy', {
       body: { path: '/health' },
     });
-    if (error) return { status: 'unreachable' };
+    if (error) {
+      const ctx = (error as Record<string, unknown>).context as Record<string, unknown> | undefined;
+      const detail = String(ctx?.error ?? ctx?.message ?? error.message);
+      console.warn('[n8n-health]', detail);
+      return { status: 'unreachable', detail };
+    }
     return data as { status: 'connected' | 'error' | 'unreachable' };
-  } catch {
-    return { status: 'unreachable' };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+    console.warn('[n8n-health]', msg);
+    return { status: 'unreachable', detail: msg };
   }
 };
 

@@ -33,37 +33,37 @@ const NewsletterManager = () => {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Card>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="h-10 w-10 rounded-lg bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-              <Users className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <Users className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Total Subscritores</p>
               <p className="text-2xl font-bold">{stats?.total || 0}</p>
+              <p className="text-xs text-muted-foreground">Total Subscritores</p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="h-10 w-10 rounded-lg bg-secondary-100 dark:bg-secondary-900 flex items-center justify-center">
-              <UserCheck className="h-5 w-5 text-secondary-600 dark:text-secondary-400" />
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
+              <UserCheck className="h-4 w-4 text-emerald-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Ativos</p>
               <p className="text-2xl font-bold">{stats?.active || 0}</p>
+              <p className="text-xs text-muted-foreground">Ativos</p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="h-10 w-10 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
-              <Mail className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+              <Mail className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Inativos</p>
               <p className="text-2xl font-bold">{(stats?.total || 0) - (stats?.active || 0)}</p>
+              <p className="text-xs text-muted-foreground">Inativos</p>
             </div>
           </CardContent>
         </Card>

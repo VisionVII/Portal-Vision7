@@ -45,6 +45,7 @@ export interface CreateAudiocastData {
   post_id?: string;
   tags?: string[];
   status?: string;
+  author_id?: string;
 }
 
 export interface UpdateAudiocastData extends Partial<CreateAudiocastData> {

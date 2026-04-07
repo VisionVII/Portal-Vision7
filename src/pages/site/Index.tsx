@@ -136,6 +136,7 @@ const Index = () => {
               title={featuredPost.title}
               excerpt={featuredPost.excerpt}
               image={featuredPost.image_url || ''}
+              banner={featuredPost.banner_url}
               category={featuredPost.categories?.name || 'Geral'}
               categoryColor={featuredPost.categories?.color || 'bg-muted'}
               author={featuredPost.author_name}
@@ -171,6 +172,7 @@ const Index = () => {
                     title={post.title}
                     excerpt={post.excerpt}
                     image={post.image_url || ''}
+                    banner={post.banner_url}
                     category={post.categories?.name || 'Geral'}
                     categoryColor={post.categories?.color || 'bg-muted'}
                     author={post.author_name}

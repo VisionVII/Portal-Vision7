@@ -51,8 +51,15 @@ const AdminDashboard = () => {
 
   const draftCount = useMemo(() => posts?.filter((p) => p.status === 'draft').length ?? 0, [posts]);
 
+  // Only redirect ONCE after the initial auth check resolves.
+  // Subsequent auth state changes (token refresh, etc.) should not cause navigation.
+  const hasCheckedAccessRef = React.useRef(false);
+
   useEffect(() => {
-    if (!authLoading && isAccessReady && (!user || !canAccessDashboard)) {
+    if (authLoading || !isAccessReady) return; // still loading
+    if (hasCheckedAccessRef.current) return;   // already checked once
+    hasCheckedAccessRef.current = true;
+    if (!user || !canAccessDashboard) {
       navigate('/admin/login');
     }
   }, [user, canAccessDashboard, authLoading, isAccessReady, navigate]);
@@ -85,23 +92,13 @@ const AdminDashboard = () => {
     setActiveView('content');
   }, []);
 
-  const renderActiveView = () => {
-    switch (activeView) {
-      case 'overview':
-        return <OverviewView onNewPost={handleNewPost} onNavigate={setActiveView} onEdit={handleEdit} allowedViews={allowedViews} />;
-      case 'content':
-        return <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />;
-      case 'builder': return <BuilderView />;
-      case 'automations': return <AutomationsView />;
-      case 'audiocasts': return <AudiocastsView />;
-      case 'courses': return <CoursesView />;
-      case 'crm': return <CrmView />;
-      case 'access': return <AccessView />;
-      case 'developer': return <DeveloperView />;
-      case 'settings': return <SettingsView />;
-      default: return null;
-    }
-  };
+  // Helper: wrap lazy view in a div that hides when not active (keeps state mounted)
+  const Panel = useCallback(
+    ({ view, children }: { view: AdminView; children: React.ReactNode }) => (
+      <div className={activeView === view ? undefined : 'hidden'}>{children}</div>
+    ),
+    [activeView],
+  );
 
   if (authLoading || !isAccessReady) {
     return (
@@ -162,7 +159,20 @@ const AdminDashboard = () => {
             </div>
 
             <Suspense fallback={<ViewSkeleton />}>
-              {renderActiveView()}
+              <Panel view="overview">
+                <OverviewView onNewPost={handleNewPost} onNavigate={setActiveView} onEdit={handleEdit} allowedViews={allowedViews} />
+              </Panel>
+              <Panel view="content">
+                <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />
+              </Panel>
+              <Panel view="builder"><BuilderView /></Panel>
+              <Panel view="automations"><AutomationsView isActive={activeView === 'automations'} /></Panel>
+              <Panel view="audiocasts"><AudiocastsView /></Panel>
+              <Panel view="courses"><CoursesView /></Panel>
+              <Panel view="crm"><CrmView /></Panel>
+              <Panel view="access"><AccessView /></Panel>
+              <Panel view="developer"><DeveloperView /></Panel>
+              <Panel view="settings"><SettingsView /></Panel>
             </Suspense>
           </div>
         </main>

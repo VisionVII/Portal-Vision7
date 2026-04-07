@@ -265,7 +265,7 @@ const Header = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="flex w-[88vw] flex-col border-l border-border bg-background px-4 sm:max-w-sm">
+              <SheetContent side="right" className="flex w-[80vw] max-w-sm flex-col border-l border-border bg-background px-4">
                 <SheetHeader className="shrink-0 border-b border-border pb-3 text-left">
                   <SheetTitle className="sr-only">Menu Vision</SheetTitle>
                   <BrandLogo compact showTagline={false} logoUrl="/logo7.jpg" className="items-start" />
