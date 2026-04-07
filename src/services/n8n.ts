@@ -51,38 +51,51 @@ async function getEdgeAuthHeaders(): Promise<Record<string, string>> {
 }
 
 /**
- * Extract a human-readable message from a Supabase FunctionsHttpError.
- * error.context is a Response object — body must be read async.
+ * Extract a human-readable message from an HTTP response.
  */
-async function extractEdgeFunctionError(error: { name?: string; message?: string; context?: unknown }): Promise<string> {
-  if (error?.name === 'FunctionsFetchError' || /Failed to send a request to the Edge Function/i.test(error?.message ?? '')) {
+async function extractHttpError(resp: Response): Promise<string> {
+  const status = resp.status;
+  try {
+    const body = await resp.clone().json();
+    const msg = body?.error ?? body?.message ?? body?.msg ?? '';
+    if (msg) return `[${status}] ${msg}`;
+  } catch { /* body not JSON */ }
+  try {
+    const text = await resp.clone().text();
+    if (text) return `[${status}] ${text.slice(0, 200)}`;
+  } catch { /* body consumed */ }
+  return `Edge Function retornou HTTP ${status}`;
+}
+
+async function callN8nProxy(payload: unknown): Promise<unknown> {
+  if (!SUPABASE_FUNCTIONS_URL) {
+    throw new Error('SUPABASE_FUNCTIONS_URL ausente. Verifique VITE_SUPABASE_URL.');
+  }
+
+  const endpoint = `${SUPABASE_FUNCTIONS_URL}/n8n-proxy`;
+  const headers = await getEdgeAuthHeaders();
+
+  let resp: Response;
+  try {
+    resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'unknown-origin';
-    const endpoint = SUPABASE_FUNCTIONS_URL ? `${SUPABASE_FUNCTIONS_URL}/n8n-proxy` : 'unknown-functions-url';
-    return `Falha de rede/CORS ao contactar Edge Function. Verifique ALLOWED_ORIGINS e VITE_SUPABASE_URL. origin=${origin} endpoint=${endpoint}`;
+    throw new Error(`Falha de rede/CORS ao contactar Edge Function. Verifique ALLOWED_ORIGINS e VITE_SUPABASE_URL. origin=${origin} endpoint=${endpoint}`);
   }
 
-  const resp = error.context;
-  if (resp instanceof Response) {
-    const status = resp.status;
-    try {
-      const body = await resp.clone().json();
-      const msg = body?.error ?? body?.message ?? body?.msg ?? '';
-      if (msg) return `[${status}] ${msg}`;
-    } catch { /* body not JSON */ }
-    try {
-      const text = await resp.clone().text();
-      if (text) return `[${status}] ${text.slice(0, 200)}`;
-    } catch { /* body already consumed */ }
-    return `Edge Function retornou HTTP ${status}`;
+  if (!resp.ok) {
+    const detail = await extractHttpError(resp);
+    throw new Error(detail);
   }
 
-  if (resp && typeof resp === 'object') {
-    const maybe = resp as { status?: number; error?: string; message?: string };
-    const msg = maybe.error || maybe.message;
-    if (msg) return maybe.status ? `[${maybe.status}] ${msg}` : msg;
-  }
-
-  return error.message || 'Falha na API do n8n';
+  return resp.json();
 }
 
 /**
@@ -91,18 +104,7 @@ async function extractEdgeFunctionError(error: { name?: string; message?: string
  */
 const n8nRequest = async <T>(path: string, options: N8nRequestOptions = {}): Promise<T> => {
   const { method, body, query } = options;
-  const headers = await getEdgeAuthHeaders();
-
-  const { data, error } = await supabase.functions.invoke('n8n-proxy', {
-    headers,
-    body: { path, method: method || 'GET', body, query },
-  });
-
-  if (error) {
-    const detail = await extractEdgeFunctionError(error);
-    throw new Error(detail);
-  }
-
+  const data = await callN8nProxy({ path, method: method || 'GET', body, query });
   return data as T;
 };
 
@@ -128,26 +130,15 @@ export const checkN8nHealth = async (): Promise<{
   httpStatus?: number;
 }> => {
   try {
-    const headers = await getEdgeAuthHeaders();
-    const { data, error } = await supabase.functions.invoke('n8n-proxy', {
-      headers,
-      body: { path: '/health' },
-    });
-    if (error) {
-      const detail = await extractEdgeFunctionError(error);
-      const httpStatus = error.context instanceof Response ? error.context.status : undefined;
-      console.warn(
-        `[n8n-health] error detail=${detail} httpStatus=${httpStatus ?? 'n/a'} name=${error.name ?? 'n/a'} message=${error.message ?? 'n/a'}`,
-      );
-      console.debug('[n8n-health] raw error object', error);
-      return { status: 'unreachable', detail, httpStatus };
-    }
+    const data = await callN8nProxy({ path: '/health' });
     console.info('[n8n-health] success:', data);
     return data as { status: 'connected' | 'error' | 'unreachable' };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
     console.warn('[n8n-health] exception:', msg);
-    return { status: 'unreachable', detail: msg };
+    const match = msg.match(/^\[(\d{3})\]/);
+    const httpStatus = match ? Number(match[1]) : undefined;
+    return { status: 'unreachable', detail: msg, httpStatus };
   }
 };
 
