@@ -10,11 +10,13 @@ VALUES ('audiocast-covers', 'audiocast-covers', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Public read access
+DROP POLICY IF EXISTS "Public can view audiocast covers" ON storage.objects;
 CREATE POLICY "Public can view audiocast covers"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'audiocast-covers');
 
 -- Admin upload
+DROP POLICY IF EXISTS "Admins can upload audiocast covers" ON storage.objects;
 CREATE POLICY "Admins can upload audiocast covers"
 ON storage.objects FOR INSERT
 TO authenticated
@@ -24,6 +26,7 @@ WITH CHECK (
 );
 
 -- Admin update
+DROP POLICY IF EXISTS "Admins can update audiocast covers" ON storage.objects;
 CREATE POLICY "Admins can update audiocast covers"
 ON storage.objects FOR UPDATE
 TO authenticated
@@ -33,6 +36,7 @@ USING (
 );
 
 -- Admin delete
+DROP POLICY IF EXISTS "Admins can delete audiocast covers" ON storage.objects;
 CREATE POLICY "Admins can delete audiocast covers"
 ON storage.objects FOR DELETE
 TO authenticated
