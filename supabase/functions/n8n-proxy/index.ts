@@ -75,6 +75,16 @@ setInterval(() => {
 // ─── Path whitelist ──────────────────────────────────────────────────────────
 const ALLOWED_PATHS = ['/api/v1/workflows', '/api/v1/executions'];
 
+function normalizeLegacyPath(path: string): string {
+  if (path === '/rest/workflows' || path.startsWith('/rest/workflows/')) {
+    return path.replace('/rest/workflows', '/api/v1/workflows');
+  }
+  if (path === '/rest/executions' || path.startsWith('/rest/executions/')) {
+    return path.replace('/rest/executions', '/api/v1/executions');
+  }
+  return path;
+}
+
 function isAllowedPath(path: string): boolean {
   return ALLOWED_PATHS.some(
     (allowed) => path === allowed || path.startsWith(`${allowed}/`),
@@ -238,8 +248,10 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'Missing or invalid path' }, 400, cors);
     }
 
-    if (!isAllowedPath(path)) {
-      return jsonResponse({ error: 'Path not allowed' }, 403, cors);
+    const normalizedPath = normalizeLegacyPath(path);
+
+    if (!isAllowedPath(normalizedPath)) {
+      return jsonResponse({ error: `Path not allowed: ${path}` }, 403, cors);
     }
 
     // Normalise method
@@ -258,7 +270,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── 8. Build n8n URL ────────────────────────────────────────────────────
-    const url = new URL(`${N8N_BASE_URL}${path}`);
+    const url = new URL(`${N8N_BASE_URL}${normalizedPath}`);
     if (query && typeof query === 'object') {
       for (const [key, value] of Object.entries(query)) {
         if (value !== undefined && value !== null && value !== '') {
