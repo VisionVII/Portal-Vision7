@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Edit, Trash2, Eye, Search } from 'lucide-react';
+import { Edit, Trash2, Eye, Search, FileText } from 'lucide-react';
 import { Post, useDeletePost } from '@/hooks/usePosts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
@@ -59,14 +59,21 @@ const PostsTable: React.FC<PostsTableProps> = ({ posts, isLoading, onEdit }) => 
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Posts Recentes</CardTitle>
+      <Card className="border-border/30 dark:border-border/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold">Posts Recentes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-16 w-full" />
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </div>
             ))}
           </div>
         </CardContent>
@@ -75,16 +82,15 @@ const PostsTable: React.FC<PostsTableProps> = ({ posts, isLoading, onEdit }) => 
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Posts Recentes</CardTitle>
-        <CardDescription>
-          Gerencie todos os artigos do seu blog com uma visualização otimizada para desktop e mobile.
-        </CardDescription>
-        <div className="flex flex-wrap gap-2 pt-1">
-          <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">Total: {totalPosts}</span>
-          <span className="rounded-full bg-secondary-100 px-2.5 py-1 text-xs text-secondary-800 dark:bg-secondary-900 dark:text-secondary-200">Publicados: {publishedCount}</span>
-          <span className="rounded-full bg-primary-100 px-2.5 py-1 text-xs text-primary-800 dark:bg-primary-900 dark:text-primary-200">Rascunhos: {draftCount}</span>
+    <Card className="border-border/30 dark:border-border/20">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-semibold">Posts Recentes</CardTitle>
+          <div className="flex gap-1.5">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{totalPosts}</span>
+            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">{publishedCount}</span>
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">{draftCount}</span>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -112,14 +118,24 @@ const PostsTable: React.FC<PostsTableProps> = ({ posts, isLoading, onEdit }) => 
         </div>
 
         {!filteredPosts || filteredPosts.length === 0 ? (
-          <p className="py-8 text-center text-muted-foreground">
-            Nenhum post encontrado. Crie o seu primeiro post!
-          </p>
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="rounded-2xl bg-muted/40 p-4 dark:bg-muted/20">
+              <FileText className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+            <p className="mt-4 text-sm font-medium text-foreground/70">
+              {searchQuery || statusFilter !== 'all' ? 'Nenhum post encontrado' : 'Sem publicações ainda'}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {searchQuery || statusFilter !== 'all'
+                ? 'Tente ajustar os filtros de pesquisa'
+                : 'Comece criando o seu primeiro artigo'}
+            </p>
+          </div>
         ) : (
           <>
             <div className="space-y-3 md:hidden">
               {filteredPosts.map((post) => (
-                <div key={post.id} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div key={post.id} className="rounded-xl border border-border/40 bg-card p-4 transition-all duration-150 active:scale-[0.99] dark:border-border/25">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="line-clamp-2 font-semibold text-foreground">{post.title}</p>
