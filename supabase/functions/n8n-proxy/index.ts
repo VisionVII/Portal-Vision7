@@ -10,7 +10,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 // CORS — restrict to known origins (production + preview + local dev)
-const ALLOWED_ORIGINS = (Deno.env.get('N8N_PROXY_ALLOWED_ORIGINS') ?? '')
+const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? Deno.env.get('N8N_PROXY_ALLOWED_ORIGINS') ?? '')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
