@@ -28,6 +28,8 @@ interface AudiocastPlayerProps {
     transcript: string | null;
     views: number;
     downloads: number;
+    cover_url?: string | null;
+    slug?: string;
   };
   autoPlay?: boolean;
   showTranscript?: boolean;
@@ -40,143 +42,79 @@ const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
   showTranscript = false,
   compact = false
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const globalPlayer = useAudioPlayerOptional();
   const trackPlay = useTrackAudiocastPlay();
   const trackDownload = useTrackAudiocastDownload();
   const { toast } = useToast();
-  const globalPlayer = useAudioPlayerOptional();
+  const hasTrackedRef = useRef(false);
 
+  // Determine if the global player is handling THIS podcast
+  const isGlobalActive = !!(globalPlayer && globalPlayer.track?.id === podcast.id);
+
+  // Derive state from global player when it owns this track
+  const isPlaying = isGlobalActive ? globalPlayer.isPlaying : false;
+  const currentTime = isGlobalActive ? globalPlayer.currentTime : 0;
+  const duration = isGlobalActive ? (globalPlayer.duration || podcast.duration || 0) : (podcast.duration || 0);
+  const volume = isGlobalActive ? globalPlayer.volume : 0.8;
+  const isMuted = isGlobalActive ? globalPlayer.isMuted : false;
+  const isLoading = isGlobalActive ? globalPlayer.isLoading : false;
+
+  // Track play event once per session
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !podcast.audio_url) return;
-
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-      setIsLoading(false);
-    };
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-    };
-
-    const handleEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-    };
-
-    const handlePlay = () => {
+    if (isPlaying && !hasTrackedRef.current) {
+      hasTrackedRef.current = true;
       trackPlay.mutate(podcast.id);
-    };
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('play', handlePlay);
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('play', handlePlay);
-    };
-  }, [podcast.audio_url, trackPlay, podcast.id]);
-
-  useEffect(() => {
-    if (autoPlay && audioRef.current) {
-      audioRef.current.play().catch(() => {
-        // Autoplay failed, user interaction required
-      });
     }
-  }, [autoPlay]);
+  }, [isPlaying, trackPlay, podcast.id]);
 
-  const togglePlay = async () => {
-    const audio = audioRef.current;
-    if (!audio) return;
+  const togglePlay = () => {
+    if (!globalPlayer || !podcast.audio_url) return;
 
-    try {
-      if (isPlaying) {
-        audio.pause();
-        setIsPlaying(false);
-        globalPlayer?.pause();
-      } else {
-        await audio.play();
-        setIsPlaying(true);
-        // Sync to global player for mini-player persistence
-        if (globalPlayer && podcast.audio_url) {
-          globalPlayer.play({
-            id: podcast.id,
-            title: podcast.title,
-            audio_url: podcast.audio_url,
-            duration: podcast.duration,
-            description: podcast.description,
-          });
-        }
-      }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível reproduzir o áudio.",
-        variant: "destructive",
+    if (isGlobalActive) {
+      // Already playing this track — toggle
+      globalPlayer.toggle();
+    } else {
+      // Start playing this track via global player
+      hasTrackedRef.current = false;
+      globalPlayer.play({
+        id: podcast.id,
+        title: podcast.title,
+        audio_url: podcast.audio_url,
+        cover_url: podcast.cover_url,
+        duration: podcast.duration,
+        description: podcast.description,
+        slug: podcast.slug,
       });
     }
   };
 
   const handleSeek = (value: number[]) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const newTime = value[0];
-    audio.currentTime = newTime;
-    setCurrentTime(newTime);
+    if (!isGlobalActive || !globalPlayer) return;
+    globalPlayer.seek(value[0]);
   };
 
   const handleVolumeChange = (value: number[]) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const newVolume = value[0];
-    audio.volume = newVolume;
-    setVolume(newVolume);
-    setIsMuted(newVolume === 0);
+    if (!globalPlayer) return;
+    globalPlayer.setVolume(value[0]);
   };
 
   const toggleMute = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isMuted) {
-      audio.volume = volume;
-      setIsMuted(false);
-    } else {
-      audio.volume = 0;
-      setIsMuted(true);
-    }
+    if (!globalPlayer) return;
+    globalPlayer.toggleMute();
   };
 
   const skipTime = (seconds: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const newTime = Math.max(0, Math.min(duration, audio.currentTime + seconds));
-    audio.currentTime = newTime;
-    setCurrentTime(newTime);
+    if (!globalPlayer) return;
+    if (seconds > 0) globalPlayer.skipForward(Math.abs(seconds));
+    else globalPlayer.skipBackward(Math.abs(seconds));
   };
 
   const handleDownload = async () => {
     if (!podcast.audio_url) return;
 
     try {
-      // Track download
       trackDownload.mutate(podcast.id);
 
-      // Create download link
       const link = document.createElement('a');
       link.href = podcast.audio_url;
       link.download = `${podcast.title}.mp3`;
@@ -188,7 +126,7 @@ const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
         title: "Download iniciado",
         description: "O audiocast está sendo baixado.",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Não foi possível baixar o audiocast.",
@@ -207,11 +145,10 @@ const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
           text: podcast.description || '',
           url: url,
         });
-      } catch (error) {
+      } catch {
         // User cancelled share
       }
     } else {
-      // Fallback to clipboard
       navigator.clipboard.writeText(url);
       toast({
         title: "Link copiado",
@@ -254,11 +191,9 @@ const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium truncate">{podcast.title}</div>
           <div className="text-xs text-muted-foreground">
-            {formatDuration(currentTime)} / {formatDuration(duration || podcast.duration || 0)}
+            {formatDuration(currentTime)} / {formatDuration(duration)}
           </div>
         </div>
-
-        <audio ref={audioRef} src={podcast.audio_url} preload="metadata" />
       </div>
     );
   }
@@ -275,26 +210,18 @@ const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
             )}
           </div>
 
-          {/* Audio Element */}
-          <audio
-            ref={audioRef}
-            src={podcast.audio_url}
-            preload="metadata"
-            onLoadedMetadata={() => setIsLoading(false)}
-          />
-
           {/* Progress Bar */}
           <div className="space-y-2">
             <Slider
               value={[currentTime]}
-              max={duration || podcast.duration || 100}
+              max={duration || 100}
               step={1}
               onValueChange={handleSeek}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{formatDuration(currentTime)}</span>
-              <span>{formatDuration(duration || podcast.duration || 0)}</span>
+              <span>{formatDuration(duration)}</span>
             </div>
           </div>
 
