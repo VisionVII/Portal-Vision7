@@ -1,12 +1,27 @@
 import type { N8nExecution, N8nWorkflow } from '@/types/automation';
 import { supabase } from '@/integrations/supabase/client';
 import { SUPABASE_FUNCTIONS_URL } from '@/integrations/supabase/client';
+import { SUPABASE_ANON } from '@/integrations/supabase/client';
 
 type N8nRequestOptions = {
   method?: string;
   body?: unknown;
   query?: Record<string, string | number | boolean | undefined>;
 };
+
+async function getEdgeAuthHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
+
+  if (!accessToken) {
+    throw new Error('Sessao invalida ou expirada. Inicie sessao novamente.');
+  }
+
+  return {
+    Authorization: `Bearer ${accessToken}`,
+    apikey: SUPABASE_ANON,
+  };
+}
 
 /**
  * Extract a human-readable message from a Supabase FunctionsHttpError.
@@ -42,8 +57,10 @@ async function extractEdgeFunctionError(error: { name?: string; message?: string
  */
 const n8nRequest = async <T>(path: string, options: N8nRequestOptions = {}): Promise<T> => {
   const { method, body, query } = options;
+  const headers = await getEdgeAuthHeaders();
 
   const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+    headers,
     body: { path, method: method || 'GET', body, query },
   });
 
@@ -77,7 +94,9 @@ export const checkN8nHealth = async (): Promise<{
   httpStatus?: number;
 }> => {
   try {
+    const headers = await getEdgeAuthHeaders();
     const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+      headers,
       body: { path: '/health' },
     });
     if (error) {
