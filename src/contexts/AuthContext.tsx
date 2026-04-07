@@ -141,9 +141,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ── Apply access profile to state ─────────────────────────────────────────
 
   const applyAccess = useCallback(
-    (userId: string, access: { roles: AppRole[]; isAdmin: boolean }) => {
-      setRoles(access.roles);
-      setIsAdmin(access.isAdmin);
+    (userId: string, access: { roles: AppRole[]; isAdmin: boolean } | undefined | null) => {
+      if (!access) {
+        console.warn('[Auth] applyAccess called with falsy access — skipping');
+        return;
+      }
+      setRoles(access.roles ?? []);
+      setIsAdmin(access.isAdmin ?? false);
       loadedRolesForRef.current = userId;
     },
     [],
@@ -198,7 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             accessToken: sess.access_token,
             email: sess.user.email,
           });
-          if (isMounted) applyAccess(sess.user.id, access);
+          if (isMounted && access) applyAccess(sess.user.id, access);
         } catch (err) {
           console.error('[Auth] onAuthStateChange error:', err);
         }

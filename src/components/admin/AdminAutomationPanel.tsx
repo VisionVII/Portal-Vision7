@@ -69,7 +69,7 @@ const normalizeExecutionStatus = (execution: N8nExecution) => {
   return 'success';
 };
 
-const AdminAutomationPanel = () => {
+const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   const { toast } = useToast();
 
   const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
@@ -129,6 +129,7 @@ const AdminAutomationPanel = () => {
   }, [toast]);
 
   useEffect(() => {
+    if (!isActive) return;
     void refreshN8nData();
     const interval = window.setInterval(() => {
       // Stop polling after 3 consecutive errors
@@ -136,7 +137,7 @@ const AdminAutomationPanel = () => {
       void refreshN8nData();
     }, 30_000);
     return () => window.clearInterval(interval);
-  }, [refreshN8nData]);
+  }, [refreshN8nData, isActive]);
 
   const lastExecutionByWorkflow = useMemo(() => {
     const map = new Map<string, N8nExecution>();
