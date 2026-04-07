@@ -122,7 +122,50 @@ WITH CHECK (
   AND (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin'))
 );
 
--- ─── 6. Add cover_url column ────────────────────────────────────────────────
+-- ─── 6. Add cover_url column to podcasts ────────────────────────────────────
 
 ALTER TABLE public.podcasts
 ADD COLUMN IF NOT EXISTS cover_url TEXT;
+
+-- ─── 7. Add banner_url column to posts ──────────────────────────────────────
+
+ALTER TABLE public.posts
+ADD COLUMN IF NOT EXISTS banner_url TEXT;
+
+-- ─── 8. Storage bucket "post-images" for banners ────────────────────────────
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('post-images', 'post-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Public can view post images" ON storage.objects;
+CREATE POLICY "Public can view post images"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'post-images');
+
+DROP POLICY IF EXISTS "Admins can upload post images" ON storage.objects;
+CREATE POLICY "Admins can upload post images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'post-images'
+  AND (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor') OR public.has_role(auth.uid(), 'redator'))
+);
+
+DROP POLICY IF EXISTS "Admins can update post images" ON storage.objects;
+CREATE POLICY "Admins can update post images"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'post-images'
+  AND (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'))
+);
+
+DROP POLICY IF EXISTS "Admins can delete post images" ON storage.objects;
+CREATE POLICY "Admins can delete post images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'post-images'
+  AND (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin'))
+);

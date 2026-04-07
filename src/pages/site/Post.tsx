@@ -6,7 +6,7 @@ import Footer from '@/components/layout/Footer';
 import AdSpace from '@/components/content/AdSpace';
 import RelatedPosts from '@/components/content/RelatedPosts';
 import { usePost, usePosts, useTrackPostView } from '@/hooks/usePosts';
-import { Calendar, User, ArrowLeft, Share2, Check } from 'lucide-react';
+import { Calendar, User, ArrowLeft, Share2, Check, Clock, Tag } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Post = () => {
@@ -32,10 +32,11 @@ const Post = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+        <Skeleton className="h-[350px] w-full" />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
-            <Skeleton className="h-12 w-3/4 mb-6" />
-            <Skeleton className="h-96 w-full mb-8" />
+            <Skeleton className="h-12 w-3/4 mb-4" />
+            <Skeleton className="h-6 w-1/2 mb-8" />
             <Skeleton className="h-64 w-full" />
           </div>
         </div>
@@ -70,6 +71,7 @@ const Post = () => {
 
   const categoryPath = post.categories?.slug ? `/${post.categories.slug}` : '/';
   const categoryLabel = post.categories?.name ?? 'Notícias';
+  const heroImage = post.banner_url || post.image_url;
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -95,96 +97,146 @@ const Post = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
+      {/* Hero Section */}
+      <div className="relative">
+        {heroImage ? (
+          <div className="relative min-h-[300px] sm:min-h-[380px] lg:min-h-[440px]">
+            <img
+              src={heroImage}
+              alt={post.title}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-black/60 to-black/30" />
+            <div className="absolute inset-0 flex flex-col justify-end">
+              <div className="container mx-auto px-4 pb-8 sm:pb-12">
+                <div className="mx-auto max-w-4xl">
+                  <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <Link
+                      to={categoryPath}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/25"
+                    >
+                      <ArrowLeft className="h-3 w-3" />
+                      {categoryLabel}
+                    </Link>
+                    <span className={`category-badge ${post.categories?.color || 'bg-primary'}`}>
+                      {post.categories?.name || 'Geral'}
+                    </span>
+                  </div>
+                  <h1 className="text-2xl font-headline font-bold leading-tight text-white sm:text-3xl lg:text-5xl">
+                    {post.title}
+                  </h1>
+                  <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/80">
+                    <div className="flex items-center gap-1.5">
+                      <User size={15} /><span>{post.author_name}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Calendar size={15} /><span>{formattedDate}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={15} /><span>{post.read_time}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-12 sm:py-16 lg:py-20">
+            <div className="container mx-auto px-4">
+              <div className="mx-auto max-w-4xl">
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  <Link
+                    to={categoryPath}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 transition-colors hover:bg-white/20"
+                  >
+                    <ArrowLeft className="h-3 w-3" />
+                    {categoryLabel}
+                  </Link>
+                  <span className={`category-badge ${post.categories?.color || 'bg-primary'}`}>
+                    {post.categories?.name || 'Geral'}
+                  </span>
+                </div>
+                <h1 className="text-2xl font-headline font-bold leading-tight text-white sm:text-3xl lg:text-5xl">
+                  {post.title}
+                </h1>
+                <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/70">
+                  <div className="flex items-center gap-1.5">
+                    <User size={15} /><span>{post.author_name}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={15} /><span>{formattedDate}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={15} /><span>{post.read_time}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
       <article id="post-top" className="container mx-auto px-4 py-6 sm:py-8 lg:py-10">
         <div className="mx-auto max-w-7xl">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-6 flex items-center justify-between gap-3">
-              <Link
-                to={categoryPath}
-                className="inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {categoryLabel}
-              </Link>
-              <button
-                onClick={() => void handleShare()}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-                title="Partilhar artigo"
-              >
-                {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Share2 className="h-3.5 w-3.5" />}
-                {copied ? 'Copiado!' : 'Partilhar'}
-              </button>
-            </div>
-
-            <header className="scroll-mt-28 mb-8 md:mb-10">
-              <span className={`category-badge ${post.categories?.color || 'bg-muted'} mb-4`}>
-                {post.categories?.name || 'Geral'}
-              </span>
-              <h1 className="max-w-4xl text-3xl font-headline font-bold leading-tight text-foreground sm:text-4xl lg:text-6xl">
-                {post.title}
-              </h1>
-              <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-muted-foreground sm:gap-6 sm:text-base">
-                <div className="flex items-center gap-2">
-                  <User size={18} />
-                  <span>{post.author_name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar size={18} />
-                  <span>{formattedDate}</span>
-                </div>
-                <span className="font-medium text-primary-600 dark:text-primary-400">{post.read_time}</span>
-              </div>
-            </header>
+          {/* Share bar */}
+          <div className="mx-auto mb-6 flex max-w-4xl items-center justify-between">
+            <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">{post.excerpt}</p>
+            <button
+              onClick={() => void handleShare()}
+              className="ml-4 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+              title="Partilhar artigo"
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Share2 className="h-3.5 w-3.5" />}
+              {copied ? 'Copiado!' : 'Partilhar'}
+            </button>
           </div>
 
-          {post.image_url && (
-            <div className="mx-auto mb-8 max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+          {/* Article image (if no banner but has image) */}
+          {!post.banner_url && post.image_url && (
+            <div className="mx-auto mb-8 max-w-4xl overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
               <img
                 src={post.image_url}
                 alt={post.title}
-                className="h-64 w-full object-cover sm:h-80 lg:h-[440px]"
+                className="h-64 w-full object-cover sm:h-80 lg:h-[420px]"
               />
             </div>
           )}
 
-          <AdSpace size="banner" position="Antes do Conteúdo" className="mx-auto mb-8 max-w-5xl" />
+          <AdSpace size="banner" position="Antes do Conteúdo" className="mx-auto mb-8 max-w-4xl" />
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-8">
             <div className="min-w-0">
               <div className="rounded-2xl border border-border bg-card p-4 shadow-md sm:p-6 lg:p-8">
-                <div className="prose prose-base max-w-none break-words text-foreground dark:prose-invert sm:prose-lg">
-                  <p className="mb-6 text-lg font-medium text-foreground sm:text-xl">
-                    {post.excerpt}
-                  </p>
+                <div
+                  className="prose prose-base max-w-none break-words leading-relaxed text-foreground dark:prose-invert dark:text-gray-300 sm:prose-lg"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(post.content, {
+                      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'a', 'img', 'figcaption', 'figure', 'code', 'pre'],
+                      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'target', 'rel', 'class'],
+                      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.-]*(?:[^a-z+.-:]|$))/i,
+                    })
+                  }}
+                />
 
-                  <div
-                    className="prose prose-base max-w-none break-words leading-relaxed text-foreground dark:text-gray-300 sm:prose-lg"
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(post.content, {
-                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'a', 'img', 'figcaption', 'figure', 'code', 'pre'],
-                        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'target', 'rel', 'class'],
-                        ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.-]*(?:[^a-z+.-:]|$))/i,
-                      })
-                    }}
-                  />
-
-                  {post.tags && post.tags.length > 0 && (
-                    <div className="mt-8 border-t border-border pt-6">
-                      <h4 className="mb-3 font-semibold text-foreground">Tags:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {post.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="cursor-pointer rounded-full bg-secondary-100 px-3 py-1 text-sm text-secondary-700 transition-colors hover:bg-secondary-200 dark:bg-secondary-900 dark:text-secondary-400 dark:hover:bg-secondary-800"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                {post.tags && post.tags.length > 0 && (
+                  <div className="mt-8 border-t border-border pt-6">
+                    <h4 className="mb-3 flex items-center gap-2 font-semibold text-foreground">
+                      <Tag size={16} /> Tags
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="cursor-pointer rounded-full bg-secondary-100 px-3 py-1 text-sm text-secondary-700 transition-colors hover:bg-secondary-200 dark:bg-secondary-900 dark:text-secondary-400 dark:hover:bg-secondary-800"
+                        >
+                          {tag}
+                        </span>
+                      ))}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               <AdSpace size="rectangle" position="Após o Conteúdo" className="mt-8" />
