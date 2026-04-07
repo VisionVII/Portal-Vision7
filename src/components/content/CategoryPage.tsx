@@ -35,21 +35,21 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
       <Header />
 
       {/* Hero */}
-      <section className={`${heroColor} relative overflow-hidden py-8 text-white md:py-12`}>
+      <section className={`${heroColor} relative overflow-hidden text-white`}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.32),transparent_28%)] opacity-30" />
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-6xl">
-            <div className="rounded-[28px] border border-white/15 bg-slate-950/20 p-5 shadow-xl backdrop-blur md:p-8">
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/90">
+        <div className="container mx-auto px-0 sm:px-4">
+          <div className="flex min-h-[50svh] items-end border-y border-white/10 bg-slate-950/20 p-5 shadow-xl backdrop-blur sm:min-h-0 sm:items-center sm:rounded-2xl sm:border sm:py-10 md:rounded-3xl md:py-14">
+            <div className="w-full">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/90">
                   Curadoria Vision7
                 </span>
-                <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-medium text-white/90">
+                <span className="rounded-full bg-white/12 px-2.5 py-0.5 text-xs font-medium text-white/90">
                   {totalPosts} artigo{totalPosts === 1 ? '' : 's'}
                 </span>
               </div>
               <h1 className="mb-2 text-3xl font-headline font-bold sm:text-4xl md:text-5xl">{title}</h1>
-              <p className="max-w-2xl text-base opacity-90 sm:text-lg">{description}</p>
+              <p className="max-w-2xl text-sm leading-relaxed opacity-85 sm:text-base">{description}</p>
             </div>
           </div>
         </div>
@@ -59,13 +59,6 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
         <div className="mx-auto max-w-7xl">
           {/* Top Ad */}
           <AdSpace size="leaderboard" position={`Topo ${title}`} className="mb-8" />
-
-          <div className="mb-6 rounded-2xl border border-border bg-card/80 p-4 shadow-sm">
-            <p className="text-sm font-semibold text-foreground">Explorar {title}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Conteúdo editorial organizado com navegação rápida, cards mais leves e leitura otimizada para mobile e desktop.
-            </p>
-          </div>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_280px] xl:gap-8">
             {/* Main */}

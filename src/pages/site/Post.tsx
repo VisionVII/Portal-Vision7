@@ -101,11 +101,11 @@ const Post = () => {
       {/* Hero Section */}
       <div className="relative">
         {heroImage ? (
-          <div className="relative min-h-[300px] sm:min-h-[380px] lg:min-h-[440px]">
+          <div className="relative min-h-[70svh] sm:min-h-[380px] lg:min-h-[440px]">
             <img
               src={heroImage}
               alt={post.title}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-black/60 to-black/30" />
             <div className="absolute inset-0 flex flex-col justify-end">

@@ -106,9 +106,13 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
         const httpStatus = (health as { httpStatus?: number }).httpStatus;
         let detail = (health as { detail?: string }).detail || 'Instância n8n inacessível.';
 
-        // Enrich with deployment-specific guidance
+        // Enrich with status-specific guidance
         if (httpStatus === 401) {
-          detail = 'HTTP 401 — A Edge Function n8n-proxy não está deployed ou o JWT é inválido. Deploy a função via Supabase CLI ou Dashboard.';
+          if (!detail || /unauthorized|invalid jwt|expired token/i.test(detail)) {
+            detail = 'HTTP 401 — JWT do utilizador inválido/expirado para a Edge Function. Faça logout/login e tente novamente.';
+          } else {
+            detail = `HTTP 401 na API do n8n — verifique o Secret N8N_API_KEY no n8n-proxy. Detalhe: ${detail}`;
+          }
         } else if (httpStatus === 404) {
           detail = 'HTTP 404 — A Edge Function n8n-proxy não existe. Faça deploy via: supabase functions deploy n8n-proxy';
         }
@@ -311,8 +315,8 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
               {n8nError.includes('not configured') && (
                 <p className="text-muted-foreground">Os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> não estão definidos. Vá a <strong>Supabase → Edge Functions → n8n-proxy → Secrets</strong>.</p>
               )}
-              {(n8nError.includes('401') || n8nError.includes('not deployed')) && (
-                <p className="text-muted-foreground">A Edge Function <code>n8n-proxy</code> precisa ser deployed. Use <code>supabase functions deploy n8n-proxy</code> ou faça deploy pelo <strong>Supabase Dashboard → Edge Functions</strong>.</p>
+              {(n8nError.includes('401') || n8nError.includes('invalid jwt') || n8nError.includes('expired token')) && (
+                <p className="text-muted-foreground">Se mencionar JWT/sessão: faça logout/login. Se mencionar API do n8n: valide o Secret <code>N8N_API_KEY</code> da função <code>n8n-proxy</code>.</p>
               )}
               {n8nError.includes('404') && (
                 <p className="text-muted-foreground">A função não existe no projeto. Execute <code>supabase functions deploy n8n-proxy</code>.</p>

@@ -5,6 +5,7 @@ import {
   Globe,
   GraduationCap,
   Headphones,
+  Image,
   LayoutDashboard,
   LayoutTemplate,
   Mail,
@@ -46,6 +47,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     { id: 'content', label: 'Conteúdo', icon: FileText, hint: 'Posts e editorial', badge: draftCount || undefined },
     { id: 'audiocasts', label: 'Audiocasts', icon: Headphones, hint: 'Áudio e episódios' },
     { id: 'builder', label: 'Homepage', icon: LayoutTemplate, hint: 'Builder visual' },
+    { id: 'media', label: 'Galeria', icon: Image, hint: 'Imagens do portal' },
     { id: 'automations', label: 'Automações', icon: Bot, hint: 'N8N e workflows' },
     { id: 'courses', label: 'Cursos', icon: GraduationCap, hint: 'Afiliados e parcerias' },
     { id: 'crm', label: 'CRM', icon: Mail, hint: 'Newsletter e leads' },
@@ -60,7 +62,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const groups: NavGroup[] = [
     {
       title: 'Conteúdo',
-      items: navigationItems.filter((i) => ['overview', 'content', 'audiocasts', 'builder'].includes(i.id)),
+      items: navigationItems.filter((i) => ['overview', 'content', 'audiocasts', 'builder', 'media'].includes(i.id)),
     },
     {
       title: 'Marketing',
@@ -76,7 +78,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     <>
       {/* ─── Mobile: horizontal scrollable pills ─── */}
       <div className="lg:hidden">
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeView === item.id;
@@ -85,7 +87,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 key={item.id}
                 type="button"
                 onClick={() => onViewChange(item.id)}
-                className={`relative inline-flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-150 ${
+                className={`relative inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-150 ${
                   isActive
                     ? 'border-primary/30 bg-primary/10 text-primary shadow-sm dark:border-primary/40 dark:bg-primary/15 dark:text-primary-300'
                     : 'border-border/50 bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground'

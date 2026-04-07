@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PostForm from '@/components/admin/PostForm';
@@ -27,16 +27,16 @@ const ContentView: React.FC<ContentViewProps> = ({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={onNewPost} className="gap-2 rounded-lg">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button onClick={onNewPost} className="gap-2 rounded-xl shadow-sm">
           <Plus className="h-4 w-4" />
           Novo post
         </Button>
-        <div className="flex gap-1.5 text-xs text-muted-foreground">
-          <span className="rounded-full bg-emerald-100/80 px-2.5 py-1 font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+        <div className="flex gap-1.5">
+          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
             {publishedPosts.length} publicados
           </span>
-          <span className="rounded-full bg-amber-100/80 px-2.5 py-1 font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
             {draftPosts.length} rascunhos
           </span>
         </div>
