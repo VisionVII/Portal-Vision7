@@ -114,7 +114,7 @@ const AdminDashboard = () => {
   if (!user || !canAccessDashboard) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+    <div className="min-h-screen bg-background">
       <DashboardHeader onNewPost={handleNewPost} />
 
       {/* Mobile nav — full width, no padding issues */}
@@ -129,7 +129,7 @@ const AdminDashboard = () => {
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         {/* Desktop sidebar — fixed left column */}
-        <div className="hidden w-56 shrink-0 border-r border-border/40 bg-card/40 lg:block xl:w-64">
+        <div className="hidden w-56 shrink-0 border-r border-border/50 bg-card/60 lg:block xl:w-64">
           <div className="sticky top-14 p-3 xl:p-4">
             <DashboardSidebar
               activeView={activeView}
@@ -141,15 +141,15 @@ const AdminDashboard = () => {
         </div>
 
         {/* Main content — grows to fill remaining width */}
-        <main className="min-w-0 flex-1">
+        <main className="min-w-0 flex-1 overflow-x-hidden">
           <div className="mx-auto max-w-6xl px-3 py-4 sm:px-5 sm:py-5 lg:px-6 xl:px-8">
             {/* View title bar */}
-            <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-border/50 bg-card/70 p-4 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div>
-                <h2 className="text-xl font-bold text-foreground sm:text-2xl">{PANEL_META[activeView].title}</h2>
+            <div className="mb-5 flex flex-col gap-3 rounded-xl border border-border/50 bg-card/80 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="min-w-0">
+                <h2 className="truncate text-lg font-bold text-foreground sm:text-xl">{PANEL_META[activeView].title}</h2>
                 <p className="mt-0.5 text-sm text-muted-foreground">{PANEL_META[activeView].description}</p>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex shrink-0 flex-wrap gap-1.5">
                 {roles.map((role) => (
                   <Badge key={role} variant="outline" className="text-[10px]">
                     {role.replace('_', ' ')}

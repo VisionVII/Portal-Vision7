@@ -80,9 +80,9 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         {allowedViews.includes('content') && (
           <button
             onClick={onNewPost}
-            className="group flex flex-col items-center gap-2.5 rounded-xl border border-primary-200 bg-gradient-to-b from-primary-50 to-primary-50/50 p-4 text-center transition-all hover:shadow-md hover:shadow-primary-100/50 dark:border-primary-800 dark:from-primary-950/30 dark:to-primary-950/10 dark:hover:shadow-primary-900/20"
+            className="group flex flex-col items-center gap-2 rounded-xl border border-primary-200 bg-primary-50/80 p-4 text-center transition-all hover:shadow-md dark:border-primary-800/50 dark:bg-primary-950/20 dark:hover:bg-primary-950/30"
           >
-            <div className="rounded-xl bg-primary-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-110">
+            <div className="rounded-xl bg-primary-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-105">
               <Plus className="h-4 w-4" />
             </div>
             <span className="text-xs font-semibold text-foreground">Novo Post</span>
@@ -91,9 +91,9 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         {allowedViews.includes('builder') && (
           <button
             onClick={() => onNavigate('builder')}
-            className="group flex flex-col items-center gap-2.5 rounded-xl border border-border bg-card p-4 text-center transition-all hover:shadow-md dark:hover:shadow-neutral-900/20"
+            className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-card p-4 text-center transition-all hover:shadow-md dark:border-border/40 dark:hover:bg-muted/30"
           >
-            <div className="rounded-xl bg-secondary-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-110">
+            <div className="rounded-xl bg-secondary-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-105">
               <LayoutTemplate className="h-4 w-4" />
             </div>
             <span className="text-xs font-semibold text-foreground">Homepage</span>
@@ -102,9 +102,9 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         {allowedViews.includes('automations') && (
           <button
             onClick={() => onNavigate('automations')}
-            className="group flex flex-col items-center gap-2.5 rounded-xl border border-border bg-card p-4 text-center transition-all hover:shadow-md dark:hover:shadow-neutral-900/20"
+            className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-card p-4 text-center transition-all hover:shadow-md dark:border-border/40 dark:hover:bg-muted/30"
           >
-            <div className="rounded-xl bg-violet-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-110">
+            <div className="rounded-xl bg-violet-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-105">
               <Bot className="h-4 w-4" />
             </div>
             <span className="text-xs font-semibold text-foreground">Automações</span>
@@ -113,9 +113,9 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         <Link
           to="/"
           target="_blank"
-          className="group flex flex-col items-center gap-2.5 rounded-xl border border-border bg-card p-4 text-center transition-all hover:shadow-md dark:hover:shadow-neutral-900/20"
+          className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-card p-4 text-center transition-all hover:shadow-md dark:border-border/40 dark:hover:bg-muted/30"
         >
-          <div className="rounded-xl bg-emerald-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-110">
+          <div className="rounded-xl bg-emerald-600 p-2.5 text-white shadow-sm transition-transform group-hover:scale-105">
             <Globe className="h-4 w-4" />
           </div>
           <span className="text-xs font-semibold text-foreground">Ver Portal</span>
@@ -191,9 +191,9 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
               <CardContent className="space-y-2">
                 {postsByCategory.map(([cat, count]) => (
                   <div key={cat} className="flex items-center justify-between">
-                    <span className="text-sm text-foreground">{cat}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-20 rounded-full bg-muted">
+                    <span className="min-w-0 truncate text-sm text-foreground">{cat}</span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <div className="h-1.5 w-24 rounded-full bg-muted">
                         <div
                           className="h-full rounded-full bg-primary-600 transition-all"
                           style={{

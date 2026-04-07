@@ -348,14 +348,14 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
               const wfId = String(wf.id);
               const lastExec = lastExecutionByWorkflow.get(wfId);
               return (
-                <div key={wfId} className="rounded-xl border border-border p-3.5 shadow-sm">
+                <div key={wfId} className="overflow-hidden rounded-xl border border-border p-3.5 shadow-sm">
                   <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">{wf.name}</p>
+                        <p className="truncate text-sm font-semibold text-foreground">{wf.name}</p>
                         <Badge variant={wf.active ? 'default' : 'secondary'} className="text-[10px]">{wf.active ? 'Ativo' : 'Inativo'}</Badge>
                       </div>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">ID: {wfId} • Última: {lastExec ? formatDateTime(lastExec.startedAt) : '—'}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">ID: {wfId} • Última: {lastExec ? formatDateTime(lastExec.startedAt) : '—'}</p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => void handleWorkflowToggle(wfId, true)}>Ativar</Button>

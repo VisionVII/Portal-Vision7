@@ -85,7 +85,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
       {/* ─── Desktop: clean sidebar nav ─── */}
       <nav className="hidden lg:block">
-        <div className="mb-4 rounded-xl bg-gradient-to-br from-neutral-900 via-neutral-900 to-primary-900 px-4 py-3 text-white dark:from-neutral-950 dark:to-primary-950">
+        <div className="mb-4 rounded-xl bg-gradient-to-br from-primary-800 via-primary-900 to-secondary-900 px-4 py-3 text-white dark:from-primary-900/80 dark:via-primary-950/60 dark:to-secondary-950/40">
           <p className="text-xs font-bold tracking-wide">Painel de controlo</p>
           <p className="mt-0.5 text-[10px] text-white/50">{navigationItems.length} áreas</p>
         </div>

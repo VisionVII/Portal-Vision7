@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import ThemeToggle from '@/components/system/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardHeaderProps {
@@ -38,8 +37,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle compact />
-
           <div className="hidden text-right lg:block">
             <p className="text-xs text-foreground">{user?.email}</p>
             <p className="text-[10px] text-muted-foreground">{roles.join(', ')}</p>
