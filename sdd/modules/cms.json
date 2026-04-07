@@ -1,6 +1,6 @@
 {
   "module": "CMS",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
   "last_updated": "2026-04-07",
@@ -150,7 +150,6 @@
     "hooks": [
       "src/hooks/usePosts.ts",
       "src/hooks/useCourses.ts",
-      "src/hooks/usePodcasts.ts",
       "src/hooks/useCategories.ts",
       "src/hooks/useNewsletter.ts",
       "src/hooks/useSiteSettings.ts",
@@ -270,6 +269,12 @@
     {
       "date": "2026-04-07",
       "version": "1.1.1",
+      "author": "sdd-sync",
+      "description": "Auto-sync: file list updated"
+    },
+    {
+      "date": "2026-04-07",
+      "version": "1.1.2",
       "author": "sdd-sync",
       "description": "Auto-sync: file list updated"
     }
