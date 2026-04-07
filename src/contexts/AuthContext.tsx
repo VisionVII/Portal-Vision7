@@ -46,6 +46,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Guard: when signIn() is running, the listener should skip role loading
   const signingInRef = React.useRef(false);
+  // Guard: skip auth-state-change role loading until init completes
+  const initDoneRef = React.useRef(false);
+  // Track the user ID whose roles are currently loaded — avoids redundant re-fetches
+  const loadedRolesForRef = React.useRef<string | null>(null);
 
   const isSuperAdmin = useMemo(() => roles.includes('super_admin'), [roles]);
   const canAccessDashboard = useMemo(
@@ -137,9 +141,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ── Apply access profile to state ─────────────────────────────────────────
 
   const applyAccess = useCallback(
-    (access: { roles: AppRole[]; isAdmin: boolean }) => {
-      setRoles(access.roles);
-      setIsAdmin(access.isAdmin);
+    (userId: string, access: { roles: AppRole[]; isAdmin: boolean } | undefined | null) => {
+      if (!access) {
+        console.warn('[Auth] applyAccess called with falsy access — skipping');
+        return;
+      }
+      setRoles(access.roles ?? []);
+      setIsAdmin(access.isAdmin ?? false);
+      loadedRolesForRef.current = userId;
     },
     [],
   );
@@ -149,6 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setRoles([]);
     setIsAdmin(false);
+    loadedRolesForRef.current = null;
   }, []);
 
   // ── Session initialisation & auth state listener ──────────────────────────
@@ -170,24 +180,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // If signIn() is handling this flow, skip to avoid race condition
         if (signingInRef.current) return;
 
+        // Always keep session/user references fresh
         setSession(sess);
         setUser(sess?.user ?? null);
 
+        // Token refresh or init not done — just update session, don't reload roles
+        if (!initDoneRef.current || event === 'TOKEN_REFRESHED') return;
+
+        // SIGNED_OUT — clear everything
+        if (!sess?.user) {
+          if (isMounted) clearAccess();
+          return;
+        }
+
+        // SIGNED_IN — only fetch roles if this is a different user
+        // (avoids reload when Supabase re-emits SIGNED_IN for the same session)
+        if (loadedRolesForRef.current === sess.user.id) return;
+
         try {
-          if (sess?.user) {
-            setIsAccessReady(false);
-            const access = await getUserAccessProfile(sess.user.id, {
-              accessToken: sess.access_token,
-              email: sess.user.email,
-            });
-            if (isMounted) applyAccess(access);
-          } else {
-            if (isMounted) clearAccess();
-          }
+          const access = await getUserAccessProfile(sess.user.id, {
+            accessToken: sess.access_token,
+            email: sess.user.email,
+          });
+          if (isMounted && access) applyAccess(sess.user.id, access);
         } catch (err) {
           console.error('[Auth] onAuthStateChange error:', err);
-        } finally {
-          if (isMounted) setIsAccessReady(true);
         }
       },
     );
@@ -205,7 +222,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             accessToken: sess.access_token,
             email: sess.user.email,
           });
-          if (isMounted) applyAccess(access);
+          if (isMounted) applyAccess(sess.user.id, access);
         }
       } catch (err) {
         if (!isAbortError(err)) {
@@ -214,6 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } finally {
         window.clearTimeout(safetyTimer);
         if (isMounted) { setIsAccessReady(true); setIsLoading(false); }
+        initDoneRef.current = true;
       }
     };
 
@@ -279,7 +297,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       setSession(data.session);
       setUser(data.user);
-      applyAccess(access);
+      applyAccess(data.user.id, access);
     } catch (err) {
       console.error('[Auth] Error after sign-in:', err);
       access = { ...access, queryFailed: true };
@@ -309,10 +327,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ── Sign out ──────────────────────────────────────────────────────────────
 
   const signOut = useCallback(async () => {
-    setIsAccessReady(false);
     await supabase.auth.signOut();
     clearAccess();
-    setIsAccessReady(true);
   }, [clearAccess]);
 
   // ── Session idle timeout (30 min) ─────────────────────────────────────────

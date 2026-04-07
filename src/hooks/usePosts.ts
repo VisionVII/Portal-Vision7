@@ -8,6 +8,7 @@ export interface Post {
   excerpt: string;
   content: string;
   image_url: string | null;
+  banner_url: string | null;
   category_id: string | null;
   author_id: string | null;
   author_name: string;
@@ -33,6 +34,7 @@ export interface CreatePostData {
   excerpt: string;
   content: string;
   image_url?: string;
+  banner_url?: string;
   category_id?: string;
   author_id?: string;
   author_name?: string;

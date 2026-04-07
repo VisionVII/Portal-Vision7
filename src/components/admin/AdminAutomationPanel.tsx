@@ -20,9 +20,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutomations } from '@/hooks/useAutomations';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   activateWorkflow,
   checkN8nHealth,
@@ -67,7 +69,7 @@ const normalizeExecutionStatus = (execution: N8nExecution) => {
   return 'success';
 };
 
-const AdminAutomationPanel = () => {
+const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   const { toast } = useToast();
 
   const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
@@ -83,27 +85,51 @@ const AdminAutomationPanel = () => {
 
   const n8nConfig = useMemo(() => getN8nConfigStatus(), []);
 
+  const consecutiveErrorsRef = React.useRef(0);
+
   const refreshN8nData = useCallback(async (showToast = false) => {
+    // Skip if no active session (avoids 401 spam)
+    const { data: { session: sess } } = await supabase.auth.getSession();
+    if (!sess?.access_token) {
+      setN8nError('Sem sessão ativa — faça login novamente.');
+      setN8nHealthy(false);
+      return;
+    }
+
     setIsBusy(true);
     try {
-      const [workflowData, executionData, health] = await Promise.all([
+      // Health check never throws — always completes
+      const health = await checkN8nHealth();
+      setN8nHealthy(health.status === 'connected');
+
+      if (health.status !== 'connected') {
+        const detail = (health as { detail?: string }).detail || 'Instância n8n inacessível.';
+        consecutiveErrorsRef.current += 1;
+        setN8nError(detail);
+        if (showToast) {
+          toast({ title: 'n8n offline', description: detail, variant: 'destructive' });
+        }
+        return;
+      }
+
+      const [workflowData, executionData] = await Promise.all([
         getWorkflows(),
         getExecutions(),
-        checkN8nHealth(),
       ]);
       setWorkflows(workflowData);
       setExecutions(executionData);
-      setN8nHealthy(health.status === 'connected');
       setSelectedExecution((current) => {
         if (!current) return executionData[0] ?? null;
         return executionData.find((item) => String(item.id) === String(current.id)) ?? current;
       });
       setLastSync(new Date().toLocaleTimeString('pt-PT'));
       setN8nError(null);
+      consecutiveErrorsRef.current = 0;
       if (showToast) {
         toast({ title: 'n8n sincronizado', description: 'Workflows e execuções atualizados com sucesso.' });
       }
     } catch (error) {
+      consecutiveErrorsRef.current += 1;
       const message = error instanceof Error ? error.message : 'Falha ao contactar a instância do n8n.';
       setN8nError(message);
       if (showToast) {
@@ -115,10 +141,15 @@ const AdminAutomationPanel = () => {
   }, [toast]);
 
   useEffect(() => {
+    if (!isActive) return;
     void refreshN8nData();
-    const interval = window.setInterval(() => void refreshN8nData(), 10000);
+    const interval = window.setInterval(() => {
+      // Stop polling after 3 consecutive errors
+      if (consecutiveErrorsRef.current >= 3) return;
+      void refreshN8nData();
+    }, 30_000);
     return () => window.clearInterval(interval);
-  }, [refreshN8nData]);
+  }, [refreshN8nData, isActive]);
 
   const lastExecutionByWorkflow = useMemo(() => {
     const map = new Map<string, N8nExecution>();
@@ -264,11 +295,25 @@ const AdminAutomationPanel = () => {
       {n8nError && (
         <Card className="border-amber-200 bg-amber-50/80 dark:border-amber-900/40 dark:bg-amber-950/20">
           <CardContent className="flex items-start gap-3 p-4 text-sm">
-            <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
-            <div>
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <div className="space-y-1">
               <p className="font-semibold text-foreground">Ligação ao n8n com atenção</p>
               <p className="text-muted-foreground">{n8nError}</p>
-              <p className="mt-1 text-muted-foreground">Confirme os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> em Supabase → Edge Functions.</p>
+              {n8nError.includes('not configured') && (
+                <p className="text-muted-foreground">Os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> não estão definidos. Vá a <strong>Supabase → Edge Functions → n8n-proxy → Secrets</strong>.</p>
+              )}
+              {n8nError.includes('Forbidden') && (
+                <p className="text-muted-foreground">O seu utilizador não tem role <code>admin</code> ou <code>super_admin</code> ativa na tabela <code>user_roles</code>.</p>
+              )}
+              {n8nError.includes('Unauthorized') && (
+                <p className="text-muted-foreground">Token JWT expirado ou inválido. Tente fazer <strong>logout/login</strong>.</p>
+              )}
+              {(n8nError.includes('unreachable') || n8nError.includes('inacessível') || n8nError.includes('Failed to fetch')) && (
+                <p className="text-muted-foreground">A Edge Function <code>n8n-proxy</code> pode não estar deployed ou a instância n8n está offline. Verifique o deploy no Supabase e o estado da instância.</p>
+              )}
+              {!n8nError.includes('not configured') && !n8nError.includes('Forbidden') && !n8nError.includes('Unauthorized') && !n8nError.includes('unreachable') && !n8nError.includes('inacessível') && !n8nError.includes('Failed to fetch') && (
+                <p className="text-muted-foreground">Confirme os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> em Supabase → Edge Functions.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -352,10 +397,14 @@ const AdminAutomationPanel = () => {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="panel-workflow-select" className="text-xs">Workflow</Label>
-                <select id="panel-workflow-select" value={formState.workflowId} onChange={(e) => setFormState((p) => ({ ...p, workflowId: e.target.value }))} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm">
-                  <option value="">Selecionar workflow</option>
-                  {workflows.map((wf) => <option key={String(wf.id)} value={String(wf.id)}>{wf.name} ({wf.id})</option>)}
-                </select>
+                <Select value={formState.workflowId} onValueChange={(v) => setFormState((p) => ({ ...p, workflowId: v }))}>
+                  <SelectTrigger id="panel-workflow-select">
+                    <SelectValue placeholder="Selecionar workflow" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workflows.map((wf) => <SelectItem key={String(wf.id)} value={String(wf.id)}>{wf.name} ({wf.id})</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="panel-interval" className="text-xs">Intervalo (min)</Label>
