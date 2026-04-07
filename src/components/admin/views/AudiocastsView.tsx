@@ -125,7 +125,7 @@ const AudiocastsView: React.FC = () => {
         audioFile: null,
         coverFile: null,
         audioPreview: ac.audio_url ?? '',
-        coverPreview: '', // could store cover_url if added to DB
+        coverPreview: ac.cover_url ?? '',
         duration: ac.duration ?? 0,
       });
       setEditingId(ac.id);
@@ -200,9 +200,14 @@ const AudiocastsView: React.FC = () => {
     setUploading(true);
     try {
       let audioUrl = form.audioPreview;
+      let coverUrl = form.coverPreview;
       // Upload audio if new file selected
       if (form.audioFile) {
         audioUrl = await uploadFile(form.audioFile, 'podcasts', 'audiocasts');
+      }
+      // Upload cover image if new file selected
+      if (form.coverFile) {
+        coverUrl = await uploadFile(form.coverFile, 'audiocast-covers', 'covers');
       }
 
       const payload: CreateAudiocastData = {
@@ -210,6 +215,7 @@ const AudiocastsView: React.FC = () => {
         slug: form.slug.trim(),
         description: form.description.trim() || undefined,
         audio_url: audioUrl || undefined,
+        cover_url: coverUrl || undefined,
         duration: form.duration || undefined,
         category_id: form.category_id || undefined,
         tags: form.tags
