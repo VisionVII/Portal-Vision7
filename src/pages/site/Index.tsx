@@ -320,11 +320,11 @@ const Index = () => {
         <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:28px_28px]" />
         <div className="container relative mx-auto px-0 sm:px-4">
           <div className="overflow-hidden border-y border-white/10 bg-slate-950/72 shadow-[0_30px_90px_rgba(8,18,44,0.45)] backdrop-blur-xl sm:rounded-2xl sm:border md:rounded-3xl">
-            <div className="relative min-h-[44svh] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[420px]">
+            <div className="relative min-h-[70svh] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[420px]">
               <img
                 src={activeBanner.imageUrl}
                 alt={activeBanner.title}
-                className="absolute inset-0 h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover object-center"
                 onError={(event) => {
                   event.currentTarget.src = homeConfig.bannerUrl || defaultHomePageConfig.bannerUrl;
                 }}
@@ -333,7 +333,7 @@ const Index = () => {
               <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(2,6,23,0.85)_0%,rgba(2,6,23,0.3)_40%,rgba(2,6,23,0.8)_100%)]" />
               <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:26px_26px]" />
 
-              <div className="relative z-10 mx-auto flex min-h-[44svh] max-w-4xl flex-col items-center justify-center px-4 py-6 text-center sm:min-h-[320px] sm:px-8 md:min-h-[360px] lg:min-h-[420px] lg:px-12">
+              <div className="relative z-10 mx-auto flex min-h-[70svh] max-w-4xl flex-col items-center justify-center px-4 py-10 text-center sm:min-h-[320px] sm:px-8 md:min-h-[360px] lg:min-h-[420px] lg:px-12">
                 <h2 className="max-w-3xl text-[clamp(1.25rem,3.2vw,2.25rem)] font-headline font-bold leading-tight text-white [text-wrap:balance]">
                   {activeBanner.title}
                 </h2>
