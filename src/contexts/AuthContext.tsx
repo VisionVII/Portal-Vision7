@@ -46,6 +46,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Guard: when signIn() is running, the listener should skip role loading
   const signingInRef = React.useRef(false);
+  // Guard: skip auth-state-change role loading until init completes
+  const initDoneRef = React.useRef(false);
 
   const isSuperAdmin = useMemo(() => roles.includes('super_admin'), [roles]);
   const canAccessDashboard = useMemo(
@@ -170,6 +172,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // If signIn() is handling this flow, skip to avoid race condition
         if (signingInRef.current) return;
 
+        // Skip redundant role loads during initialisation or token refreshes
+        if (!initDoneRef.current || event === 'TOKEN_REFRESHED') {
+          if (sess) { setSession(sess); setUser(sess.user); }
+          return;
+        }
+
         setSession(sess);
         setUser(sess?.user ?? null);
 
@@ -214,6 +222,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } finally {
         window.clearTimeout(safetyTimer);
         if (isMounted) { setIsAccessReady(true); setIsLoading(false); }
+        initDoneRef.current = true;
       }
     };
 

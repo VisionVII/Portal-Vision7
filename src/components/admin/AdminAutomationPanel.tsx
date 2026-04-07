@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useAutomations } from '@/hooks/useAutomations';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   activateWorkflow,
   checkN8nHealth,
@@ -84,7 +85,17 @@ const AdminAutomationPanel = () => {
 
   const n8nConfig = useMemo(() => getN8nConfigStatus(), []);
 
+  const consecutiveErrorsRef = React.useRef(0);
+
   const refreshN8nData = useCallback(async (showToast = false) => {
+    // Skip if no active session (avoids 401 spam)
+    const { data: { session: sess } } = await supabase.auth.getSession();
+    if (!sess?.access_token) {
+      setN8nError('Sem sessão ativa — faça login novamente.');
+      setN8nHealthy(false);
+      return;
+    }
+
     setIsBusy(true);
     try {
       const [workflowData, executionData, health] = await Promise.all([
@@ -101,10 +112,12 @@ const AdminAutomationPanel = () => {
       });
       setLastSync(new Date().toLocaleTimeString('pt-PT'));
       setN8nError(null);
+      consecutiveErrorsRef.current = 0;
       if (showToast) {
         toast({ title: 'n8n sincronizado', description: 'Workflows e execuções atualizados com sucesso.' });
       }
     } catch (error) {
+      consecutiveErrorsRef.current += 1;
       const message = error instanceof Error ? error.message : 'Falha ao contactar a instância do n8n.';
       setN8nError(message);
       if (showToast) {
@@ -117,7 +130,11 @@ const AdminAutomationPanel = () => {
 
   useEffect(() => {
     void refreshN8nData();
-    const interval = window.setInterval(() => void refreshN8nData(), 10000);
+    const interval = window.setInterval(() => {
+      // Stop polling after 3 consecutive errors
+      if (consecutiveErrorsRef.current >= 3) return;
+      void refreshN8nData();
+    }, 30_000);
     return () => window.clearInterval(interval);
   }, [refreshN8nData]);
 

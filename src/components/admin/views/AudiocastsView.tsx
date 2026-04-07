@@ -31,6 +31,7 @@ import {
 } from '@/hooks/useAudiocasts';
 import { useCategories } from '@/hooks/useCategories';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatDuration } from '@/lib/utils';
 
@@ -77,6 +78,7 @@ const AudiocastsView: React.FC = () => {
   const { data: audiocasts = [], isLoading } = useAudiocasts(true);
   const { data: stats } = useAudiocastStats();
   const { data: categories = [] } = useCategories();
+  const { user } = useAuth();
   const createMutation = useCreateAudiocast();
   const updateMutation = useUpdateAudiocast();
   const deleteMutation = useDeleteAudiocast();
@@ -185,7 +187,13 @@ const AudiocastsView: React.FC = () => {
       cacheControl: '3600',
       upsert: false,
     });
-    if (error) throw error;
+    if (error) {
+      const msg = error.message || '';
+      if (msg.includes('not found') || msg.includes('Bucket')) {
+        throw new Error(`Bucket "${bucket}" não existe. Aplica a migration SQL no Supabase (SQL Editor → colar o ficheiro 20260407120000_add_audiocast_covers_bucket.sql).`);
+      }
+      throw error;
+    }
     const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
   };
@@ -223,6 +231,7 @@ const AudiocastsView: React.FC = () => {
           .map((t) => t.trim())
           .filter(Boolean),
         status: form.status,
+        author_id: user?.id,
       };
 
       if (editingId) {
