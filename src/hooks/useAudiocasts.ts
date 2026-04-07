@@ -7,6 +7,7 @@ export interface Audiocast {
   slug: string;
   description: string | null;
   audio_url: string | null;
+  cover_url: string | null;
   duration: number | null;
   transcript: string | null;
   status: string;
@@ -37,6 +38,7 @@ export interface CreateAudiocastData {
   slug: string;
   description?: string;
   audio_url?: string;
+  cover_url?: string;
   duration?: number;
   transcript?: string;
   category_id?: string;

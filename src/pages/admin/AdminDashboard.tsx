@@ -120,32 +120,51 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <DashboardHeader onNewPost={handleNewPost} />
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-4 sm:gap-5 sm:px-6 sm:py-5 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8">
+      {/* Mobile nav — full width, no padding issues */}
+      <div className="px-3 pt-3 sm:px-4 lg:hidden">
         <DashboardSidebar
           activeView={activeView}
           onViewChange={setActiveView}
           allowedViews={allowedViews}
           draftCount={draftCount}
         />
+      </div>
 
-        <main className="space-y-5">
-          <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">{PANEL_META[activeView].title}</h2>
-              <p className="text-sm text-muted-foreground">{PANEL_META[activeView].description}</p>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {roles.map((role) => (
-                <Badge key={role} variant="outline" className="text-[10px]">
-                  {role.replace('_', ' ')}
-                </Badge>
-              ))}
-            </div>
+      <div className="flex min-h-[calc(100vh-3.5rem)]">
+        {/* Desktop sidebar — fixed left column */}
+        <div className="hidden w-56 shrink-0 border-r border-border/40 bg-card/40 lg:block xl:w-64">
+          <div className="sticky top-14 p-3 xl:p-4">
+            <DashboardSidebar
+              activeView={activeView}
+              onViewChange={setActiveView}
+              allowedViews={allowedViews}
+              draftCount={draftCount}
+            />
           </div>
+        </div>
 
-          <Suspense fallback={<ViewSkeleton />}>
-            {renderActiveView()}
-          </Suspense>
+        {/* Main content — grows to fill remaining width */}
+        <main className="min-w-0 flex-1">
+          <div className="mx-auto max-w-6xl px-3 py-4 sm:px-5 sm:py-5 lg:px-6 xl:px-8">
+            {/* View title bar */}
+            <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-border/50 bg-card/70 p-4 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div>
+                <h2 className="text-xl font-bold text-foreground sm:text-2xl">{PANEL_META[activeView].title}</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">{PANEL_META[activeView].description}</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {roles.map((role) => (
+                  <Badge key={role} variant="outline" className="text-[10px]">
+                    {role.replace('_', ' ')}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <Suspense fallback={<ViewSkeleton />}>
+              {renderActiveView()}
+            </Suspense>
+          </div>
         </main>
       </div>
     </div>
