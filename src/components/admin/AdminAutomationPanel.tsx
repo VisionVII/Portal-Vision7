@@ -88,9 +88,9 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   const consecutiveErrorsRef = React.useRef(0);
 
   const refreshN8nData = useCallback(async (showToast = false) => {
-    // Skip if no active session (avoids 401 spam)
-    const { data: { session: sess } } = await supabase.auth.getSession();
-    if (!sess?.access_token) {
+    // Ensure a fresh session token (avoids stale JWT → 401 from gateway)
+    const { data: { session: sess }, error: sessError } = await supabase.auth.refreshSession();
+    if (sessError || !sess?.access_token) {
       setN8nError('Sem sessão ativa — faça login novamente.');
       setN8nHealthy(false);
       return;
@@ -103,7 +103,16 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
       setN8nHealthy(health.status === 'connected');
 
       if (health.status !== 'connected') {
-        const detail = (health as { detail?: string }).detail || 'Instância n8n inacessível.';
+        const httpStatus = (health as { httpStatus?: number }).httpStatus;
+        let detail = (health as { detail?: string }).detail || 'Instância n8n inacessível.';
+
+        // Enrich with deployment-specific guidance
+        if (httpStatus === 401) {
+          detail = 'HTTP 401 — A Edge Function n8n-proxy não está deployed ou o JWT é inválido. Deploy a função via Supabase CLI ou Dashboard.';
+        } else if (httpStatus === 404) {
+          detail = 'HTTP 404 — A Edge Function n8n-proxy não existe. Faça deploy via: supabase functions deploy n8n-proxy';
+        }
+
         consecutiveErrorsRef.current += 1;
         setN8nError(detail);
         if (showToast) {
@@ -302,6 +311,12 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
               {n8nError.includes('not configured') && (
                 <p className="text-muted-foreground">Os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> não estão definidos. Vá a <strong>Supabase → Edge Functions → n8n-proxy → Secrets</strong>.</p>
               )}
+              {(n8nError.includes('401') || n8nError.includes('not deployed')) && (
+                <p className="text-muted-foreground">A Edge Function <code>n8n-proxy</code> precisa ser deployed. Use <code>supabase functions deploy n8n-proxy</code> ou faça deploy pelo <strong>Supabase Dashboard → Edge Functions</strong>.</p>
+              )}
+              {n8nError.includes('404') && (
+                <p className="text-muted-foreground">A função não existe no projeto. Execute <code>supabase functions deploy n8n-proxy</code>.</p>
+              )}
               {n8nError.includes('Forbidden') && (
                 <p className="text-muted-foreground">O seu utilizador não tem role <code>admin</code> ou <code>super_admin</code> ativa na tabela <code>user_roles</code>.</p>
               )}
@@ -311,7 +326,7 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
               {(n8nError.includes('unreachable') || n8nError.includes('inacessível') || n8nError.includes('Failed to fetch')) && (
                 <p className="text-muted-foreground">A Edge Function <code>n8n-proxy</code> pode não estar deployed ou a instância n8n está offline. Verifique o deploy no Supabase e o estado da instância.</p>
               )}
-              {!n8nError.includes('not configured') && !n8nError.includes('Forbidden') && !n8nError.includes('Unauthorized') && !n8nError.includes('unreachable') && !n8nError.includes('inacessível') && !n8nError.includes('Failed to fetch') && (
+              {!n8nError.includes('not configured') && !n8nError.includes('401') && !n8nError.includes('not deployed') && !n8nError.includes('404') && !n8nError.includes('Forbidden') && !n8nError.includes('Unauthorized') && !n8nError.includes('unreachable') && !n8nError.includes('inacessível') && !n8nError.includes('Failed to fetch') && (
                 <p className="text-muted-foreground">Confirme os Secrets <code>N8N_BASE_URL</code> e <code>N8N_API_KEY</code> em Supabase → Edge Functions.</p>
               )}
             </div>
