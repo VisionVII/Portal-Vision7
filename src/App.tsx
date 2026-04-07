@@ -15,7 +15,7 @@ import Musica from "@/pages/site/Musica";
 import Saude from "@/pages/site/Saude";
 import Mundo from "@/pages/site/Mundo";
 import Post from "@/pages/site/Post";
-import Podcast from "@/pages/site/Podcast";
+import Audiocast from "@/pages/site/Audiocast";
 import NotFound from "@/pages/site/NotFound";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminLogin from "@/pages/admin/AdminLogin";
@@ -23,7 +23,7 @@ import UserLogin from "@/pages/admin/UserLogin";
 import ProtectedRoute from "@/components/system/ProtectedRoute";
 import PrivacyPolicy from "@/pages/site/PrivacyPolicy";
 import Course from "@/pages/site/Course";
-import Podcasts from "@/pages/site/Podcasts";
+import Audiocasts from "@/pages/site/Audiocasts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,8 +55,8 @@ const App = () => (
             <Route path="/musica" element={<Musica />} />
             <Route path="/saude" element={<Saude />} />
             <Route path="/mundo" element={<Mundo />} />
-            <Route path="/podcasts" element={<Podcasts />} />
-            <Route path="/podcast/:id" element={<Podcast />} />
+            <Route path="/audiocasts" element={<Audiocasts />} />
+            <Route path="/audiocast/:id" element={<Audiocast />} />
             <Route path="/post/:slug" element={<Post />} />
             <Route path="/curso/:slug" element={<Course />} />
             <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
@@ -66,6 +66,8 @@ const App = () => (
             <Route path="/acesso/equipa" element={<UserLogin />} />
 
             {/* ── Legacy redirects ── */}
+            <Route path="/podcasts" element={<Navigate to="/audiocasts" replace />} />
+            <Route path="/podcast/:id" element={<Navigate to="/audiocasts" replace />} />
             <Route path="/validar/entrada/tipodeuser" element={<Navigate to="/admin/login" replace />} />
             <Route path="/acesso/admin/controlado" element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin/register" element={<Navigate to="/admin/login" replace />} />

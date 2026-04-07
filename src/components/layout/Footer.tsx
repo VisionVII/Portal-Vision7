@@ -45,7 +45,7 @@ const Footer = () => {
             <h4 className="mb-4 font-editorial text-xl text-foreground dark:text-white">Links Úteis</h4>
             <ul className="space-y-2 text-muted-foreground">
               <li><Link to="/" className="transition-colors hover:text-foreground dark:hover:text-white">Início</Link></li>
-              <li><Link to="/podcasts" className="transition-colors hover:text-foreground dark:hover:text-white">Podcasts</Link></li>
+              <li><Link to="/audiocasts" className="transition-colors hover:text-foreground dark:hover:text-white">Audiocasts</Link></li>
               <li><Link to="/admin/dashboard" className="transition-colors hover:text-foreground dark:hover:text-white">Dashboard</Link></li>
               <li><Link to="/politica-privacidade" className="transition-colors hover:text-foreground dark:hover:text-white">Política de Privacidade</Link></li>
             </ul>

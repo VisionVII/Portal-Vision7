@@ -2,7 +2,7 @@
   "$schema": "./templates/module_schema.json",
   "project": "Vision7 Portal",
   "version": "1.0.0",
-  "last_updated": "2026-04-06",
+  "last_updated": "2026-04-07",
   "description": "Índice central SDD do projeto Vision7 — mapa de todos os módulos, dependências e status.",
   "modules": [
     {
@@ -32,7 +32,7 @@
       "id": "cms",
       "name": "CMS",
       "spec_file": "sdd/modules/cms.json",
-      "version": "1.0.1",
+      "version": "1.1.2",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [
@@ -54,7 +54,7 @@
       "id": "frontend-ui",
       "name": "Frontend & UI",
       "spec_file": "sdd/modules/frontend-ui.json",
-      "version": "1.0.1",
+      "version": "1.1.2",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [
@@ -137,7 +137,7 @@
       "id": "auth-security",
       "name": "Auth & Segurança",
       "spec_file": "sdd/modules/auth-security.json",
-      "version": "1.0.0",
+      "version": "1.2.1",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [

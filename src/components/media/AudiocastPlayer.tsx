@@ -13,11 +13,11 @@ import {
   Share2,
   Maximize2
 } from 'lucide-react';
-import { useTrackPodcastPlay, useTrackPodcastDownload } from '@/hooks/usePodcasts';
+import { useTrackAudiocastPlay, useTrackAudiocastDownload } from '@/hooks/useAudiocasts';
 import { useToast } from '@/hooks/use-toast';
 import { formatDuration } from '@/lib/utils';
 
-interface PodcastPlayerProps {
+interface AudiocastPlayerProps {
   podcast: {
     id: string;
     title: string;
@@ -33,7 +33,7 @@ interface PodcastPlayerProps {
   compact?: boolean;
 }
 
-const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
+const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
   podcast,
   autoPlay = false,
   showTranscript = false,
@@ -47,8 +47,8 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const trackPlay = useTrackPodcastPlay();
-  const trackDownload = useTrackPodcastDownload();
+  const trackPlay = useTrackAudiocastPlay();
+  const trackDownload = useTrackAudiocastDownload();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -173,12 +173,12 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
 
       toast({
         title: "Download iniciado",
-        description: "O podcast está sendo baixado.",
+        description: "O audiocast está sendo baixado.",
       });
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível baixar o podcast.",
+        description: "Não foi possível baixar o audiocast.",
         variant: "destructive",
       });
     }
@@ -202,7 +202,7 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
       navigator.clipboard.writeText(url);
       toast({
         title: "Link copiado",
-        description: "Link do podcast copiado para a área de transferência.",
+        description: "Link do audiocast copiado para a área de transferência.",
       });
     }
   };
@@ -212,7 +212,7 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
       <Card className="w-full">
         <CardContent className="p-6">
           <div className="text-center text-muted-foreground">
-            <p>Áudio não disponível para este podcast.</p>
+            <p>Áudio não disponível para este audiocast.</p>
           </div>
         </CardContent>
       </Card>
@@ -358,4 +358,4 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
   );
 };
 
-export default PodcastPlayer;
+export default AudiocastPlayer;

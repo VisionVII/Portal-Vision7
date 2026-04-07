@@ -1,9 +1,9 @@
 {
   "module": "CMS",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-06",
+  "last_updated": "2026-04-07",
   "objective": "Sistema de gestão de conteúdo completo para administração do portal: posts, cursos, podcasts, categorias, newsletter, site settings, media uploads e developer tools.",
   "functional_requirements": [
     {
@@ -132,11 +132,14 @@
   },
   "files": {
     "components": [
-      "src/components/admin/AdminAutomationPanel.tsx",
       "src/components/admin/AdminAccessManager.tsx",
+      "src/components/admin/AdminAutomationPanel.tsx",
       "src/components/admin/AdminCmsCustomizer.tsx",
       "src/components/admin/AdminCoursesManager.tsx",
       "src/components/admin/AdminStatsCards.tsx",
+      "src/components/admin/AuthShell.tsx",
+      "src/components/admin/DashboardHeader.tsx",
+      "src/components/admin/DashboardSidebar.tsx",
       "src/components/admin/DeveloperControlCenter.tsx",
       "src/components/admin/NewsletterManager.tsx",
       "src/components/admin/PostForm.tsx",
@@ -147,7 +150,6 @@
     "hooks": [
       "src/hooks/usePosts.ts",
       "src/hooks/useCourses.ts",
-      "src/hooks/usePodcasts.ts",
       "src/hooks/useCategories.ts",
       "src/hooks/useNewsletter.ts",
       "src/hooks/useSiteSettings.ts",
@@ -155,10 +157,14 @@
       "src/hooks/useAdminAccess.ts"
     ],
     "pages": [
+      "src/pages/admin/AdminAccessControlled.tsx",
       "src/pages/admin/AdminAutomation.tsx",
       "src/pages/admin/AdminDashboard.tsx",
       "src/pages/admin/AdminLogin.tsx",
-      "src/pages/admin/AdminRegister.tsx"
+      "src/pages/admin/AdminRegister.tsx",
+      "src/pages/admin/EntryTypeValidation.tsx",
+      "src/pages/admin/TeamAccess.tsx",
+      "src/pages/admin/UserLogin.tsx"
     ],
     "services": [],
     "types": [
@@ -259,6 +265,18 @@
       "version": "1.1.0",
       "author": "Vision7 Team",
       "description": "Dashboard expandido para 9 views; Automações integradas inline; AdminAutomationPanel adicionado"
+    },
+    {
+      "date": "2026-04-07",
+      "version": "1.1.1",
+      "author": "sdd-sync",
+      "description": "Auto-sync: file list updated"
+    },
+    {
+      "date": "2026-04-07",
+      "version": "1.1.2",
+      "author": "sdd-sync",
+      "description": "Auto-sync: file list updated"
     }
   ]
 }
