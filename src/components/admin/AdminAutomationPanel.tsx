@@ -5,10 +5,14 @@ import {
   Bot,
   CheckCircle2,
   Clock3,
+  FlaskConical,
+  KeyRound,
   Play,
   Plus,
+  Power,
   RefreshCcw,
   Save,
+  ShieldAlert,
   ShieldCheck,
   Trash2,
   Wifi,
@@ -24,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useAutomations } from '@/hooks/useAutomations';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   activateWorkflow,
@@ -35,6 +40,13 @@ import {
   getN8nConfigStatus,
   getWorkflows,
 } from '@/services/n8n';
+import {
+  activateN8nCredential,
+  createN8nCredential,
+  listN8nCredentials,
+  revokeN8nCredential,
+  type N8nCredentialRow,
+} from '@/services/n8nSettings';
 import type { Automation, N8nExecution, N8nWorkflow } from '@/types/automation';
 
 const emptyForm = {
@@ -71,6 +83,7 @@ const normalizeExecutionStatus = (execution: N8nExecution) => {
 
 const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
   const [executions, setExecutions] = useState<N8nExecution[]>([]);
@@ -80,10 +93,21 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [n8nError, setN8nError] = useState<string | null>(null);
   const [n8nHealthy, setN8nHealthy] = useState<boolean | null>(null);
+  const [credentials, setCredentials] = useState<N8nCredentialRow[]>([]);
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
+  const [newCredentialValue, setNewCredentialValue] = useState('');
+  const [newCredentialExpiresAt, setNewCredentialExpiresAt] = useState('');
+  const [newCredentialNotes, setNewCredentialNotes] = useState('');
+  const [isSavingCredential, setIsSavingCredential] = useState(false);
 
   const { automations, createAutomation, updateAutomation, deleteAutomation, isSaving } = useAutomations();
 
   const n8nConfig = useMemo(() => getN8nConfigStatus(), []);
+
+  const activeCredential = useMemo(
+    () => credentials.find((c) => c.status === 'active' && c.key_name === 'N8N_API_KEY') ?? null,
+    [credentials],
+  );
 
   const consecutiveErrorsRef = React.useRef(0);
 
@@ -153,16 +177,101 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
     }
   }, [toast]);
 
+  const refreshCredentials = useCallback(async () => {
+    setCredentialsLoading(true);
+    try {
+      const rows = await listN8nCredentials();
+      setCredentials(rows);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha ao carregar credenciais.';
+      toast({ title: 'Falha ao carregar chaves', description: message, variant: 'destructive' });
+    } finally {
+      setCredentialsLoading(false);
+    }
+  }, [toast]);
+
+  const handleCreateCredential = async () => {
+    if (!newCredentialValue.trim() || !newCredentialExpiresAt) {
+      toast({ title: 'Campos obrigatórios', description: 'Preencha chave e expiração.', variant: 'destructive' });
+      return;
+    }
+
+    setIsSavingCredential(true);
+    try {
+      await createN8nCredential({
+        keyName: 'N8N_API_KEY',
+        value: newCredentialValue.trim(),
+        expiresAt: new Date(newCredentialExpiresAt).toISOString(),
+        notes: newCredentialNotes.trim() || undefined,
+      });
+
+      setNewCredentialValue('');
+      setNewCredentialExpiresAt('');
+      setNewCredentialNotes('');
+      toast({ title: 'Chave salva', description: 'Chave armazenada de forma criptografada no banco.' });
+      await refreshCredentials();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha ao salvar chave.';
+      toast({ title: 'Falha ao salvar', description: message, variant: 'destructive' });
+    } finally {
+      setIsSavingCredential(false);
+    }
+  };
+
+  const handleActivateCredential = async (id: string) => {
+    try {
+      await activateN8nCredential(id);
+      toast({ title: 'Chave ativada', description: 'A nova chave passa a ser usada pelo proxy.' });
+      await refreshCredentials();
+      await refreshN8nData();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha ao ativar chave.';
+      toast({ title: 'Falha ao ativar', description: message, variant: 'destructive' });
+    }
+  };
+
+  const handleRevokeCredential = async (id: string) => {
+    try {
+      await revokeN8nCredential(id);
+      toast({ title: 'Chave revogada', description: 'A chave foi removida de uso.' });
+      await refreshCredentials();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha ao revogar chave.';
+      toast({ title: 'Falha ao revogar', description: message, variant: 'destructive' });
+    }
+  };
+
+  const handleWakeN8n = async () => {
+    setIsBusy(true);
+    try {
+      for (let i = 0; i < 6; i += 1) {
+        const health = await checkN8nHealth();
+        if (health.status === 'connected') {
+          setN8nHealthy(true);
+          setN8nError(null);
+          toast({ title: 'n8n acordado', description: 'A instância no Render respondeu com sucesso.' });
+          await refreshN8nData();
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+      toast({ title: 'n8n em cold start', description: 'Render pode levar alguns segundos para acordar.', variant: 'destructive' });
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
   useEffect(() => {
     if (!isActive) return;
     void refreshN8nData();
+    void refreshCredentials();
     const interval = window.setInterval(() => {
       // Stop polling after 3 consecutive errors
       if (consecutiveErrorsRef.current >= 3) return;
       void refreshN8nData();
     }, 30_000);
     return () => window.clearInterval(interval);
-  }, [refreshN8nData, isActive]);
+  }, [refreshN8nData, refreshCredentials, isActive]);
 
   const lastExecutionByWorkflow = useMemo(() => {
     const map = new Map<string, N8nExecution>();
@@ -258,6 +367,12 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
           <RefreshCcw className={`h-3.5 w-3.5 ${isBusy ? 'animate-spin' : ''}`} />
           {isBusy ? 'A sincronizar...' : 'Atualizar'}
         </Button>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => void handleWakeN8n()} disabled={isBusy}>
+          <Power className="h-3.5 w-3.5" />Acordar n8n (Render)
+        </Button>
+        <Button size="sm" className="gap-1.5" onClick={() => navigate('/admin/automation-lab')}>
+          <FlaskConical className="h-3.5 w-3.5" />Ir ao laboratório de automações
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -337,6 +452,77 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base"><KeyRound className="h-4 w-4" />Chaves expiráveis do n8n</CardTitle>
+          <CardDescription className="text-xs">As chaves são guardadas criptografadas no banco e podem ser rotacionadas sem editar Secrets manualmente.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-3 md:grid-cols-[1fr_220px_1fr_auto]">
+            <Input
+              type="password"
+              value={newCredentialValue}
+              onChange={(e) => setNewCredentialValue(e.target.value)}
+              placeholder="Nova N8N_API_KEY"
+            />
+            <Input
+              type="datetime-local"
+              value={newCredentialExpiresAt}
+              onChange={(e) => setNewCredentialExpiresAt(e.target.value)}
+            />
+            <Input
+              value={newCredentialNotes}
+              onChange={(e) => setNewCredentialNotes(e.target.value)}
+              placeholder="Notas (opcional)"
+            />
+            <Button onClick={() => void handleCreateCredential()} disabled={isSavingCredential}>
+              {isSavingCredential ? 'A guardar...' : 'Guardar'}
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {credentialsLoading ? (
+              <p className="text-xs text-muted-foreground">A carregar chaves...</p>
+            ) : credentials.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Sem chaves cadastradas no banco.</p>
+            ) : credentials.map((c) => {
+              const expiresAt = new Date(c.expires_at);
+              const hoursLeft = Math.round((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60));
+              const expiringSoon = hoursLeft <= 72;
+
+              return (
+                <div key={c.id} className="flex flex-col gap-2 rounded-xl border border-border p-3 md:flex-row md:items-center md:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">{c.key_name} <span className="text-xs text-muted-foreground">({c.status})</span></p>
+                    <p className="text-xs text-muted-foreground">Expira em: {formatDateTime(c.expires_at)} {expiringSoon ? '• expiração próxima' : ''}</p>
+                    {c.notes && <p className="truncate text-xs text-muted-foreground">{c.notes}</p>}
+                  </div>
+                  <div className="flex gap-2">
+                    {c.status !== 'active' && (
+                      <Button size="sm" variant="outline" onClick={() => void handleActivateCredential(c.id)}>Ativar</Button>
+                    )}
+                    {c.status !== 'revoked' && (
+                      <Button size="sm" variant="destructive" onClick={() => void handleRevokeCredential(c.id)}>Revogar</Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {activeCredential && (() => {
+            const hoursLeft = Math.round((new Date(activeCredential.expires_at).getTime() - Date.now()) / (1000 * 60 * 60));
+            if (hoursLeft > 72) return null;
+            return (
+              <div className="flex items-start gap-2 rounded-lg border border-amber-300/50 bg-amber-50/60 p-3 text-xs dark:border-amber-900/50 dark:bg-amber-950/20">
+                <ShieldAlert className="mt-0.5 h-4 w-4 text-amber-600" />
+                <p className="text-muted-foreground">A chave ativa expira em cerca de {hoursLeft}h. Faça a rotação agora para evitar indisponibilidade no n8n.</p>
+              </div>
+            );
+          })()}
+        </CardContent>
+      </Card>
 
       {/* Workflows + Logs */}
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr]">

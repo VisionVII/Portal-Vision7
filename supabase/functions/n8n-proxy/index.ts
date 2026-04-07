@@ -6,6 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // ─── Config ──────────────────────────────────────────────────────────────────
 const N8N_BASE_URL = (Deno.env.get('N8N_BASE_URL') ?? '').replace(/\/$/, '');
 const N8N_API_KEY = Deno.env.get('N8N_API_KEY') ?? '';
+const N8N_CREDENTIALS_ENCRYPTION_KEY = Deno.env.get('N8N_CREDENTIALS_ENCRYPTION_KEY') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
@@ -109,6 +110,54 @@ function jsonResponse(data: unknown, status: number, cors: Record<string, string
   });
 }
 
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function utf8ToBytes(text: string): Uint8Array {
+  return new TextEncoder().encode(text);
+}
+
+async function deriveAesKey(secret: string): Promise<CryptoKey> {
+  const hash = await crypto.subtle.digest('SHA-256', utf8ToBytes(secret));
+  return crypto.subtle.importKey('raw', hash, 'AES-GCM', false, ['decrypt']);
+}
+
+async function decryptValue(secret: string, payload: string): Promise<string> {
+  const [ivB64, dataB64] = payload.split('.');
+  if (!ivB64 || !dataB64) throw new Error('Invalid encrypted payload format');
+  const key = await deriveAesKey(secret);
+  const iv = base64ToBytes(ivB64);
+  const encrypted = base64ToBytes(dataB64);
+  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
+  return new TextDecoder().decode(plaintext);
+}
+
+async function getEffectiveN8nApiKey(supabaseAdmin: ReturnType<typeof createClient>) {
+  if (!N8N_CREDENTIALS_ENCRYPTION_KEY) return N8N_API_KEY;
+
+  const { data } = await supabaseAdmin
+    .from('n8n_credentials')
+    .select('encrypted_value,expires_at')
+    .eq('key_name', 'N8N_API_KEY')
+    .eq('status', 'active')
+    .gt('expires_at', new Date().toISOString())
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data?.encrypted_value) return N8N_API_KEY;
+
+  try {
+    return await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, data.encrypted_value);
+  } catch {
+    return N8N_API_KEY;
+  }
+}
+
 // ─── Main handler ────────────────────────────────────────────────────────────
 // NOTE: Deploy WITH no JWT verification in the gateway and validate the token here.
 Deno.serve(async (req: Request) => {
@@ -182,7 +231,9 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── 5. Check n8n config ─────────────────────────────────────────────────
-    if (!N8N_BASE_URL || !N8N_API_KEY) {
+    const effectiveN8nApiKey = await getEffectiveN8nApiKey(supabaseAdmin);
+
+    if (!N8N_BASE_URL || !effectiveN8nApiKey) {
       return jsonResponse({ error: 'n8n not configured on server' }, 503, cors);
     }
 
@@ -209,7 +260,7 @@ Deno.serve(async (req: Request) => {
       try {
         const pingRes = await fetch(`${N8N_BASE_URL}/api/v1/workflows?limit=1&excludePinnedData=true`, {
           method: 'GET',
-          headers: { 'X-N8N-API-KEY': N8N_API_KEY },
+          headers: { 'X-N8N-API-KEY': effectiveN8nApiKey },
           signal: AbortSignal.timeout(25000), // 25s — Render free tier cold start can take 10-15s
         });
 
@@ -284,7 +335,7 @@ Deno.serve(async (req: Request) => {
       method: httpMethod,
       headers: {
         'Content-Type': 'application/json',
-        'X-N8N-API-KEY': N8N_API_KEY,
+        'X-N8N-API-KEY': effectiveN8nApiKey,
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
       signal: AbortSignal.timeout(30_000), // 30s timeout to n8n
