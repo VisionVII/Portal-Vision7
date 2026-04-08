@@ -29,6 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAutomations } from '@/hooks/useAutomations';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
   activateWorkflow,
@@ -45,6 +46,7 @@ import {
   createN8nCredential,
   listN8nCredentials,
   revokeN8nCredential,
+  triggerN8nCredentialReminders,
   type N8nCredentialRow,
 } from '@/services/n8nSettings';
 import type { Automation, N8nExecution, N8nWorkflow } from '@/types/automation';
@@ -84,6 +86,7 @@ const normalizeExecutionStatus = (execution: N8nExecution) => {
 const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
   const [executions, setExecutions] = useState<N8nExecution[]>([]);
@@ -96,8 +99,10 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   const [credentials, setCredentials] = useState<N8nCredentialRow[]>([]);
   const [credentialsLoading, setCredentialsLoading] = useState(false);
   const [newCredentialValue, setNewCredentialValue] = useState('');
-  const [newCredentialExpiresAt, setNewCredentialExpiresAt] = useState('');
+  const [newCredentialDurationDays, setNewCredentialDurationDays] = useState<7 | 30 | 60 | 90>(30);
   const [newCredentialNotes, setNewCredentialNotes] = useState('');
+  const [newCredentialReminderEmail, setNewCredentialReminderEmail] = useState('');
+  const [newCredentialRemindDaysBefore, setNewCredentialRemindDaysBefore] = useState<7 | 30 | 60 | 90>(7);
   const [isSavingCredential, setIsSavingCredential] = useState(false);
 
   const { automations, createAutomation, updateAutomation, deleteAutomation, isSaving } = useAutomations();
@@ -110,6 +115,12 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   );
 
   const consecutiveErrorsRef = React.useRef(0);
+
+  useEffect(() => {
+    if (user?.email && !newCredentialReminderEmail) {
+      setNewCredentialReminderEmail(user.email);
+    }
+  }, [user?.email, newCredentialReminderEmail]);
 
   const refreshN8nData = useCallback(async (showToast = false) => {
     // Ensure a fresh session token (avoids stale JWT → 401 from gateway)
@@ -191,23 +202,28 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   }, [toast]);
 
   const handleCreateCredential = async () => {
-    if (!newCredentialValue.trim() || !newCredentialExpiresAt) {
-      toast({ title: 'Campos obrigatórios', description: 'Preencha chave e expiração.', variant: 'destructive' });
+    if (!newCredentialValue.trim()) {
+      toast({ title: 'Campos obrigatórios', description: 'Preencha a chave.', variant: 'destructive' });
       return;
     }
 
     setIsSavingCredential(true);
     try {
+      const expiresAt = new Date(Date.now() + newCredentialDurationDays * 24 * 60 * 60 * 1000).toISOString();
+
       await createN8nCredential({
         keyName: 'N8N_API_KEY',
         value: newCredentialValue.trim(),
-        expiresAt: new Date(newCredentialExpiresAt).toISOString(),
+        expiresAt,
         notes: newCredentialNotes.trim() || undefined,
+        reminderEmail: newCredentialReminderEmail.trim() || undefined,
+        remindDaysBefore: newCredentialRemindDaysBefore,
       });
 
       setNewCredentialValue('');
-      setNewCredentialExpiresAt('');
       setNewCredentialNotes('');
+      setNewCredentialDurationDays(30);
+      setNewCredentialRemindDaysBefore(7);
       toast({ title: 'Chave salva', description: 'Chave armazenada de forma criptografada no banco.' });
       await refreshCredentials();
     } catch (error) {
@@ -238,6 +254,17 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Falha ao revogar chave.';
       toast({ title: 'Falha ao revogar', description: message, variant: 'destructive' });
+    }
+  };
+
+  const handleSendRemindersNow = async () => {
+    try {
+      await triggerN8nCredentialReminders();
+      toast({ title: 'Lembretes processados', description: 'Os emails elegíveis foram enviados.' });
+      await refreshCredentials();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha ao enviar lembretes.';
+      toast({ title: 'Falha ao enviar lembretes', description: message, variant: 'destructive' });
     }
   };
 
@@ -456,35 +483,79 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base"><KeyRound className="h-4 w-4" />Chaves expiráveis do n8n</CardTitle>
-          <CardDescription className="text-xs">As chaves são guardadas criptografadas no banco e podem ser rotacionadas sem editar Secrets manualmente.</CardDescription>
+          <CardDescription className="text-xs">As chaves são guardadas criptografadas no banco, ativadas pelo painel e lidas automaticamente pelo proxy do n8n.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <form
-            className="grid gap-3 md:grid-cols-[1fr_220px_1fr_auto]"
+            className="grid gap-3 md:grid-cols-2"
             onSubmit={(e) => {
               e.preventDefault();
               void handleCreateCredential();
             }}
           >
-            <Input
-              type="password"
-              value={newCredentialValue}
-              onChange={(e) => setNewCredentialValue(e.target.value)}
-              placeholder="Nova N8N_API_KEY"
-            />
-            <Input
-              type="datetime-local"
-              value={newCredentialExpiresAt}
-              onChange={(e) => setNewCredentialExpiresAt(e.target.value)}
-            />
-            <Input
-              value={newCredentialNotes}
-              onChange={(e) => setNewCredentialNotes(e.target.value)}
-              placeholder="Notas (opcional)"
-            />
-            <Button type="submit" disabled={isSavingCredential}>
-              {isSavingCredential ? 'A guardar...' : 'Guardar'}
-            </Button>
+            <div className="space-y-1.5 md:col-span-2">
+              <Label className="text-xs">Nova chave N8N_API_KEY</Label>
+              <Input
+                type="password"
+                autoComplete="current-password"
+                value={newCredentialValue}
+                onChange={(e) => setNewCredentialValue(e.target.value)}
+                placeholder="Cole a nova N8N_API_KEY"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Validade</Label>
+              <Select value={String(newCredentialDurationDays)} onValueChange={(v) => setNewCredentialDurationDays(Number(v) as 7 | 30 | 60 | 90)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Escolher validade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 dias</SelectItem>
+                  <SelectItem value="30">30 dias</SelectItem>
+                  <SelectItem value="60">60 dias</SelectItem>
+                  <SelectItem value="90">90 dias</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Lembrar antes de expirar</Label>
+              <Select value={String(newCredentialRemindDaysBefore)} onValueChange={(v) => setNewCredentialRemindDaysBefore(Number(v) as 7 | 30 | 60 | 90)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Escolher janela" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 dias antes</SelectItem>
+                  <SelectItem value="30">30 dias antes</SelectItem>
+                  <SelectItem value="60">60 dias antes</SelectItem>
+                  <SelectItem value="90">90 dias antes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Email para lembrete</Label>
+              <Input
+                type="email"
+                value={newCredentialReminderEmail}
+                onChange={(e) => setNewCredentialReminderEmail(e.target.value)}
+                placeholder="equipa@vision7.pt"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Notas</Label>
+              <Input
+                value={newCredentialNotes}
+                onChange={(e) => setNewCredentialNotes(e.target.value)}
+                placeholder="Ex.: chave prod abril"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2 md:col-span-2">
+              <Button type="submit" disabled={isSavingCredential}>
+                {isSavingCredential ? 'A guardar...' : 'Salvar chave'}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => void handleSendRemindersNow()}>
+                Enviar lembretes agora
+              </Button>
+            </div>
           </form>
 
           <div className="space-y-2">
@@ -501,7 +572,9 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
                 <div key={c.id} className="flex flex-col gap-2 rounded-xl border border-border p-3 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">{c.key_name} <span className="text-xs text-muted-foreground">({c.status})</span></p>
-                    <p className="text-xs text-muted-foreground">Expira em: {formatDateTime(c.expires_at)} {expiringSoon ? '• expiração próxima' : ''}</p>
+                    <p className="text-xs text-muted-foreground">Criada em: {formatDateTime(c.created_at)}</p>
+                    <p className="text-xs text-muted-foreground">Ativada em: {formatDateTime(c.activated_at)} • Expira em: {formatDateTime(c.expires_at)} {expiringSoon ? '• expiração próxima' : ''}</p>
+                    <p className="text-xs text-muted-foreground">Lembrete: {c.remind_days_before} dias antes • Email: {c.reminder_email || '—'} • Último envio: {formatDateTime(c.last_reminder_sent_at)}</p>
                     {c.notes && <p className="truncate text-xs text-muted-foreground">{c.notes}</p>}
                   </div>
                   <div className="flex gap-2">

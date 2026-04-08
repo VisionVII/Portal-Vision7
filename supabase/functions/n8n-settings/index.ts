@@ -6,6 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const CREDENTIALS_ENCRYPTION_KEY = Deno.env.get('N8N_CREDENTIALS_ENCRYPTION_KEY') ?? '';
+const SITE_URL = Deno.env.get('SITE_URL') ?? 'https://www.vision7.pt';
 
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? Deno.env.get('N8N_PROXY_ALLOWED_ORIGINS') ?? '')
   .split(',')
@@ -83,6 +84,75 @@ async function decryptValue(secret: string, payload: string): Promise<string> {
   return new TextDecoder().decode(plaintext);
 }
 
+async function sendReminderEmail(email: string, keyName: string, expiresAt: string, daysBefore: number) {
+  const subject = `Vision7: a chave ${keyName} expira em breve`;
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a">
+      <h2>Rotação de chave necessária</h2>
+      <p>A chave <strong>${keyName}</strong> está na janela de aviso configurada (${daysBefore} dias).</p>
+      <p><strong>Expiração:</strong> ${new Date(expiresAt).toLocaleString('pt-PT')}</p>
+      <p>Abra a dashboard Vision7 e substitua a chave em Automações.</p>
+      <p><a href="${SITE_URL}/admin/dashboard">Abrir dashboard</a></p>
+    </div>
+  `;
+
+  const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    },
+    body: JSON.stringify({
+      to: email,
+      subject,
+      html,
+      template: 'n8n-key-expiry-reminder',
+    }),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`Failed to send reminder email: ${text}`);
+  }
+}
+
+async function maybeSendExpiryReminders(supabaseAdmin: ReturnType<typeof createClient>) {
+  const { data: rows, error } = await supabaseAdmin
+    .from('n8n_credentials')
+    .select('id,key_name,expires_at,reminder_email,remind_days_before,last_reminder_sent_at,status,activated_at')
+    .eq('status', 'active')
+    .not('reminder_email', 'is', null);
+
+  if (error || !rows?.length) return 0;
+
+  let sent = 0;
+  const now = new Date();
+
+  for (const row of rows) {
+    const expiresAt = new Date(row.expires_at);
+    const remindAt = new Date(expiresAt.getTime() - row.remind_days_before * 24 * 60 * 60 * 1000);
+    const alreadySentAt = row.last_reminder_sent_at ? new Date(row.last_reminder_sent_at) : null;
+    const activatedAt = row.activated_at ? new Date(row.activated_at) : null;
+
+    if (now < remindAt) continue;
+    if (alreadySentAt && (!activatedAt || alreadySentAt >= activatedAt)) continue;
+
+    try {
+      await sendReminderEmail(row.reminder_email, row.key_name, row.expires_at, row.remind_days_before);
+      await supabaseAdmin
+        .from('n8n_credentials')
+        .update({ last_reminder_sent_at: new Date().toISOString() })
+        .eq('id', row.id);
+      sent += 1;
+    } catch (err) {
+      console.error('[n8n-settings] reminder error', err);
+    }
+  }
+
+  return sent;
+}
+
 Deno.serve(async (req: Request) => {
   const cors = getCorsHeaders(req);
 
@@ -131,9 +201,11 @@ Deno.serve(async (req: Request) => {
     const action = String(body?.action ?? 'list');
 
     if (action === 'list') {
+      await maybeSendExpiryReminders(supabaseAdmin);
+
       const { data, error } = await supabaseAdmin
         .from('n8n_credentials')
-        .select('id,key_name,expires_at,status,notes,created_at,updated_at')
+        .select('id,key_name,expires_at,status,notes,reminder_email,remind_days_before,last_reminder_sent_at,activated_at,created_at,updated_at')
         .order('created_at', { ascending: false });
 
       if (error) return jsonResponse({ error: error.message }, 500, cors);
@@ -145,9 +217,15 @@ Deno.serve(async (req: Request) => {
       const value = String(body?.value ?? '').trim();
       const expiresAt = String(body?.expiresAt ?? '').trim();
       const notes = body?.notes ? String(body.notes) : null;
+      const reminderEmail = body?.reminderEmail ? String(body.reminderEmail).trim() : null;
+      const remindDaysBefore = Number(body?.remindDaysBefore ?? 7);
 
       if (!value || !expiresAt) {
         return jsonResponse({ error: 'value and expiresAt are required' }, 400, cors);
+      }
+
+      if (![7, 30, 60, 90].includes(remindDaysBefore)) {
+        return jsonResponse({ error: 'remindDaysBefore must be one of 7, 30, 60 or 90' }, 400, cors);
       }
 
       const encrypted = await encryptValue(CREDENTIALS_ENCRYPTION_KEY, value);
@@ -160,9 +238,11 @@ Deno.serve(async (req: Request) => {
           expires_at: expiresAt,
           status: 'inactive',
           notes,
+          reminder_email: reminderEmail,
+          remind_days_before: remindDaysBefore,
           created_by: userId,
         })
-        .select('id,key_name,expires_at,status,notes,created_at,updated_at')
+        .select('id,key_name,expires_at,status,notes,reminder_email,remind_days_before,last_reminder_sent_at,activated_at,created_at,updated_at')
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 500, cors);
@@ -192,7 +272,7 @@ Deno.serve(async (req: Request) => {
 
       const { error: activateError } = await supabaseAdmin
         .from('n8n_credentials')
-        .update({ status: 'active' })
+        .update({ status: 'active', activated_at: new Date().toISOString(), last_reminder_sent_at: null })
         .eq('id', id);
 
       if (activateError) return jsonResponse({ error: activateError.message }, 500, cors);
@@ -210,6 +290,11 @@ Deno.serve(async (req: Request) => {
 
       if (error) return jsonResponse({ error: error.message }, 500, cors);
       return jsonResponse({ success: true }, 200, cors);
+    }
+
+    if (action === 'send-reminders') {
+      const sent = await maybeSendExpiryReminders(supabaseAdmin);
+      return jsonResponse({ success: true, sent }, 200, cors);
     }
 
     return jsonResponse({ error: 'Unsupported action' }, 400, cors);

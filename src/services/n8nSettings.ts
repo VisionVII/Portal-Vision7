@@ -6,6 +6,10 @@ export type N8nCredentialRow = {
   expires_at: string;
   status: 'active' | 'inactive' | 'revoked';
   notes?: string | null;
+  reminder_email?: string | null;
+  remind_days_before: 7 | 30 | 60 | 90;
+  last_reminder_sent_at?: string | null;
+  activated_at?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -54,6 +58,8 @@ export async function createN8nCredential(payload: {
   value: string;
   expiresAt: string;
   notes?: string;
+  reminderEmail?: string;
+  remindDaysBefore: 7 | 30 | 60 | 90;
 }) {
   const result = await callSettings<{ data: N8nCredentialRow }>({ action: 'create', ...payload });
   return result.data;
@@ -65,4 +71,8 @@ export async function activateN8nCredential(id: string) {
 
 export async function revokeN8nCredential(id: string) {
   await callSettings<{ success: boolean }>({ action: 'revoke', id });
+}
+
+export async function triggerN8nCredentialReminders() {
+  await callSettings<{ success: boolean; sent: number }>({ action: 'send-reminders' });
 }
