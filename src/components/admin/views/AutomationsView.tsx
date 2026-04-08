@@ -1,6 +1,6 @@
 import React from 'react';
-import AdminAutomationPanel from '@/components/admin/AdminAutomationPanel';
+import { AutomationDashboard } from '@/components/admin/automation';
 
-const AutomationsView: React.FC<{ isActive?: boolean }> = ({ isActive }) => <AdminAutomationPanel isActive={isActive} />;
+const AutomationsView: React.FC<{ isActive?: boolean }> = () => <AutomationDashboard />;
 
 export default AutomationsView;

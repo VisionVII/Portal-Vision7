@@ -14,7 +14,8 @@ sdd/
 │   ├── news-aggregator.json    # Agregador de Notícias
 │   ├── cms.json                # CMS
 │   ├── frontend-ui.json        # Frontend & UI
-│   ├── automation-n8n.json     # Automação n8n
+│   ├── automation-n8n.json     # Automação n8n (Legacy v1 — depreciado)
+│   ├── automation-engine.json  # Automation Engine v2 (substitui automation-n8n)
 │   ├── analytics.json          # Analytics
 │   ├── tags-taxonomy.json      # Tags & Taxonomia
 │   ├── auth-security.json      # Auth & Segurança

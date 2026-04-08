@@ -94,6 +94,8 @@ const App = () => (
                 </ProtectedRoute>
               )}
             />
+            <Route path="/admin/laboratorio-automacao" element={<Navigate to="/admin/automation-lab" replace />} />
+            <Route path="/admin/automacao-legacy" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/automation" element={<Navigate to="/admin/dashboard" replace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

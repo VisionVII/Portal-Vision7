@@ -9,6 +9,7 @@ Esta pasta contém a arquitetura de agentes IA e skills especializadas para o de
 - `agente-seguranca.agent.md` - Agente especializado em segurança da infraestrutura
 - `agente-ux-ui.agent.md` - Agente especializado em design e experiência do usuário
 - `assistente-portal.agent.md` - Agente dedicado ao botão Vision7 AI e à navegação contextual do portal
+- `agente-automacoes.agent.md` - Agente especializado em projetar e implementar automações multi-categoria
 
 ### Skills
 
@@ -18,6 +19,7 @@ Esta pasta contém a arquitetura de agentes IA e skills especializadas para o de
 - `otimizacao-performance.skill.md` - Skill para otimização de performance
 - `assistente-portal.skill.md` - Skill fechada para busca de notícias, ferramentas e apoio contextual no Vision7
 - `curadoria-inteligente.skill.md` - Skill para curadoria contextual, jornadas editoriais e descoberta guiada no portal
+- `automacoes-portal.skill.md` - Skill para motor de automações escalável (conteúdo, email, auditoria, processos, integrações)
 
 ## Como Usar
 
