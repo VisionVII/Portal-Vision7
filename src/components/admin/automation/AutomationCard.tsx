@@ -1,6 +1,6 @@
 import {
   Play, Pause, Pencil, Trash2, Copy, Clock, CheckCircle2, AlertTriangle, XCircle,
-  Newspaper, Mail, Shield, Cog, Plug,
+  Newspaper, Mail, Shield, Cog, Plug, Tag,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -91,6 +91,24 @@ export function AutomationCard({
           </span>
         </div>
 
+        {/* Search tags (content_pipeline) */}
+        {automation.category === 'content_pipeline' &&
+          Array.isArray(automation.config?.search_tags) &&
+          (automation.config.search_tags as string[]).length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap mb-3">
+            <Tag className="w-3 h-3 text-cyan-400 shrink-0" />
+            {(automation.config.search_tags as string[]).map((tag) => (
+              <Badge
+                key={tag}
+                variant="outline"
+                className="text-[10px] px-1.5 py-0 border-cyan-600/40 text-cyan-300 bg-cyan-500/10"
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+
         {/* Trigger info */}
         <div className="flex items-center gap-2 text-[11px] text-gray-500 mb-3">
           <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-slate-600 text-slate-400">
@@ -122,7 +140,11 @@ export function AutomationCard({
                 <Play className="w-3.5 h-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Executar agora</TooltipContent>
+            <TooltipContent>
+              {automation.triggerType === 'schedule'
+                ? 'Sincronizar tags e aguardar cron'
+                : 'Executar agora'}
+            </TooltipContent>
           </Tooltip>
 
           <Tooltip>

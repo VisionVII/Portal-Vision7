@@ -23,8 +23,9 @@ import type {
 /* ── Config fields per category ── */
 const CATEGORY_FIELDS: Record<AutomationCategory, { key: string; label: string; type: 'text' | 'textarea' | 'list' | 'boolean' | 'number' }[]> = {
   content_pipeline: [
-    { key: 'rss_feeds', label: 'RSS Feeds', type: 'list' },
-    { key: 'keywords', label: 'Palavras-chave', type: 'list' },
+    { key: 'search_tags', label: 'Tags de Pesquisa (n8n busca por estas)', type: 'list' },
+    { key: 'rss_feeds', label: 'RSS Feeds (opcional)', type: 'list' },
+    { key: 'keywords', label: 'Palavras-chave extra', type: 'list' },
     { key: 'ai_prompt', label: 'Prompt da IA', type: 'textarea' },
     { key: 'target_tone', label: 'Tom/Estilo', type: 'text' },
     { key: 'auto_publish', label: 'Publicar automaticamente', type: 'boolean' },

@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { sendEmail } from '@/services/email';
 
+const PRIMARY_ADMIN_EMAIL = import.meta.env.VITE_ADMIN_PRIMARY_EMAIL ?? '';
+
 /* ── Types ── */
 export interface CuratedPost {
   id: string;
@@ -78,18 +80,25 @@ export function useCuratedPostsStats() {
 }
 
 /* ── Notify admin via email when a post is promoted ── */
+async function getNotificationEmails() {
+  const emails = new Map<string, string>();
+
+  if (PRIMARY_ADMIN_EMAIL) {
+    emails.set(PRIMARY_ADMIN_EMAIL.toLowerCase(), PRIMARY_ADMIN_EMAIL);
+  }
+
+  const { data: authData } = await supabase.auth.getUser();
+  const currentEmail = authData.user?.email;
+  if (currentEmail) {
+    emails.set(currentEmail.toLowerCase(), currentEmail);
+  }
+
+  return [...emails.values()];
+}
+
 async function notifyAdminPostReady(curated: CuratedPost) {
   try {
-    // Fetch admin users (role = admin or super_admin)
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('email, role')
-      .in('role', ['admin', 'super_admin']);
-
-    const adminEmails = (profiles ?? [])
-      .map((p) => (p as { email: string | null }).email)
-      .filter((e): e is string => !!e);
-
+    const adminEmails = await getNotificationEmails();
     if (!adminEmails.length) return;
 
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
