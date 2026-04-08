@@ -7,7 +7,8 @@ export type EmailTemplateType =
   | 'newsletter_digest'
   | 'password_reset'
   | 'role_change'
-  | 'account_deactivated';
+  | 'account_deactivated'
+  | 'automation_post_ready';
 
 export interface EmailTemplateData {
   login_otp: {
@@ -58,6 +59,12 @@ export interface EmailTemplateData {
     userName: string;
     reason?: string;
     contactEmail: string;
+  };
+  automation_post_ready: {
+    postTitle: string;
+    postExcerpt: string;
+    editorialScore: number;
+    reviewUrl: string;
   };
 }
 
