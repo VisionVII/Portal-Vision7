@@ -54,6 +54,13 @@ N8N_API_KEY=MESMA_KEY_DOS_SUPABASE_SECRETS
 # ── Webhook URL pública ──────────────────────────────────────────────────────
 WEBHOOK_URL=https://n8n-vision7.onrender.com
 
+# ── Embed interno no portal (mesma origin via /n8n) ─────────────────────────
+# Necessário para usar o n8n embutido no portal sem bloqueio SAMEORIGIN.
+N8N_PATH=/n8n
+N8N_EDITOR_BASE_URL=https://www.vision7.pt/n8n
+N8N_HOST=www.vision7.pt
+N8N_PROTOCOL=https
+
 # ── Execuções: salvar tudo no DB ─────────────────────────────────────────────
 EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
 EXECUTIONS_DATA_SAVE_ON_ERROR=all

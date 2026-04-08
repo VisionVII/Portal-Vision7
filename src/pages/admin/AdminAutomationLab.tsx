@@ -3,7 +3,6 @@ import { ArrowLeft, FlaskConical, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import AdminAutomationPanel from '@/components/admin/AdminAutomationPanel';
 
 const DEFAULT_N8N_LAB_URL = 'https://n8n-vision7.onrender.com';
 
@@ -30,15 +29,14 @@ function resolveN8nLabBaseUrl() {
 }
 
 const N8N_LAB_URL = resolveN8nLabBaseUrl();
+const N8N_INTERNAL_URL = '/n8n/';
 
 const AdminAutomationLab: React.FC = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
-  const [embedMode, setEmbedMode] = useState(false);
+  const [internalReady, setInternalReady] = useState<boolean | null>(null);
   const [showFallback, setShowFallback] = useState(false);
 
   useEffect(() => {
-    if (!embedMode) return;
-
     setIframeLoaded(false);
     setShowFallback(false);
     const timer = window.setTimeout(() => {
@@ -46,7 +44,27 @@ const AdminAutomationLab: React.FC = () => {
     }, 12000);
 
     return () => window.clearTimeout(timer);
-  }, [embedMode]);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const checkInternalRoute = async () => {
+      try {
+        const resp = await fetch('/n8n/rest/login', { method: 'GET', credentials: 'include' });
+        if (!mounted) return;
+        // Any non-404 response indicates the internal proxy route exists.
+        setInternalReady(resp.status !== 404);
+      } catch {
+        if (!mounted) return;
+        setInternalReady(false);
+      }
+    };
+
+    void checkInternalRoute();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.18),transparent_35%),#070f1f] text-white">
@@ -76,25 +94,10 @@ const AdminAutomationLab: React.FC = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <FlaskConical className="h-4 w-4 text-cyan-300" />
-              Operação interna Vision7
+              n8n interno no portal
             </CardTitle>
             <CardDescription className="text-slate-300">
-              Este modo interno usa a API do n8n via proxy seguro do portal. Funciona mesmo sem sessão ativa na interface web externa do n8n.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AdminAutomationPanel isActive showLabButton={false} />
-          </CardContent>
-        </Card>
-
-        <Card className="border-cyan-300/20 bg-[#081529]/80 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <FlaskConical className="h-4 w-4 text-cyan-300" />
-              Interface web do n8n (opcional)
-            </CardTitle>
-            <CardDescription className="text-slate-300">
-              O shell visual é Vision7. O builder interno é do n8n (infra Render). Para uso real, abra o n8n em aba separada. O modo embutido é experimental e pode ser bloqueado pelo browser ou pela política de frame do serviço.
+              Este modo carrega o n8n via rota interna do portal (<strong>/n8n</strong>). Assim evitamos o bloqueio de iframe por <strong>X-Frame-Options: SAMEORIGIN</strong>.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -102,37 +105,30 @@ const AdminAutomationLab: React.FC = () => {
               <a href={N8N_LAB_URL} target="_blank" rel="noreferrer">
                 <Button className="gap-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400">Abrir ambiente real do n8n <ExternalLink className="h-4 w-4" /></Button>
               </a>
-              <Button type="button" variant="outline" className="border-cyan-300/40 text-cyan-100 hover:bg-cyan-400/10" onClick={() => setEmbedMode((v) => !v)}>
-                {embedMode ? 'Ocultar modo embutido' : 'Tentar modo embutido (experimental)'}
-              </Button>
             </div>
 
-            {!embedMode ? (
-              <div className="rounded-xl border border-cyan-300/20 bg-black/20 p-4 text-sm text-slate-200">
-                <p className="font-medium text-white">Fluxo recomendado</p>
-                <p className="mt-2">1. Abra o ambiente real do n8n no botão acima.</p>
-                <p>2. Faça login no n8n (uma vez por sessão).</p>
-                <p>3. Volte ao painel Vision7 para gerir chaves, workflows, execução e logs.</p>
+            {internalReady === false && (
+              <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">
+                A rota interna <strong>/n8n</strong> não está ativa neste ambiente. Configure o proxy/rewrite do host para <strong>/n8n -&gt; n8n-vision7.onrender.com</strong> e o <strong>N8N_PATH=/n8n</strong> no serviço n8n.
               </div>
-            ) : (
-              <>
-                {showFallback && !iframeLoaded && (
-                  <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">
-                    O modo embutido foi bloqueado ou não carregou a tempo. Use o botão "Abrir ambiente real do n8n" para operação normal.
-                  </div>
-                )}
-                <div className="h-[78vh] overflow-hidden rounded-xl border border-cyan-300/20 bg-black/20">
-                  <iframe
-                    src={N8N_LAB_URL}
-                    title="Vision7 Automation Lab"
-                    className="h-full w-full border-0"
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                    allow="clipboard-read; clipboard-write"
-                    onLoad={() => setIframeLoaded(true)}
-                  />
-                </div>
-              </>
             )}
+
+            {showFallback && !iframeLoaded && (
+              <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">
+                O n8n interno não respondeu no tempo esperado. Se a rota interna ainda não estiver ativa no host, use temporariamente o botão externo.
+              </div>
+            )}
+
+            <div className="h-[78vh] overflow-hidden rounded-xl border border-cyan-300/20 bg-black/20">
+              <iframe
+                src={N8N_INTERNAL_URL}
+                title="Vision7 Automation Lab"
+                className="h-full w-full border-0"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                allow="clipboard-read; clipboard-write"
+                onLoad={() => setIframeLoaded(true)}
+              />
+            </div>
           </CardContent>
         </Card>
       </main>
