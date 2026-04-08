@@ -292,12 +292,30 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
 
   const handleActivateCredential = async (id: string) => {
     try {
-      await activateN8nCredential(id);
+      await activateN8nCredential(id, false);
       toast({ title: 'Chave ativada', description: 'A nova chave passa a ser usada pelo proxy.' });
       await refreshCredentials();
       await refreshN8nData();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Falha ao ativar chave.';
+
+      if (/nao foi aceite pelo n8n|não foi aceite pelo n8n|unauthorized/i.test(message)) {
+        const force = window.confirm('A chave não foi validada pelo n8n. Deseja forçar a ativação mesmo assim?');
+        if (force) {
+          try {
+            await activateN8nCredential(id, true);
+            toast({ title: 'Chave ativada com forçagem', description: 'A chave foi marcada ativa. Confirme o estado do n8n no topo.' });
+            await refreshCredentials();
+            await refreshN8nData();
+            return;
+          } catch (forcedError) {
+            const forcedMessage = forcedError instanceof Error ? forcedError.message : 'Falha ao forçar ativação.';
+            toast({ title: 'Falha ao forçar ativação', description: forcedMessage, variant: 'destructive' });
+            return;
+          }
+        }
+      }
+
       toast({ title: 'Falha ao ativar', description: message, variant: 'destructive' });
     }
   };
@@ -810,7 +828,7 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Configuração de automação</CardTitle>
-            <CardDescription className="text-xs">Feeds RSS, palavras-chave, prompt e intervalo.</CardDescription>
+            <CardDescription className="text-xs">Configuração operacional real: workflow, fontes, regras e teste de disparo.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1.5">
@@ -872,7 +890,7 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Execução & configs salvas</CardTitle>
-            <CardDescription className="text-xs">JSON do log e automações registadas.</CardDescription>
+            <CardDescription className="text-xs">Histórico de execução do n8n + automações persistidas no banco.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="rounded-xl border border-border bg-slate-950 p-2.5 text-[11px] text-slate-100">
