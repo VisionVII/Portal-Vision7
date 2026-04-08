@@ -4,24 +4,35 @@
     {
       "parameters": {
         "rule": {
-          "interval": [{ "field": "minutes", "minutesInterval": 30 }]
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
         }
       },
       "id": "schedule_trigger",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [-1200, 200]
+      "position": [
+        -1200,
+        200
+      ]
     },
     {
       "parameters": {
-        "jsCode": "return [\n  { json: { url: 'https://news.google.com/rss/search?q=intelig%C3%AAncia+artificial&hl=pt-PT&gl=PT&ceid=PT:pt', topic: 'ia' } },\n  { json: { url: 'https://news.google.com/rss/search?q=ciberseguran%C3%A7a&hl=pt-PT&gl=PT&ceid=PT:pt', topic: 'ciberseguranca' } },\n  { json: { url: 'https://news.google.com/rss/search?q=automa%C3%A7%C3%A3o+empresarial&hl=pt-PT&gl=PT&ceid=PT:pt', topic: 'automacao' } }\n];"
+        "jsCode": "// Dynamic feed builder — reads tags from pipeline_search_config table\n// Falls back to default tags if table is empty or unreachable\n\nconst SUPABASE_URL = 'https://stpusdeqwbckvfsitsld.supabase.co';\nconst SUPABASE_KEY = 'SUA_SERVICE_ROLE_KEY';\n\nconst DEFAULT_TAGS = [\n  { tag: 'inteligência artificial', topic: 'ia' },\n  { tag: 'cibersegurança', topic: 'ciberseguranca' },\n  { tag: 'automação empresarial', topic: 'automacao' },\n];\n\nfunction buildGoogleNewsUrl(query) {\n  return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=pt-PT&gl=PT&ceid=PT:pt`;\n}\n\nfunction tagToTopic(tag) {\n  return tag\n    .toLowerCase()\n    .normalize('NFD')\n    .replace(/[̀-ͯ]/g, '')\n    .replace(/[^a-z0-9]+/g, '_')\n    .replace(/^_|_$/g, '');\n}\n\nlet tags = DEFAULT_TAGS;\n\ntry {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${SUPABASE_URL}/rest/v1/pipeline_search_config?is_active=eq.true&limit=1`,\n    headers: {\n      'apikey': SUPABASE_KEY,\n      'Authorization': `Bearer ${SUPABASE_KEY}`,\n      'Content-Type': 'application/json',\n    },\n  });\n\n  const configs = Array.isArray(resp) ? resp : [];\n  if (configs.length > 0 && Array.isArray(configs[0].tags) && configs[0].tags.length > 0) {\n    tags = configs[0].tags.map(t => ({\n      tag: t,\n      topic: tagToTopic(t),\n    }));\n  }\n} catch (e) {\n  // Fallback to defaults silently\n}\n\nreturn tags.map(t => ({\n  json: {\n    url: buildGoogleNewsUrl(t.tag),\n    topic: t.topic,\n  }\n}));"
       },
       "id": "build_feeds",
       "name": "Build Feed List",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-960, 200]
+      "position": [
+        -960,
+        200
+      ]
     },
     {
       "parameters": {
@@ -32,7 +43,10 @@
       "name": "RSS Feed Read",
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.1,
-      "position": [-720, 200],
+      "position": [
+        -720,
+        200
+      ],
       "continueOnFail": true
     },
     {
@@ -43,7 +57,10 @@
       "name": "Normalize Records",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-480, 200]
+      "position": [
+        -480,
+        200
+      ]
     },
     {
       "parameters": {
@@ -52,10 +69,22 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "SUA_SERVICE_ROLE_KEY" },
-            { "name": "Authorization", "value": "Bearer SUA_SERVICE_ROLE_KEY" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "resolution=ignore-duplicates,return=minimal" }
+            {
+              "name": "apikey",
+              "value": "SUA_SERVICE_ROLE_KEY"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer SUA_SERVICE_ROLE_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=ignore-duplicates,return=minimal"
+            }
           ]
         },
         "sendBody": true,
@@ -66,25 +95,62 @@
       "name": "Insert Staging",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-240, 200],
+      "position": [
+        -240,
+        200
+      ],
       "continueOnFail": true
     }
   ],
   "connections": {
     "Schedule Trigger": {
-      "main": [[{ "node": "Build Feed List", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Build Feed List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Build Feed List": {
-      "main": [[{ "node": "RSS Feed Read", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "RSS Feed Read": {
-      "main": [[{ "node": "Normalize Records", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Normalize Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Normalize Records": {
-      "main": [[{ "node": "Insert Staging", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Insert Staging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "pinData": {}
 }
