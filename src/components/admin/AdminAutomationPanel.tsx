@@ -44,6 +44,7 @@ import {
 import {
   activateN8nCredential,
   createN8nCredential,
+  deleteN8nCredential,
   listN8nCredentials,
   revokeN8nCredential,
   triggerN8nCredentialReminders,
@@ -306,9 +307,25 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
       await revokeN8nCredential(id);
       toast({ title: 'Chave revogada', description: 'A chave foi removida de uso.' });
       await refreshCredentials();
+      await refreshN8nData();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Falha ao revogar chave.';
       toast({ title: 'Falha ao revogar', description: message, variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteCredential = async (id: string) => {
+    const confirmed = window.confirm('Apagar esta chave do banco? A nota e o histórico deste registo também serão removidos.');
+    if (!confirmed) return;
+
+    try {
+      await deleteN8nCredential(id);
+      toast({ title: 'Chave apagada', description: 'O registo foi removido definitivamente do banco.' });
+      await refreshCredentials();
+      await refreshN8nData();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha ao apagar chave.';
+      toast({ title: 'Falha ao apagar', description: message, variant: 'destructive' });
     }
   };
 
@@ -659,10 +676,11 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Notas</Label>
-              <Input
+              <Textarea
                 value={newCredentialNotes}
                 onChange={(e) => setNewCredentialNotes(e.target.value)}
                 placeholder="Ex.: chave prod abril"
+                rows={3}
               />
             </div>
             <div className="flex flex-wrap gap-2 md:col-span-2">
@@ -684,23 +702,27 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
               const expiresAt = new Date(c.expires_at);
               const hoursLeft = Math.round((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60));
               const expiringSoon = hoursLeft <= 72;
+              const isExpired = expiresAt.getTime() <= Date.now();
 
               return (
                 <div key={c.id} className="flex flex-col gap-2 rounded-xl border border-border p-3 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">{c.key_name} <span className="text-xs text-muted-foreground">({c.status})</span></p>
                     <p className="text-xs text-muted-foreground">Criada em: {formatDateTime(c.created_at)}</p>
-                    <p className="text-xs text-muted-foreground">Ativada em: {formatDateTime(c.activated_at)} • Expira em: {formatDateTime(c.expires_at)} {expiringSoon ? '• expiração próxima' : ''}</p>
+                    <p className="text-xs text-muted-foreground">Ativada em: {formatDateTime(c.activated_at)} • Expira em: {formatDateTime(c.expires_at)} {isExpired ? '• expirada' : expiringSoon ? '• expiração próxima' : ''}</p>
                     <p className="text-xs text-muted-foreground">Lembrete: {c.remind_days_before} dias antes • Email: {c.reminder_email || '—'} • Último envio: {formatDateTime(c.last_reminder_sent_at)}</p>
-                    {c.notes && <p className="truncate text-xs text-muted-foreground">{c.notes}</p>}
+                    {c.notes && <p className="whitespace-pre-wrap text-xs text-muted-foreground">{c.notes}</p>}
                   </div>
-                  <div className="flex gap-2">
-                    {c.status !== 'active' && (
+                  <div className="flex flex-wrap gap-2">
+                    {c.status !== 'active' && c.status !== 'revoked' && !isExpired && (
                       <Button size="sm" variant="outline" onClick={() => void handleActivateCredential(c.id)}>Ativar</Button>
                     )}
                     {c.status !== 'revoked' && (
                       <Button size="sm" variant="destructive" onClick={() => void handleRevokeCredential(c.id)}>Revogar</Button>
                     )}
+                    <Button size="sm" variant="secondary" onClick={() => void handleDeleteCredential(c.id)}>
+                      <Trash2 className="mr-1 h-3.5 w-3.5" />Apagar
+                    </Button>
                   </div>
                 </div>
               );
