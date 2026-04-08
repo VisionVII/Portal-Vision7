@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Json } from '@/integrations/supabase/types';
 import type {
   AutomationV2,
   AutomationCategory,
@@ -116,7 +117,7 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
           workflow_id: payload.workflowId,
           interval_minutes: payload.intervalMinutes,
           cron_expression: payload.cronExpression,
-          config: payload.config ?? {},
+          config: (payload.config ?? {}) as Json,
         })
         .select()
         .single();
@@ -143,12 +144,12 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
       if (payload.workflowId !== undefined) row.workflow_id = payload.workflowId;
       if (payload.intervalMinutes !== undefined) row.interval_minutes = payload.intervalMinutes;
       if (payload.cronExpression !== undefined) row.cron_expression = payload.cronExpression;
-      if (payload.config !== undefined) row.config = payload.config;
+      if (payload.config !== undefined) row.config = payload.config as Json;
       if (payload.status !== undefined) row.status = payload.status;
 
       const { data: updated, error: err } = await supabase
         .from('automations_v2')
-        .update(row)
+        .update(row as Record<string, Json>)
         .eq('id', id)
         .select()
         .single();

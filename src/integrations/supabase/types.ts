@@ -639,6 +639,202 @@ export type Database = {
         }
         Relationships: []
       }
+      /* ── Automation Engine v2 tables ── */
+      automations_v2: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          category: string
+          trigger_type: string
+          workflow_id: string | null
+          status: string
+          interval_minutes: number
+          cron_expression: string | null
+          config: Json
+          last_run_at: string | null
+          last_run_status: string | null
+          next_run_at: string | null
+          run_count: number
+          error_count: number
+          success_rate: number
+          created_by: string | null
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          category: string
+          trigger_type?: string
+          workflow_id?: string | null
+          status?: string
+          interval_minutes?: number
+          cron_expression?: string | null
+          config?: Json
+          last_run_at?: string | null
+          last_run_status?: string | null
+          next_run_at?: string | null
+          run_count?: number
+          error_count?: number
+          success_rate?: number
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          category?: string
+          trigger_type?: string
+          workflow_id?: string | null
+          status?: string
+          interval_minutes?: number
+          cron_expression?: string | null
+          config?: Json
+          last_run_at?: string | null
+          last_run_status?: string | null
+          next_run_at?: string | null
+          run_count?: number
+          error_count?: number
+          success_rate?: number
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      automation_executions: {
+        Row: {
+          id: string
+          automation_id: string | null
+          n8n_execution_id: string | null
+          status: string
+          trigger_mode: string
+          triggered_by: string | null
+          started_at: string
+          finished_at: string | null
+          duration_ms: number | null
+          steps: Json
+          error_message: string | null
+          error_detail: Json | null
+          items_processed: number
+          items_created: number
+          metadata: Json
+        }
+        Insert: {
+          id?: string
+          automation_id?: string | null
+          n8n_execution_id?: string | null
+          status?: string
+          trigger_mode: string
+          triggered_by?: string | null
+          started_at?: string
+          finished_at?: string | null
+          duration_ms?: number | null
+          steps?: Json
+          error_message?: string | null
+          error_detail?: Json | null
+          items_processed?: number
+          items_created?: number
+          metadata?: Json
+        }
+        Update: {
+          id?: string
+          automation_id?: string | null
+          n8n_execution_id?: string | null
+          status?: string
+          trigger_mode?: string
+          triggered_by?: string | null
+          started_at?: string
+          finished_at?: string | null
+          duration_ms?: number | null
+          steps?: Json
+          error_message?: string | null
+          error_detail?: Json | null
+          items_processed?: number
+          items_created?: number
+          metadata?: Json
+        }
+        Relationships: []
+      }
+      automation_templates: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          category: string
+          icon: string | null
+          config_preset: Json
+          workflow_json: Json | null
+          is_system: boolean
+          popularity: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          category: string
+          icon?: string | null
+          config_preset?: Json
+          workflow_json?: Json | null
+          is_system?: boolean
+          popularity?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          category?: string
+          icon?: string | null
+          config_preset?: Json
+          workflow_json?: Json | null
+          is_system?: boolean
+          popularity?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      automation_audit_log: {
+        Row: {
+          id: number
+          automation_id: string | null
+          action: string
+          actor_id: string | null
+          actor_email: string | null
+          details: Json
+          ip_address: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          automation_id?: string | null
+          action: string
+          actor_id?: string | null
+          actor_email?: string | null
+          details?: Json
+          ip_address?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          automation_id?: string | null
+          action?: string
+          actor_id?: string | null
+          actor_email?: string | null
+          details?: Json
+          ip_address?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
