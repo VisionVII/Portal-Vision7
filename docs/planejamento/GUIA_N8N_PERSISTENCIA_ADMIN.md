@@ -1,7 +1,9 @@
+> **⚠️ DOCUMENTO LEGACY (2026-04-08)** — Este guia refere-se à arquitetura v1 (`AdminAutomationPanel.tsx`, `useAutomations.ts`, tabela `automations`). A arquitetura ativa é o **Automation Engine v2** documentado em `sdd/modules/automation-engine.json`. Mantido para referência histórica.
+
 # N8N — Persistência, Gestão de Projetos e Controle via Admin
 
 **Data:** 2026-04-06  
-**Status:** Guia de implementação pronto
+**Status:** ~~Guia de implementação pronto~~ Depreciado (v1)
 
 ---
 

@@ -1,3 +1,5 @@
+> **⚠️ DOCUMENTO LEGACY (2026-04-08)** — Os diagramas abaixo referem-se à arquitetura v1 (`AdminAutomation.tsx`, `AdminAutomationPanel`, `useAutomations`). A arquitetura ativa é o **Automation Engine v2** com componentes modulares. Ver `sdd/modules/automation-engine.json` e `sdd/diagrams/architecture-overview.md`.
+
 # Arquitetura Proposta: Vision7 Portal + n8n Avançado
 
 ## Fluxo Atual (MVP - Funcional)

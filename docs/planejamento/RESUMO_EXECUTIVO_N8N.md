@@ -1,8 +1,10 @@
+> **⚠️ PARCIALMENTE DESATUALIZADO (2026-04-08)** — O sistema descrito aqui é a v1. O portal agora usa o Automation Engine v2 com dashboard modular multi-categoria. Ver `sdd/modules/automation-engine.json`.
+
 # RESUMO EXECUTIVO: Plano n8n Advanced + Dashboard Automações
 
 **Para:** Victor Gonçalves (visionvidevgrid@proton.me)  
 **Data:** 7 de Abril de 2026  
-**Status:** 🚨 URGENTE - Tokens expiram em 3 dias  
+**Status:** ~~🚨 URGENTE~~ Atualizado pelo Automation Engine v2  
 
 ---
 

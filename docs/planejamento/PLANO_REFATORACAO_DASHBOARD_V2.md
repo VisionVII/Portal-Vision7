@@ -1,7 +1,9 @@
+> **✅ PARCIALMENTE EXECUTADO (2026-04-08)** — O split do dashboard foi implementado (views modulares). O `AdminAutomationPanel.tsx` foi substituído pelo `AutomationDashboard` modular (Automation Engine v2). Ver `sdd/modules/automation-engine.json`.
+
 # PLANO DE REFATORAÇÃO — DASHBOARD V2
 
 **Data:** 2026-04-06  
-**Status:** Aprovado para execução  
+**Status:** ~~Aprovado para execução~~ Parcialmente executado  
 **Base SDD:** v1.2.0 (atualizado)
 
 ---

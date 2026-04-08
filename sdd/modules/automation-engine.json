@@ -28,13 +28,9 @@
         "name": "State & Data",
         "description": "Hooks especializados com React Query, filtros server-side, paginação e cache inteligente",
         "hooks": [
-          "useAutomations(category?, status?, page?)",
-          "useAutomationDetail(id)",
-          "useExecutions(automationId?, status?, dateRange?, page?)",
-          "useExecutionDetail(id)",
-          "useAutomationTemplates(category?)",
-          "useAutomationStats()",
-          "useCredentialVault()"
+          "useAutomationsV2(category?, status?, page?)",
+          "useAutomationExecutions(automationId?, status?, dateRange?, page?)",
+          "useAutomationTemplates(category?)"
         ]
       },
       {
@@ -161,25 +157,25 @@
       "id": "FR-001",
       "description": "Dashboard com tabs por categoria de automação (conteúdo, email, auditoria, processos, integrações)",
       "priority": "Crítica",
-      "status": "Pendente"
+      "status": "Implementado"
     },
     {
       "id": "FR-002",
       "description": "Card de automação com: nome, categoria, status (ativo/pausa/erro), último run, próximo run, badge de saúde",
       "priority": "Crítica",
-      "status": "Pendente"
+      "status": "Implementado"
     },
     {
       "id": "FR-003",
       "description": "Form dinâmico de criação/edição baseado na categoria selecionada (schema-driven)",
       "priority": "Crítica",
-      "status": "Pendente"
+      "status": "Implementado"
     },
     {
       "id": "FR-004",
       "description": "Timeline visual de execuções com filtros: status, data, categoria, workflow",
       "priority": "Alta",
-      "status": "Pendente"
+      "status": "Implementado"
     },
     {
       "id": "FR-005",
@@ -191,13 +187,13 @@
       "id": "FR-006",
       "description": "Galeria de templates pré-configurados por categoria para setup rápido",
       "priority": "Alta",
-      "status": "Pendente"
+      "status": "Implementado"
     },
     {
       "id": "FR-007",
       "description": "KPI bar global: total automações, ativas, execuções hoje, taxa de sucesso, próxima execução",
       "priority": "Alta",
-      "status": "Pendente"
+      "status": "Implementado"
     },
     {
       "id": "FR-008",
@@ -227,7 +223,7 @@
       "id": "FR-012",
       "description": "Trigger types: schedule (cron), event (DB trigger/webhook), manual (botão)",
       "priority": "Crítica",
-      "status": "Pendente"
+      "status": "Implementado"
     },
     {
       "id": "FR-013",
@@ -437,14 +433,12 @@
       "src/components/admin/automation/AutomationForm.tsx",
       "src/components/admin/automation/AutomationTemplateGallery.tsx",
       "src/components/admin/automation/ExecutionTimeline.tsx",
-      "src/components/admin/automation/ExecutionDetail.tsx",
-      "src/components/admin/automation/CredentialVault.tsx"
+      "src/components/admin/automation/index.ts"
     ],
     "hooks": [
       "src/hooks/useAutomationsV2.ts",
       "src/hooks/useAutomationExecutions.ts",
-      "src/hooks/useAutomationTemplates.ts",
-      "src/hooks/useAutomationStats.ts"
+      "src/hooks/useAutomationTemplates.ts"
     ],
     "services": [
       "src/services/automationEngine.ts",

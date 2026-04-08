@@ -139,19 +139,7 @@ export type UpdateAutomationPayload = Partial<CreateAutomationPayload> & {
   status?: AutomationStatus;
 };
 
-/* ── Legacy compat (v1) ── */
-export type Automation = {
-  id: string;
-  name: string;
-  workflowId: string;
-  active: boolean;
-  interval: number;
-  rssFeeds: string[];
-  keywords: string[];
-  prompt: string;
-  createdAt: string;
-};
-
+/* ── n8n API types (used by n8n.ts service) ── */
 export type N8nWorkflow = {
   id: string | number;
   name: string;

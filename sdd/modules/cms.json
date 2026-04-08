@@ -1,9 +1,9 @@
 {
   "module": "CMS",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-07",
+  "last_updated": "2026-04-08",
   "objective": "Sistema de gestão de conteúdo completo para administração do portal: posts, cursos, podcasts, categorias, newsletter, site settings, media uploads e developer tools.",
   "functional_requirements": [
     {
@@ -133,7 +133,6 @@
   "files": {
     "components": [
       "src/components/admin/AdminAccessManager.tsx",
-      "src/components/admin/AdminAutomationPanel.tsx",
       "src/components/admin/AdminCmsCustomizer.tsx",
       "src/components/admin/AdminCoursesManager.tsx",
       "src/components/admin/AdminStatsCards.tsx",
@@ -273,10 +272,10 @@
       "description": "Auto-sync: file list updated"
     },
     {
-      "date": "2026-04-07",
-      "version": "1.1.2",
-      "author": "sdd-sync",
-      "description": "Auto-sync: file list updated"
+      "date": "2026-04-08",
+      "version": "1.2.0",
+      "author": "Vision7 Team",
+      "description": "AdminAutomationPanel substituído por AutomationDashboard modular (automation-engine v2). Dashboard de automações agora é gerido pelo módulo automation-engine."
     }
   ]
 }

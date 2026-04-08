@@ -1,9 +1,9 @@
 {
   "module": "Agents & Skills AI",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "owner": "Vision7 Core Team",
   "status": "Em desenvolvimento",
-  "last_updated": "2026-04-06",
+  "last_updated": "2026-04-08",
   "objective": "Agentes e skills de IA para assistência no desenvolvimento, segurança, UX/UI, curadoria de conteúdo, planejamento de acessos hierárquicos e otimização de performance do portal Vision7.",
   "functional_requirements": [
     {
@@ -89,7 +89,22 @@
     "pages": [],
     "services": [],
     "types": [],
-    "migrations": []
+    "migrations": [],
+    "agents": [
+      "docs/ai/agente-seguranca.agent.md",
+      "docs/ai/agente-ux-ui.agent.md",
+      "docs/ai/assistente-portal.agent.md",
+      "docs/ai/agente-automacoes.agent.md"
+    ],
+    "skills": [
+      "docs/ai/assistente-portal.skill.md",
+      "docs/ai/curadoria-inteligente.skill.md",
+      "docs/ai/gestao-conteudo.skill.md",
+      "docs/ai/otimizacao-performance.skill.md",
+      "docs/ai/seguranca-portal.skill.md",
+      "docs/ai/ux-ui-portal.skill.md",
+      "docs/ai/automacoes-portal.skill.md"
+    ]
   },
   "qa_tests": [
     {
@@ -122,10 +137,10 @@
       "description": "SDD spec gerado; portal-ai module placeholder"
     },
     {
-      "date": "2026-04-06",
-      "version": "0.6.0",
+      "date": "2026-04-08",
+      "version": "0.7.0",
       "author": "Vision7 Team",
-      "description": "Agentes e skills passam a cobrir explicitamente o desenho de acessos hierárquicos e fluxos de login por perfil"
+      "description": "Adicionados agente-automacoes.agent.md e automacoes-portal.skill.md para o novo Automation Engine v2"
     }
   ]
 }
