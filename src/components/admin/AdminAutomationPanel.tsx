@@ -895,7 +895,7 @@ const AdminAutomationPanel = ({ isActive = true, showLabButton = true }: { isAct
           <CardContent className="space-y-3">
             <div className="rounded-xl border border-emerald-300/30 bg-emerald-500/10 p-3 text-xs text-emerald-900 dark:text-emerald-100">
               <p className="font-semibold">Ordem de execução esperada</p>
-              <p className="mt-1">WF-01 grava em news_staging -> WF-02 clusteriza em news_clusters e marca processed=true.</p>
+              <p className="mt-1">WF-01 grava em news_staging e depois WF-02 clusteriza em news_clusters e marca processed=true.</p>
               <p>Se WF-02 não encontrar itens, confirme que WF-01 executou antes e inseriu registros novos.</p>
             </div>
 
