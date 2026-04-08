@@ -13,15 +13,36 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? Deno.env.get('N8N_PR
   .map((o) => o.trim())
   .filter(Boolean);
 
+const ALLOWED_ORIGIN_SUFFIXES = ['.vision7.pt'];
+
 const N8N_ADMIN_ROLES = new Set(['super_admin', 'admin']);
+
+function isAllowedOrigin(origin: string) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.length === 0) return true;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+
+  try {
+    const { hostname, protocol } = new URL(origin);
+    const isHttps = protocol === 'https:';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isVisionDomain = ALLOWED_ORIGIN_SUFFIXES.some((suffix) => hostname === suffix.slice(1) || hostname.endsWith(suffix));
+    if ((isHttps && isVisionDomain) || isLocalhost) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
+}
 
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin') ?? '';
-  const allow = ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.supabase.co');
+  const allow = isAllowedOrigin(origin) || origin.endsWith('.supabase.co');
   return {
     'Access-Control-Allow-Origin': allow ? origin : (ALLOWED_ORIGINS[0] || 'https://www.vision7.pt'),
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
 }
@@ -155,6 +176,11 @@ async function maybeSendExpiryReminders(supabaseAdmin: ReturnType<typeof createC
 
 Deno.serve(async (req: Request) => {
   const cors = getCorsHeaders(req);
+  const origin = req.headers.get('Origin') ?? '';
+
+  if (origin && !isAllowedOrigin(origin) && !origin.endsWith('.supabase.co')) {
+    return jsonResponse({ error: 'Origin not allowed', origin }, 403, cors);
+  }
 
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405, cors);
