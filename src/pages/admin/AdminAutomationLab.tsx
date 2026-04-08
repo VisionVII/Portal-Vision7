@@ -32,15 +32,20 @@ const N8N_LAB_URL = resolveN8nLabBaseUrl();
 
 const AdminAutomationLab: React.FC = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [embedMode, setEmbedMode] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
 
   useEffect(() => {
+    if (!embedMode) return;
+
+    setIframeLoaded(false);
+    setShowFallback(false);
     const timer = window.setTimeout(() => {
       setShowFallback(true);
     }, 12000);
 
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [embedMode]);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.18),transparent_35%),#070f1f] text-white">
@@ -73,25 +78,45 @@ const AdminAutomationLab: React.FC = () => {
               Ambiente Vision7 sobre infraestrutura n8n
             </CardTitle>
             <CardDescription className="text-slate-300">
-              O shell visual é Vision7. O builder interno é do n8n (infra Render). O laboratório abre a raiz do n8n para evitar rotas inválidas em produção; se não existir sessão ativa no n8n, use o botão externo para autenticar e volte depois.
+              O shell visual é Vision7. O builder interno é do n8n (infra Render). Para uso real, abra o n8n em aba separada. O modo embutido é experimental e pode ser bloqueado pelo browser ou pela política de frame do serviço.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {showFallback && !iframeLoaded && (
-              <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">
-                O editor do n8n ainda não respondeu dentro do esperado. Isto normalmente significa cold start do Render ou falta de sessão no n8n. Abra em separado, autentique-se e volte ao laboratório.
-              </div>
-            )}
-            <div className="h-[78vh] overflow-hidden rounded-xl border border-cyan-300/20 bg-black/20">
-              <iframe
-                src={N8N_LAB_URL}
-                title="Vision7 Automation Lab"
-                className="h-full w-full border-0"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                allow="clipboard-read; clipboard-write"
-                onLoad={() => setIframeLoaded(true)}
-              />
+            <div className="mb-3 flex flex-wrap gap-2">
+              <a href={N8N_LAB_URL} target="_blank" rel="noreferrer">
+                <Button className="gap-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400">Abrir ambiente real do n8n <ExternalLink className="h-4 w-4" /></Button>
+              </a>
+              <Button type="button" variant="outline" className="border-cyan-300/40 text-cyan-100 hover:bg-cyan-400/10" onClick={() => setEmbedMode((v) => !v)}>
+                {embedMode ? 'Ocultar modo embutido' : 'Tentar modo embutido (experimental)'}
+              </Button>
             </div>
+
+            {!embedMode ? (
+              <div className="rounded-xl border border-cyan-300/20 bg-black/20 p-4 text-sm text-slate-200">
+                <p className="font-medium text-white">Fluxo recomendado</p>
+                <p className="mt-2">1. Abra o ambiente real do n8n no botão acima.</p>
+                <p>2. Faça login no n8n (uma vez por sessão).</p>
+                <p>3. Volte ao painel Vision7 para gerir chaves, workflows, execução e logs.</p>
+              </div>
+            ) : (
+              <>
+                {showFallback && !iframeLoaded && (
+                  <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">
+                    O modo embutido foi bloqueado ou não carregou a tempo. Use o botão "Abrir ambiente real do n8n" para operação normal.
+                  </div>
+                )}
+                <div className="h-[78vh] overflow-hidden rounded-xl border border-cyan-300/20 bg-black/20">
+                  <iframe
+                    src={N8N_LAB_URL}
+                    title="Vision7 Automation Lab"
+                    className="h-full w-full border-0"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                    allow="clipboard-read; clipboard-write"
+                    onLoad={() => setIframeLoaded(true)}
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </main>
