@@ -164,7 +164,25 @@ export const deactivateWorkflow = async (id: string) => {
 };
 
 export const executeWorkflow = async (id: string) => {
-  throw new Error('A API publica do n8n nao expoe execucao manual de workflow neste ambiente. Use um trigger/webhook do proprio workflow para disparo manual.');
+  const attempts = [
+    `/api/v1/workflows/${id}/run`,
+    `/api/v1/workflows/${id}/execute`,
+  ];
+
+  let lastError = 'Execução manual não disponível para este workflow.';
+
+  for (const path of attempts) {
+    try {
+      return await n8nRequest(path, { method: 'POST' });
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : 'Erro desconhecido ao executar workflow';
+      if (!/\[(404|405|501)\]/.test(lastError)) {
+        break;
+      }
+    }
+  }
+
+  throw new Error(`Falha na execução manual. ${lastError}. Se o workflow usa trigger (cron/webhook), dispare pelo trigger correspondente.`);
 };
 
 export const getExecutions = async (limit = 20) => {

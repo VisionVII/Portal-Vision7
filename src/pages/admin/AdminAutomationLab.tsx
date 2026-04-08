@@ -65,6 +65,7 @@ const AdminAutomationLab: React.FC = () => {
                 title="Vision7 Automation Lab"
                 className="h-full w-full border-0"
                 sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                allow="clipboard-read; clipboard-write"
                 onLoad={() => setIframeLoaded(true)}
               />
             </div>

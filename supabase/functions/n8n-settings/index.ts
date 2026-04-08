@@ -338,6 +338,7 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'activate') {
       const id = String(body?.id ?? '').trim();
+      const force = body?.force === true;
       if (!id) return jsonResponse({ error: 'id is required' }, 400, cors);
 
       const { data: target, error: targetError } = await supabaseAdmin
@@ -358,7 +359,15 @@ Deno.serve(async (req: Request) => {
 
       // decrypt once to validate payload integrity before activation
       const decryptedValue = await decryptValue(CREDENTIALS_ENCRYPTION_KEY, target.encrypted_value);
-      await validateN8nApiKey(decryptedValue);
+
+      try {
+        await validateN8nApiKey(decryptedValue);
+      } catch (validationError) {
+        if (!force) {
+          const message = validationError instanceof Error ? validationError.message : 'A chave falhou na validação do n8n';
+          return jsonResponse({ error: message }, 400, cors);
+        }
+      }
 
       await supabaseAdmin
         .from('n8n_credentials')
@@ -372,7 +381,7 @@ Deno.serve(async (req: Request) => {
         .eq('id', id);
 
       if (activateError) return jsonResponse({ error: activateError.message }, 500, cors);
-      return jsonResponse({ success: true }, 200, cors);
+      return jsonResponse({ success: true, force }, 200, cors);
     }
 
     if (action === 'revoke') {

@@ -71,8 +71,8 @@ export async function createN8nCredential(payload: {
   return result.data;
 }
 
-export async function activateN8nCredential(id: string) {
-  await callSettings<{ success: boolean }>({ action: 'activate', id });
+export async function activateN8nCredential(id: string, force = false) {
+  return callSettings<{ success: boolean; force: boolean }>({ action: 'activate', id, force });
 }
 
 export async function revokeN8nCredential(id: string) {
