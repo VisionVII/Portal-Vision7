@@ -27,9 +27,17 @@ async function getEdgeAuthHeaders(): Promise<Record<string, string>> {
   const exp = accessToken ? getJwtExp(accessToken) : null;
   const now = Math.floor(Date.now() / 1000);
 
-  if (!accessToken || (exp !== null && exp <= now + 30)) {
+  if (!accessToken) {
+    throw new Error('Sessao invalida ou expirada. Inicie sessao novamente.');
+  }
+
+  if (exp !== null && exp <= now + 30) {
     const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) {
+      if (/invalid refresh token|refresh token not found/i.test(refreshError.message)) {
+        await supabase.auth.signOut({ scope: 'local' });
+        throw new Error('Sessao invalida no navegador. Faça login novamente.');
+      }
       throw new Error(`Nao foi possivel renovar a sessao: ${refreshError.message}`);
     }
     accessToken = refreshed.session?.access_token;
@@ -164,7 +172,25 @@ export const deactivateWorkflow = async (id: string) => {
 };
 
 export const executeWorkflow = async (id: string) => {
-  throw new Error('A API publica do n8n nao expoe execucao manual de workflow neste ambiente. Use um trigger/webhook do proprio workflow para disparo manual.');
+  const attempts = [
+    `/api/v1/workflows/${id}/run`,
+    `/api/v1/workflows/${id}/execute`,
+  ];
+
+  let lastError = 'Execução manual não disponível para este workflow.';
+
+  for (const path of attempts) {
+    try {
+      return await n8nRequest(path, { method: 'POST' });
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : 'Erro desconhecido ao executar workflow';
+      if (!/\[(404|405|501)\]/.test(lastError)) {
+        break;
+      }
+    }
+  }
+
+  throw new Error(`Falha na execução manual. ${lastError}. Se o workflow usa trigger (cron/webhook), dispare pelo trigger correspondente.`);
 };
 
 export const getExecutions = async (limit = 20) => {

@@ -20,6 +20,7 @@ import Post from "@/pages/site/Post";
 import Audiocast from "@/pages/site/Audiocast";
 import NotFound from "@/pages/site/NotFound";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminAutomationLab from "@/pages/admin/AdminAutomationLab";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import UserLogin from "@/pages/admin/UserLogin";
 import ProtectedRoute from "@/components/system/ProtectedRoute";
@@ -82,6 +83,14 @@ const App = () => (
               element={(
                 <ProtectedRoute>
                   <AdminDashboard />
+                </ProtectedRoute>
+              )}
+            />
+            <Route
+              path="/admin/automation-lab"
+              element={(
+                <ProtectedRoute>
+                  <AdminAutomationLab />
                 </ProtectedRoute>
               )}
             />
