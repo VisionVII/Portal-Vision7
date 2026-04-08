@@ -90,7 +90,7 @@ const normalizeExecutionStatus = (execution: N8nExecution) => {
   return 'success';
 };
 
-const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
+const AdminAutomationPanel = ({ isActive = true, showLabButton = true }: { isActive?: boolean; showLabButton?: boolean }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -490,9 +490,11 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => void handleWakeN8n()} disabled={isBusy}>
           <Power className="h-3.5 w-3.5" />Acordar n8n (Render)
         </Button>
-        <Button size="sm" className="gap-1.5" onClick={() => navigate('/admin/automation-lab')}>
-          <FlaskConical className="h-3.5 w-3.5" />Ir ao laboratório de automações
-        </Button>
+        {showLabButton && (
+          <Button size="sm" className="gap-1.5" onClick={() => navigate('/admin/automation-lab')}>
+            <FlaskConical className="h-3.5 w-3.5" />Ir ao laboratório de automações
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -822,6 +824,13 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
             <CardDescription className="text-xs">Configuração operacional real: workflow, fontes, regras e teste de disparo.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            <div className="rounded-xl border border-cyan-300/30 bg-cyan-500/10 p-3 text-xs text-cyan-900 dark:text-cyan-100">
+              <p className="font-semibold">Pipeline recomendado no portal</p>
+              <p className="mt-1">1. Crie uma automação para WF-01 (coleta), com feeds RSS e intervalo de 30 min.</p>
+              <p>2. Crie outra automação para WF-02 (dedupe/cluster), sem feeds e com intervalo de 20 min.</p>
+              <p>3. Não una os dois passos no mesmo workflow do n8n.</p>
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="panel-automation-name" className="text-xs">Nome</Label>
               <Input id="panel-automation-name" value={formState.name} onChange={(e) => setFormState((p) => ({ ...p, name: e.target.value }))} placeholder="Ex.: Curadoria IA manhã" />
@@ -884,6 +893,12 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
             <CardDescription className="text-xs">Histórico de execução do n8n + automações persistidas no banco.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            <div className="rounded-xl border border-emerald-300/30 bg-emerald-500/10 p-3 text-xs text-emerald-900 dark:text-emerald-100">
+              <p className="font-semibold">Ordem de execução esperada</p>
+              <p className="mt-1">WF-01 grava em news_staging e depois WF-02 clusteriza em news_clusters e marca processed=true.</p>
+              <p>Se WF-02 não encontrar itens, confirme que WF-01 executou antes e inseriu registros novos.</p>
+            </div>
+
             <div className="rounded-xl border border-border bg-slate-950 p-2.5 text-[11px] text-slate-100">
               <pre className="max-h-[200px] overflow-auto whitespace-pre-wrap break-words">
                 {selectedExecution ? JSON.stringify(selectedExecution, null, 2) : 'Selecione uma execução para ver detalhes.'}

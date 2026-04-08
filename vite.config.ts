@@ -7,6 +7,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 8080,
+    proxy: {
+      "/n8n": {
+        target: "https://n8n-vision7.onrender.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/n8n/, "/n8n"),
+      },
+    },
   },
   plugins: [
     react(),
