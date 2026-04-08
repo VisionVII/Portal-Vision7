@@ -1,0 +1,154 @@
+{
+  "name": "WF-01 Coleta MultiPesquisa Noticias",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule_trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -980,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const feeds = [\n  { source_name: 'Google News PT - IA', feed_url: 'https://news.google.com/rss/search?q=inteligencia+artificial+portugal&hl=pt-PT&gl=PT&ceid=PT:pt-150', topic: 'ia' },\n  { source_name: 'Google News PT - Ciberseguranca', feed_url: 'https://news.google.com/rss/search?q=ciberseguranca+portugal&hl=pt-PT&gl=PT&ceid=PT:pt-150', topic: 'ciberseguranca' },\n  { source_name: 'Google News PT - Automacao', feed_url: 'https://news.google.com/rss/search?q=automacao+empresarial+portugal&hl=pt-PT&gl=PT&ceid=PT:pt-150', topic: 'automacao' }\n];\n\nreturn feeds.map((feed) => ({ json: feed }));"
+      },
+      "id": "build_feed_list",
+      "name": "Build Feed List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -760,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.feed_url}}"
+      },
+      "id": "rss_feed_read",
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        -540,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nfunction normalizeUrl(value) {\n  try {\n    const u = new URL(value || '');\n    u.hash = '';\n    u.searchParams.delete('utm_source');\n    u.searchParams.delete('utm_medium');\n    u.searchParams.delete('utm_campaign');\n    return u.toString();\n  } catch {\n    return value || '';\n  }\n}\n\nfunction toIsoDate(value) {\n  if (!value) return null;\n  const d = new Date(value);\n  return Number.isNaN(d.getTime()) ? null : d.toISOString();\n}\n\nreturn items.map((item) => {\n  const sourceName = item.json.source_name || item.json.source || 'unknown';\n  const title = String(item.json.title || '').trim();\n  const summary = String(item.json.contentSnippet || item.json.content || '').trim();\n  const rawLink = item.json.link || item.json.id || '';\n  const canonicalUrl = normalizeUrl(rawLink);\n  const topic = item.json.topic || 'geral';\n  const publishedAt = toIsoDate(item.json.isoDate || item.json.pubDate);\n  const fingerprint = crypto\n    .createHash('sha256')\n    .update((title + '|' + canonicalUrl).toLowerCase())\n    .digest('hex');\n\n  return {\n    json: {\n      source_name: sourceName,\n      source_url: rawLink || canonicalUrl,\n      canonical_url: canonicalUrl || rawLink,\n      title,\n      summary,\n      content: summary,\n      language: 'pt',\n      topic,\n      published_at: publishedAt,\n      trust_score: 50,\n      duplicate_fingerprint: fingerprint,\n      metadata: {\n        pipeline: 'WF-01',\n        collected_via: 'rss',\n        feed_url: item.json.feedUrl || item.json.feed_url || null\n      }\n    }\n  };\n});"
+      },
+      "id": "normalize_records",
+      "name": "Normalize Records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL}}/rest/v1/news_staging",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=ignore-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      },
+      "id": "insert_staging",
+      "name": "Insert Staging",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -60,
+        120
+      ],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Feed List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Feed List": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Normalize Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Records": {
+      "main": [
+        [
+          {
+            "node": "Insert Staging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
