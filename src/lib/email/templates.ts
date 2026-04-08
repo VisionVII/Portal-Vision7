@@ -312,6 +312,37 @@ function accountDeactivatedTemplate(data: EmailTemplateData['account_deactivated
   };
 }
 
+function automationPostReadyTemplate(data: EmailTemplateData['automation_post_ready']): { subject: string; html: string } {
+  const scoreColor = data.editorialScore >= 80 ? '#10B981' : data.editorialScore >= 50 ? '#F59E0B' : '#EF4444';
+
+  const body = `
+    <h2 style="margin:0 0 8px;font-size:20px;color:#1e293b;">Novo artigo pronto para revisão 🤖</h2>
+    <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">
+      A pipeline de IA do <strong>${BRAND_NAME}</strong> gerou um novo artigo que está pronto para revisão editorial.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;background:#f8fafc;border-radius:8px;border-left:4px solid ${BRAND_COLOR};">
+      <tr><td style="padding:16px;">
+        <h3 style="margin:0 0 8px;font-size:16px;color:#1e293b;">${data.postTitle}</h3>
+        <p style="margin:0 0 12px;font-size:14px;color:#64748b;line-height:1.5;">${data.postExcerpt}</p>
+        <span style="display:inline-block;background:${scoreColor}20;color:${scoreColor};font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;">
+          Score Editorial: ${data.editorialScore.toFixed(0)}/100
+        </span>
+      </td></tr>
+    </table>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${data.reviewUrl}" class="btn-primary">Rever e Publicar</a>
+    </div>
+    <p style="margin:16px 0 0;font-size:13px;color:#94a3b8;text-align:center;">
+      Este artigo foi gerado automaticamente. Reveja o conteúdo antes de publicar.
+    </p>
+  `;
+
+  return {
+    subject: `🤖 Novo artigo IA: ${data.postTitle} — ${BRAND_NAME}`,
+    html: wrapInLayout('Artigo IA Pronto', body, `Novo artigo gerado pela IA: ${data.postTitle}`),
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /*  Public API                                                         */
 /* ------------------------------------------------------------------ */
@@ -328,6 +359,7 @@ const templateBuilders: Record<EmailTemplateType, (data: never) => TemplateResul
   password_reset: passwordResetTemplate as (data: never) => TemplateResult,
   role_change: roleChangeTemplate as (data: never) => TemplateResult,
   account_deactivated: accountDeactivatedTemplate as (data: never) => TemplateResult,
+  automation_post_ready: automationPostReadyTemplate as (data: never) => TemplateResult,
 };
 
 /**
@@ -358,5 +390,6 @@ export function getAvailableTemplates(): Array<{ type: EmailTemplateType; label:
     { type: 'password_reset', label: 'Redefinir Palavra-passe', description: 'Link para redefinição de palavra-passe' },
     { type: 'role_change', label: 'Alteração de Perfil', description: 'Notificação de alteração de permissões' },
     { type: 'account_deactivated', label: 'Conta Desativada', description: 'Notificação de desativação de conta' },
+    { type: 'automation_post_ready', label: 'Artigo IA Pronto', description: 'Notificação de novo artigo gerado pela pipeline IA' },
   ];
 }

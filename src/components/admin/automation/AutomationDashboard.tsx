@@ -11,6 +11,8 @@ import { AutomationCard } from './AutomationCard';
 import { AutomationForm } from './AutomationForm';
 import { AutomationTemplateGallery } from './AutomationTemplateGallery';
 import { ExecutionTimeline } from './ExecutionTimeline';
+import { NewsPipelineCard } from './NewsPipelineCard';
+import { CuratedPostsReview } from './CuratedPostsReview';
 
 import { useAutomationsV2 } from '@/hooks/useAutomationsV2';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
@@ -248,6 +250,9 @@ export function AutomationDashboard({
           lastSync={lastSync}
         />
 
+        {/* ── News Pipeline Card ── */}
+        <NewsPipelineCard />
+
         {/* ── Template Gallery ── */}
         <AutomationTemplateGallery
           templates={templates}
@@ -271,7 +276,10 @@ export function AutomationDashboard({
         {/* ── Main content: Tabs + Cards + Timeline ── */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* Cards (3/5 width on desktop) */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 space-y-4">
+            {/* ── Curated Posts Review ── */}
+            <CuratedPostsReview />
+
             <AutomationCategoryTabs
               activeCategory={activeCategory}
               onCategoryChange={setActiveCategory}
