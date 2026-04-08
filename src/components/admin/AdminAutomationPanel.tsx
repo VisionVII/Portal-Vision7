@@ -90,7 +90,7 @@ const normalizeExecutionStatus = (execution: N8nExecution) => {
   return 'success';
 };
 
-const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
+const AdminAutomationPanel = ({ isActive = true, showLabButton = true }: { isActive?: boolean; showLabButton?: boolean }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -490,9 +490,11 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => void handleWakeN8n()} disabled={isBusy}>
           <Power className="h-3.5 w-3.5" />Acordar n8n (Render)
         </Button>
-        <Button size="sm" className="gap-1.5" onClick={() => navigate('/admin/automation-lab')}>
-          <FlaskConical className="h-3.5 w-3.5" />Ir ao laboratório de automações
-        </Button>
+        {showLabButton && (
+          <Button size="sm" className="gap-1.5" onClick={() => navigate('/admin/automation-lab')}>
+            <FlaskConical className="h-3.5 w-3.5" />Ir ao laboratório de automações
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

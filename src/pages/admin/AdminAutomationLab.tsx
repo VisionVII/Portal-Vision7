@@ -3,6 +3,7 @@ import { ArrowLeft, FlaskConical, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import AdminAutomationPanel from '@/components/admin/AdminAutomationPanel';
 
 const DEFAULT_N8N_LAB_URL = 'https://n8n-vision7.onrender.com';
 
@@ -75,7 +76,22 @@ const AdminAutomationLab: React.FC = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <FlaskConical className="h-4 w-4 text-cyan-300" />
-              Ambiente Vision7 sobre infraestrutura n8n
+              Operação interna Vision7
+            </CardTitle>
+            <CardDescription className="text-slate-300">
+              Este modo interno usa a API do n8n via proxy seguro do portal. Funciona mesmo sem sessão ativa na interface web externa do n8n.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AdminAutomationPanel isActive showLabButton={false} />
+          </CardContent>
+        </Card>
+
+        <Card className="border-cyan-300/20 bg-[#081529]/80 text-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FlaskConical className="h-4 w-4 text-cyan-300" />
+              Interface web do n8n (opcional)
             </CardTitle>
             <CardDescription className="text-slate-300">
               O shell visual é Vision7. O builder interno é do n8n (infra Render). Para uso real, abra o n8n em aba separada. O modo embutido é experimental e pode ser bloqueado pelo browser ou pela política de frame do serviço.
