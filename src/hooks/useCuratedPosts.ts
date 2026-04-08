@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { sendEmail } from '@/services/email';
@@ -285,4 +286,109 @@ export function useAutoPromoteCurated() {
       toast({ title: 'Erro na promoção automática', description: err.message, variant: 'destructive' });
     },
   });
+}
+
+/* ── Auto-promote polling — runs in background while pipeline is active ── */
+const POLLING_STORAGE_KEY = 'pipeline:autoPromoteActive';
+const POLLING_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+
+export function useAutoPromotePolling() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const [isActive, setIsActive] = useState(() => {
+    try { return localStorage.getItem(POLLING_STORAGE_KEY) === 'true'; } catch { return false; }
+  });
+
+  const [lastCheck, setLastCheck] = useState<string | null>(null);
+  const [totalPromoted, setTotalPromoted] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Persist active state
+  useEffect(() => {
+    try { localStorage.setItem(POLLING_STORAGE_KEY, String(isActive)); } catch { /* ignore */ }
+  }, [isActive]);
+
+  const checkAndPromote = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('curated_posts')
+        .select('*')
+        .eq('status', 'ready')
+        .order('editorial_score', { ascending: false });
+
+      if (error) {
+        console.warn('[AutoPromote] Query error:', error.message);
+        return;
+      }
+
+      const readyPosts = (data ?? []) as CuratedPost[];
+      setLastCheck(new Date().toISOString());
+
+      if (readyPosts.length === 0) return;
+
+      let promoted = 0;
+      for (const curated of readyPosts) {
+        try {
+          await promoteSingleCurated(curated);
+          promoted++;
+          void notifyAdminPostReady(curated);
+        } catch (err) {
+          console.warn(`[AutoPromote] Failed: "${curated.title}"`, err);
+        }
+      }
+
+      if (promoted > 0) {
+        setTotalPromoted((prev) => prev + promoted);
+        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+        toast({
+          title: `${promoted} novo${promoted > 1 ? 's' : ''} rascunho${promoted > 1 ? 's' : ''}`,
+          description: `Pipeline automática: ${promoted} artigo${promoted > 1 ? 's' : ''} promovido${promoted > 1 ? 's' : ''} para rascunhos. Notificação enviada.`,
+        });
+      }
+    } catch (err) {
+      console.warn('[AutoPromote] Unexpected error:', err);
+    }
+  }, [queryClient, toast]);
+
+  // Start/stop polling
+  useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    if (isActive) {
+      // Run immediately on activation
+      void checkAndPromote();
+      intervalRef.current = setInterval(() => void checkAndPromote(), POLLING_INTERVAL_MS);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isActive, checkAndPromote]);
+
+  const start = useCallback(() => {
+    setIsActive(true);
+    toast({
+      title: 'Pipeline ativada',
+      description: 'Verificação automática a cada 2 min. Posts curados serão promovidos para rascunhos com notificação.',
+    });
+  }, [toast]);
+
+  const stop = useCallback(() => {
+    setIsActive(false);
+    toast({ title: 'Pipeline pausada', description: 'Promoção automática desativada.' });
+  }, [toast]);
+
+  return {
+    isActive,
+    lastCheck,
+    totalPromoted,
+    start,
+    stop,
+    checkNow: checkAndPromote,
+  };
 }

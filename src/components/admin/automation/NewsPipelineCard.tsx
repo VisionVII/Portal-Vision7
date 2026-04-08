@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { useCuratedPostsStats, useAutoPromoteCurated } from '@/hooks/useCuratedPosts';
+import { useCuratedPostsStats, useAutoPromoteCurated, useAutoPromotePolling } from '@/hooks/useCuratedPosts';
 import { usePipelineConfig } from '@/hooks/usePipelineConfig';
 import {
   getWorkflows,
@@ -146,6 +146,7 @@ export function NewsPipelineCard() {
   const { toast } = useToast();
   const { data: stats } = useCuratedPostsStats();
   const autoPromote = useAutoPromoteCurated();
+  const polling = useAutoPromotePolling();
   const {
     activeConfig,
     updateTags,
@@ -807,16 +808,41 @@ export function NewsPipelineCard() {
           )}
         </div>
 
-        {/* ── Cron schedule info ── */}
+        {/* ── Cron schedule info + auto-promote toggle ── */}
         {pipelineFound && allActive && !pipelineRunning && (
-          <div className="rounded-lg border border-emerald-500/15 bg-emerald-500/5 p-2.5">
-            <div className="flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5 text-emerald-400" />
-              <p className="text-xs text-emerald-300">
-                <span className="font-medium">Pipeline automático ativo</span> — Os workflows executam por cronograma no n8n.
-                Artigos gerados pela IA ficam em <span className="font-medium">curated_posts</span> → clique
-                <span className="font-medium"> "Promover Curados"</span> para mover para rascunhos editoriais. Será notificado por email.
-              </p>
+          <div className="rounded-lg border border-emerald-500/15 bg-emerald-500/5 p-2.5 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                <p className="text-xs text-emerald-300">
+                  <span className="font-medium">Pipeline automático ativo</span> — Workflows executam por cronograma no n8n.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2 pt-1 border-t border-emerald-500/10">
+              <div className="flex items-center gap-2">
+                <Zap className={`w-3.5 h-3.5 ${polling.isActive ? 'text-emerald-400' : 'text-gray-500'}`} />
+                <div>
+                  <p className="text-xs text-white font-medium">
+                    Promoção automática
+                    {polling.isActive && (
+                      <Badge className="ml-1.5 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] px-1 py-0 animate-pulse">
+                        ATIVO
+                      </Badge>
+                    )}
+                  </p>
+                  <p className="text-[10px] text-gray-400">
+                    {polling.isActive
+                      ? `Verifica a cada 2 min · ${polling.totalPromoted} promovido(s)${polling.lastCheck ? ` · Último check: ${formatRelativeTime(polling.lastCheck)}` : ''}`
+                      : 'Ativa para mover curated_posts → rascunhos automaticamente com notificação'}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={polling.isActive}
+                onCheckedChange={(checked) => checked ? polling.start() : polling.stop()}
+                className="data-[state=checked]:bg-emerald-600"
+              />
             </div>
           </div>
         )}
