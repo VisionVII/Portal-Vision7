@@ -4,12 +4,7 @@
     {
       "parameters": {
         "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 60
-            }
-          ]
+          "interval": [{ "field": "minutes", "minutesInterval": 60 }]
         }
       },
       "id": "schedule_trigger",
@@ -21,12 +16,12 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{$env.SUPABASE_URL}}/rest/v1/news_clusters",
+        "url": "https://stpusdeqwbckvfsitsld.supabase.co/rest/v1/news_clusters",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
-            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}" }
+            { "name": "apikey", "value": "SUA_SERVICE_ROLE_KEY" },
+            { "name": "Authorization", "value": "Bearer SUA_SERVICE_ROLE_KEY" }
           ]
         },
         "sendQuery": true,
@@ -37,17 +32,21 @@
             { "name": "order", "value": "confidence_score.desc" },
             { "name": "limit", "value": "3" }
           ]
+        },
+        "options": {
+          "alwaysOutputData": true
         }
       },
       "id": "fetch_clusters",
       "name": "Fetch High-Confidence Clusters",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-960, 200]
+      "position": [-960, 200],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "// Filter clusters that already have a curated_post (avoid duplicates)\nconst clusters = Array.isArray(items[0]?.json) ? items[0].json : items.map(i => i.json);\nif (!clusters || clusters.length === 0) return [];\nreturn clusters.map(c => ({ json: c }));"
+        "jsCode": "let rows;\nif (Array.isArray(items[0]?.json)) {\n  rows = items[0].json;\n} else {\n  rows = items.map(i => i.json);\n}\n// Filter out empty objects and items without id\nrows = rows.filter(r => r && r.id);\nif (!rows || rows.length === 0) return [];\nreturn rows.map(c => ({ json: c }));"
       },
       "id": "normalize_input",
       "name": "Normalize Input",
@@ -58,32 +57,36 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{$env.SUPABASE_URL}}/rest/v1/news_staging",
+        "url": "https://stpusdeqwbckvfsitsld.supabase.co/rest/v1/news_staging",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
-            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}" }
+            { "name": "apikey", "value": "SUA_SERVICE_ROLE_KEY" },
+            { "name": "Authorization", "value": "Bearer SUA_SERVICE_ROLE_KEY" }
           ]
         },
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             { "name": "select", "value": "title,summary,content,source_name,canonical_url,topic,published_at" },
-            { "name": "duplicate_fingerprint", "value": "=eq.{{$json.fingerprint}}" },
+            { "name": "duplicate_fingerprint", "value": "=eq.{{ $json.fingerprint }}" },
             { "name": "limit", "value": "5" }
           ]
+        },
+        "options": {
+          "alwaysOutputData": true
         }
       },
       "id": "fetch_sources",
       "name": "Fetch Source Articles",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-480, 200]
+      "position": [-480, 200],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "const cluster = $('Normalize Input').item.json;\nconst sources = Array.isArray($json) ? $json : [$json];\n\nconst sourceTexts = sources.map((s, i) => {\n  return `Fonte ${i + 1} (${s.source_name || 'desconhecido'}):\\nTitulo: ${s.title || ''}\\nResumo: ${s.summary || s.content || ''}\\nURL: ${s.canonical_url || ''}`;\n}).join('\\n\\n');\n\nconst topicMap = {\n  'ia': 'Inteligência Artificial',\n  'ciberseguranca': 'Cibersegurança',\n  'automacao': 'Automação',\n  'geral': 'Tecnologia'\n};\n\nconst topicLabel = topicMap[cluster.topic] || cluster.topic || 'Tecnologia';\n\nconst prompt = `Es um jornalista tecnologico portugues do portal Vision7. Escreve um artigo ORIGINAL baseado nas fontes abaixo.\\n\\nREGRAS:\\n- Artigo 100% original, NAO copies frases das fontes\\n- Tom informativo e profissional, portugues europeu\\n- Entre 300 e 600 palavras\\n- Inclui titulo atrativo (sem clickbait)\\n- Inclui subtitulo de 1 linha\\n- Inclui excerpt (resumo de 2 frases)\\n- Corpo em Markdown\\n- Tema: ${topicLabel}\\n- NAO inventes dados ou estatisticas\\n- Cita fontes quando relevante\\n\\nFONTES:\\n${sourceTexts}\\n\\nResponde APENAS em JSON valido:\\n{\\n  \"title\": \"...\",\\n  \"subtitle\": \"...\",\\n  \"excerpt\": \"...\",\\n  \"body_markdown\": \"...\",\\n  \"topic\": \"${cluster.topic}\"\\n}`;\n\nreturn [{\n  json: {\n    cluster_id: cluster.id,\n    fingerprint: cluster.fingerprint,\n    confidence_score: cluster.confidence_score,\n    source_count: sources.length,\n    topic: cluster.topic,\n    prompt: prompt\n  }\n}];"
+        "jsCode": "const cluster = $('Normalize Input').item.json;\nlet sources = items.map(i => i.json).filter(s => s && s.title);\n\nif (sources.length === 0) {\n  sources = [{ title: cluster.topic || 'Tecnologia', summary: 'Noticia sobre ' + (cluster.topic || 'tecnologia'), source_name: 'Vision7', canonical_url: '', topic: cluster.topic }];\n}\n\nconst sourceTexts = sources.map((s, i) => {\n  return 'Fonte ' + (i + 1) + ' (' + (s.source_name || 'desconhecido') + '):\\nTitulo: ' + (s.title || '') + '\\nResumo: ' + (s.summary || s.content || '') + '\\nURL: ' + (s.canonical_url || '');\n}).join('\\n\\n');\n\nconst topicMap = {\n  'ia': 'Inteligencia Artificial',\n  'ciberseguranca': 'Ciberseguranca',\n  'automacao': 'Automacao',\n  'geral': 'Tecnologia'\n};\n\nconst topicLabel = topicMap[cluster.topic] || cluster.topic || 'Tecnologia';\n\nconst prompt = 'Es um jornalista tecnologico portugues do portal Vision7. Escreve um artigo ORIGINAL baseado nas fontes abaixo.\\n\\nREGRAS:\\n- Artigo 100% original, NAO copies frases das fontes\\n- Tom informativo e profissional, portugues europeu\\n- Entre 300 e 600 palavras\\n- Inclui titulo atrativo (sem clickbait)\\n- Inclui subtitulo de 1 linha\\n- Inclui excerpt (resumo de 2 frases)\\n- Corpo em Markdown\\n- Tema: ' + topicLabel + '\\n- NAO inventes dados ou estatisticas\\n- Cita fontes quando relevante\\n\\nFONTES:\\n' + sourceTexts + '\\n\\nResponde APENAS em JSON valido:\\n{\\n  \"title\": \"...\",\\n  \"subtitle\": \"...\",\\n  \"excerpt\": \"...\",\\n  \"body_markdown\": \"...\",\\n  \"topic\": \"' + cluster.topic + '\"\\n}';\n\nreturn [{\n  json: {\n    cluster_id: cluster.id,\n    fingerprint: cluster.fingerprint,\n    confidence_score: cluster.confidence_score,\n    source_count: sources.length,\n    topic: cluster.topic,\n    prompt: prompt\n  }\n}];"
       },
       "id": "build_prompt",
       "name": "Build AI Prompt",
@@ -93,29 +96,17 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.groq.com/openai/v1/chat/completions",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{$env.GROQ_API_KEY}}" },
-            { "name": "Content-Type", "value": "application/json" }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ {\n  \"model\": \"llama-3.1-8b-instant\",\n  \"temperature\": 0.7,\n  \"max_tokens\": 2000,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": \"Es um jornalista tech portugues. Responde SEMPRE em JSON valido.\" },\n    { \"role\": \"user\", \"content\": $json.prompt }\n  ]\n} }}"
+        "jsCode": "const prev = $('Build AI Prompt').item.json;\n\nconst body = {\n  model: 'llama-3.1-8b-instant',\n  temperature: 0.7,\n  max_tokens: 2000,\n  messages: [\n    { role: 'system', content: 'Es um jornalista tech portugues. Responde SEMPRE em JSON valido.' },\n    { role: 'user', content: prev.prompt }\n  ]\n};\n\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.groq.com/openai/v1/chat/completions',\n    headers: {\n      'Authorization': 'Bearer SUA_GROQ_API_KEY',\n      'Content-Type': 'application/json'\n    },\n    body: body,\n    json: true\n  });\n  return [{ json: response }];\n} catch (e) {\n  return [{ json: { error: { message: e.message }, choices: [] } }];\n}"
       },
       "id": "ai_generate",
       "name": "AI Generate Article",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [0, 200],
-      "continueOnFail": true
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, 200]
     },
     {
       "parameters": {
-        "jsCode": "const prev = $('Build AI Prompt').item.json;\nconst response = $json;\n\n// Parse AI response\nlet article;\ntry {\n  let content = response.choices[0].message.content;\n  // Remove markdown code fences if present\n  content = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  // Fix control characters inside JSON string values\n  content = content.replace(/[\\x00-\\x1F\\x7F]/g, function(c) {\n    if (c === '\\n') return '\\\\n';\n    if (c === '\\r') return '\\\\r';\n    if (c === '\\t') return '\\\\t';\n    return '';\n  });\n  article = JSON.parse(content);\n} catch (e) {\n  return [{ json: { error: 'Failed to parse AI response: ' + e.message, cluster_id: prev.cluster_id, skip: true } }];\n}\n\n// AUDIT: validate quality\nconst audit = {\n  has_title: Boolean(article.title && article.title.length > 10),\n  has_body: Boolean(article.body_markdown && article.body_markdown.length > 200),\n  has_excerpt: Boolean(article.excerpt && article.excerpt.length > 20),\n  body_length: (article.body_markdown || '').length,\n  no_suspicious_urls: !/https?:\\/\\/(?!vision7|google|microsoft|apple|meta)/i.test(article.body_markdown || ''),\n  language_ok: /[áàãâéêíóôõúç]/i.test(article.body_markdown || '') // Portuguese chars present\n};\n\nconst passedChecks = Object.values(audit).filter(v => v === true).length;\nconst totalChecks = Object.keys(audit).length - 1; // exclude body_length (numeric)\nconst editorial_score = Math.round((passedChecks / totalChecks) * 100);\n\n// Generate slug from title\nconst slug = (article.title || 'sem-titulo')\n  .toLowerCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[^a-z0-9]+/g, '-')\n  .replace(/^-|-$/g, '')\n  .substring(0, 80)\n  + '-' + Date.now().toString(36);\n\nreturn [{\n  json: {\n    cluster_id: prev.cluster_id,\n    fingerprint: prev.fingerprint,\n    title: article.title || 'Sem titulo',\n    subtitle: article.subtitle || null,\n    slug: slug,\n    excerpt: article.excerpt || null,\n    body_markdown: article.body_markdown || '',\n    body_html: null,\n    language: 'pt',\n    editorial_score: editorial_score,\n    confidence_score: prev.confidence_score,\n    status: editorial_score >= 70 ? 'ready' : 'draft',\n    tone_profile: 'vision7',\n    topic: prev.topic,\n    model_info: {\n      model: 'llama-3.1-8b-instant',\n      source_count: prev.source_count,\n      generated_at: new Date().toISOString()\n    },\n    moderation: audit,\n    skip: false\n  }\n}];"
+        "jsCode": "const prev = $('Build AI Prompt').item.json;\nconst response = $json;\n\nlet article;\ntry {\n  let content = response.choices[0].message.content;\n  content = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\n  // Try direct parse first\n  try {\n    article = JSON.parse(content);\n  } catch (e1) {\n    // Fix control chars inside JSON string values only\n    let fixed = '';\n    let inString = false;\n    let esc = false;\n    for (let i = 0; i < content.length; i++) {\n      const ch = content[i];\n      if (esc) { fixed += ch; esc = false; continue; }\n      if (ch === '\\\\') { fixed += ch; esc = true; continue; }\n      if (ch === '\"') { inString = !inString; fixed += ch; continue; }\n      if (inString && ch === '\\n') { fixed += '\\\\n'; continue; }\n      if (inString && ch === '\\r') { fixed += '\\\\r'; continue; }\n      if (inString && ch === '\\t') { fixed += '\\\\t'; continue; }\n      fixed += ch;\n    }\n    article = JSON.parse(fixed);\n  }\n} catch (e) {\n  return [{ json: { error: 'Failed to parse AI response: ' + e.message, cluster_id: prev.cluster_id, skip: true } }];\n}\n\nconst audit = {\n  has_title: Boolean(article.title && article.title.length > 10),\n  has_body: Boolean(article.body_markdown && article.body_markdown.length > 200),\n  has_excerpt: Boolean(article.excerpt && article.excerpt.length > 20),\n  body_length: (article.body_markdown || '').length,\n  no_suspicious_urls: !/https?:\\/\\/(?!vision7|google|microsoft|apple|meta)/i.test(article.body_markdown || ''),\n  language_ok: /[a-zA-Z]/.test(article.body_markdown || '')\n};\n\nconst passedChecks = Object.values(audit).filter(v => v === true).length;\nconst totalChecks = Object.keys(audit).length - 1;\nconst editorial_score = Math.round((passedChecks / totalChecks) * 100);\n\nconst slug = (article.title || 'sem-titulo')\n  .toLowerCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[^a-z0-9]+/g, '-')\n  .replace(/^-|-$/g, '')\n  .substring(0, 80)\n  + '-' + Date.now().toString(36);\n\nreturn [{\n  json: {\n    cluster_id: prev.cluster_id,\n    fingerprint: prev.fingerprint,\n    title: article.title || 'Sem titulo',\n    subtitle: article.subtitle || null,\n    slug: slug,\n    excerpt: article.excerpt || null,\n    body_markdown: article.body_markdown || '',\n    body_html: null,\n    language: 'pt',\n    editorial_score: editorial_score,\n    confidence_score: prev.confidence_score,\n    status: editorial_score >= 70 ? 'ready' : 'draft',\n    tone_profile: 'vision7',\n    topic: prev.topic,\n    model_info: {\n      model: 'llama-3.1-8b-instant',\n      source_count: prev.source_count,\n      generated_at: new Date().toISOString()\n    },\n    moderation: audit,\n    skip: false\n  }\n}];"
       },
       "id": "audit_score",
       "name": "Audit and Score",
@@ -128,7 +119,7 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{$json.skip}}",
+              "value1": "={{ $json.skip }}",
               "value2": true,
               "operation": "notEqual"
             }
@@ -143,156 +134,45 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "={{$env.SUPABASE_URL}}/rest/v1/curated_posts",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
-            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "return=representation" }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ {\n  cluster_id: $json.cluster_id,\n  title: $json.title,\n  subtitle: $json.subtitle,\n  slug: $json.slug,\n  excerpt: $json.excerpt,\n  body_markdown: $json.body_markdown,\n  body_html: $json.body_html,\n  language: $json.language,\n  editorial_score: $json.editorial_score,\n  confidence_score: $json.confidence_score,\n  status: $json.status,\n  tone_profile: $json.tone_profile,\n  model_info: $json.model_info,\n  moderation: $json.moderation\n} }}"
+        "jsCode": "const post = $json;\nconst SUPABASE_URL = 'https://stpusdeqwbckvfsitsld.supabase.co';\nconst SUPABASE_KEY = 'SUA_SERVICE_ROLE_KEY';\nconst headers = {\n  'apikey': SUPABASE_KEY,\n  'Authorization': 'Bearer ' + SUPABASE_KEY,\n  'Content-Type': 'application/json',\n  'Prefer': 'return=representation'\n};\n\n// 1. Save curated post\nlet saved = null;\ntry {\n  saved = await this.helpers.httpRequest({\n    method: 'POST',\n    url: SUPABASE_URL + '/rest/v1/curated_posts',\n    headers: headers,\n    body: {\n      cluster_id: post.cluster_id,\n      title: post.title,\n      subtitle: post.subtitle,\n      slug: post.slug,\n      excerpt: post.excerpt,\n      body_markdown: post.body_markdown,\n      body_html: post.body_html,\n      language: post.language,\n      editorial_score: post.editorial_score,\n      confidence_score: post.confidence_score,\n      status: post.status,\n      tone_profile: post.tone_profile,\n      model_info: post.model_info,\n      moderation: post.moderation\n    },\n    json: true\n  });\n} catch (e) {\n  return [{ json: { error: 'Save failed: ' + e.message, cluster_id: post.cluster_id } }];\n}\n\n// 2. Cleanup staging (delete processed records with this fingerprint)\ntry {\n  await this.helpers.httpRequest({\n    method: 'DELETE',\n    url: SUPABASE_URL + '/rest/v1/news_staging?duplicate_fingerprint=eq.' + post.fingerprint + '&processed=eq.true',\n    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },\n    json: true\n  });\n} catch (e) {\n  // non-fatal\n}\n\n// 3. Cleanup cluster\ntry {\n  await this.helpers.httpRequest({\n    method: 'DELETE',\n    url: SUPABASE_URL + '/rest/v1/news_clusters?id=eq.' + post.cluster_id,\n    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },\n    json: true\n  });\n} catch (e) {\n  // non-fatal\n}\n\nreturn [{ json: { success: true, title: post.title, slug: post.slug, editorial_score: post.editorial_score, status: post.status } }];"
       },
-      "id": "save_curated_post",
-      "name": "Save Curated Post",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [720, 100],
-      "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "method": "DELETE",
-        "url": "={{$env.SUPABASE_URL}}/rest/v1/news_staging",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
-            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}" }
-          ]
-        },
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            { "name": "duplicate_fingerprint", "value": "=eq.{{$json.fingerprint}}" },
-            { "name": "processed", "value": "eq.true" }
-          ]
-        }
-      },
-      "id": "cleanup_staging",
-      "name": "Cleanup Staging",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [960, 100],
-      "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "method": "DELETE",
-        "url": "={{$env.SUPABASE_URL}}/rest/v1/news_clusters",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
-            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}" }
-          ]
-        },
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            { "name": "id", "value": "=eq.{{$json.cluster_id}}" }
-          ]
-        }
-      },
-      "id": "cleanup_cluster",
-      "name": "Cleanup Cluster",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1200, 100],
-      "continueOnFail": true
+      "id": "save_and_cleanup",
+      "name": "Save and Cleanup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 100]
     }
   ],
   "connections": {
     "Schedule Trigger": {
-      "main": [
-        [
-          { "node": "Fetch High-Confidence Clusters", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "Fetch High-Confidence Clusters", "type": "main", "index": 0 }]]
     },
     "Fetch High-Confidence Clusters": {
-      "main": [
-        [
-          { "node": "Normalize Input", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "Normalize Input", "type": "main", "index": 0 }]]
     },
     "Normalize Input": {
-      "main": [
-        [
-          { "node": "Fetch Source Articles", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "Fetch Source Articles", "type": "main", "index": 0 }]]
     },
     "Fetch Source Articles": {
-      "main": [
-        [
-          { "node": "Build AI Prompt", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "Build AI Prompt", "type": "main", "index": 0 }]]
     },
     "Build AI Prompt": {
-      "main": [
-        [
-          { "node": "AI Generate Article", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "AI Generate Article", "type": "main", "index": 0 }]]
     },
     "AI Generate Article": {
-      "main": [
-        [
-          { "node": "Audit and Score", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "Audit and Score", "type": "main", "index": 0 }]]
     },
     "Audit and Score": {
-      "main": [
-        [
-          { "node": "Filter Valid Posts", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "Filter Valid Posts", "type": "main", "index": 0 }]]
     },
     "Filter Valid Posts": {
       "main": [
-        [
-          { "node": "Save Curated Post", "type": "main", "index": 0 }
-        ],
+        [{ "node": "Save and Cleanup", "type": "main", "index": 0 }],
         []
-      ]
-    },
-    "Save Curated Post": {
-      "main": [
-        [
-          { "node": "Cleanup Staging", "type": "main", "index": 0 }
-        ]
-      ]
-    },
-    "Cleanup Staging": {
-      "main": [
-        [
-          { "node": "Cleanup Cluster", "type": "main", "index": 0 }
-        ]
       ]
     }
   },
   "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
+  "settings": { "executionOrder": "v1" },
   "pinData": {}
 }
