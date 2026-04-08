@@ -1,0 +1,626 @@
+{
+  "module": "Automation Engine v2",
+  "version": "2.0.0",
+  "owner": "Vision7 Core Team",
+  "status": "Em desenvolvimento",
+  "last_updated": "2026-04-08",
+  "objective": "Motor de automações escalável para portal enterprise: suporta múltiplas categorias (conteúdo, email, auditoria, notificações, integrações externas), com pipeline visual, histórico de execuções filtrado, templates reutilizáveis e arquitetura modular preparada para centenas de automações.",
+  "supersedes": "automation-n8n.json (v1.1.0) — mantido como referência legacy",
+
+  "architecture": {
+    "philosophy": "Separação por domínio (categories), cada automação pertence a uma categoria com schema de config próprio. O motor é agnóstico ao backend de execução (n8n, webhooks, cron interno).",
+    "layers": [
+      {
+        "name": "Presentation",
+        "description": "Dashboard modular com tabs por categoria, timeline de execuções, e forms dinâmicos baseados no tipo de automação",
+        "components": [
+          "AutomationDashboard (orchestrador de tabs)",
+          "AutomationCategoryTab (genérico por categoria)",
+          "AutomationCard (card individual de automação)",
+          "AutomationForm (form dinâmico por tipo)",
+          "ExecutionTimeline (timeline visual de execuções)",
+          "ExecutionDetail (detalhe expandido com steps)",
+          "AutomationTemplateGallery (templates pré-configurados)",
+          "CredentialVault (gestão de chaves e segredos)"
+        ]
+      },
+      {
+        "name": "State & Data",
+        "description": "Hooks especializados com React Query, filtros server-side, paginação e cache inteligente",
+        "hooks": [
+          "useAutomationsV2(category?, status?, page?)",
+          "useAutomationExecutions(automationId?, status?, dateRange?, page?)",
+          "useAutomationTemplates(category?)"
+        ]
+      },
+      {
+        "name": "Service",
+        "description": "Camada de serviço que abstrai o backend de execução (n8n, webhook, interno)",
+        "services": [
+          "automationEngine.ts (CRUD automações + execução unificada)",
+          "automationTemplates.ts (galeria de templates)",
+          "executionMonitor.ts (polling + realtime de execuções)",
+          "n8n.ts (driver n8n via Edge Function)",
+          "webhookRunner.ts (driver webhook direto)",
+          "notificationDispatcher.ts (emails, push, in-app)"
+        ]
+      },
+      {
+        "name": "Backend (Edge Functions)",
+        "description": "Edge Functions para segurança, proxy e execução server-side",
+        "functions": [
+          "n8n-proxy (existente, proxying n8n API)",
+          "n8n-settings (existente, credenciais)",
+          "automation-execute (nova: disparo unificado com audit log)",
+          "automation-webhook (nova: receptor de webhooks de callback)"
+        ]
+      },
+      {
+        "name": "Storage",
+        "description": "Tabelas Supabase com RLS para persistência de automações, execuções e audit trail",
+        "tables": [
+          "automations_v2 (config principal com category, trigger_type, config jsonb)",
+          "automation_executions (histórico completo de execuções)",
+          "automation_templates (templates pré-definidos por categoria)",
+          "automation_audit_log (audit trail de todas as ações)",
+          "automation_notifications (fila de notificações geradas)",
+          "n8n_credentials (existente)",
+          "news_staging (existente, pipeline conteúdo)",
+          "news_clusters (existente, pipeline conteúdo)",
+          "curated_posts (existente, pipeline conteúdo)",
+          "posting_queue (existente, pipeline publicação)",
+          "editorial_feedback (existente, feedback editorial)"
+        ]
+      }
+    ]
+  },
+
+  "automation_categories": [
+    {
+      "id": "content_pipeline",
+      "name": "Pipeline de Conteúdo",
+      "icon": "Newspaper",
+      "description": "Coleta, deduplicação, curadoria AI, escrita e publicação de posts",
+      "trigger_types": ["schedule", "manual", "webhook"],
+      "config_schema": {
+        "rss_feeds": "string[]",
+        "keywords": "string[]",
+        "ai_prompt": "string",
+        "target_tone": "string",
+        "auto_publish": "boolean",
+        "review_required": "boolean"
+      },
+      "workflows": ["WF-01 Coleta", "WF-02 Deduplicação", "WF-03 Enriquecimento", "WF-04 Escrita AI", "WF-05 Regras Editoriais", "WF-06 Publicação", "WF-07 Métricas"]
+    },
+    {
+      "id": "email_campaigns",
+      "name": "Email & Notificações",
+      "icon": "Mail",
+      "description": "Disparo de emails transacionais, newsletters, alertas de sistema e notificações push",
+      "trigger_types": ["schedule", "event", "manual"],
+      "config_schema": {
+        "template_id": "string",
+        "recipient_list": "string (query ou grupo)",
+        "subject_template": "string",
+        "schedule_cron": "string",
+        "throttle_per_hour": "number"
+      },
+      "workflows": ["WF-EMAIL-01 Newsletter Automática", "WF-EMAIL-02 Alerta de Post Publicado", "WF-EMAIL-03 Digest Semanal", "WF-EMAIL-04 Boas-Vindas", "WF-EMAIL-05 Reengajamento"]
+    },
+    {
+      "id": "audit_security",
+      "name": "Auditoria & Segurança",
+      "icon": "Shield",
+      "description": "Monitoramento de acessos, rotação de chaves, verificação de integridade, alertas de segurança",
+      "trigger_types": ["schedule", "event"],
+      "config_schema": {
+        "check_type": "string (key_rotation | access_audit | integrity | rls_check)",
+        "alert_channels": "string[] (email | slack | in_app)",
+        "severity_threshold": "string (low | medium | high | critical)",
+        "retention_days": "number"
+      },
+      "workflows": ["WF-AUDIT-01 Rotação de Chaves", "WF-AUDIT-02 Auditoria de Acessos", "WF-AUDIT-03 Verificação RLS", "WF-AUDIT-04 Scan de Vulnerabilidades"]
+    },
+    {
+      "id": "process_internal",
+      "name": "Processos Internos",
+      "icon": "Cog",
+      "description": "Automações internas: limpeza de cache, backup de dados, sincronização de tabelas, manutenção",
+      "trigger_types": ["schedule", "manual"],
+      "config_schema": {
+        "process_type": "string (cleanup | backup | sync | maintenance)",
+        "target_tables": "string[]",
+        "retention_policy": "string",
+        "notify_on_complete": "boolean"
+      },
+      "workflows": ["WF-PROC-01 Limpeza de Staging Antigo", "WF-PROC-02 Backup Editorial", "WF-PROC-03 Sync Métricas", "WF-PROC-04 Health Check Geral"]
+    },
+    {
+      "id": "integrations",
+      "name": "Integrações Externas",
+      "icon": "Plug",
+      "description": "Conexões com serviços externos: redes sociais, analytics, CRM, APIs de terceiros",
+      "trigger_types": ["schedule", "webhook", "event"],
+      "config_schema": {
+        "service": "string (twitter | linkedin | analytics | crm | custom)",
+        "api_endpoint": "string",
+        "auth_type": "string (api_key | oauth2 | bearer)",
+        "credential_id": "string (ref n8n_credentials)",
+        "sync_direction": "string (push | pull | bidirectional)"
+      },
+      "workflows": ["WF-INT-01 Publicar em Redes Sociais", "WF-INT-02 Importar Analytics", "WF-INT-03 Sync CRM", "WF-INT-04 Webhook Custom"]
+    }
+  ],
+
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Dashboard com tabs por categoria de automação (conteúdo, email, auditoria, processos, integrações)",
+      "priority": "Crítica",
+      "status": "Implementado"
+    },
+    {
+      "id": "FR-002",
+      "description": "Card de automação com: nome, categoria, status (ativo/pausa/erro), último run, próximo run, badge de saúde",
+      "priority": "Crítica",
+      "status": "Implementado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Form dinâmico de criação/edição baseado na categoria selecionada (schema-driven)",
+      "priority": "Crítica",
+      "status": "Implementado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Timeline visual de execuções com filtros: status, data, categoria, workflow",
+      "priority": "Alta",
+      "status": "Implementado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Detalhe de execução expandido com steps (nós executados), duração por step, inputs/outputs",
+      "priority": "Alta",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-006",
+      "description": "Galeria de templates pré-configurados por categoria para setup rápido",
+      "priority": "Alta",
+      "status": "Implementado"
+    },
+    {
+      "id": "FR-007",
+      "description": "KPI bar global: total automações, ativas, execuções hoje, taxa de sucesso, próxima execução",
+      "priority": "Alta",
+      "status": "Implementado"
+    },
+    {
+      "id": "FR-008",
+      "description": "Sistema de notificações in-app para resultados de automações (sucesso, falha, necessita revisão)",
+      "priority": "Média",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-009",
+      "description": "Bulk actions: ativar/desativar/executar múltiplas automações de uma vez",
+      "priority": "Média",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-010",
+      "description": "Audit log completo: quem criou, editou, executou, com timestamps e diff de alterações",
+      "priority": "Alta",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-011",
+      "description": "Credential vault unificado com suporte a múltiplos tipos de credencial (n8n, SMTP, OAuth2, API keys)",
+      "priority": "Alta",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-012",
+      "description": "Trigger types: schedule (cron), event (DB trigger/webhook), manual (botão)",
+      "priority": "Crítica",
+      "status": "Implementado"
+    },
+    {
+      "id": "FR-013",
+      "description": "Execução manual com override de parâmetros (dry-run, custom inputs)",
+      "priority": "Média",
+      "status": "Pendente"
+    },
+    {
+      "id": "FR-014",
+      "description": "Integração com pipeline editorial existente (news_staging → curated_posts → posting_queue)",
+      "priority": "Crítica",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-015",
+      "description": "Suporte a configuração SMTP para envio de emails via automação",
+      "priority": "Alta",
+      "status": "Pendente"
+    }
+  ],
+
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Dashboard deve carregar em < 2s com 100+ automações (paginação server-side)",
+      "category": "Performance",
+      "status": "Pendente"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Todas as credenciais encriptadas com AES-GCM 256-bit, nunca expostas no client",
+      "category": "Segurança",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-003",
+      "description": "RBAC: super_admin full access, admin read+execute, editor apenas visualizar",
+      "category": "Segurança",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "NFR-004",
+      "description": "Responsive design: dashboard funcional em mobile/tablet com cards empilhados",
+      "category": "Acessibilidade",
+      "status": "Pendente"
+    },
+    {
+      "id": "NFR-005",
+      "description": "Rate limiting: max 30 execuções manuais/hora por utilizador, max 100 automáticas/hora",
+      "category": "Segurança",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "NFR-006",
+      "description": "Audit trail retido por 90 dias com compressão automática de registros antigos",
+      "category": "Escalabilidade",
+      "status": "Pendente"
+    },
+    {
+      "id": "NFR-007",
+      "description": "Componentes modulares: cada tab/card/form pode ser lazy-loaded independentemente",
+      "category": "Performance",
+      "status": "Pendente"
+    }
+  ],
+
+  "database_schema": {
+    "new_tables": [
+      {
+        "name": "automations_v2",
+        "description": "Tabela principal de automações com suporte a múltiplas categorias",
+        "columns": {
+          "id": "UUID PRIMARY KEY DEFAULT gen_random_uuid()",
+          "name": "TEXT NOT NULL",
+          "description": "TEXT",
+          "category": "TEXT NOT NULL CHECK (category IN ('content_pipeline','email_campaigns','audit_security','process_internal','integrations'))",
+          "trigger_type": "TEXT NOT NULL DEFAULT 'schedule' CHECK (trigger_type IN ('schedule','event','manual','webhook'))",
+          "workflow_id": "TEXT (referência ao workflow n8n, se aplicável)",
+          "status": "TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','active','paused','error','archived'))",
+          "interval_minutes": "INTEGER DEFAULT 30 CHECK (interval_minutes >= 1)",
+          "cron_expression": "TEXT (para triggers cron avançados)",
+          "config": "JSONB NOT NULL DEFAULT '{}' (schema variável por categoria)",
+          "last_run_at": "TIMESTAMPTZ",
+          "last_run_status": "TEXT",
+          "next_run_at": "TIMESTAMPTZ",
+          "run_count": "INTEGER DEFAULT 0",
+          "error_count": "INTEGER DEFAULT 0",
+          "success_rate": "NUMERIC(5,2) DEFAULT 0",
+          "created_by": "UUID REFERENCES auth.users(id)",
+          "updated_by": "UUID REFERENCES auth.users(id)",
+          "created_at": "TIMESTAMPTZ DEFAULT now()",
+          "updated_at": "TIMESTAMPTZ DEFAULT now()"
+        },
+        "indexes": ["category", "status", "trigger_type", "next_run_at", "created_by"],
+        "rls": "admin/super_admin: full CRUD; editor: SELECT only"
+      },
+      {
+        "name": "automation_executions",
+        "description": "Histórico detalhado de execuções com steps",
+        "columns": {
+          "id": "UUID PRIMARY KEY DEFAULT gen_random_uuid()",
+          "automation_id": "UUID REFERENCES automations_v2(id) ON DELETE CASCADE",
+          "n8n_execution_id": "TEXT (referência externa se executado via n8n)",
+          "status": "TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','running','success','error','warning','cancelled'))",
+          "trigger_mode": "TEXT NOT NULL CHECK (trigger_mode IN ('scheduled','manual','webhook','event'))",
+          "triggered_by": "UUID REFERENCES auth.users(id) (NULL se automático)",
+          "started_at": "TIMESTAMPTZ DEFAULT now()",
+          "finished_at": "TIMESTAMPTZ",
+          "duration_ms": "INTEGER",
+          "steps": "JSONB DEFAULT '[]' (array de {name, status, duration_ms, input, output})",
+          "error_message": "TEXT",
+          "error_detail": "JSONB",
+          "items_processed": "INTEGER DEFAULT 0",
+          "items_created": "INTEGER DEFAULT 0",
+          "metadata": "JSONB DEFAULT '{}'"
+        },
+        "indexes": ["automation_id", "status", "started_at DESC", "trigger_mode"],
+        "rls": "admin/super_admin: full; editor: SELECT"
+      },
+      {
+        "name": "automation_templates",
+        "description": "Templates pré-configurados para setup rápido",
+        "columns": {
+          "id": "UUID PRIMARY KEY DEFAULT gen_random_uuid()",
+          "name": "TEXT NOT NULL",
+          "description": "TEXT",
+          "category": "TEXT NOT NULL",
+          "icon": "TEXT",
+          "config_preset": "JSONB NOT NULL (configuração padrão)",
+          "workflow_json": "JSONB (workflow n8n importável, se aplicável)",
+          "is_system": "BOOLEAN DEFAULT false (templates built-in não editáveis)",
+          "popularity": "INTEGER DEFAULT 0",
+          "created_at": "TIMESTAMPTZ DEFAULT now()"
+        },
+        "indexes": ["category", "is_system", "popularity DESC"],
+        "rls": "SELECT: authenticated; INSERT/UPDATE/DELETE: super_admin"
+      },
+      {
+        "name": "automation_audit_log",
+        "description": "Registro completo de todas as ações no módulo de automações",
+        "columns": {
+          "id": "BIGSERIAL PRIMARY KEY",
+          "automation_id": "UUID REFERENCES automations_v2(id) ON DELETE SET NULL",
+          "action": "TEXT NOT NULL (created, updated, activated, paused, executed, deleted, credential_rotated, etc.)",
+          "actor_id": "UUID REFERENCES auth.users(id)",
+          "actor_email": "TEXT",
+          "details": "JSONB DEFAULT '{}' (diff de alterações, parâmetros, etc.)",
+          "ip_address": "INET",
+          "created_at": "TIMESTAMPTZ DEFAULT now()"
+        },
+        "indexes": ["automation_id", "action", "actor_id", "created_at DESC"],
+        "rls": "SELECT: super_admin; INSERT: via service_role (Edge Function)"
+      }
+    ],
+    "migration_from_v1": {
+      "strategy": "Criar tabelas v2 → migrar dados da tabela automations → manter automations como legacy read-only → drop após validação",
+      "data_mapping": {
+        "automations.workflow_id": "automations_v2.workflow_id",
+        "automations.active": "automations_v2.status = active|paused",
+        "automations.interval": "automations_v2.interval_minutes",
+        "automations.rss_feeds + keywords + prompt": "automations_v2.config JSONB"
+      }
+    }
+  },
+
+  "flows": {
+    "data_flow": "Dashboard UI → useAutomations hook → automationEngine service → Edge Function (n8n-proxy | automation-execute) → n8n / Webhook / Internal → DB tables → Realtime subscription → UI update",
+    "user_flow_create": "Dashboard → Selecionar Categoria → Escolher Template OU criar do zero → Preencher form dinâmico → Testar (dry-run) → Ativar → Monitorar",
+    "user_flow_monitor": "Dashboard → Tab categoria → Ver cards com status → Clicar card → Timeline de execuções → Expandir execução → Ver steps/inputs/outputs",
+    "execution_flow": "Trigger (cron/manual/webhook) → Edge Function → Validação (rate limit, RBAC) → Dispatch (n8n/webhook/interno) → Aguardar resultado → Salvar execution + audit_log → Notificar (se configurado)"
+  },
+
+  "diagrams": {
+    "architecture": "sdd/diagrams/automation-engine-arch.md",
+    "ui_wireframe": "sdd/diagrams/automation-engine-ui.md",
+    "data_model": "sdd/diagrams/automation-engine-erd.md"
+  },
+
+  "dependencies": {
+    "modules": ["Auth & Segurança", "CMS", "Agregador de Notícias", "Supabase & Database"],
+    "packages": ["lucide-react", "sonner", "date-fns", "recharts"],
+    "supabase_tables": [
+      "automations_v2",
+      "automation_executions",
+      "automation_templates",
+      "automation_audit_log",
+      "n8n_credentials",
+      "news_staging",
+      "news_clusters",
+      "curated_posts",
+      "posting_queue",
+      "editorial_feedback"
+    ],
+    "edge_functions": ["n8n-proxy", "n8n-settings", "automation-execute", "automation-webhook"],
+    "api_endpoints": ["n8n REST API", "Supabase REST/Realtime", "SMTP (email)", "External webhooks"]
+  },
+
+  "files": {
+    "types": [
+      "src/types/automation.ts (refatorado com categorias, execuções, templates)"
+    ],
+    "components": [
+      "src/components/admin/automation/AutomationDashboard.tsx",
+      "src/components/admin/automation/AutomationKPIBar.tsx",
+      "src/components/admin/automation/AutomationCategoryTabs.tsx",
+      "src/components/admin/automation/AutomationCard.tsx",
+      "src/components/admin/automation/AutomationForm.tsx",
+      "src/components/admin/automation/AutomationTemplateGallery.tsx",
+      "src/components/admin/automation/ExecutionTimeline.tsx",
+      "src/components/admin/automation/index.ts"
+    ],
+    "hooks": [
+      "src/hooks/useAutomationsV2.ts",
+      "src/hooks/useAutomationExecutions.ts",
+      "src/hooks/useAutomationTemplates.ts"
+    ],
+    "services": [
+      "src/services/automationEngine.ts",
+      "src/services/automationTemplates.ts",
+      "src/services/executionMonitor.ts",
+      "src/services/n8n.ts (existente)",
+      "src/services/n8nSettings.ts (existente)"
+    ],
+    "pages": [
+      "src/pages/admin/AdminAutomation.tsx (refatorado)"
+    ],
+    "migrations": [
+      "supabase/migrations/20260409000000_automation_engine_v2.sql"
+    ]
+  },
+
+  "ui_specification": {
+    "layout": {
+      "type": "Full-width dashboard com sidebar do admin",
+      "sections": [
+        "KPI Bar (topo, sempre visível)",
+        "Category Tabs (conteúdo | email | auditoria | processos | integrações | todas)",
+        "Cards Grid (2-3 colunas, cards de automação filtradas por tab ativa)",
+        "Drawer/Panel (lateral direita, abre ao clicar num card para edição ou timeline)",
+        "Create Button (FAB ou botão no header, abre form de criação)"
+      ]
+    },
+    "card_anatomy": {
+      "header": "Ícone categoria + Nome + Badge status (ativo/pausado/erro)",
+      "body": "Descrição curta + Último run (tempo relativo) + Próximo run",
+      "metrics": "Runs totais | Taxa sucesso | Items processados",
+      "actions": "Play (executar) | Pause/Resume | Edit | Clone | Delete"
+    },
+    "execution_timeline": {
+      "type": "Lista vertical cronológica com indicadores visuais",
+      "item": "Dot colorido (verde/vermelho/amarelo/azul) + Hora + Duração + Items + Status badge",
+      "expandable": "Clica para ver steps detalhados (accordion)",
+      "filters": "Status | Data range | Trigger mode | Busca por texto"
+    }
+  },
+
+  "templates_catalog": [
+    {
+      "id": "tpl-content-rss",
+      "category": "content_pipeline",
+      "name": "Coleta RSS Automática",
+      "description": "Coleta notícias de feeds RSS a cada 30 min, deduplica e armazena para curadoria",
+      "config_preset": {
+        "rss_feeds": [],
+        "keywords": [],
+        "ai_prompt": "",
+        "target_tone": "informativo",
+        "auto_publish": false,
+        "review_required": true
+      }
+    },
+    {
+      "id": "tpl-email-newsletter",
+      "category": "email_campaigns",
+      "name": "Newsletter Semanal",
+      "description": "Compila os melhores posts da semana e envia newsletter automática",
+      "config_preset": {
+        "template_id": "weekly_digest",
+        "recipient_list": "subscribers",
+        "schedule_cron": "0 9 * * 1",
+        "throttle_per_hour": 100
+      }
+    },
+    {
+      "id": "tpl-audit-keys",
+      "category": "audit_security",
+      "name": "Rotação de Chaves API",
+      "description": "Verifica expiração de chaves e notifica admin para rotação",
+      "config_preset": {
+        "check_type": "key_rotation",
+        "alert_channels": ["email", "in_app"],
+        "severity_threshold": "high"
+      }
+    },
+    {
+      "id": "tpl-proc-cleanup",
+      "category": "process_internal",
+      "name": "Limpeza de Staging",
+      "description": "Remove registros processados com mais de 30 dias da tabela news_staging",
+      "config_preset": {
+        "process_type": "cleanup",
+        "target_tables": ["news_staging"],
+        "retention_policy": "30d",
+        "notify_on_complete": true
+      }
+    },
+    {
+      "id": "tpl-int-social",
+      "category": "integrations",
+      "name": "Publicar em Redes Sociais",
+      "description": "Publica automaticamente posts aprovados no Twitter/LinkedIn",
+      "config_preset": {
+        "service": "twitter",
+        "auth_type": "oauth2",
+        "sync_direction": "push"
+      }
+    }
+  ],
+
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "unit",
+      "description": "Testar automationEngine.ts: CRUD, execução, filtros",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "unit",
+      "description": "Testar useAutomationsV2 hook: fetch, create, update, delete, filters",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "integration",
+      "description": "Testar fluxo completo: criar automação → executar → verificar execution log → verificar audit log",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-004",
+      "type": "security",
+      "description": "Verificar RBAC: editor não pode criar/editar, admin pode executar, super_admin full access",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-005",
+      "type": "e2e",
+      "description": "Testar dashboard com n8n offline: graceful degradation, mensagens claras, retry",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-006",
+      "type": "performance",
+      "description": "Dashboard com 100 automações + 1000 execuções: deve carregar < 2s",
+      "status": "Pendente"
+    }
+  ],
+
+  "scalability_notes": [
+    "Paginação server-side em automations_v2 e automation_executions",
+    "Índices compostos para queries frequentes (category + status, automation_id + started_at)",
+    "Compressão de audit_log após 90 dias (mover para cold storage ou aggregate)",
+    "Lazy-loading de tabs: só carrega dados da tab ativa",
+    "Realtime subscriptions para status de execuções em andamento",
+    "Templates são cached com staleTime de 24h (raramente mudam)",
+    "Execução via Edge Function com timeout de 60s; n8n jobs longos usam polling"
+  ],
+
+  "security_considerations": [
+    "Todas as credenciais encriptadas AES-GCM, nunca expostas ao client",
+    "API keys de terceiros geridas no credential vault com mesma encriptação",
+    "Audit log é append-only (INSERT via service_role), não editável por users",
+    "Rate limiting em Edge Functions: 30 exec manuais/hora, 100 automáticas/hora",
+    "RBAC consistente: Edge Functions validam JWT + role antes de qualquer operação",
+    "Webhooks validados com HMAC signature",
+    "Config JSONB sanitizado server-side antes de persistir",
+    "Dry-run não persiste resultados e tem rate limit próprio"
+  ],
+
+  "change_history": [
+    {
+      "date": "2026-04-05",
+      "version": "1.0.0",
+      "author": "Vision7 Team",
+      "description": "Módulo original: dashboard básico, n8n proxy, tipos simples"
+    },
+    {
+      "date": "2026-04-06",
+      "version": "1.1.0",
+      "author": "Vision7 Team",
+      "description": "Edge Functions, credenciais encriptadas, useAutomations hook"
+    },
+    {
+      "date": "2026-04-08",
+      "version": "2.0.0",
+      "author": "Vision7 Team",
+      "description": "Reescrita completa: motor multi-categoria, execuções com steps, templates, audit log, dashboard modular com tabs"
+    }
+  ]
+}

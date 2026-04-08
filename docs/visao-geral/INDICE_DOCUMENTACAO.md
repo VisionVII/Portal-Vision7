@@ -1,8 +1,8 @@
 # 📚 ÍNDICE DE DOCUMENTAÇÃO - PROJETO DASHBOARD
 
-**Data:** 23 de Março de 2026  
-**Total de Documentos:** 9 arquivos  
-**Status:** ✅ Completo e pronto para uso
+**Data:** 23 de Março de 2026 (atualizado 08 de Abril de 2026)  
+**Total de Documentos:** 9 arquivos base + SDD modules + AI agents/skills  
+**Status:** ✅ Ativo
 
 ---
 
@@ -13,7 +13,10 @@
 - `docs/seguranca/` — análise técnica, findings e plano de ação.
 - `docs/referencia/` — snippets reutilizáveis e referência de permissões.
 - `docs/ai/` — agentes e skills especializados do projeto.
+- `sdd/modules/` — **SDD specs** (fonte de verdade técnica por módulo).
 - `scripts/` e `examples/` — utilitários e exemplos de apoio.
+
+> **🔑 Referência principal de automações:** `sdd/modules/automation-engine.json` (Automation Engine v2)
 
 ---
 
