@@ -74,7 +74,7 @@ setInterval(() => {
 }, 120_000);
 
 // ─── Path whitelist ──────────────────────────────────────────────────────────
-const ALLOWED_PATHS = ['/api/v1/workflows', '/api/v1/executions'];
+const ALLOWED_PATHS = ['/api/v1/workflows', '/api/v1/executions', '/webhook', '/webhook-test'];
 
 function normalizeLegacyPath(path: string): string {
   if (path === '/rest/workflows' || path.startsWith('/rest/workflows/')) {
@@ -269,7 +269,7 @@ Deno.serve(async (req: Request) => {
         const pingRes = await fetch(`${N8N_BASE_URL}/api/v1/workflows?limit=1&excludePinnedData=true`, {
           method: 'GET',
           headers: { 'X-N8N-API-KEY': effectiveN8nApiKey },
-          signal: AbortSignal.timeout(25000), // 25s — Render free tier cold start can take 10-15s
+          signal: AbortSignal.timeout(45000),
         });
 
         let detail = '';
@@ -296,8 +296,9 @@ Deno.serve(async (req: Request) => {
           200,
           cors,
         );
-      } catch {
-        return jsonResponse({ status: 'unreachable', source: 'n8n-api' }, 200, cors);
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : 'Falha de rede ao contactar o n8n';
+        return jsonResponse({ status: 'unreachable', source: 'n8n-api', detail }, 200, cors);
       }
     }
 
