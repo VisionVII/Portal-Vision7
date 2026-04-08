@@ -459,7 +459,13 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
           <CardDescription className="text-xs">As chaves são guardadas criptografadas no banco e podem ser rotacionadas sem editar Secrets manualmente.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-[1fr_220px_1fr_auto]">
+          <form
+            className="grid gap-3 md:grid-cols-[1fr_220px_1fr_auto]"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleCreateCredential();
+            }}
+          >
             <Input
               type="password"
               value={newCredentialValue}
@@ -476,10 +482,10 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
               onChange={(e) => setNewCredentialNotes(e.target.value)}
               placeholder="Notas (opcional)"
             />
-            <Button onClick={() => void handleCreateCredential()} disabled={isSavingCredential}>
+            <Button type="submit" disabled={isSavingCredential}>
               {isSavingCredential ? 'A guardar...' : 'Guardar'}
             </Button>
-          </div>
+          </form>
 
           <div className="space-y-2">
             {credentialsLoading ? (
