@@ -132,23 +132,44 @@ async function sendReminderEmail(email: string, keyName: string, expiresAt: stri
     }),
   });
 
+  let body: Record<string, unknown> | null = null;
+  try {
+    body = await resp.json();
+  } catch {
+    body = null;
+  }
+
   if (!resp.ok) {
-    const text = await resp.text();
-    throw new Error(`Failed to send reminder email: ${text}`);
+    const detail = typeof body?.error === 'string' ? body.error : `HTTP ${resp.status}`;
+    throw new Error(`Failed to send reminder email: ${detail}`);
+  }
+
+  // send-email returns "dev-mode" when RESEND_API_KEY is missing.
+  if (body?.id === 'dev-mode') {
+    throw new Error('send-email está em modo dev (RESEND_API_KEY ausente); email não foi entregue');
   }
 }
 
-async function maybeSendExpiryReminders(supabaseAdmin: ReturnType<typeof createClient>) {
+async function maybeSendExpiryReminders(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  options?: { force?: boolean },
+) {
   const { data: rows, error } = await supabaseAdmin
     .from('n8n_credentials')
     .select('id,key_name,expires_at,reminder_email,remind_days_before,last_reminder_sent_at,status,activated_at')
     .eq('status', 'active')
     .not('reminder_email', 'is', null);
 
-  if (error || !rows?.length) return 0;
+  if (error || !rows?.length) {
+    return { sent: 0, skipped: 0, failed: error ? 1 : 0, details: error ? [error.message] : [] };
+  }
 
   let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+  const details: string[] = [];
   const now = new Date();
+  const force = options?.force === true;
 
   for (const row of rows) {
     const expiresAt = new Date(row.expires_at);
@@ -156,8 +177,15 @@ async function maybeSendExpiryReminders(supabaseAdmin: ReturnType<typeof createC
     const alreadySentAt = row.last_reminder_sent_at ? new Date(row.last_reminder_sent_at) : null;
     const activatedAt = row.activated_at ? new Date(row.activated_at) : null;
 
-    if (now < remindAt) continue;
-    if (alreadySentAt && (!activatedAt || alreadySentAt >= activatedAt)) continue;
+    if (!force && now < remindAt) {
+      skipped += 1;
+      continue;
+    }
+
+    if (!force && alreadySentAt && (!activatedAt || alreadySentAt >= activatedAt)) {
+      skipped += 1;
+      continue;
+    }
 
     try {
       await sendReminderEmail(row.reminder_email, row.key_name, row.expires_at, row.remind_days_before);
@@ -168,10 +196,12 @@ async function maybeSendExpiryReminders(supabaseAdmin: ReturnType<typeof createC
       sent += 1;
     } catch (err) {
       console.error('[n8n-settings] reminder error', err);
+      failed += 1;
+      details.push(`id=${row.id}: ${err instanceof Error ? err.message : 'erro ao enviar'}`);
     }
   }
 
-  return sent;
+  return { sent, skipped, failed, details };
 }
 
 Deno.serve(async (req: Request) => {
@@ -319,8 +349,13 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'send-reminders') {
-      const sent = await maybeSendExpiryReminders(supabaseAdmin);
-      return jsonResponse({ success: true, sent }, 200, cors);
+      const force = body?.force === true;
+      const result = await maybeSendExpiryReminders(supabaseAdmin, { force });
+      return jsonResponse({
+        success: result.failed === 0,
+        force,
+        ...result,
+      }, result.failed > 0 ? 207 : 200, cors);
     }
 
     return jsonResponse({ error: 'Unsupported action' }, 400, cors);
