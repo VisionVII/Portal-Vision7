@@ -493,6 +493,15 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
               void handleCreateCredential();
             }}
           >
+            <input
+              type="text"
+              autoComplete="username"
+              value={newCredentialReminderEmail || user?.email || 'vision7-n8n-key'}
+              readOnly
+              tabIndex={-1}
+              aria-hidden="true"
+              className="hidden"
+            />
             <div className="space-y-1.5 md:col-span-2">
               <Label className="text-xs">Nova chave N8N_API_KEY</Label>
               <Input
