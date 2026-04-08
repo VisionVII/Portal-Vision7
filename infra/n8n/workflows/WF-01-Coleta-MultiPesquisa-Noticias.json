@@ -4,151 +4,87 @@
     {
       "parameters": {
         "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 30
-            }
-          ]
+          "interval": [{ "field": "minutes", "minutesInterval": 30 }]
         }
       },
       "id": "schedule_trigger",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [
-        -980,
-        120
-      ]
+      "position": [-1200, 200]
     },
     {
       "parameters": {
-        "jsCode": "const feeds = [\n  { source_name: 'Google News PT - IA', feed_url: 'https://news.google.com/rss/search?q=inteligencia+artificial+portugal&hl=pt-PT&gl=PT&ceid=PT:pt-150', topic: 'ia' },\n  { source_name: 'Google News PT - Ciberseguranca', feed_url: 'https://news.google.com/rss/search?q=ciberseguranca+portugal&hl=pt-PT&gl=PT&ceid=PT:pt-150', topic: 'ciberseguranca' },\n  { source_name: 'Google News PT - Automacao', feed_url: 'https://news.google.com/rss/search?q=automacao+empresarial+portugal&hl=pt-PT&gl=PT&ceid=PT:pt-150', topic: 'automacao' }\n];\n\nreturn feeds.map((feed) => ({ json: feed }));"
+        "jsCode": "return [\n  { json: { url: 'https://news.google.com/rss/search?q=intelig%C3%AAncia+artificial&hl=pt-PT&gl=PT&ceid=PT:pt', topic: 'ia' } },\n  { json: { url: 'https://news.google.com/rss/search?q=ciberseguran%C3%A7a&hl=pt-PT&gl=PT&ceid=PT:pt', topic: 'ciberseguranca' } },\n  { json: { url: 'https://news.google.com/rss/search?q=automa%C3%A7%C3%A3o+empresarial&hl=pt-PT&gl=PT&ceid=PT:pt', topic: 'automacao' } }\n];"
       },
-      "id": "build_feed_list",
+      "id": "build_feeds",
       "name": "Build Feed List",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -760,
-        120
-      ]
+      "position": [-960, 200]
     },
     {
       "parameters": {
-        "url": "={{$json.feed_url}}"
+        "url": "={{ $json.url }}",
+        "options": {}
       },
-      "id": "rss_feed_read",
+      "id": "rss_read",
       "name": "RSS Feed Read",
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.1,
-      "position": [
-        -540,
-        120
-      ]
+      "position": [-720, 200],
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "// Pure JS hash (no require needed) — FNV-1a 128-bit hex\nfunction fnv1aHash(str) {\n  let h1 = 0x811c9dc5 >>> 0;\n  let h2 = 0x811c9dc5 >>> 0;\n  for (let i = 0; i < str.length; i++) {\n    const c = str.charCodeAt(i);\n    h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0;\n    h2 = Math.imul(h2 ^ (c + i), 0x01000193) >>> 0;\n  }\n  return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0') +\n    (h1 ^ h2).toString(16).padStart(8, '0') + (h1 + h2).toString(16).padStart(8, '0');\n}\n\nfunction normalizeUrl(value) {\n  try {\n    const u = new URL(value || '');\n    u.hash = '';\n    u.searchParams.delete('utm_source');\n    u.searchParams.delete('utm_medium');\n    u.searchParams.delete('utm_campaign');\n    return u.toString();\n  } catch (e) {\n    return value || '';\n  }\n}\n\nfunction toIsoDate(value) {\n  if (!value) return null;\n  const d = new Date(value);\n  return Number.isNaN(d.getTime()) ? null : d.toISOString();\n}\n\nreturn items.map((item) => {\n  const sourceName = item.json.source_name || item.json.source || 'unknown';\n  const title = String(item.json.title || '').trim();\n  const summary = String(item.json.contentSnippet || item.json.content || '').trim();\n  const rawLink = item.json.link || item.json.id || '';\n  const canonicalUrl = normalizeUrl(rawLink);\n  const topic = item.json.topic || 'geral';\n  const publishedAt = toIsoDate(item.json.isoDate || item.json.pubDate);\n  const fingerprint = fnv1aHash((title + '|' + canonicalUrl).toLowerCase());\n\n  return {\n    json: {\n      source_name: sourceName,\n      source_url: rawLink || canonicalUrl,\n      canonical_url: canonicalUrl || rawLink,\n      title,\n      summary,\n      content: summary,\n      language: 'pt',\n      topic,\n      published_at: publishedAt,\n      trust_score: 50,\n      duplicate_fingerprint: fingerprint,\n      metadata: {\n        pipeline: 'WF-01',\n        collected_via: 'rss',\n        feed_url: item.json.feedUrl || item.json.feed_url || null\n      }\n    }\n  };\n});"
+        "jsCode": "function fnv1aHash(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = Math.imul(h, 0x01000193);\n  }\n  h = h >>> 0;\n  let hex = h.toString(16).padStart(8, '0');\n  let h2 = 0x811c9dc5;\n  for (let i = str.length - 1; i >= 0; i--) {\n    h2 ^= str.charCodeAt(i);\n    h2 = Math.imul(h2, 0x01000193);\n  }\n  h2 = h2 >>> 0;\n  hex += h2.toString(16).padStart(8, '0');\n  let h3 = 0x811c9dc5;\n  for (let i = 0; i < str.length; i += 2) {\n    h3 ^= str.charCodeAt(i);\n    h3 = Math.imul(h3, 0x01000193);\n  }\n  h3 = h3 >>> 0;\n  hex += h3.toString(16).padStart(8, '0');\n  let h4 = 0x811c9dc5;\n  for (let i = 1; i < str.length; i += 2) {\n    h4 ^= str.charCodeAt(i);\n    h4 = Math.imul(h4, 0x01000193);\n  }\n  h4 = h4 >>> 0;\n  hex += h4.toString(16).padStart(8, '0');\n  return hex;\n}\n\nconst feedItem = $('Build Feed List').item.json;\nconst output = [];\n\nfor (const item of items) {\n  try {\n    const title = String(item.json.title || '').trim();\n    const link = String(item.json.link || '').trim();\n    if (!title || !link) continue;\n    const fingerprint = fnv1aHash(title.toLowerCase().replace(/[^a-z0-9]/g, ''));\n    output.push({\n      json: {\n        title: title,\n        summary: String(item.json.contentSnippet || item.json.content || '').substring(0, 500),\n        canonical_url: link,\n        source_name: String(item.json.creator || item.json.source || 'Google News'),\n        topic: feedItem.topic || 'geral',\n        published_at: item.json.isoDate || item.json.pubDate || new Date().toISOString(),\n        duplicate_fingerprint: fingerprint,\n        processed: false,\n        content: null,\n        metadata: { feed_url: feedItem.url }\n      }\n    });\n  } catch (e) {\n    // skip\n  }\n}\n\nreturn output;"
       },
-      "id": "normalize_records",
+      "id": "normalize",
       "name": "Normalize Records",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -300,
-        120
-      ]
+      "position": [-480, 200]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.SUPABASE_URL}}/rest/v1/news_staging",
+        "url": "https://stpusdeqwbckvfsitsld.supabase.co/rest/v1/news_staging",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "resolution=ignore-duplicates,return=minimal"
-            }
+            { "name": "apikey", "value": "SUA_SERVICE_ROLE_KEY" },
+            { "name": "Authorization", "value": "Bearer SUA_SERVICE_ROLE_KEY" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "resolution=ignore-duplicates,return=minimal" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{$json}}"
+        "jsonBody": "={{ {\n  title: $json.title,\n  summary: $json.summary,\n  canonical_url: $json.canonical_url,\n  source_name: $json.source_name,\n  topic: $json.topic,\n  published_at: $json.published_at,\n  duplicate_fingerprint: $json.duplicate_fingerprint,\n  processed: false,\n  content: null,\n  metadata: $json.metadata\n} }}"
       },
       "id": "insert_staging",
       "name": "Insert Staging",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        -60,
-        120
-      ],
+      "position": [-240, 200],
       "continueOnFail": true
     }
   ],
   "connections": {
     "Schedule Trigger": {
-      "main": [
-        [
-          {
-            "node": "Build Feed List",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Build Feed List", "type": "main", "index": 0 }]]
     },
     "Build Feed List": {
-      "main": [
-        [
-          {
-            "node": "RSS Feed Read",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "RSS Feed Read", "type": "main", "index": 0 }]]
     },
     "RSS Feed Read": {
-      "main": [
-        [
-          {
-            "node": "Normalize Records",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Normalize Records", "type": "main", "index": 0 }]]
     },
     "Normalize Records": {
-      "main": [
-        [
-          {
-            "node": "Insert Staging",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Insert Staging", "type": "main", "index": 0 }]]
     }
   },
   "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
+  "settings": { "executionOrder": "v1" },
   "pinData": {}
 }
