@@ -73,10 +73,10 @@
     },
     {
       "id": "automation-n8n",
-      "name": "Automação n8n",
+      "name": "Automação n8n (Legacy v1)",
       "spec_file": "sdd/modules/automation-n8n.json",
-      "version": "1.0.0",
-      "status": "Em desenvolvimento",
+      "version": "1.1.0",
+      "status": "Depreciado",
       "owner": "Vision7 Core Team",
       "depends_on": [
         "supabase-database",
@@ -84,12 +84,37 @@
         "news-aggregator"
       ],
       "dependents": [
-        "cicd-devops"
+        "cicd-devops",
+        "automation-engine"
       ],
-      "priority": "Alta",
+      "priority": "Baixa",
       "tags": [
         "automation",
-        "integration"
+        "legacy"
+      ]
+    },
+    {
+      "id": "automation-engine",
+      "name": "Automation Engine v2",
+      "spec_file": "sdd/modules/automation-engine.json",
+      "version": "2.0.0",
+      "status": "Em desenvolvimento",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "supabase-database",
+        "auth-security",
+        "news-aggregator",
+        "automation-n8n"
+      ],
+      "dependents": [
+        "cicd-devops",
+        "cms"
+      ],
+      "priority": "Crítica",
+      "tags": [
+        "automation",
+        "integration",
+        "core"
       ]
     },
     {
