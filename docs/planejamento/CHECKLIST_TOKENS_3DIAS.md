@@ -1,6 +1,8 @@
+> **✅ CHECKLIST EXPIRADO (2026-04-08)** — Os tokens referidos já expiraram em 06/04. Gestão de credenciais agora é parte do Automation Engine v2 (`audit_security` category). Ver `sdd/modules/automation-engine.json`.
+
 # CHECKLIST IMEDIATO: Automações n8n - Próximos 3 Dias
 
-**Status:** 🚨 URGENTE - Tokens expiram 06/04/2026  
+**Status:** ~~🚨 URGENTE~~ Expirado/Arquivado  
 **Responsável:** Victor Gonçalves  
 **Data Início:** 07/04/2026
 

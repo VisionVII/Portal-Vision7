@@ -1,3 +1,5 @@
+> **⚠️ PARCIALMENTE DESATUALIZADO (2026-04-08)** — Este índice refere-se a docs da arquitetura v1 de automações. A referência principal agora é `sdd/modules/automation-engine.json`. Os docs abaixo são válidos para contexto histórico e integração n8n básica.
+
 # Índice de Documentação: Integração n8n + Dashboard Automações
 
 **Versão:** 1.0  

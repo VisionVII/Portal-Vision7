@@ -1,3 +1,5 @@
+> **⚠️ CONTEXTO HISTÓRICO (2026-04-08)** — O escopo de automações foi substituído pelo Automation Engine v2. As secções de segurança e produção continuam válidas.
+
 # Fase de Automação, Segurança e Produção
 
 ## Objetivo

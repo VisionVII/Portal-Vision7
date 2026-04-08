@@ -1,14 +1,14 @@
 {
   "module": "Supabase & Database",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-06",
+  "last_updated": "2026-04-08",
   "objective": "Camada de infraestrutura de dados: PostgreSQL via Supabase com schema completo, RLS policies, RPC functions, Storage buckets, migrações versionadas e client SDK configurado.",
   "functional_requirements": [
     {
       "id": "FR-001",
-      "description": "Schema com 15+ tabelas: posts, categories, courses, podcasts, newsletter_subscribers, site_settings, user_profiles, user_roles, permissions_matrix, registration_invites, audit_logs, analytics_events, monetization_settings, automations, security_codes, partner_access_requests",
+      "description": "Schema com 20+ tabelas: posts, categories, courses, podcasts, newsletter_subscribers, site_settings, user_profiles, user_roles, permissions_matrix, registration_invites, audit_logs, analytics_events, monetization_settings, automations, security_codes, partner_access_requests, automations_v2, automation_executions, automation_templates, automation_audit_log, news_staging, news_clusters, curated_posts, posting_queue, editorial_feedback",
       "priority": "Crítica",
       "status": "Finalizado"
     },
@@ -32,7 +32,7 @@
     },
     {
       "id": "FR-005",
-      "description": "Migrações versionadas e incrementais (17 migration files)",
+      "description": "Migrações versionadas e incrementais (19+ migration files)",
       "priority": "Alta",
       "status": "Finalizado"
     },
@@ -130,7 +130,9 @@
       "supabase/migrations/20260405200000_add_automations_table.sql",
       "supabase/migrations/20260405223000_harden_security_codes_rate_limits.sql",
       "supabase/migrations/20260406190000_add_partner_access_requests.sql",
-      "supabase/migrations/20260407000000_add_invite_type_security_codes.sql"
+      "supabase/migrations/20260407000000_add_invite_type_security_codes.sql",
+      "supabase/migrations/20260408021000_add_news_pipeline_tables.sql",
+      "supabase/migrations/20260409000000_automation_engine_v2.sql"
     ]
   },
   "qa_tests": [
@@ -233,10 +235,10 @@
       "description": "SDD spec gerado; schema completo documentado"
     },
     {
-      "date": "2026-04-05",
-      "version": "1.0.1",
-      "author": "sdd-sync",
-      "description": "Auto-sync: file list updated"
+      "date": "2026-04-08",
+      "version": "1.3.0",
+      "author": "Vision7 Team",
+      "description": "Adicionadas tabelas Automation Engine v2 (automations_v2, automation_executions, automation_templates, automation_audit_log) e pipeline de conteúdo (news_staging, news_clusters, curated_posts, posting_queue, editorial_feedback). 2 novas migrações."
     }
   ]
 }

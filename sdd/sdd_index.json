@@ -16,7 +16,7 @@
         "supabase-database",
         "auth-security",
         "tags-taxonomy",
-        "automation-n8n"
+        "automation-engine"
       ],
       "dependents": [
         "cms",
@@ -42,7 +42,7 @@
         "tags-taxonomy"
       ],
       "dependents": [
-        "automation-n8n"
+        "automation-engine"
       ],
       "priority": "Crítica",
       "tags": [
@@ -103,8 +103,7 @@
       "depends_on": [
         "supabase-database",
         "auth-security",
-        "news-aggregator",
-        "automation-n8n"
+        "news-aggregator"
       ],
       "dependents": [
         "cicd-devops",
@@ -170,7 +169,7 @@
       ],
       "dependents": [
         "cms",
-        "automation-n8n",
+        "automation-engine",
         "analytics",
         "news-aggregator"
       ],
@@ -193,7 +192,7 @@
         "news-aggregator",
         "cms",
         "frontend-ui",
-        "automation-n8n",
+        "automation-engine",
         "analytics",
         "tags-taxonomy"
       ],
@@ -226,7 +225,7 @@
       "status": "Em desenvolvimento",
       "owner": "Vision7 Core Team",
       "depends_on": [
-        "automation-n8n"
+        "automation-engine"
       ],
       "dependents": [],
       "priority": "Alta",
@@ -266,7 +265,7 @@
         "name": "Admin & Automation",
         "modules": [
           "cms",
-          "automation-n8n"
+          "automation-engine"
         ]
       },
       {
@@ -308,7 +307,7 @@
     "api": {
       "source": "src/services/, src/hooks/",
       "modules_affected": [
-        "automation-n8n",
+        "automation-engine",
         "analytics",
         "news-aggregator"
       ],
@@ -322,19 +321,19 @@
       "action": "Validar RBAC e RLS policies"
     },
     "automation": {
-      "source": "src/services/n8n.ts, src/types/automation.ts",
+      "source": "src/services/n8n.ts, src/types/automation.ts, src/hooks/useAutomationsV2.ts",
       "modules_affected": [
-        "automation-n8n",
+        "automation-engine",
         "cicd-devops"
       ],
-      "action": "Atualizar workflows e CI/CD integration"
+      "action": "Atualizar workflows, hooks e CI/CD integration"
     }
   },
   "statistics": {
-    "total_modules": 10,
+    "total_modules": 11,
     "finalized": 6,
     "in_development": 4,
-    "pending": 0,
+    "deprecated": 1,
     "total_functional_requirements": 72,
     "total_qa_tests": 42,
     "coverage_percentage": 0
