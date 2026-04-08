@@ -28,6 +28,17 @@ Implementar pipeline editorial completo para multi-pesquisa, validação, curado
 
 ## Passo a Passo de Implementação
 
+### Decisão de desenho (obrigatória)
+
+1. Use duas automações separadas no portal.
+1. Use dois workflows separados no n8n.
+1. Não coloque WF-01 e WF-02 no mesmo workflow.
+
+Modelo correto:
+
+- Automação A -> Workflow WF-01 Coleta MultiPesquisa Noticias
+- Automação B -> Workflow WF-02 Deduplicacao Cluster Curadoria Base
+
 ### 1) Aplicar estrutura de dados
 
 1. Execute a migration nova no Supabase.
@@ -57,6 +68,31 @@ Defina no serviço n8n:
 
 1. Ajuste feeds e tópicos no node `Build Feed List`.
 1. Ative os workflows.
+
+### 3.1) Configurar as duas automações no portal
+
+1. Em Configuração de automação, crie a Automação A:
+
+- Nome: Coleta MultiPesquisa
+- Workflow: WF-01 Coleta MultiPesquisa Noticias
+- Intervalo: 30
+- RSS feeds: preencher
+- Palavras-chave: ia, automacao, ciberseguranca
+- Prompt: opcional (não usado no WF-01)
+
+1. Crie a Automação B:
+
+- Nome: Dedupe e Cluster
+- Workflow: WF-02 Deduplicacao Cluster Curadoria Base
+- Intervalo: 20
+- RSS feeds: vazio
+- Palavras-chave: pipeline, cluster
+- Prompt: opcional (não usado no WF-02)
+
+1. Salve e teste manualmente nesta ordem:
+
+- Executar Automação A
+- Executar Automação B
 
 ### 4) Validar pipeline base
 
