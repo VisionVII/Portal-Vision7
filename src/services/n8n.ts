@@ -181,13 +181,18 @@ export const executeWorkflow = async (id: string): Promise<{ executed: boolean; 
 
   let lastError = '';
 
+  // Status codes that indicate "can't run this way" rather than a real error:
+  // 404/405/501 = endpoint doesn't exist / method not allowed
+  // 503 = n8n database cold-starting on Render (transient)
+  const NON_FATAL_RE = /\[(404|405|501|503)\]/;
+
   for (const path of apiAttempts) {
     try {
       await n8nRequest(path, { method: 'POST' });
       return { executed: true, method: 'api-run' };
     } catch (error) {
       lastError = error instanceof Error ? error.message : 'Erro desconhecido';
-      if (!/\[(404|405|501)\]/.test(lastError)) {
+      if (!NON_FATAL_RE.test(lastError)) {
         throw new Error(`Falha na execução: ${lastError}`);
       }
     }
@@ -202,7 +207,7 @@ export const executeWorkflow = async (id: string): Promise<{ executed: boolean; 
     return { executed: true, method: 'api-executions' };
   } catch (error) {
     const msg = error instanceof Error ? error.message : '';
-    if (!/\[(400|404|405|422|501)\]/.test(msg)) {
+    if (!/\[(400|404|405|422|501|503)\]/.test(msg)) {
       throw new Error(`Falha na execução: ${msg}`);
     }
   }

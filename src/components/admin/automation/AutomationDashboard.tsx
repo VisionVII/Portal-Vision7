@@ -231,13 +231,26 @@ export function AutomationDashboard({
       });
     } catch (err: unknown) {
       if (err instanceof CronWorkflowError) {
+        const tagsSynced = automation.category === 'content_pipeline' &&
+          Array.isArray(automation.config?.search_tags) &&
+          (automation.config.search_tags as string[]).length > 0;
         toast({
           title: `${automation.name} — Automático (cron)`,
-          description: 'Este workflow executa automaticamente por cronograma no n8n. Tags sincronizadas para a próxima execução.',
+          description: tagsSynced
+            ? 'Tags sincronizadas. Workflow executa automaticamente por cron. Ative "Promoção automática" no Pipeline para mover curados → rascunhos.'
+            : 'Este workflow executa automaticamente por cronograma no n8n.',
         });
         return;
       }
       const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      // Friendly message for n8n cold-start
+      if (/503|Database is not ready|not ready/i.test(msg)) {
+        toast({
+          title: 'n8n a iniciar (cold start)',
+          description: 'A instância n8n no Render está a arrancar. Aguarde 1-2 min e tente novamente, ou ative o pipeline na card acima.',
+        });
+        return;
+      }
       toast({ title: 'Erro na execução', description: msg, variant: 'destructive' });
     }
   };
