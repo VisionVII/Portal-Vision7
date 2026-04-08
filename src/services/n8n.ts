@@ -27,9 +27,17 @@ async function getEdgeAuthHeaders(): Promise<Record<string, string>> {
   const exp = accessToken ? getJwtExp(accessToken) : null;
   const now = Math.floor(Date.now() / 1000);
 
-  if (!accessToken || (exp !== null && exp <= now + 30)) {
+  if (!accessToken) {
+    throw new Error('Sessao invalida ou expirada. Inicie sessao novamente.');
+  }
+
+  if (exp !== null && exp <= now + 30) {
     const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) {
+      if (/invalid refresh token|refresh token not found/i.test(refreshError.message)) {
+        await supabase.auth.signOut({ scope: 'local' });
+        throw new Error('Sessao invalida no navegador. Faça login novamente.');
+      }
       throw new Error(`Nao foi possivel renovar a sessao: ${refreshError.message}`);
     }
     accessToken = refreshed.session?.access_token;

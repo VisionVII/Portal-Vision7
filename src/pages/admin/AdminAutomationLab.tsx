@@ -4,8 +4,30 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-const N8N_LAB_URL = import.meta.env.VITE_N8N_BASE_URL || 'https://n8n-vision7.onrender.com';
-const N8N_LAB_WORKSPACE_URL = `${N8N_LAB_URL.replace(/\/$/, '')}/home/workflows`;
+const DEFAULT_N8N_LAB_URL = 'https://n8n-vision7.onrender.com';
+
+function resolveN8nLabBaseUrl() {
+  const configured = String(import.meta.env.VITE_N8N_BASE_URL || '').trim();
+  const candidate = configured || DEFAULT_N8N_LAB_URL;
+
+  try {
+    const parsed = new URL(candidate);
+    const isLocalTarget = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+    const isBrowserLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const isMixedContent = typeof window !== 'undefined' && window.location.protocol === 'https:' && parsed.protocol === 'http:';
+
+    if ((isLocalTarget && !isBrowserLocal) || isMixedContent) {
+      return DEFAULT_N8N_LAB_URL;
+    }
+
+    return parsed.toString().replace(/\/$/, '');
+  } catch {
+    return DEFAULT_N8N_LAB_URL;
+  }
+}
+
+const N8N_LAB_URL = resolveN8nLabBaseUrl();
+const N8N_LAB_WORKSPACE_URL = `${N8N_LAB_URL}/home/workflows`;
 
 const AdminAutomationLab: React.FC = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);

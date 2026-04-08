@@ -30,7 +30,6 @@ import { useAutomations } from '@/hooks/useAutomations';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import {
   activateWorkflow,
   checkN8nHealth,
@@ -179,14 +178,6 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
   }, [user?.email, newCredentialReminderEmail]);
 
   const refreshN8nData = useCallback(async (showToast = false) => {
-    // Ensure a fresh session token (avoids stale JWT → 401 from gateway)
-    const { data: { session: sess }, error: sessError } = await supabase.auth.refreshSession();
-    if (sessError || !sess?.access_token) {
-      setN8nError('Sem sessão ativa — faça login novamente.');
-      setN8nHealthy(false);
-      return;
-    }
-
     setIsBusy(true);
     try {
       // Health check never throws — always completes
