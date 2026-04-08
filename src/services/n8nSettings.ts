@@ -28,11 +28,17 @@ async function getHeaders() {
 async function callSettings<T>(payload: unknown): Promise<T> {
   if (!SUPABASE_FUNCTIONS_URL) throw new Error('SUPABASE_FUNCTIONS_URL ausente.');
 
-  const resp = await fetch(`${SUPABASE_FUNCTIONS_URL}/n8n-settings`, {
-    method: 'POST',
-    headers: await getHeaders(),
-    body: JSON.stringify(payload),
-  });
+  let resp: Response;
+  try {
+    resp = await fetch(`${SUPABASE_FUNCTIONS_URL}/n8n-settings`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Falha de rede';
+    throw new Error(`Failed to fetch n8n-settings: ${message}. Verifique deploy da Edge Function, CORS e a ligação à internet.`);
+  }
 
   if (!resp.ok) {
     let detail = `HTTP ${resp.status}`;
@@ -73,6 +79,13 @@ export async function revokeN8nCredential(id: string) {
   await callSettings<{ success: boolean }>({ action: 'revoke', id });
 }
 
-export async function triggerN8nCredentialReminders() {
-  await callSettings<{ success: boolean; sent: number }>({ action: 'send-reminders' });
+export async function triggerN8nCredentialReminders(force = true) {
+  return callSettings<{
+    success: boolean;
+    force: boolean;
+    sent: number;
+    skipped: number;
+    failed: number;
+    details?: string[];
+  }>({ action: 'send-reminders', force });
 }

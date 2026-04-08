@@ -77,6 +77,13 @@ const formatDuration = (execution: N8nExecution) => {
   return `${Math.round((end - start) / 1000)}s`;
 };
 
+const getDaysUntil = (value?: string) => {
+  if (!value) return null;
+  const target = new Date(value).getTime();
+  if (Number.isNaN(target)) return null;
+  return Math.ceil((target - Date.now()) / (1000 * 60 * 60 * 24));
+};
+
 const normalizeExecutionStatus = (execution: N8nExecution) => {
   if (execution.status) return execution.status;
   if (execution.finished === false) return 'running';
@@ -113,6 +120,54 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
     () => credentials.find((c) => c.status === 'active' && c.key_name === 'N8N_API_KEY') ?? null,
     [credentials],
   );
+
+  const activeCredentialRisk = useMemo(() => {
+    if (!activeCredential) return null;
+
+    const daysLeft = getDaysUntil(activeCredential.expires_at);
+    if (daysLeft === null) {
+      return {
+        label: 'Sem data válida',
+        tone: 'text-amber-700',
+        badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+        description: 'A chave ativa está sem uma data de expiração reconhecível.',
+      };
+    }
+
+    if (daysLeft <= 0) {
+      return {
+        label: 'Expirada',
+        tone: 'text-red-700',
+        badgeClass: 'border-red-200 bg-red-50 text-red-700',
+        description: 'A chave ativa já expirou e deve ser trocada imediatamente.',
+      };
+    }
+
+    if (daysLeft <= 7) {
+      return {
+        label: 'Risco alto',
+        tone: 'text-red-700',
+        badgeClass: 'border-red-200 bg-red-50 text-red-700',
+        description: `A chave ativa expira em ${daysLeft} dia(s). Faça a rotação agora.`,
+      };
+    }
+
+    if (daysLeft <= 30) {
+      return {
+        label: 'Risco médio',
+        tone: 'text-amber-700',
+        badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+        description: `A chave ativa expira em ${daysLeft} dia(s). Planeie a substituição.`,
+      };
+    }
+
+    return {
+      label: 'Estável',
+      tone: 'text-emerald-700',
+      badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+      description: `A chave ativa ainda tem ${daysLeft} dia(s) de validade.`,
+    };
+  }, [activeCredential]);
 
   const consecutiveErrorsRef = React.useRef(0);
 
@@ -259,8 +314,20 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
 
   const handleSendRemindersNow = async () => {
     try {
-      await triggerN8nCredentialReminders();
-      toast({ title: 'Lembretes processados', description: 'Os emails elegíveis foram enviados.' });
+      const result = await triggerN8nCredentialReminders(true);
+      if (result.failed > 0) {
+        const detail = result.details?.[0] ?? 'Verifique RESEND_API_KEY/FROM_EMAIL e logs do send-email.';
+        toast({
+          title: 'Lembretes com falhas',
+          description: `Enviados: ${result.sent} • Falhas: ${result.failed} • Pulados: ${result.skipped}. ${detail}`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Lembretes enviados',
+          description: `Enviados: ${result.sent} • Pulados: ${result.skipped}.`,
+        });
+      }
       await refreshCredentials();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Falha ao enviar lembretes.';
@@ -446,6 +513,47 @@ const AdminAutomationPanel = ({ isActive = true }: { isActive?: boolean }) => {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base"><KeyRound className="h-4 w-4" />Resumo da chave ativa</CardTitle>
+          <CardDescription className="text-xs">Este cartão ajuda a validar rapidamente se a rotação ficou ativa no backend.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!activeCredential || !activeCredentialRisk ? (
+            <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+              Nenhuma chave ativa encontrada. Salve uma nova chave e clique em Ativar para que o proxy passe a usá-la.
+            </div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-[1.2fr_0.8fr]">
+              <div className="rounded-xl border border-border p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold text-foreground">{activeCredential.key_name}</p>
+                  <Badge variant="outline" className={activeCredentialRisk.badgeClass}>{activeCredentialRisk.label}</Badge>
+                  <Badge variant={n8nHealthy ? 'default' : 'secondary'}>
+                    {n8nHealthy ? 'Proxy em uso' : 'Proxy pendente'}
+                  </Badge>
+                </div>
+                <p className={`mt-2 text-sm ${activeCredentialRisk.tone}`}>{activeCredentialRisk.description}</p>
+                <div className="mt-3 grid gap-2 text-xs text-muted-foreground md:grid-cols-2">
+                  <p>Criada em: {formatDateTime(activeCredential.created_at)}</p>
+                  <p>Ativada em: {formatDateTime(activeCredential.activated_at)}</p>
+                  <p>Expira em: {formatDateTime(activeCredential.expires_at)}</p>
+                  <p>Último lembrete: {formatDateTime(activeCredential.last_reminder_sent_at)}</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border p-4 text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">Checklist rápido</p>
+                <p className="mt-2">1. Salvar a nova chave no formulário abaixo.</p>
+                <p>2. Clicar em Ativar na lista.</p>
+                <p>3. Confirmar aqui a data de ativação.</p>
+                <p>4. Atualizar o estado do n8n para validar que o proxy continua conectado.</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {n8nError && (
         <Card className="border-amber-200 bg-amber-50/80 dark:border-amber-900/40 dark:bg-amber-950/20">
