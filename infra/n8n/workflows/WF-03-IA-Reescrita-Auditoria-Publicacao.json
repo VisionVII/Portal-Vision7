@@ -94,17 +94,17 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://models.inference.ai.azure.com/chat/completions",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{$env.GITHUB_MODELS_TOKEN}}" },
+            { "name": "Authorization", "value": "=Bearer {{$env.GROQ_API_KEY}}" },
             { "name": "Content-Type", "value": "application/json" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.7,\n  \"max_tokens\": 2000,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": \"Es um jornalista tech portugues. Responde SEMPRE em JSON valido.\" },\n    { \"role\": \"user\", \"content\": $json.prompt }\n  ]\n} }}"
+        "jsonBody": "={{ {\n  \"model\": \"llama-3.1-8b-instant\",\n  \"temperature\": 0.7,\n  \"max_tokens\": 2000,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": \"Es um jornalista tech portugues. Responde SEMPRE em JSON valido.\" },\n    { \"role\": \"user\", \"content\": $json.prompt }\n  ]\n} }}"
       },
       "id": "ai_generate",
       "name": "AI Generate Article",
