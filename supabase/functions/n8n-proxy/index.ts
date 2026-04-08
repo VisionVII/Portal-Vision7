@@ -139,6 +139,12 @@ async function decryptValue(secret: string, payload: string): Promise<string> {
 async function getEffectiveN8nApiKey(supabaseAdmin: ReturnType<typeof createClient>) {
   if (!N8N_CREDENTIALS_ENCRYPTION_KEY) return N8N_API_KEY;
 
+  const { count, error: countError } = await supabaseAdmin
+    .from('n8n_credentials')
+    .select('id', { count: 'exact', head: true });
+
+  if (countError) return N8N_API_KEY;
+
   const { data } = await supabaseAdmin
     .from('n8n_credentials')
     .select('encrypted_value,expires_at')
@@ -149,12 +155,14 @@ async function getEffectiveN8nApiKey(supabaseAdmin: ReturnType<typeof createClie
     .limit(1)
     .maybeSingle();
 
-  if (!data?.encrypted_value) return N8N_API_KEY;
+  if (!data?.encrypted_value) {
+    return count && count > 0 ? '' : N8N_API_KEY;
+  }
 
   try {
     return await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, data.encrypted_value);
   } catch {
-    return N8N_API_KEY;
+    return count && count > 0 ? '' : N8N_API_KEY;
   }
 }
 

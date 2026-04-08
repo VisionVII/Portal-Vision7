@@ -79,6 +79,10 @@ export async function revokeN8nCredential(id: string) {
   await callSettings<{ success: boolean }>({ action: 'revoke', id });
 }
 
+export async function deleteN8nCredential(id: string) {
+  await callSettings<{ success: boolean }>({ action: 'delete', id });
+}
+
 export async function triggerN8nCredentialReminders(force = true) {
   return callSettings<{
     success: boolean;

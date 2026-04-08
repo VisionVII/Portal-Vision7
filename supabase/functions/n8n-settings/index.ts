@@ -6,6 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const CREDENTIALS_ENCRYPTION_KEY = Deno.env.get('N8N_CREDENTIALS_ENCRYPTION_KEY') ?? '';
+const N8N_BASE_URL = (Deno.env.get('N8N_BASE_URL') ?? '').replace(/\/$/, '');
 const SITE_URL = Deno.env.get('SITE_URL') ?? 'https://www.vision7.pt';
 
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? Deno.env.get('N8N_PROXY_ALLOWED_ORIGINS') ?? '')
@@ -148,6 +149,36 @@ async function sendReminderEmail(email: string, keyName: string, expiresAt: stri
   if (body?.id === 'dev-mode') {
     throw new Error('send-email está em modo dev (RESEND_API_KEY ausente); email não foi entregue');
   }
+}
+
+async function validateN8nApiKey(candidateKey: string) {
+  if (!N8N_BASE_URL) {
+    throw new Error('N8N_BASE_URL ausente; não foi possível validar a chave');
+  }
+
+  const response = await fetch(`${N8N_BASE_URL}/api/v1/workflows?limit=1&excludePinnedData=true`, {
+    method: 'GET',
+    headers: {
+      'X-N8N-API-KEY': candidateKey,
+    },
+    signal: AbortSignal.timeout(25_000),
+  });
+
+  if (response.ok) return;
+
+  let detail = `HTTP ${response.status}`;
+  try {
+    const body = await response.json();
+    detail = body?.message || body?.error || detail;
+  } catch {
+    try {
+      detail = (await response.text()).slice(0, 200) || detail;
+    } catch {
+      // ignore
+    }
+  }
+
+  throw new Error(`A chave não foi aceite pelo n8n: ${detail}`);
 }
 
 async function maybeSendExpiryReminders(
@@ -311,14 +342,23 @@ Deno.serve(async (req: Request) => {
 
       const { data: target, error: targetError } = await supabaseAdmin
         .from('n8n_credentials')
-        .select('id,key_name,status,encrypted_value')
+        .select('id,key_name,status,encrypted_value,expires_at,notes,reminder_email,remind_days_before,last_reminder_sent_at,activated_at,created_at,updated_at')
         .eq('id', id)
         .single();
 
       if (targetError || !target) return jsonResponse({ error: 'Credential not found' }, 404, cors);
 
+      if (target.status === 'revoked') {
+        return jsonResponse({ error: 'A chave revogada não pode ser reativada. Use uma chave inativa ou crie uma nova.' }, 400, cors);
+      }
+
+      if (new Date(target.expires_at).getTime() <= Date.now()) {
+        return jsonResponse({ error: 'A chave está expirada e não pode ser ativada.' }, 400, cors);
+      }
+
       // decrypt once to validate payload integrity before activation
-      await decryptValue(CREDENTIALS_ENCRYPTION_KEY, target.encrypted_value);
+      const decryptedValue = await decryptValue(CREDENTIALS_ENCRYPTION_KEY, target.encrypted_value);
+      await validateN8nApiKey(decryptedValue);
 
       await supabaseAdmin
         .from('n8n_credentials')
@@ -342,6 +382,19 @@ Deno.serve(async (req: Request) => {
       const { error } = await supabaseAdmin
         .from('n8n_credentials')
         .update({ status: 'revoked' })
+        .eq('id', id);
+
+      if (error) return jsonResponse({ error: error.message }, 500, cors);
+      return jsonResponse({ success: true }, 200, cors);
+    }
+
+    if (action === 'delete') {
+      const id = String(body?.id ?? '').trim();
+      if (!id) return jsonResponse({ error: 'id is required' }, 400, cors);
+
+      const { error } = await supabaseAdmin
+        .from('n8n_credentials')
+        .delete()
         .eq('id', id);
 
       if (error) return jsonResponse({ error: error.message }, 500, cors);
