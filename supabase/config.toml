@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.verify-login-code]
 verify_jwt = false
+
+[functions.n8n-proxy]
+verify_jwt = false
+
+[functions.n8n-settings]
+verify_jwt = false

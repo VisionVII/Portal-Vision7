@@ -13,12 +13,14 @@ import { AutomationTemplateGallery } from './AutomationTemplateGallery';
 import { ExecutionTimeline } from './ExecutionTimeline';
 import { NewsPipelineCard } from './NewsPipelineCard';
 import { CuratedPostsReview } from './CuratedPostsReview';
+import { N8nWorkflowsPanel } from './N8nWorkflowsPanel';
 
 import { useAutomationsV2 } from '@/hooks/useAutomationsV2';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import { useAutomationTemplates } from '@/hooks/useAutomationTemplates';
+import { usePipelineConfig } from '@/hooks/usePipelineConfig';
 
-import { checkN8nHealth, getWorkflows, executeWorkflow } from '@/services/n8n';
+import { checkN8nHealth, getWorkflows, executeWorkflow, CronWorkflowError } from '@/services/n8n';
 
 import {
   AUTOMATION_CATEGORIES,
@@ -45,10 +47,20 @@ export function AutomationDashboard({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  /* ── n8n state ── */
-  const [isConnected, setIsConnected] = useState(false);
-  const [lastSync, setLastSync] = useState<string | null>(null);
-  const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
+  /* ── n8n state (with localStorage persistence) ── */
+  const [isConnected, setIsConnected] = useState(() => {
+    try { return localStorage.getItem('dashboard:n8nConnected') === 'true'; } catch { return false; }
+  });
+  const [lastSync, setLastSync] = useState<string | null>(() => {
+    try { return localStorage.getItem('dashboard:lastSync'); } catch { return null; }
+  });
+  const [n8nStatusDetail, setN8nStatusDetail] = useState<string | null>(null);
+  const [workflows, setWorkflows] = useState<N8nWorkflow[]>(() => {
+    try {
+      const raw = localStorage.getItem('dashboard:workflows');
+      return raw ? JSON.parse(raw) as N8nWorkflow[] : [];
+    } catch { return []; }
+  });
 
   /* ── UI state ── */
   const [activeCategory, setActiveCategory] = useState<AutomationCategory | 'all'>('all');
@@ -85,18 +97,40 @@ export function AutomationDashboard({
     isLoading: loadingTemplates,
   } = useAutomationTemplates(activeCategory !== 'all' ? activeCategory : undefined);
 
+  const { activeConfig, updateTags, createConfig } = usePipelineConfig();
+
   /* ── n8n health + workflow fetch ── */
   const refreshN8n = useCallback(async () => {
     try {
       const health = await checkN8nHealth();
-      setIsConnected(health.status === 'connected');
-      if (health.status === 'connected') {
+
+      if (health.status !== 'connected') {
+        setIsConnected(false);
+        setWorkflows([]);
+        setN8nStatusDetail(health.detail ?? 'Falha ao verificar a saúde do n8n.');
+        setLastSync(new Date().toISOString());
+        return;
+      }
+
+      try {
         const wfs = await getWorkflows();
         setWorkflows(wfs);
+        setIsConnected(true);
+        setN8nStatusDetail(null);
+      } catch (workflowError) {
+        const detail = workflowError instanceof Error ? workflowError.message : 'Falha ao listar workflows no n8n.';
+        setIsConnected(false);
+        setWorkflows([]);
+        setN8nStatusDetail(detail);
       }
+
       setLastSync(new Date().toISOString());
-    } catch {
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'Erro desconhecido ao sincronizar com o n8n.';
       setIsConnected(false);
+      setWorkflows([]);
+      setN8nStatusDetail(detail);
+      setLastSync(new Date().toISOString());
     }
   }, []);
 
@@ -105,6 +139,15 @@ export function AutomationDashboard({
     const interval = setInterval(() => void refreshN8n(), 30_000);
     return () => clearInterval(interval);
   }, [refreshN8n]);
+
+  /* ── Persist n8n state to localStorage ── */
+  useEffect(() => {
+    try {
+      localStorage.setItem('dashboard:n8nConnected', String(isConnected));
+      if (lastSync) localStorage.setItem('dashboard:lastSync', lastSync);
+      localStorage.setItem('dashboard:workflows', JSON.stringify(workflows));
+    } catch { /* quota exceeded — ignore */ }
+  }, [isConnected, lastSync, workflows]);
 
   /* ── Category counts ── */
   const allAutomationsForCounts = useAutomationsV2({});
@@ -163,11 +206,51 @@ export function AutomationDashboard({
       toast({ title: 'Sem workflow', description: 'Esta automação não tem workflow associado.', variant: 'destructive' });
       return;
     }
+
+    // If content_pipeline with search_tags, sync tags to pipeline_search_config first
+    if (automation.category === 'content_pipeline') {
+      const tags = automation.config?.search_tags;
+      if (Array.isArray(tags) && tags.length > 0) {
+        try {
+          if (activeConfig) {
+            await updateTags({ id: activeConfig.id, tags: tags as string[] });
+          } else {
+            await createConfig({ label: automation.name, tags: tags as string[] });
+          }
+        } catch {
+          // non-blocking — proceed with execution even if tag sync fails
+        }
+      }
+    }
+
     try {
-      await executeWorkflow(automation.workflowId);
-      toast({ title: 'Workflow executado', description: `${automation.name} disparado com sucesso.` });
+      const result = await executeWorkflow(automation.workflowId);
+      toast({
+        title: 'Workflow executado',
+        description: `${automation.name} disparado com sucesso (${result.method}).`,
+      });
     } catch (err: unknown) {
+      if (err instanceof CronWorkflowError) {
+        const tagsSynced = automation.category === 'content_pipeline' &&
+          Array.isArray(automation.config?.search_tags) &&
+          (automation.config.search_tags as string[]).length > 0;
+        toast({
+          title: `${automation.name} — Automático (cron)`,
+          description: tagsSynced
+            ? 'Tags sincronizadas. Workflow executa automaticamente por cron. Ative "Promoção automática" no Pipeline para mover curados → rascunhos.'
+            : 'Este workflow executa automaticamente por cronograma no n8n.',
+        });
+        return;
+      }
       const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      // Friendly message for n8n cold-start
+      if (/503|Database is not ready|not ready/i.test(msg)) {
+        toast({
+          title: 'n8n a iniciar (cold start)',
+          description: 'A instância n8n no Render está a arrancar. Aguarde 1-2 min e tente novamente, ou ative o pipeline na card acima.',
+        });
+        return;
+      }
       toast({ title: 'Erro na execução', description: msg, variant: 'destructive' });
     }
   };
@@ -248,6 +331,8 @@ export function AutomationDashboard({
           executions={executions}
           isConnected={isConnected}
           lastSync={lastSync}
+          statusDetail={n8nStatusDetail}
+          workflows={workflows}
         />
 
         {/* ── News Pipeline Card ── */}
@@ -322,8 +407,13 @@ export function AutomationDashboard({
             </AutomationCategoryTabs>
           </div>
 
-          {/* Execution Timeline (2/5 width) */}
-          <div className="lg:col-span-2">
+          {/* Execution Timeline + Workflows (2/5 width) */}
+          <div className="lg:col-span-2 space-y-4">
+            <N8nWorkflowsPanel
+              workflows={workflows}
+              isConnected={isConnected}
+              onRefresh={() => void refreshN8n()}
+            />
             <ExecutionTimeline
               executions={executions}
               total={totalExecutions}

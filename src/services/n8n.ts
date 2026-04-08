@@ -140,13 +140,16 @@ export const checkN8nHealth = async (): Promise<{
   try {
     const data = await callN8nProxy({ path: '/health' });
     console.info('[n8n-health] success:', data);
-    return data as { status: 'connected' | 'error' | 'unreachable' };
+    return data as { status: 'connected' | 'error' | 'unreachable'; detail?: string; httpStatus?: number };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
     console.warn('[n8n-health] exception:', msg);
     const match = msg.match(/^\[(\d{3})\]/);
     const httpStatus = match ? Number(match[1]) : undefined;
-    return { status: 'unreachable', detail: msg, httpStatus };
+    const detail = /abort|timeout/i.test(msg)
+      ? 'Timeout ao contactar o n8n. A instância pode estar a arrancar no Render ou indisponível.'
+      : msg;
+    return { status: 'unreachable', detail, httpStatus };
   }
 };
 
@@ -158,9 +161,7 @@ export const getWorkflows = async () => {
 };
 
 export const getWorkflowById = async (id: string) => {
-  return n8nRequest<N8nWorkflow>(`/api/v1/workflows/${id}`, {
-    query: { excludePinnedData: true },
-  });
+  return n8nRequest<N8nWorkflow>(`/api/v1/workflows/${id}`);
 };
 
 export const activateWorkflow = async (id: string) => {
@@ -171,27 +172,94 @@ export const deactivateWorkflow = async (id: string) => {
   return n8nRequest(`/api/v1/workflows/${id}/deactivate`, { method: 'POST' });
 };
 
-export const executeWorkflow = async (id: string) => {
-  const attempts = [
+export const executeWorkflow = async (id: string): Promise<{ executed: boolean; method: string }> => {
+  // Attempt 1 & 2: Standard n8n API execution endpoints (requires Manual Trigger node)
+  const apiAttempts = [
     `/api/v1/workflows/${id}/run`,
     `/api/v1/workflows/${id}/execute`,
   ];
 
-  let lastError = 'Execução manual não disponível para este workflow.';
+  let lastError = '';
 
-  for (const path of attempts) {
+  // Status codes that indicate "can't run this way" rather than a real error:
+  // 404/405/501 = endpoint doesn't exist / method not allowed
+  // 503 = n8n database cold-starting on Render (transient)
+  const NON_FATAL_RE = /\[(404|405|501|503)\]/;
+
+  for (const path of apiAttempts) {
     try {
-      return await n8nRequest(path, { method: 'POST' });
+      await n8nRequest(path, { method: 'POST' });
+      return { executed: true, method: 'api-run' };
     } catch (error) {
-      lastError = error instanceof Error ? error.message : 'Erro desconhecido ao executar workflow';
-      if (!/\[(404|405|501)\]/.test(lastError)) {
-        break;
+      lastError = error instanceof Error ? error.message : 'Erro desconhecido';
+      if (!NON_FATAL_RE.test(lastError)) {
+        throw new Error(`Falha na execução: ${lastError}`);
       }
     }
   }
 
-  throw new Error(`Falha na execução manual. ${lastError}. Se o workflow usa trigger (cron/webhook), dispare pelo trigger correspondente.`);
+  // Attempt 3: POST /api/v1/executions with workflowId (n8n >= 1.62)
+  try {
+    await n8nRequest('/api/v1/executions', {
+      method: 'POST',
+      body: { workflowId: id },
+    });
+    return { executed: true, method: 'api-executions' };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : '';
+    if (!/\[(400|404|405|422|501|503)\]/.test(msg)) {
+      throw new Error(`Falha na execução: ${msg}`);
+    }
+  }
+
+  // Attempt 4: Fetch workflow details and try webhook trigger
+  try {
+    const wf = await getWorkflowById(id);
+    const webhookPath = extractWebhookPath(wf);
+    if (webhookPath) {
+      await n8nRequest(`/webhook/${webhookPath}`, { method: 'POST' });
+      return { executed: true, method: 'webhook' };
+    }
+  } catch {
+    // webhook attempt failed
+  }
+
+  // All methods failed — this is a cron-only workflow
+  throw new CronWorkflowError(id, lastError);
 };
+
+/** Specific error for cron/schedule-only workflows that can't be manually triggered */
+export class CronWorkflowError extends Error {
+  public readonly workflowId: string;
+  constructor(workflowId: string, originalError: string) {
+    super(
+      `Workflow cron/schedule — executa automaticamente. ${originalError}`
+    );
+    this.name = 'CronWorkflowError';
+    this.workflowId = workflowId;
+  }
+}
+
+/**
+ * Extract the webhook path from a workflow's node configuration.
+ * Looks for Webhook or n8n-nodes-base.webhook trigger nodes.
+ */
+function extractWebhookPath(wf: N8nWorkflow): string | null {
+  const nodes = wf.nodes as Array<{ type?: string; parameters?: Record<string, unknown>; webhookId?: string }> | undefined;
+  if (!Array.isArray(nodes)) return null;
+
+  for (const node of nodes) {
+    if (
+      node.type === 'n8n-nodes-base.webhook' ||
+      node.type === 'n8n-nodes-base.webhookTrigger'
+    ) {
+      const path = node.parameters?.path;
+      if (typeof path === 'string' && path) return path;
+      if (node.webhookId) return node.webhookId;
+    }
+  }
+  return null;
+}
 
 export const getExecutions = async (limit = 20) => {
   const payload = await n8nRequest<unknown>('/api/v1/executions', {
