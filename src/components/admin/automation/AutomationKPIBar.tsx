@@ -1,14 +1,17 @@
-import { Activity, CheckCircle2, AlertTriangle, Clock, Zap } from 'lucide-react';
+import { Activity, CheckCircle2, AlertTriangle, Clock, Zap, Workflow } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { AutomationV2 } from '@/types/automation';
 import type { AutomationExecution } from '@/types/automation';
+import type { N8nWorkflow } from '@/types/automation';
 
 interface AutomationKPIBarProps {
   automations: AutomationV2[];
   executions: AutomationExecution[];
   isConnected: boolean;
   lastSync: string | null;
+  statusDetail?: string | null;
+  workflows?: N8nWorkflow[];
 }
 
 export function AutomationKPIBar({
@@ -16,6 +19,8 @@ export function AutomationKPIBar({
   executions,
   isConnected,
   lastSync,
+  statusDetail,
+  workflows = [],
 }: AutomationKPIBarProps) {
   const total = automations.length;
   const active = automations.filter((a) => a.status === 'active').length;
@@ -29,6 +34,8 @@ export function AutomationKPIBar({
     .filter((a) => a.nextRunAt && a.status === 'active')
     .sort((a, b) => (a.nextRunAt! > b.nextRunAt! ? 1 : -1))[0]?.nextRunAt;
 
+  const activeWorkflows = workflows.filter((w) => w.active === true).length;
+
   const kpis = [
     {
       label: 'Total',
@@ -41,6 +48,12 @@ export function AutomationKPIBar({
       value: active,
       icon: Zap,
       color: 'text-emerald-400',
+    },
+    {
+      label: 'n8n Flows',
+      value: `${activeWorkflows}/${workflows.length}`,
+      icon: Workflow,
+      color: activeWorkflows > 0 ? 'text-cyan-400' : 'text-gray-400',
     },
     {
       label: 'Hoje',
@@ -75,6 +88,12 @@ export function AutomationKPIBar({
         <span className="text-xs text-gray-500 flex items-center gap-1">
           <Clock className="w-3 h-3" />
           {new Date(lastSync).toLocaleTimeString('pt-BR')}
+        </span>
+      )}
+
+      {!isConnected && statusDetail && (
+        <span className="text-xs text-amber-300 max-w-[420px] truncate" title={statusDetail}>
+          {statusDetail}
         </span>
       )}
 

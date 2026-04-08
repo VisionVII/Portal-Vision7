@@ -429,6 +429,72 @@ export type Database = {
           },
         ]
       }
+      curated_posts: {
+        Row: {
+          body_html: string | null
+          body_markdown: string
+          cluster_id: string | null
+          confidence_score: number
+          created_at: string
+          created_by: string | null
+          editorial_score: number
+          excerpt: string | null
+          id: string
+          language: string | null
+          metrics: Json
+          model_info: Json
+          moderation: Json
+          slug: string | null
+          status: string
+          subtitle: string | null
+          title: string
+          tone_profile: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string | null
+          body_markdown: string
+          cluster_id?: string | null
+          confidence_score?: number
+          created_at?: string
+          created_by?: string | null
+          editorial_score?: number
+          excerpt?: string | null
+          id?: string
+          language?: string | null
+          metrics?: Json
+          model_info?: Json
+          moderation?: Json
+          slug?: string | null
+          status?: string
+          subtitle?: string | null
+          title: string
+          tone_profile?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string | null
+          body_markdown?: string
+          cluster_id?: string | null
+          confidence_score?: number
+          created_at?: string
+          created_by?: string | null
+          editorial_score?: number
+          excerpt?: string | null
+          id?: string
+          language?: string | null
+          metrics?: Json
+          model_info?: Json
+          moderation?: Json
+          slug?: string | null
+          status?: string
+          subtitle?: string | null
+          title?: string
+          tone_profile?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       monetization_settings: {
         Row: {
           description: string | null
@@ -636,6 +702,42 @@ export type Database = {
           twitter_handle?: string | null
           updated_at?: string
           website?: string | null
+        }
+        Relationships: []
+      }
+      pipeline_search_config: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          label: string
+          language: string | null
+          region: string | null
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          language?: string | null
+          region?: string | null
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          language?: string | null
+          region?: string | null
+          tags?: string[]
+          updated_at?: string
         }
         Relationships: []
       }
