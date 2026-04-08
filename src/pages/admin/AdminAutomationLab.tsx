@@ -8,15 +8,17 @@ const DEFAULT_N8N_LAB_URL = 'https://n8n-vision7.onrender.com';
 
 function resolveN8nLabBaseUrl() {
   const configured = String(import.meta.env.VITE_N8N_BASE_URL || '').trim();
+  const allowLocalhost = String(import.meta.env.VITE_N8N_ALLOW_LOCALHOST || '').trim().toLowerCase() === 'true';
   const candidate = configured || DEFAULT_N8N_LAB_URL;
 
   try {
     const parsed = new URL(candidate);
     const isLocalTarget = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
-    const isBrowserLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     const isMixedContent = typeof window !== 'undefined' && window.location.protocol === 'https:' && parsed.protocol === 'http:';
 
-    if ((isLocalTarget && !isBrowserLocal) || isMixedContent) {
+    // Localhost target is blocked by default to avoid "connection refused" in normal usage.
+    // Enable explicitly with VITE_N8N_ALLOW_LOCALHOST=true when running n8n locally.
+    if ((isLocalTarget && !allowLocalhost) || isMixedContent) {
       return DEFAULT_N8N_LAB_URL;
     }
 
@@ -27,18 +29,41 @@ function resolveN8nLabBaseUrl() {
 }
 
 const N8N_LAB_URL = resolveN8nLabBaseUrl();
-const N8N_LAB_WORKSPACE_URL = `${N8N_LAB_URL}/home/workflows`;
+const N8N_INTERNAL_URL = '/n8n/';
 
 const AdminAutomationLab: React.FC = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [internalReady, setInternalReady] = useState<boolean | null>(null);
   const [showFallback, setShowFallback] = useState(false);
 
   useEffect(() => {
+    setIframeLoaded(false);
+    setShowFallback(false);
     const timer = window.setTimeout(() => {
       setShowFallback(true);
     }, 12000);
 
     return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const checkInternalRoute = async () => {
+      try {
+        const resp = await fetch('/n8n/rest/login', { method: 'GET', credentials: 'include' });
+        if (!mounted) return;
+        // Any non-404 response indicates the internal proxy route exists.
+        setInternalReady(resp.status !== 404);
+      } catch {
+        if (!mounted) return;
+        setInternalReady(false);
+      }
+    };
+
+    void checkInternalRoute();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -56,7 +81,7 @@ const AdminAutomationLab: React.FC = () => {
               <h1 className="text-lg font-semibold">Laboratório de Automações</h1>
             </div>
           </div>
-          <a href={N8N_LAB_WORKSPACE_URL} target="_blank" rel="noreferrer">
+          <a href={N8N_LAB_URL} target="_blank" rel="noreferrer">
             <Button className="gap-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400">
               Abrir n8n externo <ExternalLink className="h-4 w-4" />
             </Button>
@@ -69,21 +94,34 @@ const AdminAutomationLab: React.FC = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <FlaskConical className="h-4 w-4 text-cyan-300" />
-              Ambiente Vision7 sobre infraestrutura n8n
+              n8n interno no portal
             </CardTitle>
             <CardDescription className="text-slate-300">
-              O shell visual é Vision7. O builder interno é do n8n (infra Render). O laboratório tenta abrir diretamente o workspace do editor; se não existir sessão ativa no n8n, use o botão externo para autenticar e volte depois.
+              Este modo carrega o n8n via rota interna do portal (<strong>/n8n</strong>). Assim evitamos o bloqueio de iframe por <strong>X-Frame-Options: SAMEORIGIN</strong>.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {showFallback && !iframeLoaded && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              <a href={N8N_LAB_URL} target="_blank" rel="noreferrer">
+                <Button className="gap-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400">Abrir ambiente real do n8n <ExternalLink className="h-4 w-4" /></Button>
+              </a>
+            </div>
+
+            {internalReady === false && (
               <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">
-                O editor do n8n ainda não respondeu dentro do esperado. Isto normalmente significa cold start do Render ou falta de sessão no n8n. Abra em separado, autentique-se e volte ao laboratório.
+                A rota interna <strong>/n8n</strong> não está ativa neste ambiente. Configure o proxy/rewrite do host para <strong>/n8n -&gt; n8n-vision7.onrender.com</strong> e o <strong>N8N_PATH=/n8n</strong> no serviço n8n.
               </div>
             )}
+
+            {showFallback && !iframeLoaded && (
+              <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">
+                O n8n interno não respondeu no tempo esperado. Se a rota interna ainda não estiver ativa no host, use temporariamente o botão externo.
+              </div>
+            )}
+
             <div className="h-[78vh] overflow-hidden rounded-xl border border-cyan-300/20 bg-black/20">
               <iframe
-                src={N8N_LAB_WORKSPACE_URL}
+                src={N8N_INTERNAL_URL}
                 title="Vision7 Automation Lab"
                 className="h-full w-full border-0"
                 sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
