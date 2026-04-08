@@ -35,7 +35,7 @@
             { "name": "select", "value": "id,topic,fingerprint,source_count,confidence_score,primary_staging_id,created_at" },
             { "name": "confidence_score", "value": "gte.60" },
             { "name": "order", "value": "confidence_score.desc" },
-            { "name": "limit", "value": "10" }
+            { "name": "limit", "value": "3" }
           ]
         }
       },
