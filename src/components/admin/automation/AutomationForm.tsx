@@ -208,14 +208,14 @@ export function AutomationForm({
           <div>
             <Label className="text-xs text-gray-400">Workflow n8n</Label>
             <Select
-              value={form.workflowId}
-              onValueChange={(v) => setForm({ ...form, workflowId: v })}
+              value={form.workflowId || '__none__'}
+              onValueChange={(v) => setForm({ ...form, workflowId: v === '__none__' ? '' : v })}
             >
               <SelectTrigger className="bg-slate-900/50 border-slate-600 mt-1">
                 <SelectValue placeholder="Selecionar..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhum (manual)</SelectItem>
+                <SelectItem value="__none__">Nenhum (manual)</SelectItem>
                 {workflows.map((wf) => (
                   <SelectItem key={String(wf.id)} value={String(wf.id)}>
                     {wf.name}

@@ -70,14 +70,14 @@ export function ExecutionTimeline({
             <span className="text-xs text-gray-500 font-normal ml-2">({total})</span>
           </CardTitle>
           <Select
-            value={statusFilter}
-            onValueChange={(v) => onStatusFilterChange(v as ExecutionStatus | '')}
+            value={statusFilter || '__all__'}
+            onValueChange={(v) => onStatusFilterChange((v === '__all__' ? '' : v) as ExecutionStatus | '')}
           >
             <SelectTrigger className="w-[140px] bg-slate-900/50 border-slate-600 h-8 text-xs">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="__all__">Todos</SelectItem>
               <SelectItem value="success">✓ Sucesso</SelectItem>
               <SelectItem value="error">✕ Erro</SelectItem>
               <SelectItem value="running">◉ Executando</SelectItem>
