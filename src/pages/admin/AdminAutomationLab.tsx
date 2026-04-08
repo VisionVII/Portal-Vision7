@@ -29,7 +29,6 @@ function resolveN8nLabBaseUrl() {
 }
 
 const N8N_LAB_URL = resolveN8nLabBaseUrl();
-const N8N_LAB_WORKSPACE_URL = `${N8N_LAB_URL}/home/workflows`;
 
 const AdminAutomationLab: React.FC = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
@@ -58,7 +57,7 @@ const AdminAutomationLab: React.FC = () => {
               <h1 className="text-lg font-semibold">Laboratório de Automações</h1>
             </div>
           </div>
-          <a href={N8N_LAB_WORKSPACE_URL} target="_blank" rel="noreferrer">
+          <a href={N8N_LAB_URL} target="_blank" rel="noreferrer">
             <Button className="gap-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400">
               Abrir n8n externo <ExternalLink className="h-4 w-4" />
             </Button>
@@ -74,7 +73,7 @@ const AdminAutomationLab: React.FC = () => {
               Ambiente Vision7 sobre infraestrutura n8n
             </CardTitle>
             <CardDescription className="text-slate-300">
-              O shell visual é Vision7. O builder interno é do n8n (infra Render). O laboratório tenta abrir diretamente o workspace do editor; se não existir sessão ativa no n8n, use o botão externo para autenticar e volte depois.
+              O shell visual é Vision7. O builder interno é do n8n (infra Render). O laboratório abre a raiz do n8n para evitar rotas inválidas em produção; se não existir sessão ativa no n8n, use o botão externo para autenticar e volte depois.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -85,7 +84,7 @@ const AdminAutomationLab: React.FC = () => {
             )}
             <div className="h-[78vh] overflow-hidden rounded-xl border border-cyan-300/20 bg-black/20">
               <iframe
-                src={N8N_LAB_WORKSPACE_URL}
+                src={N8N_LAB_URL}
                 title="Vision7 Automation Lab"
                 className="h-full w-full border-0"
                 sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
