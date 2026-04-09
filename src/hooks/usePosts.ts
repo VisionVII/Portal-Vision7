@@ -48,6 +48,79 @@ export interface UpdatePostData extends Partial<CreatePostData> {
   id: string;
 }
 
+const POST_CATEGORY_SELECT = `
+  categories (
+    id,
+    name,
+    slug,
+    color
+  )
+`;
+
+const PUBLIC_POST_SELECT = `
+  id,
+  title,
+  slug,
+  excerpt,
+  image_url,
+  banner_url,
+  category_id,
+  author_name,
+  status,
+  featured,
+  read_time,
+  tags,
+  views,
+  published_at,
+  created_at,
+  updated_at,
+  ${POST_CATEGORY_SELECT}
+`;
+
+const FULL_POST_SELECT = `
+  id,
+  title,
+  slug,
+  excerpt,
+  content,
+  image_url,
+  banner_url,
+  category_id,
+  author_id,
+  author_name,
+  status,
+  featured,
+  read_time,
+  tags,
+  views,
+  published_at,
+  created_at,
+  updated_at,
+  ${POST_CATEGORY_SELECT}
+`;
+
+const normalizePublicPost = (post: Partial<Post>): Post => ({
+  id: post.id || '',
+  title: post.title || '',
+  slug: post.slug || '',
+  excerpt: post.excerpt || '',
+  content: '',
+  image_url: post.image_url || null,
+  banner_url: post.banner_url || null,
+  category_id: post.category_id || null,
+  author_id: null,
+  author_name: post.author_name || 'Redação Vision7',
+  status: post.status || 'published',
+  featured: Boolean(post.featured),
+  read_time: post.read_time || '3 min',
+  tags: post.tags || [],
+  views: post.views || 0,
+  published_at: post.published_at || null,
+  created_at: post.created_at || new Date(0).toISOString(),
+  updated_at: post.updated_at || post.created_at || new Date(0).toISOString(),
+  categories: post.categories || null,
+});
+
 // Fetch all posts (published for public, all for admin)
 export const usePosts = (adminView = false) => {
   return useQuery({
@@ -55,15 +128,7 @@ export const usePosts = (adminView = false) => {
     queryFn: async () => {
       let query = supabase
         .from('posts')
-        .select(`
-          *,
-          categories (
-            id,
-            name,
-            slug,
-            color
-          )
-        `)
+        .select(adminView ? FULL_POST_SELECT : PUBLIC_POST_SELECT)
         .order('created_at', { ascending: false });
 
       if (!adminView) {
@@ -74,7 +139,9 @@ export const usePosts = (adminView = false) => {
 
       if (error) throw new Error(error.message);
 
-      return (data as Post[]) ?? [];
+      return adminView
+        ? ((data as Post[]) ?? [])
+        : ((data as Partial<Post>[] | null)?.map((post) => normalizePublicPost(post)) ?? []);
     },
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
@@ -90,13 +157,7 @@ export const usePostsByCategory = (categorySlug: string) => {
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          *,
-          categories!inner (
-            id,
-            name,
-            slug,
-            color
-          )
+          ${PUBLIC_POST_SELECT.replace('categories (', 'categories!inner (')}
         `)
         .eq('categories.slug', categorySlug)
         .eq('status', 'published')
@@ -104,7 +165,7 @@ export const usePostsByCategory = (categorySlug: string) => {
 
       if (error) throw new Error(error.message);
 
-      return (data as Post[]) ?? [];
+      return (data as Partial<Post>[] | null)?.map((post) => normalizePublicPost(post)) ?? [];
     },
     enabled: !!categorySlug,
     retry: 2,
@@ -120,15 +181,7 @@ export const usePost = (slug: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
-        .select(`
-          *,
-          categories (
-            id,
-            name,
-            slug,
-            color
-          )
-        `)
+        .select(FULL_POST_SELECT)
         .eq('slug', slug)
         .maybeSingle();
 
@@ -148,15 +201,7 @@ export const usePostById = (id: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
-        .select(`
-          *,
-          categories (
-            id,
-            name,
-            slug,
-            color
-          )
-        `)
+        .select(FULL_POST_SELECT)
         .eq('id', id)
         .maybeSingle();
 

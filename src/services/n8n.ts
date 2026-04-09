@@ -7,7 +7,39 @@ type N8nRequestOptions = {
   method?: string;
   body?: unknown;
   query?: Record<string, string | number | boolean | undefined>;
+  suppressHttpWarningsForStatuses?: number[];
 };
+
+type N8nNodeLike = {
+  type?: string;
+  parameters?: Record<string, unknown>;
+  webhookId?: string;
+};
+
+const SCHEDULE_TRIGGER_TYPES = new Set([
+  'n8n-nodes-base.scheduleTrigger',
+  'n8n-nodes-base.cron',
+]);
+
+const MANUAL_TRIGGER_TYPES = new Set([
+  'n8n-nodes-base.manualTrigger',
+  'n8n-nodes-base.executeWorkflowTrigger',
+  'n8n-nodes-base.chatTrigger',
+]);
+
+const WEBHOOK_TRIGGER_TYPES = new Set([
+  'n8n-nodes-base.webhook',
+  'n8n-nodes-base.webhookTrigger',
+  'n8n-nodes-base.formTrigger',
+]);
+
+const reportedDuplicateWorkflowDecisions = new Set<string>();
+
+function withStatusPrefix(status: number | undefined, message: string): string {
+  const normalized = message.trim() || 'Erro desconhecido';
+  if (!status) return normalized;
+  return normalized.startsWith(`[${status}]`) ? normalized : `[${status}] ${normalized}`;
+}
 
 function getJwtExp(token: string): number | null {
   try {
@@ -66,16 +98,20 @@ async function extractHttpError(resp: Response): Promise<string> {
   try {
     const body = await resp.clone().json();
     const msg = body?.error ?? body?.message ?? body?.msg ?? '';
-    if (msg) return `[${status}] ${msg}`;
+    if (msg) return withStatusPrefix(status, String(msg));
   } catch { /* body not JSON */ }
   try {
     const text = await resp.clone().text();
-    if (text) return `[${status}] ${text.slice(0, 200)}`;
+    if (text) return withStatusPrefix(status, text.slice(0, 200));
   } catch { /* body consumed */ }
-  return `Edge Function retornou HTTP ${status}`;
+  return withStatusPrefix(status, `Edge Function retornou HTTP ${status}`);
 }
 
-async function callN8nProxy(payload: unknown): Promise<unknown> {
+function shouldSuppressProxyWarning(httpStatus: number, suppressedStatuses?: number[]) {
+  return Array.isArray(suppressedStatuses) && suppressedStatuses.includes(httpStatus);
+}
+
+async function callN8nProxy(payload: unknown, options: Pick<N8nRequestOptions, 'suppressHttpWarningsForStatuses'> = {}): Promise<unknown> {
   if (!SUPABASE_FUNCTIONS_URL) {
     throw new Error('SUPABASE_FUNCTIONS_URL ausente. Verifique VITE_SUPABASE_URL.');
   }
@@ -98,12 +134,168 @@ async function callN8nProxy(payload: unknown): Promise<unknown> {
     throw new Error(`Falha de rede/CORS ao contactar Edge Function. Verifique ALLOWED_ORIGINS e VITE_SUPABASE_URL. origin=${origin} endpoint=${endpoint}`);
   }
 
-  if (!resp.ok) {
-    const detail = await extractHttpError(resp);
+  const data = await resp.clone().json().catch(async () => {
+    const text = await resp.clone().text().catch(() => '');
+    return text || null;
+  });
+  const proxyData = data && typeof data === 'object' && !Array.isArray(data)
+    ? data as { error?: unknown; message?: unknown; httpStatus?: unknown }
+    : null;
+  const httpStatus = typeof proxyData?.httpStatus === 'number'
+    ? proxyData.httpStatus
+    : resp.status;
+  const proxyMessage = typeof proxyData?.error === 'string'
+    ? proxyData.error
+    : typeof proxyData?.message === 'string'
+    ? proxyData.message
+    : '';
+
+  // Edge function now wraps 503 in 200 OK — check body for actual status
+  if (proxyData?.error && httpStatus === 503) {
+    // Cold-start wrapped in 200 — suppress console spam, just throw for retry
+    throw new Error(withStatusPrefix(httpStatus, proxyMessage || 'n8n Service Unavailable (cold start)'));
+  }
+
+  if (!resp.ok || proxyData?.error) {
+    const detail = proxyMessage
+      ? withStatusPrefix(httpStatus, proxyMessage)
+      : await extractHttpError(resp);
+    // Only log unexpected errors. Some speculative execution attempts deliberately
+    // probe multiple n8n endpoints and may return 404/405/422 without meaning failure.
+    if (httpStatus !== 503 && !shouldSuppressProxyWarning(httpStatus, options.suppressHttpWarningsForStatuses)) {
+      console.warn('[n8n-proxy]', detail);
+    }
     throw new Error(detail);
   }
 
-  return resp.json();
+  return data;
+}
+
+function getWorkflowTimestamp(workflow: N8nWorkflow): number {
+  const rawTimestamp = typeof workflow.updatedAt === 'string'
+    ? workflow.updatedAt
+    : typeof workflow.createdAt === 'string'
+    ? workflow.createdAt
+    : '';
+  const timestamp = rawTimestamp ? Date.parse(rawTimestamp) : Number.NaN;
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function shouldReplaceWorkflow(current: N8nWorkflow, candidate: N8nWorkflow): boolean {
+  const currentActive = current.active === true;
+  const candidateActive = candidate.active === true;
+
+  if (currentActive !== candidateActive) {
+    return candidateActive;
+  }
+
+  return getWorkflowTimestamp(candidate) > getWorkflowTimestamp(current);
+}
+
+function getWorkflowId(workflowOrId: N8nWorkflow | string): string {
+  return typeof workflowOrId === 'string' ? workflowOrId : String(workflowOrId.id);
+}
+
+function getWorkflowNodes(workflow: N8nWorkflow): N8nNodeLike[] {
+  const workflowNodes = Array.isArray(workflow.nodes) ? workflow.nodes : null;
+  if (workflowNodes) {
+    return workflowNodes as N8nNodeLike[];
+  }
+
+  const activeVersion = workflow.activeVersion;
+  if (activeVersion && typeof activeVersion === 'object' && Array.isArray(activeVersion.nodes)) {
+    return activeVersion.nodes as N8nNodeLike[];
+  }
+
+  return [];
+}
+
+function getWorkflowVersionId(workflow: N8nWorkflow): string | null {
+  if (typeof workflow.versionId === 'string' && workflow.versionId) {
+    return workflow.versionId;
+  }
+
+  const activeVersion = workflow.activeVersion;
+  if (
+    activeVersion &&
+    typeof activeVersion === 'object' &&
+    typeof activeVersion.versionId === 'string' &&
+    activeVersion.versionId
+  ) {
+    return activeVersion.versionId;
+  }
+
+  if (typeof workflow.activeVersionId === 'string' && workflow.activeVersionId) {
+    return workflow.activeVersionId;
+  }
+
+  return null;
+}
+
+async function ensureWorkflowDetails(
+  workflowOrId: N8nWorkflow | string,
+  options: { requireNodes?: boolean; requireVersionId?: boolean } = {},
+): Promise<N8nWorkflow> {
+  if (typeof workflowOrId === 'string') {
+    return getWorkflowById(workflowOrId);
+  }
+
+  const hasNodes = getWorkflowNodes(workflowOrId).length > 0;
+  const hasVersionId = Boolean(getWorkflowVersionId(workflowOrId));
+  const needsNodes = options.requireNodes === true;
+  const needsVersionId = options.requireVersionId === true;
+
+  if ((!needsNodes || hasNodes) && (!needsVersionId || hasVersionId)) {
+    return workflowOrId;
+  }
+
+  return getWorkflowById(String(workflowOrId.id));
+}
+
+function isScheduleOnlyWorkflow(workflow: N8nWorkflow): boolean {
+  const nodes = getWorkflowNodes(workflow);
+
+  if (nodes.length === 0) {
+    return false;
+  }
+
+  const hasScheduleTrigger = nodes.some((node) => SCHEDULE_TRIGGER_TYPES.has(node.type ?? ''));
+  const hasManualTrigger = nodes.some((node) => MANUAL_TRIGGER_TYPES.has(node.type ?? ''));
+  const hasWebhookTrigger = nodes.some((node) => WEBHOOK_TRIGGER_TYPES.has(node.type ?? ''));
+
+  return hasScheduleTrigger && !hasManualTrigger && !hasWebhookTrigger;
+}
+
+export function deduplicateN8nWorkflows(workflows: N8nWorkflow[]): N8nWorkflow[] {
+  const seen = new Map<string, N8nWorkflow>();
+
+  for (const workflow of workflows) {
+    const key = String(workflow.name ?? '').trim() || String(workflow.id);
+    const existing = seen.get(key);
+
+    if (!existing) {
+      seen.set(key, workflow);
+      continue;
+    }
+
+    if (shouldReplaceWorkflow(existing, workflow)) {
+      const decisionKey = `replace:${key}:${existing.id}:${workflow.id}`;
+      if (!reportedDuplicateWorkflowDecisions.has(decisionKey)) {
+        reportedDuplicateWorkflowDecisions.add(decisionKey);
+        console.info('[n8n] Duplicate workflow detected; using preferred copy:', key, 'old=', existing.id, 'new=', workflow.id);
+      }
+      seen.set(key, workflow);
+      continue;
+    }
+
+    const decisionKey = `ignore:${key}:${existing.id}:${workflow.id}`;
+    if (!reportedDuplicateWorkflowDecisions.has(decisionKey)) {
+      reportedDuplicateWorkflowDecisions.add(decisionKey);
+      console.info('[n8n] Duplicate workflow detected; ignored duplicate copy:', key, 'kept=', existing.id, 'ignored=', workflow.id);
+    }
+  }
+
+  return [...seen.values()];
 }
 
 /**
@@ -111,8 +303,16 @@ async function callN8nProxy(payload: unknown): Promise<unknown> {
  * The API key is kept server-side — never exposed to the browser.
  */
 const n8nRequest = async <T>(path: string, options: N8nRequestOptions = {}): Promise<T> => {
-  const { method, body, query } = options;
-  const data = await callN8nProxy({ path, method: method || 'GET', body, query });
+  const {
+    method,
+    body,
+    query,
+    suppressHttpWarningsForStatuses,
+  } = options;
+  const data = await callN8nProxy(
+    { path, method: method || 'GET', body, query },
+    { suppressHttpWarningsForStatuses },
+  );
   return data as T;
 };
 
@@ -139,15 +339,33 @@ export const checkN8nHealth = async (): Promise<{
 }> => {
   try {
     const data = await callN8nProxy({ path: '/health' });
-    console.info('[n8n-health] success:', data);
-    return data as { status: 'connected' | 'error' | 'unreachable'; detail?: string; httpStatus?: number };
+    const result = data as { status: 'connected' | 'error' | 'unreachable'; detail?: string; httpStatus?: number };
+    
+    // Only log non-503 errors (503 cold-start is normal and creates spam)
+    if (result.status !== 'connected' && result.httpStatus !== 503) {
+      console.info('[n8n-health]', result.status, result.httpStatus ?? '', result.detail ?? '');
+    }
+
+    // Enhance detail for cold-start HTTP codes
+    if (result.status === 'error' && result.httpStatus === 503) {
+      result.detail = result.detail || 'n8n a arrancar (503 — cold start no Render)';
+    }
+
+    return result;
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
-    console.warn('[n8n-health] exception:', msg);
     const match = msg.match(/^\[(\d{3})\]/);
     const httpStatus = match ? Number(match[1]) : undefined;
-    const detail = /abort|timeout/i.test(msg)
-      ? 'Timeout ao contactar o n8n. A instância pode estar a arrancar no Render ou indisponível.'
+    
+    // Suppress 503 warnings and config errors (cold-start spam)
+    const is503Error = httpStatus === 503 || msg.includes('not configured on server');
+    if (!is503Error) {
+      console.warn('[n8n-health] exception:', msg);
+    }
+    
+    const isTimeout = /abort|timeout/i.test(msg);
+    const detail = isTimeout
+      ? 'Timeout ao contactar o n8n (possível cold start no Render — aguarde 30-60 s).'
       : msg;
     return { status: 'unreachable', detail, httpStatus };
   }
@@ -157,22 +375,88 @@ export const getWorkflows = async () => {
   const payload = await n8nRequest<unknown>('/api/v1/workflows', {
     query: { excludePinnedData: true },
   });
-  return normalizeCollection<N8nWorkflow>(payload);
+  const workflows = normalizeCollection<N8nWorkflow>(payload).filter((workflow) => workflow.isArchived !== true);
+  console.log('[n8n] Workflows raw:', payload);
+  console.log('[n8n] Workflows normalized:', workflows.map(w => ({
+    id: w.id,
+    name: w.name,
+    active: w.active,
+    isArchived: w.isArchived,
+    tags: w.tags
+  })));
+  return workflows;
 };
 
 export const getWorkflowById = async (id: string) => {
   return n8nRequest<N8nWorkflow>(`/api/v1/workflows/${id}`);
 };
 
-export const activateWorkflow = async (id: string) => {
-  return n8nRequest(`/api/v1/workflows/${id}/activate`, { method: 'POST' });
+export const activateWorkflow = async (workflowOrId: N8nWorkflow | string) => {
+  const id = getWorkflowId(workflowOrId);
+  console.log('[n8n] Activating workflow:', id);
+  try {
+    const workflow = await ensureWorkflowDetails(workflowOrId, { requireVersionId: true });
+    const versionId = getWorkflowVersionId(workflow);
+
+    if (!versionId) {
+      throw new Error('Workflow sem versionId no n8n. Atualize ou publique o workflow antes de ativar.');
+    }
+
+    const result = await n8nRequest(`/api/v1/workflows/${id}/activate`, {
+      method: 'POST',
+      body: { versionId },
+    });
+    console.log('[n8n] ✓ Workflow activated:', id, result);
+    return result;
+  } catch (error) {
+    console.error('[n8n] ✗ Failed to activate workflow:', id, error);
+    throw error;
+  }
 };
 
 export const deactivateWorkflow = async (id: string) => {
-  return n8nRequest(`/api/v1/workflows/${id}/deactivate`, { method: 'POST' });
+  console.log('[n8n] Deactivating workflow:', id);
+  try {
+    const result = await n8nRequest(`/api/v1/workflows/${id}/deactivate`, {
+      method: 'POST',
+      body: {},
+    });
+    console.log('[n8n] ✓ Workflow deactivated:', id, result);
+    return result;
+  } catch (error) {
+    console.error('[n8n] ✗ Failed to deactivate workflow:', id, error);
+    throw error;
+  }
 };
 
-export const executeWorkflow = async (id: string): Promise<{ executed: boolean; method: string }> => {
+export const executeWorkflow = async (workflowOrId: N8nWorkflow | string): Promise<{ executed: boolean; method: string }> => {
+  const workflow = await ensureWorkflowDetails(workflowOrId, { requireNodes: true });
+  const id = getWorkflowId(workflow);
+  const expectedExecutionFallbackStatuses = [400, 404, 405, 422, 501, 503];
+
+  if (isScheduleOnlyWorkflow(workflow)) {
+    const detail = workflow.active
+      ? 'A execução real acontece no agendamento configurado no n8n.'
+      : 'Ative-o para que o agendamento execute no n8n.';
+    throw new CronWorkflowError(id, detail);
+  }
+
+  const webhookPath = extractWebhookPath(workflow);
+  if (webhookPath) {
+    try {
+      await n8nRequest(`/webhook/${webhookPath}`, {
+        method: 'POST',
+        suppressHttpWarningsForStatuses: expectedExecutionFallbackStatuses,
+      });
+      return { executed: true, method: 'webhook' };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Erro desconhecido';
+      if (!/\[(400|404|405|422|501|503)\]/.test(msg)) {
+        throw new Error(`Falha na execução: ${msg}`);
+      }
+    }
+  }
+
   // Attempt 1 & 2: Standard n8n API execution endpoints (requires Manual Trigger node)
   const apiAttempts = [
     `/api/v1/workflows/${id}/run`,
@@ -188,7 +472,10 @@ export const executeWorkflow = async (id: string): Promise<{ executed: boolean; 
 
   for (const path of apiAttempts) {
     try {
-      await n8nRequest(path, { method: 'POST' });
+      await n8nRequest(path, {
+        method: 'POST',
+        suppressHttpWarningsForStatuses: expectedExecutionFallbackStatuses,
+      });
       return { executed: true, method: 'api-run' };
     } catch (error) {
       lastError = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -203,6 +490,7 @@ export const executeWorkflow = async (id: string): Promise<{ executed: boolean; 
     await n8nRequest('/api/v1/executions', {
       method: 'POST',
       body: { workflowId: id },
+      suppressHttpWarningsForStatuses: expectedExecutionFallbackStatuses,
     });
     return { executed: true, method: 'api-executions' };
   } catch (error) {
@@ -212,16 +500,8 @@ export const executeWorkflow = async (id: string): Promise<{ executed: boolean; 
     }
   }
 
-  // Attempt 4: Fetch workflow details and try webhook trigger
-  try {
-    const wf = await getWorkflowById(id);
-    const webhookPath = extractWebhookPath(wf);
-    if (webhookPath) {
-      await n8nRequest(`/webhook/${webhookPath}`, { method: 'POST' });
-      return { executed: true, method: 'webhook' };
-    }
-  } catch {
-    // webhook attempt failed
+  if (/\[(503)\]/.test(lastError) || /timeout|cold start/i.test(lastError)) {
+    throw new Error(`Falha na execução: ${lastError}`);
   }
 
   // All methods failed — this is a cron-only workflow
@@ -245,13 +525,12 @@ export class CronWorkflowError extends Error {
  * Looks for Webhook or n8n-nodes-base.webhook trigger nodes.
  */
 function extractWebhookPath(wf: N8nWorkflow): string | null {
-  const nodes = wf.nodes as Array<{ type?: string; parameters?: Record<string, unknown>; webhookId?: string }> | undefined;
-  if (!Array.isArray(nodes)) return null;
+  const nodes = getWorkflowNodes(wf);
+  if (nodes.length === 0) return null;
 
   for (const node of nodes) {
     if (
-      node.type === 'n8n-nodes-base.webhook' ||
-      node.type === 'n8n-nodes-base.webhookTrigger'
+      WEBHOOK_TRIGGER_TYPES.has(node.type ?? '')
     ) {
       const path = node.parameters?.path;
       if (typeof path === 'string' && path) return path;

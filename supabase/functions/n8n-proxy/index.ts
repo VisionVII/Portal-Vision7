@@ -156,13 +156,15 @@ async function getEffectiveN8nApiKey(supabaseAdmin: ReturnType<typeof createClie
     .maybeSingle();
 
   if (!data?.encrypted_value) {
-    return count && count > 0 ? '' : N8N_API_KEY;
+    // No valid encrypted credential — fallback to env var
+    return N8N_API_KEY;
   }
 
   try {
     return await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, data.encrypted_value);
   } catch {
-    return count && count > 0 ? '' : N8N_API_KEY;
+    // Decryption failed — fallback to env var
+    return N8N_API_KEY;
   }
 }
 
@@ -195,17 +197,24 @@ Deno.serve(async (req: Request) => {
     const token = authHeader.slice(7);
 
     // ── 2. Verify token and resolve user via Supabase Auth ──────────────────
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    // Create client with user's token for validation, then switch to service role
+    const supabaseUser = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      global: { headers: { Authorization: authHeader } },
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const { data: authData, error: authError } = await supabaseUser.auth.getUser();
     if (authError || !authData.user?.id) {
-      console.error('[n8n-proxy] Auth error:', authError?.message ?? 'Invalid token');
+      console.error('[n8n-proxy] Auth error:', authError?.message ?? 'Invalid token', 'code:', authError?.code);
       return jsonResponse({ error: 'Unauthorized — invalid or expired token' }, 401, cors);
     }
 
     const userId = authData.user.id;
+
+    // Create service-role client for database operations
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
     // ── 3. Verify user has an allowed admin role (via service-role client) ──
     const { data: roles, error: rolesError } = await supabaseAdmin
@@ -215,7 +224,8 @@ Deno.serve(async (req: Request) => {
       .eq('is_active', true);
 
     if (rolesError) {
-      console.error('[n8n-proxy] Roles query error:', rolesError.message);
+      console.error('[n8n-proxy] Roles query error:', rolesError.message, 'userId:', userId);
+      console.error('[n8n-proxy] Full error:', JSON.stringify(rolesError));
       return jsonResponse({ error: 'Internal error checking roles' }, 500, cors);
     }
 
@@ -242,7 +252,12 @@ Deno.serve(async (req: Request) => {
     const effectiveN8nApiKey = await getEffectiveN8nApiKey(supabaseAdmin);
 
     if (!N8N_BASE_URL || !effectiveN8nApiKey) {
-      return jsonResponse({ error: 'n8n not configured on server' }, 503, cors);
+      // Return 200 OK to avoid browser Network tab errors during config issues
+      return jsonResponse(
+        { error: 'n8n not configured on server', httpStatus: 503 },
+        200,
+        cors,
+      );
     }
 
     // ── 6. Parse & validate request body ────────────────────────────────────
@@ -269,7 +284,7 @@ Deno.serve(async (req: Request) => {
         const pingRes = await fetch(`${N8N_BASE_URL}/api/v1/workflows?limit=1&excludePinnedData=true`, {
           method: 'GET',
           headers: { 'X-N8N-API-KEY': effectiveN8nApiKey },
-          signal: AbortSignal.timeout(45000),
+          signal: AbortSignal.timeout(60000),
         });
 
         let detail = '';
@@ -340,6 +355,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── 9. Forward to n8n ───────────────────────────────────────────────────
+    // 60s timeout — Render free-tier cold starts can take 30-90s
     const n8nResponse = await fetch(url.toString(), {
       method: httpMethod,
       headers: {
@@ -347,10 +363,23 @@ Deno.serve(async (req: Request) => {
         'X-N8N-API-KEY': effectiveN8nApiKey,
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
-      signal: AbortSignal.timeout(30_000), // 30s timeout to n8n
+      signal: AbortSignal.timeout(60_000),
     });
 
     const responseData = await n8nResponse.text();
+
+    // For 503 (cold-start), wrap in 200 OK to avoid browser network errors
+    if (n8nResponse.status === 503) {
+      return jsonResponse(
+        {
+          error: 'n8n Service Unavailable (cold start)',
+          httpStatus: 503,
+          detail: responseData.slice(0, 200),
+        },
+        200,
+        cors,
+      );
+    }
 
     return new Response(responseData, {
       status: n8nResponse.status,
@@ -362,6 +391,19 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[n8n-proxy] Error:', message);
+    
+    // Timeout errors during cold-start - return 200 OK to avoid browser spam
+    if (message.includes('abort') || message.includes('timeout')) {
+      return jsonResponse(
+        {
+          error: 'n8n timeout (cold start em progresso)',
+          detail: message,
+        },
+        200,
+        cors,
+      );
+    }
+    
     return jsonResponse({ error: 'Proxy error', message }, 500, cors);
   }
 });

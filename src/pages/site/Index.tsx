@@ -1,16 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SectionPageHero from '@/components/content/SectionPageHero';
 import PostCard from '@/components/content/PostCard';
 import AdSpace from '@/components/content/AdSpace';
-import CookieBanner from '@/components/system/CookieBanner';
 import NewsletterForm from '@/components/content/NewsletterForm';
 import PostPagination from '@/components/content/PostPagination';
 import { usePosts } from '@/hooks/usePosts';
 import { useCategories } from '@/hooks/useCategories';
 import { useCourses } from '@/hooks/useCourses';
 import { usePagination } from '@/hooks/usePagination';
-import { useSticky } from '@/hooks/useSticky';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
@@ -45,7 +44,6 @@ const Index = () => {
   const { data: categories } = useCategories();
   const { data: courses = [] } = useCourses();
   const { data: siteSettings } = useSiteSettings();
-  const { ref: stickyRef, style: stickyStyle } = useSticky({ offset: 100, topBuffer: 120 });
 
   const homeConfig = useMemo(
     () => parseHomePageConfig(siteSettings?.[HOME_PAGE_CONFIG_KEY]),
@@ -79,9 +77,10 @@ const Index = () => {
   const activeBanner = activeBanners[activeBannerIndex] || activeBanners[0];
   const bannerHref = activeBanner?.ctaHref?.trim() || '#noticias';
   const bannerCtaLabel = activeBanner?.ctaLabel?.trim() || homeConfig.primaryCtaLabel || 'Explorar Notícias';
-  const bannerDescription = activeBanner?.description?.trim() || 'Acesse insights estratégicos sobre tecnologia, inteligência artificial, inovação e negócios digitais. Informação clara e relevante para decisões rápidas em um mundo em constante evolução.';
   const isExternalBannerHref = /^https?:\/\//i.test(bannerHref);
   const isHashBannerHref = bannerHref.startsWith('#');
+  const activeBannerDesktopUrl = activeBanner?.imageUrl || homeConfig.bannerUrl || defaultHomePageConfig.bannerUrl;
+  const activeBannerMobileUrl = activeBanner?.mobileImageUrl || homeConfig.mobileBannerUrl || activeBannerDesktopUrl;
 
   useEffect(() => {
     setActiveBannerIndex((prev) => (prev >= activeBanners.length ? 0 : prev));
@@ -316,112 +315,78 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <section className="relative overflow-hidden bg-[#020817] py-0 text-white md:py-3 lg:py-6">
-        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:28px_28px]" />
-        <div className="container relative mx-auto px-0 sm:px-4">
-          <div className="overflow-hidden border-y border-white/10 bg-slate-950/72 shadow-[0_30px_90px_rgba(8,18,44,0.45)] backdrop-blur-xl sm:rounded-2xl sm:border md:rounded-3xl">
-            <div className="relative min-h-[70svh] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[420px]">
-              <img
-                src={activeBanner.imageUrl}
-                alt={activeBanner.title}
-                className="absolute inset-0 h-full w-full object-cover object-center"
-                onError={(event) => {
-                  event.currentTarget.src = homeConfig.bannerUrl || defaultHomePageConfig.bannerUrl;
-                }}
-              />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.25)_0%,rgba(2,6,23,0.65)_50%,rgba(2,6,23,0.92)_100%)]" />
-              <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(2,6,23,0.85)_0%,rgba(2,6,23,0.3)_40%,rgba(2,6,23,0.8)_100%)]" />
-              <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:26px_26px]" />
+      <SectionPageHero
+        title=""
+        description=""
+        align="left"
+        fallbackClassName="bg-[#020817]"
+        media={{
+          desktopUrl: activeBannerDesktopUrl,
+          mobileUrl: activeBannerMobileUrl,
+          alt: activeBanner?.title || 'Banner principal do Vision7',
+        }}
+        overlayClassName="bg-[linear-gradient(118deg,rgba(2,6,23,0.58)_0%,rgba(2,6,23,0.12)_42%,rgba(2,6,23,0.62)_100%)]"
+        contentClassName="max-w-[34rem] pb-2 text-left sm:pb-6 lg:pb-10 xl:pl-6"
+        actionsSlot={(
+          <div className="flex flex-col items-start gap-4 pt-6 sm:pt-8">
+            <div className="inline-flex w-full max-w-[22rem] flex-col items-start gap-4 rounded-[28px] border border-white/12 bg-slate-950/42 px-4 py-4 shadow-[0_24px_80px_rgba(2,6,23,0.32)] backdrop-blur-md sm:px-5 sm:py-5">
+              {isExternalBannerHref ? (
+                <a
+                  href={bannerHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                >
+                  {bannerCtaLabel}
+                </a>
+              ) : isHashBannerHref ? (
+                <a
+                  href={bannerHref}
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                >
+                  {bannerCtaLabel}
+                </a>
+              ) : (
+                <Link
+                  to={bannerHref}
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                >
+                  {bannerCtaLabel}
+                </Link>
+              )}
 
-              <div className="relative z-10 mx-auto flex min-h-[70svh] max-w-4xl flex-col items-center justify-center px-4 py-10 text-center sm:min-h-[320px] sm:px-8 md:min-h-[360px] lg:min-h-[420px] lg:px-12">
-                <h2 className="max-w-3xl text-[clamp(1.25rem,3.2vw,2.25rem)] font-headline font-bold leading-tight text-white [text-wrap:balance]">
-                  {activeBanner.title}
-                </h2>
-                <p className="mt-2 max-w-2xl text-[clamp(0.8rem,1.8vw,1rem)] leading-relaxed text-slate-200/85 sm:mt-3 lg:max-w-3xl [text-wrap:balance]">
-                  {bannerDescription}
-                </p>
-
-                <div className="mt-5 flex flex-col items-center gap-3 sm:mt-6 sm:flex-row">
-                  {isExternalBannerHref ? (
-                    <a
-                      href={bannerHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition-all hover:bg-slate-100"
-                    >
-                      {bannerCtaLabel}
-                    </a>
-                  ) : isHashBannerHref ? (
-                    <a
-                      href={bannerHref}
-                      className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition-all hover:bg-slate-100"
-                    >
-                      {bannerCtaLabel}
-                    </a>
-                  ) : (
-                    <Link
-                      to={bannerHref}
-                      className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition-all hover:bg-slate-100"
-                    >
-                      {bannerCtaLabel}
-                    </Link>
-                  )}
-
-                  {activeBanners.length > 1 ? (
+              {activeBanners.length > 1 ? (
+                <div className="flex items-center gap-2">
+                  {activeBanners.map((banner, index) => (
                     <button
+                      key={`dot-${banner.id}`}
                       type="button"
-                      onClick={() => setActiveBannerIndex((prev) => (prev + 1) % activeBanners.length)}
-                      className="hidden items-center justify-center rounded-xl border border-white/14 bg-white/8 px-5 py-3 text-sm font-semibold text-white backdrop-blur-xl transition-all hover:bg-white/14 sm:inline-flex"
-                    >
-                      Próximo destaque
-                    </button>
-                  ) : null}
+                      aria-label={`Abrir banner ${index + 1}`}
+                      onClick={() => setActiveBannerIndex(index)}
+                      className={`h-2.5 rounded-full transition-all duration-300 ${
+                        activeBannerIndex === index ? 'w-10 bg-white shadow-[0_0_24px_rgba(255,255,255,0.45)]' : 'w-2.5 bg-white/35 hover:bg-white/55'
+                      }`}
+                    />
+                  ))}
                 </div>
-              </div>
-
-
+              ) : null}
             </div>
           </div>
+        )}
+      />
 
-          {activeBanners.length > 1 ? (
-            <div className="mt-4 hidden gap-3 lg:grid lg:grid-cols-3">
-              {activeBanners.map((banner, index) => (
-                <button
-                  key={`panel-${banner.id}`}
-                  type="button"
-                  onClick={() => setActiveBannerIndex(index)}
-                  className={`rounded-2xl border p-4 text-left transition-all ${
-                    activeBannerIndex === index
-                      ? 'border-primary-300 bg-primary-500/14 shadow-[0_12px_36px_rgba(59,130,246,0.16)]'
-                      : 'border-white/10 bg-white/6 hover:bg-white/10'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-white">{banner.title}</p>
-                    <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-300">
-                      0{index + 1}
-                    </span>
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-300">{banner.description}</p>
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <div className="container mx-auto px-3 py-4 sm:px-4 sm:py-6 lg:py-8">
-        <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-12 lg:gap-8" id="noticias">
-          <div className="space-y-6 sm:space-y-8 lg:col-span-8 xl:col-span-9">
+      <div className="container mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:py-10">
+        <div className="grid grid-cols-1 gap-6 sm:gap-7 lg:grid-cols-12 lg:gap-9" id="noticias">
+          <div className="space-y-8 sm:space-y-10 lg:col-span-8 lg:space-y-12 xl:col-span-9">
             {homeConfig.sections
               .filter((section) => section.enabled && section.id !== 'newsletter')
               .map((section) => renderSection(section))}
           </div>
 
-          <aside className="space-y-6 lg:col-span-4 xl:col-span-3">
+          <aside className="space-y-6 sm:space-y-7 lg:col-span-4 xl:col-span-3">
             <AdSpace size="square" position="Barra Lateral" className="hidden lg:flex" />
 
-            <div ref={stickyRef} style={stickyStyle} className="space-y-6 lg:sticky lg:top-28">
+            <div className="space-y-6 lg:sticky lg:top-28">
               <div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
                 <h3 className="mb-4 text-lg font-headline font-bold text-card-foreground">Mais Populares</h3>
               {isLoading ? (
@@ -481,7 +446,6 @@ const Index = () => {
       </div>
 
       <Footer />
-      <CookieBanner />
     </div>
   );
 };

@@ -23,7 +23,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Dynamic feed builder — reads tags from pipeline_search_config table\n// Falls back to default tags if table is empty or unreachable\n\nconst SUPABASE_URL = 'https://stpusdeqwbckvfsitsld.supabase.co';\nconst SUPABASE_KEY = 'SUA_SERVICE_ROLE_KEY';\n\nconst DEFAULT_TAGS = [\n  { tag: 'inteligência artificial', topic: 'ia' },\n  { tag: 'cibersegurança', topic: 'ciberseguranca' },\n  { tag: 'automação empresarial', topic: 'automacao' },\n];\n\nfunction buildGoogleNewsUrl(query) {\n  return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=pt-PT&gl=PT&ceid=PT:pt`;\n}\n\nfunction tagToTopic(tag) {\n  return tag\n    .toLowerCase()\n    .normalize('NFD')\n    .replace(/[̀-ͯ]/g, '')\n    .replace(/[^a-z0-9]+/g, '_')\n    .replace(/^_|_$/g, '');\n}\n\nlet tags = DEFAULT_TAGS;\n\ntry {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${SUPABASE_URL}/rest/v1/pipeline_search_config?is_active=eq.true&limit=1`,\n    headers: {\n      'apikey': SUPABASE_KEY,\n      'Authorization': `Bearer ${SUPABASE_KEY}`,\n      'Content-Type': 'application/json',\n    },\n  });\n\n  const configs = Array.isArray(resp) ? resp : [];\n  if (configs.length > 0 && Array.isArray(configs[0].tags) && configs[0].tags.length > 0) {\n    tags = configs[0].tags.map(t => ({\n      tag: t,\n      topic: tagToTopic(t),\n    }));\n  }\n} catch (e) {\n  // Fallback to defaults silently\n}\n\nreturn tags.map(t => ({\n  json: {\n    url: buildGoogleNewsUrl(t.tag),\n    topic: t.topic,\n  }\n}));"
+        "jsCode": "// Dynamic feed builder — reads editorial themes from pipeline_search_config\n// Falls back to legacy tags or defaults if schema is not updated yet\n\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://stpusdeqwbckvfsitsld.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\n\nconst DEFAULT_TAGS = [\n  { tag: 'inteligência artificial', topic: 'ia' },\n  { tag: 'cibersegurança', topic: 'ciberseguranca' },\n  { tag: 'automação empresarial', topic: 'automacao' },\n];\n\nfunction buildGoogleNewsUrl(query) {\n  return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=pt-PT&gl=PT&ceid=PT:pt`;\n}\n\nfunction tagToTopic(tag) {\n  return tag\n    .toLowerCase()\n    .normalize('NFD')\n    .replace(/[̀-ͯ]/g, '')\n    .replace(/[^a-z0-9]+/g, '_')\n    .replace(/^_|_$/g, '');\n}\n\nfunction isMissingEditorialColumns(message) {\n  return /(default_post_tags|theme_rules)/i.test(String(message || ''))\n    && /(does not exist|schema cache|Could not find)/i.test(String(message || ''));\n}\n\nasync function loadPipelineConfig() {\n  try {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${SUPABASE_URL}/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags,theme_rules`,\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Content-Type': 'application/json',\n      },\n    });\n    const configs = Array.isArray(resp) ? resp : [];\n    return configs[0] || null;\n  } catch (e) {\n    if (!isMissingEditorialColumns(e?.message)) throw e;\n\n    const legacyResp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${SUPABASE_URL}/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags`,\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Content-Type': 'application/json',\n      },\n    });\n    const legacyConfigs = Array.isArray(legacyResp) ? legacyResp : [];\n    return legacyConfigs[0] || null;\n  }\n}\n\nlet tags = DEFAULT_TAGS;\n\ntry {\n  const activeConfig = await loadPipelineConfig();\n  const themeRules = Array.isArray(activeConfig?.theme_rules) ? activeConfig.theme_rules : [];\n\n  if (themeRules.length > 0) {\n    const themedTags = themeRules.flatMap((rule) => {\n      const searchTerms = Array.isArray(rule?.searchTerms) ? rule.searchTerms : Array.isArray(rule?.search_terms) ? rule.search_terms : [];\n      const slug = String(rule?.slug || '').trim();\n      return searchTerms\n        .map((term) => String(term || '').trim())\n        .filter(Boolean)\n        .map((term) => ({\n          tag: term,\n          topic: slug || tagToTopic(term),\n        }));\n    });\n\n    if (themedTags.length > 0) {\n      tags = themedTags;\n    }\n  } else if (Array.isArray(activeConfig?.tags) && activeConfig.tags.length > 0) {\n    tags = activeConfig.tags.map((t) => ({\n      tag: t,\n      topic: tagToTopic(t),\n    }));\n  }\n} catch (e) {\n  // Fallback to defaults silently\n}\n\nreturn tags.map((t) => ({\n  json: {\n    url: buildGoogleNewsUrl(t.tag),\n    topic: t.topic,\n  }\n}));"
       },
       "id": "build_feeds",
       "name": "Build Feed List",
@@ -65,17 +65,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://stpusdeqwbckvfsitsld.supabase.co/rest/v1/news_staging",
+        "url": "={{ ($env.SUPABASE_URL || $env.SUPABASE_URL || 'https://stpusdeqwbckvfsitsld.supabase.co') + '/rest/v1/news_staging' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "SUA_SERVICE_ROLE_KEY"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer SUA_SERVICE_ROLE_KEY"
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
             },
             {
               "name": "Content-Type",

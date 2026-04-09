@@ -1,6 +1,5 @@
-import { Activity, CheckCircle2, AlertTriangle, Clock, Zap, Workflow } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Clock, Zap, Workflow } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import type { AutomationV2 } from '@/types/automation';
 import type { AutomationExecution } from '@/types/automation';
 import type { N8nWorkflow } from '@/types/automation';
@@ -17,110 +16,75 @@ interface AutomationKPIBarProps {
 export function AutomationKPIBar({
   automations,
   executions,
-  isConnected,
-  lastSync,
-  statusDetail,
   workflows = [],
 }: AutomationKPIBarProps) {
-  const total = automations.length;
   const active = automations.filter((a) => a.status === 'active').length;
 
   const today = new Date().toISOString().slice(0, 10);
   const todayExecs = executions.filter((e) => e.startedAt?.startsWith(today));
   const successToday = todayExecs.filter((e) => e.status === 'success').length;
-  const successRate = todayExecs.length > 0 ? Math.round((successToday / todayExecs.length) * 100) : 100;
+  const successRate = todayExecs.length > 0 ? Math.round((successToday / todayExecs.length) * 100) : null;
 
   const nextRun = automations
     .filter((a) => a.nextRunAt && a.status === 'active')
     .sort((a, b) => (a.nextRunAt! > b.nextRunAt! ? 1 : -1))[0]?.nextRunAt;
 
-  const activeWorkflows = workflows.filter((w) => w.active === true).length;
+  // Only count pipeline workflows (WF-01, WF-02, WF-03)
+  const pipelineWfs = workflows.filter((w) => /WF-0[1-3]/i.test(w.name ?? ''));
+  const activePipelineWfs = pipelineWfs.filter((w) => w.active === true).length;
 
   const kpis = [
     {
-      label: 'Total',
-      value: total,
-      icon: Activity,
-      color: 'text-blue-400',
-    },
-    {
-      label: 'Ativas',
-      value: active,
+      label: 'Automações',
+      value: active > 0 ? `${active} ativas` : '0',
       icon: Zap,
-      color: 'text-emerald-400',
+      color: active > 0 ? 'text-emerald-400' : 'text-gray-400',
     },
     {
-      label: 'n8n Flows',
-      value: `${activeWorkflows}/${workflows.length}`,
+      label: 'Pipeline n8n',
+      value: `${activePipelineWfs}/${pipelineWfs.length}`,
       icon: Workflow,
-      color: activeWorkflows > 0 ? 'text-cyan-400' : 'text-gray-400',
+      color: activePipelineWfs > 0 ? 'text-cyan-400' : 'text-gray-400',
     },
     {
-      label: 'Hoje',
+      label: 'Exec. Hoje',
       value: todayExecs.length,
       icon: CheckCircle2,
-      color: 'text-cyan-400',
+      color: todayExecs.length > 0 ? 'text-cyan-400' : 'text-gray-400',
     },
     {
       label: 'Taxa Sucesso',
-      value: `${successRate}%`,
-      icon: successRate >= 80 ? CheckCircle2 : AlertTriangle,
-      color: successRate >= 80 ? 'text-emerald-400' : 'text-amber-400',
+      value: successRate === null ? '—' : `${successRate}%`,
+      icon: successRate === null ? Clock : successRate >= 80 ? CheckCircle2 : AlertTriangle,
+      color: successRate === null ? 'text-gray-400' : successRate >= 80 ? 'text-emerald-400' : 'text-amber-400',
     },
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-3 mb-6">
-      {/* Connection Badge */}
-      <Badge
-        variant="outline"
-        className={`px-3 py-1 text-xs font-mono ${
-          isConnected
-            ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10'
-            : 'border-red-500/50 text-red-400 bg-red-500/10'
-        }`}
-      >
-        <span className={`inline-block w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
-        {isConnected ? 'n8n conectado' : 'n8n offline'}
-      </Badge>
-
-      {lastSync && (
-        <span className="text-xs text-gray-500 flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          {new Date(lastSync).toLocaleTimeString('pt-BR')}
-        </span>
-      )}
-
-      {!isConnected && statusDetail && (
-        <span className="text-xs text-amber-300 max-w-[420px] truncate" title={statusDetail}>
-          {statusDetail}
-        </span>
-      )}
-
-      <div className="flex-1" />
-
-      {/* KPI Cards */}
-      {kpis.map((kpi) => (
-        <Card key={kpi.label} className="bg-slate-800/50 border-slate-700/50 px-4 py-2 flex items-center gap-2">
-          <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
-          <div>
-            <div className="text-sm font-bold text-white">{kpi.value}</div>
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider">{kpi.label}</div>
-          </div>
-        </Card>
-      ))}
-
-      {nextRun && (
-        <Card className="bg-slate-800/50 border-slate-700/50 px-4 py-2 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-violet-400" />
-          <div>
-            <div className="text-sm font-bold text-white">
-              {new Date(nextRun).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+    <div className="mb-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {kpis.map((kpi) => (
+          <Card key={kpi.label} className="bg-slate-800/50 border-slate-700/50 px-4 py-3 flex items-center gap-3">
+            <kpi.icon className={`w-5 h-5 ${kpi.color} shrink-0`} />
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-white truncate">{kpi.value}</div>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider whitespace-nowrap">{kpi.label}</div>
             </div>
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider">Próximo Run</div>
-          </div>
-        </Card>
-      )}
+          </Card>
+        ))}
+
+        {nextRun && (
+          <Card className="bg-slate-800/50 border-slate-700/50 px-4 py-3 flex items-center gap-3">
+            <Clock className="w-5 h-5 text-violet-400 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-white">
+                {new Date(nextRun).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider whitespace-nowrap">Próximo Run</div>
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
