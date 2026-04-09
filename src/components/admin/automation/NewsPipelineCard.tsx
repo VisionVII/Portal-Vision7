@@ -2,9 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Newspaper, Layers, Sparkles, Play, RefreshCw, CheckCircle2, Square,
   Clock, Loader2, ChevronRight, Tag, X, Settings2, Zap,
-  Activity, ArrowUpRight, AlertTriangle, Radio, Eye, Database, Shield,
+  Activity, ArrowUpRight, AlertTriangle, Radio, Eye, Database, Shield, Workflow,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -498,89 +497,110 @@ export function NewsPipelineCard() {
   };
 
   return (
-    <Card className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-cyan-500/30 shadow-lg shadow-cyan-500/5">
-      <CardHeader className="pb-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`p-2 rounded-lg shrink-0 ${pipelineRunning || hasRunningExecution ? 'bg-cyan-500/20 animate-pulse' : 'bg-cyan-500/10'}`}>
-              <Zap className="w-5 h-5 text-cyan-400" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className="text-sm sm:text-base font-semibold text-white">
-                  {activeConfig?.label ? `${activeConfig.label} — Pipeline IA` : 'Pipeline de Notícias IA'}
-                </CardTitle>
-                {(pipelineRunning || hasRunningExecution) && (
-                  <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-[10px] px-1.5 py-0 animate-pulse">
-                    <Radio className="w-2.5 h-2.5 mr-1" />
-                    AO VIVO
-                  </Badge>
-                )}
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-sm">
+      {/* Decorative gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-violet-500/5 pointer-events-none" />
+      <div className="absolute -top-24 -right-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Header Section */}
+      <div className="relative border-b border-white/5 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl">
+        <div className="px-5 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Title & Status */}
+            <div className="flex items-start gap-4 min-w-0">
+              <div className={`p-3.5 rounded-2xl shrink-0 bg-gradient-to-br transition-all duration-300 ${
+                pipelineRunning || hasRunningExecution 
+                  ? 'from-cyan-500/30 via-cyan-400/20 to-cyan-500/30 shadow-lg shadow-cyan-500/30 animate-pulse' 
+                  : 'from-cyan-500/20 via-cyan-400/10 to-violet-500/20 shadow-xl shadow-cyan-500/10'
+              }`}>
+                <Zap className={`w-6 h-6 ${pipelineRunning || hasRunningExecution ? 'text-cyan-300' : 'text-cyan-400'}`} />
               </div>
-              <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
-                {pipelineWorkflows.length} workflow{pipelineWorkflows.length !== 1 ? 's' : ''} · Coleta → Cluster → Reescrita
-                {someActive && !allActive && <span className="text-amber-400 ml-1">· Parcial</span>}
-                {allActive && <span className="text-emerald-400 ml-1">· Todos ativos</span>}
-              </p>
+              <div className="min-w-0">
+                <div className="flex items-center gap-3 flex-wrap mb-1.5">
+                  <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-white via-cyan-50 to-violet-200 bg-clip-text text-transparent">
+                    {activeConfig?.label ? `${activeConfig.label} — Pipeline IA` : 'Pipeline de Notícias IA'}
+                  </h2>
+                  {(pipelineRunning || hasRunningExecution) && (
+                    <Badge className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-400/40 text-xs px-2.5 py-0.5 animate-pulse shadow-lg shadow-cyan-500/30">
+                      <Radio className="w-3 h-3 mr-1.5" />
+                      AO VIVO
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs sm:text-sm text-gray-400 flex items-center gap-2 flex-wrap">
+                  <span className="flex items-center gap-1.5">
+                    <Workflow className="w-3.5 h-3.5" />
+                    {pipelineWorkflows.length} workflow{pipelineWorkflows.length !== 1 ? 's' : ''}
+                  </span>
+                  <span className="text-gray-600">•</span>
+                  <span>Coleta → Cluster → Reescrita</span>
+                  {someActive && !allActive && <Badge variant="outline" className="border-amber-500/40 text-amber-400 text-[10px] px-1.5 py-0">Parcial</Badge>}
+                  {allActive && <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px] px-1.5 py-0">Todos ativos</Badge>}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-auto">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400 hover:text-white" onClick={openConfig}>
-                  <Settings2 className="w-3.5 h-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Configurar temas editoriais</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400 hover:text-white" onClick={() => { void fetchWorkflows(); void fetchRecentExecutions(); }}>
-                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Atualizar</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={`h-7 w-7 p-0 ${showSettings ? 'text-amber-400' : 'text-gray-400'} hover:text-white`}
-                  onClick={() => setShowSettings(!showSettings)}
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Configurações & Chaves API</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={`h-7 w-7 p-0 ${showLog ? 'text-cyan-400' : 'text-gray-400'} hover:text-white`}
-                  onClick={() => setShowLog(!showLog)}
-                >
-                  <Activity className="w-3.5 h-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Log da sessão</TooltipContent>
-            </Tooltip>
-            <div className="flex items-center gap-1.5 ml-1 pl-2 border-l border-slate-700">
-              <span className="text-[10px] text-gray-500 hidden sm:inline">Auto</span>
-              <Switch
-                checked={allActive}
-                disabled={!pipelineFound}
-                onCheckedChange={() => void handleToggleAll()}
-                className="data-[state=checked]:bg-cyan-600"
-              />
+
+            {/* Controls */}
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/5" onClick={openConfig}>
+                    <Settings2 className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Configurar temas editoriais</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/5" onClick={() => { void fetchWorkflows(); void fetchRecentExecutions(); }}>
+                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Atualizar</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={`h-8 w-8 p-0 ${showSettings ? 'text-amber-400' : 'text-gray-400'} hover:text-white hover:bg-white/5`}
+                    onClick={() => setShowSettings(!showSettings)}
+                  >
+                    <Shield className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Configurações & Chaves API</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={`h-8 w-8 p-0 ${showLog ? 'text-cyan-400' : 'text-gray-400'} hover:text-white hover:bg-white/5`}
+                    onClick={() => setShowLog(!showLog)}
+                  >
+                    <Activity className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Log da sessão</TooltipContent>
+              </Tooltip>
+              <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/10">
+                <span className="text-xs text-gray-400 hidden sm:inline">Auto</span>
+                <Switch
+                  checked={allActive}
+                  disabled={!pipelineFound}
+                  onCheckedChange={() => void handleToggleAll()}
+                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-600"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-3">
+      {/* Main Content */}
+      <div className="relative px-5 py-6 space-y-6">
         {editorialSchemaLegacy && (
           <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5 text-xs text-amber-200">
             <div className="flex items-center gap-1.5 text-amber-300 font-medium">
@@ -596,27 +616,32 @@ export function NewsPipelineCard() {
 
         {/* ── Editorial Theme Summary ── */}
         {activeConfig && !showConfig && (
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Tag className="w-3 h-3 text-gray-500" />
+          <div className="rounded-xl bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/5 p-4 space-y-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="p-1.5 rounded-lg bg-cyan-500/10">
+                <Tag className="w-3.5 h-3.5 text-cyan-400" />
+              </div>
+              <span className="text-xs font-medium text-gray-300">Temas editoriais configurados</span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
               {activeConfig.themeRules.map((theme) => (
-                <Badge key={theme.id} variant="outline" className="text-[10px] px-1.5 py-0 border-cyan-500/30 text-cyan-400">
+                <Badge key={theme.id} variant="outline" className="text-sm px-3 py-1 border-cyan-500/40 text-cyan-300 bg-cyan-500/5">
                   {theme.label}
                 </Badge>
               ))}
-              <Button size="sm" variant="ghost" className="h-5 px-1 text-[10px] text-gray-500 hover:text-cyan-400" onClick={openConfig}>
-                editar
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10" onClick={openConfig}>
+                Editar temas
               </Button>
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-gray-500">
-              <Badge variant="outline" className="px-1.5 py-0 border-slate-600 text-slate-300">
-                Idioma: {activeConfig.language}
+            <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-white/5">
+              <Badge variant="outline" className="text-xs px-2.5 py-1 border-slate-600 text-slate-300 bg-slate-800/50">
+                <span className="text-gray-400 mr-1.5">Idioma:</span>{activeConfig.language}
               </Badge>
-              <Badge variant="outline" className="px-1.5 py-0 border-slate-600 text-slate-300">
-                Região: {activeConfig.region}
+              <Badge variant="outline" className="text-xs px-2.5 py-1 border-slate-600 text-slate-300 bg-slate-800/50">
+                <span className="text-gray-400 mr-1.5">Região:</span>{activeConfig.region}
               </Badge>
               {activeConfig.defaultPostTags.map((tag) => (
-                <Badge key={`post-${tag}`} variant="outline" className="px-1.5 py-0 border-emerald-500/30 text-emerald-400">
+                <Badge key={`post-${tag}`} variant="outline" className="text-xs px-2.5 py-1 border-emerald-500/40 text-emerald-300 bg-emerald-500/5">
                   #{tag}
                 </Badge>
               ))}
@@ -626,35 +651,40 @@ export function NewsPipelineCard() {
 
         {/* ── Editorial Config Panel ── */}
         {showConfig && (
-          <div className="rounded-lg border border-slate-700 bg-slate-800/80 p-3 space-y-3">
+          <div className="rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-800/60 to-slate-900/60 backdrop-blur-xl p-5 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-white">Configuração Editorial</span>
-              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-gray-500" onClick={() => setShowConfig(false)}>
-                <X className="w-3 h-3" />
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-cyan-500/10">
+                  <Settings2 className="w-4 h-4 text-cyan-400" />
+                </div>
+                <span className="text-sm font-semibold text-white">Configuração Editorial</span>
+              </div>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setShowConfig(false)}>
+                <X className="w-4 h-4" />
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div>
-                <span className="text-[10px] text-gray-400">Nome editorial</span>
+                <span className="text-xs font-medium text-gray-300 block mb-1.5">Nome editorial</span>
                 <Input
                   value={editConfigLabel}
                   onChange={(e) => setEditConfigLabel(e.target.value)}
-                  className="mt-1 h-8 text-xs bg-slate-900 border-slate-700"
+                  className="h-9 text-sm bg-slate-900/80 border-slate-700/50 focus:border-cyan-500/50"
                   placeholder="Ex: Tecnologia Portugal"
                 />
               </div>
               <div>
-                <span className="text-[10px] text-gray-400">Idioma</span>
+                <span className="text-xs font-medium text-gray-300 block mb-1.5">Idioma</span>
                 <Input
                   value={editLanguage}
                   onChange={(e) => setEditLanguage(e.target.value)}
-                  className="mt-1 h-8 text-xs bg-slate-900 border-slate-700"
+                  className="h-9 text-sm bg-slate-900/80 border-slate-700/50 focus:border-cyan-500/50"
                   placeholder="pt-PT"
                 />
               </div>
               <div>
-                <span className="text-[10px] text-gray-400">Região</span>
+                <span className="text-xs font-medium text-gray-300 block mb-1.5">Região</span>
                 <Input
                   value={editRegion}
                   onChange={(e) => setEditRegion(e.target.value)}
@@ -879,97 +909,147 @@ export function NewsPipelineCard() {
         )}
 
         {/* ── Pipeline Steps Visual ── */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-1">
-          {PIPELINE_STEPS.map((step, idx) => {
-            const wf = matchWorkflow(workflows, step.nameMatch);
-            if (!wf) return null;
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Fluxo de Execução</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          </div>
 
-            const isActive = wf.active === true;
-            const isRunning = currentStep === step.key;
-            const isCompleted = completedSteps.has(step.key);
-            const isFailed = failedSteps.has(step.key);
-            const StepIcon = step.icon;
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {PIPELINE_STEPS.map((step, idx) => {
+              const wf = matchWorkflow(workflows, step.nameMatch);
+              if (!wf) return null;
 
-            const nextStep = PIPELINE_STEPS[idx + 1];
-            const nextExists = nextStep ? !!matchWorkflow(workflows, nextStep.nameMatch) : false;
+              const isActive = wf.active === true;
+              const isRunning = currentStep === step.key;
+              const isCompleted = completedSteps.has(step.key);
+              const isFailed = failedSteps.has(step.key);
+              const StepIcon = step.icon;
+              const wfExec = recentExecutions.find((e) => String(e.workflowId) === String(wf.id));
 
-            // Find last execution for this workflow
-            const wfExec = recentExecutions.find((e) => String(e.workflowId) === String(wf.id));
+              return (
+                <div key={step.key} className="relative group">
+                  {/* Connecting arrow for lg+ screens */}
+                  {idx < PIPELINE_STEPS.length - 1 && (
+                    <div className="hidden lg:block absolute top-1/2 -right-[18px] -translate-y-1/2 z-10">
+                      <ChevronRight className="w-5 h-5 text-cyan-400/50" />
+                    </div>
+                  )}
 
-            return (
-              <div key={step.key} className="flex sm:flex-1 items-center gap-1.5 sm:gap-1">
-                <div
-                  className={`flex-1 rounded-lg border p-2 sm:p-2.5 transition-all ${
+                  {/* Step Card */}
+                  <div className={`relative overflow-hidden rounded-xl p-5 transition-all duration-300 ${
                     isRunning
-                      ? 'border-cyan-400/60 bg-cyan-500/10 ring-1 ring-cyan-400/20'
+                      ? 'bg-gradient-to-br from-cyan-500/20 via-cyan-400/10 to-blue-500/20 ring-2 ring-cyan-400/50 shadow-xl shadow-cyan-500/30'
                       : isFailed
-                      ? 'border-red-500/40 bg-red-500/5'
+                      ? 'bg-gradient-to-br from-red-500/10 via-red-400/5 to-red-500/10 ring-1 ring-red-500/30'
                       : isCompleted
-                      ? 'border-emerald-500/40 bg-emerald-500/5'
+                      ? 'bg-gradient-to-br from-emerald-500/10 via-emerald-400/5 to-emerald-500/10 ring-1 ring-emerald-500/30'
                       : isActive
-                      ? 'border-slate-600/50 bg-slate-800/50'
-                      : 'border-slate-700/30 bg-slate-900/50 opacity-60'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 mb-1">
-                    {isRunning ? (
-                      <Loader2 className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
-                    ) : isFailed ? (
-                      <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
-                    ) : isCompleted ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <StepIcon className={`w-3.5 h-3.5 ${isActive ? 'text-gray-400' : 'text-gray-600'}`} />
+                      ? 'bg-gradient-to-br from-slate-800/80 to-slate-900/80 ring-1 ring-white/10 hover:ring-cyan-400/30'
+                      : 'bg-gradient-to-br from-slate-900/50 to-slate-950/50 ring-1 ring-white/5 opacity-60'
+                  }`}>
+                    {/* Decorative gradient */}
+                    {isRunning && (
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-transparent to-blue-500/10 animate-pulse pointer-events-none" />
                     )}
-                    <span className="text-xs font-medium text-white">{step.shortLabel}</span>
-                    {isActive && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-auto" title="Workflow ativo" />
-                    )}
-                  </div>
-                  <p className="text-[10px] text-gray-500 hidden sm:block">{step.description}</p>
 
-                  {/* Status badge */}
-                  <div className="flex items-center gap-1 mt-1">
-                    <Badge
-                      variant="outline"
-                      className={`text-[9px] px-1 py-0 ${
-                        isRunning
-                          ? 'border-cyan-400/30 text-cyan-400'
-                          : isFailed
-                          ? 'border-red-500/30 text-red-400'
-                          : isCompleted
-                          ? 'border-emerald-500/30 text-emerald-400'
-                          : isActive
-                          ? 'border-emerald-600/40 text-emerald-400'
-                          : 'border-slate-700 text-slate-600'
-                      }`}
-                    >
-                      {isRunning ? 'Executando...' : isFailed ? 'Erro' : isCompleted ? 'Concluído' : isActive ? 'Ativo' : 'Inativo'}
-                    </Badge>
-                  </div>
+                    <div className="relative space-y-4">
+                      {/* Icon & Title */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2.5 rounded-xl shrink-0 ${
+                            isRunning
+                              ? 'bg-cyan-500/20 ring-2 ring-cyan-400/50'
+                              : isFailed
+                              ? 'bg-red-500/20 ring-1 ring-red-500/30'
+                              : isCompleted
+                              ? 'bg-emerald-500/20 ring-1 ring-emerald-500/30'
+                              : isActive
+                              ? 'bg-gradient-to-br from-cyan-500/10 to-violet-500/10'
+                              : 'bg-slate-800/50'
+                          }`}>
+                            {isRunning ? (
+                              <Loader2 className="w-5 h-5 text-cyan-300 animate-spin" />
+                            ) : isFailed ? (
+                              <AlertTriangle className="w-5 h-5 text-red-400" />
+                            ) : isCompleted ? (
+                              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                            ) : (
+                              <StepIcon className={`w-5 h-5 ${isActive ? 'text-cyan-400' : 'text-gray-600'}`} />
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-semibold text-white">{step.label}</h3>
+                            <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+                          </div>
+                        </div>
+                        {isActive && (
+                          <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/50 animate-pulse" title="Workflow ativo" />
+                        )}
+                      </div>
 
-                  {/* Workflow meta info — compact on mobile */}
-                  <div className="mt-1 space-y-0.5">
-                    <span className="text-[9px] font-mono text-gray-600 block truncate">
-                      ID: {wf.id}
-                    </span>
-                    {wfExec && (
-                      <span className={`text-[9px] block ${
-                        wfExec.status === 'success' ? 'text-emerald-500' :
-                        wfExec.status === 'error' ? 'text-red-500' :
-                        wfExec.status === 'running' ? 'text-cyan-500' : 'text-gray-500'
-                      }`}>
-                        {wfExec.status === 'running' ? 'A correr' : wfExec.status} · {formatRelativeTime(wfExec.startedAt)}
-                      </span>
-                    )}
+                      {/* Status Badge */}
+                      <div className="flex items-center gap-2">
+                        <Badge className={`text-xs px-2.5 py-0.5 ${
+                          isRunning
+                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40'
+                            : isFailed
+                            ? 'bg-red-500/20 text-red-300 border-red-400/40'
+                            : isCompleted
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                            : isActive
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                            : 'bg-slate-800 text-slate-500 border-slate-700'
+                        }`}>
+                          {isRunning ? (
+                            <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Executando...</>
+                          ) : isFailed ? (
+                            'Erro'
+                          ) : isCompleted ? (
+                            '✓ Concluído'
+                          ) : isActive ? (
+                            'Ativo'
+                          ) : (
+                            'Inativo'
+                          )}
+                        </Badge>
+                        {wfExec && (
+                          <Badge variant="outline" className={`text-xs px-2 py-0.5 ${
+                            wfExec.status === 'success' ? 'border-emerald-500/30 text-emerald-400' :
+                            wfExec.status === 'error' ? 'border-red-500/30 text-red-400' :
+                            wfExec.status === 'running' ? 'border-cyan-500/30 text-cyan-400' : 'border-slate-600 text-slate-400'
+                          }`}>
+                            {formatRelativeTime(wfExec.startedAt)}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Workflow Meta */}
+                      <div className="pt-3 border-t border-white/5 space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">Workflow ID</span>
+                          <span className="font-mono text-gray-400">{wf.id}</span>
+                        </div>
+                        {wfExec && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500">Última exec.</span>
+                            <span className={`font-medium ${
+                              wfExec.status === 'success' ? 'text-emerald-400' :
+                              wfExec.status === 'error' ? 'text-red-400' :
+                              wfExec.status === 'running' ? 'text-cyan-400' : 'text-gray-400'
+                            }`}>
+                              {wfExec.status === 'running' ? 'A correr' : wfExec.status}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {nextExists && (
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-600 shrink-0 rotate-90 sm:rotate-0" />
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* ── Activity Log ── */}
@@ -1068,102 +1148,136 @@ export function NewsPipelineCard() {
           </div>
         )}
 
-        {/* ── Actions ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-700/50">
-          <div className="flex flex-wrap items-center gap-2">
-            {pipelineFound && (
-              <Button
-                size="sm"
-                className={`h-9 sm:h-8 text-xs gap-1.5 flex-1 sm:flex-none ${pipelineRunning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-cyan-600 hover:bg-cyan-700'}`}
-                disabled={pipelineRunning}
-                onClick={() => void handleRunPipeline()}
-              >
-                {pipelineRunning ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> <span className="sm:inline">Pipeline a correr...</span></>
-                ) : (
-                  <><Play className="w-3.5 h-3.5" /> <span>Executar Pipeline</span></>
-                )}
-              </Button>
-            )}
+        {/* ── Actions & Stats ── */}
+        <div className="space-y-4">
+          <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-            {/* Promover — only visible when curated posts are ready */}
-            {(stats?.ready ?? 0) > 0 && (
-              <Button
-                size="sm"
-                variant={pipelineFound ? 'outline' : 'default'}
-                className={`h-9 sm:h-8 text-xs gap-1.5 flex-1 sm:flex-none ${pipelineFound
-                  ? 'border-emerald-600/50 text-emerald-400 hover:bg-emerald-600/10'
-                  : 'bg-emerald-600 hover:bg-emerald-700'}`}
-                disabled={promoting}
-                onClick={() => void handlePromoteOnly()}
-              >
-                {promoting ? (
-                  <><Loader2 className="w-3 h-3 animate-spin" /> A promover...</>
-                ) : (
-                  <><ArrowUpRight className="w-3 h-3" /> Promover ({stats?.ready})</>
-                )}
-              </Button>
-            )}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3">
+              {pipelineFound && (
+                <Button
+                  size="lg"
+                  className={`h-11 px-6 text-sm font-medium gap-2 shadow-lg transition-all duration-300 ${
+                    pipelineRunning 
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-500/30' 
+                      : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-cyan-500/30'
+                  }`}
+                  disabled={pipelineRunning}
+                  onClick={() => void handleRunPipeline()}
+                >
+                  {pipelineRunning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Pipeline a correr...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4" />
+                      Executar Pipeline
+                    </>
+                  )}
+                </Button>
+              )}
 
-            {pipelineRunning && (
-              <Button size="sm" variant="ghost" className="h-9 sm:h-8 text-xs text-red-400 hover:text-red-300 gap-1" onClick={() => { abortRef.current = true; }}>
-                <Square className="w-3 h-3" /> Parar
-              </Button>
-            )}
-          </div>
+              {(stats?.ready ?? 0) > 0 && (
+                <Button
+                  size="lg"
+                  className={`h-11 px-6 text-sm font-medium gap-2 shadow-lg transition-all duration-300 ${
+                    pipelineFound
+                      ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 text-emerald-300 border-2 border-emerald-500/50 hover:border-emerald-400/60'
+                      : 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-emerald-500/30'
+                  }`}
+                  disabled={promoting}
+                  onClick={() => void handlePromoteOnly()}
+                >
+                  {promoting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      A promover...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowUpRight className="w-4 h-4" />
+                      Promover ({stats?.ready})
+                    </>
+                  )}
+                </Button>
+              )}
 
-          {stats && (
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-              <span className="text-[10px] text-gray-500">
-                <Clock className="w-3 h-3 inline mr-0.5" />{stats.total} curados
-              </span>
-              {stats.ready > 0 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500/30 text-emerald-400 animate-pulse">
-                  {stats.ready} prontos
-                </Badge>
-              )}
-              {stats.draft > 0 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-400">
-                  {stats.draft} rascunhos
-                </Badge>
-              )}
-              {stats.published > 0 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500/30 text-blue-400">
-                  {stats.published} promovidos
-                </Badge>
-              )}
-              {stats.avgScore > 0 && (
-                <span className="text-[10px] text-gray-500">
-                  Score: <span className="text-cyan-400 font-medium">{stats.avgScore}</span>
-                </span>
+              {pipelineRunning && (
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="h-11 px-6 text-sm font-medium text-red-400 border-red-500/40 hover:bg-red-500/10 hover:text-red-300 gap-2" 
+                  onClick={() => { abortRef.current = true; }}
+                >
+                  <Square className="w-4 h-4" />
+                  Parar
+                </Button>
               )}
             </div>
-          )}
+
+            {/* Stats */}
+            {stats && (
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/50 border border-white/5">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-300">{stats.total} curados</span>
+                </div>
+                {stats.ready > 0 && (
+                  <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-emerald-500/40 px-3 py-1.5 text-sm animate-pulse shadow-lg shadow-emerald-500/20">
+                    {stats.ready} prontos
+                  </Badge>
+                )}
+                {stats.draft > 0 && (
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-300 px-3 py-1.5 text-sm">
+                    {stats.draft} rascunhos
+                  </Badge>
+                )}
+                {stats.published > 0 && (
+                  <Badge variant="outline" className="border-blue-500/40 text-blue-300 px-3 py-1.5 text-sm">
+                    {stats.published} promovidos
+                  </Badge>
+                )}
+                {stats.avgScore > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5">
+                    <span className="text-xs text-gray-400">Score</span>
+                    <span className="text-sm font-semibold text-cyan-400">{stats.avgScore}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Cron schedule info + auto-promote toggle ── */}
         {pipelineFound && allActive && (
-          <div className="rounded-lg border border-emerald-500/15 bg-emerald-500/5 p-2 sm:p-2.5 space-y-2">
-            <div className="flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <p className="text-[11px] sm:text-xs text-emerald-300">
-                <span className="font-medium">Pipeline automático ativo</span>
-                <span className="hidden sm:inline"> — o n8n gera curadoria mesmo sem login no portal; a promoção final passa pela Edge Function do portal.</span>
+          <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-green-500/5 to-emerald-500/10 p-5 space-y-3 shadow-lg shadow-emerald-500/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-emerald-500/20 shrink-0">
+                <Clock className="w-4 h-4 text-emerald-300" />
+              </div>
+              <p className="text-sm text-emerald-200">
+                <span className="font-semibold">Pipeline automático ativo</span>
+                <span className="hidden sm:inline text-emerald-300/80"> — o n8n gera curadoria mesmo sem login no portal; a promoção final passa pela Edge Function do portal.</span>
               </p>
             </div>
-            <div className="flex items-center justify-between gap-2 pt-1 border-t border-emerald-500/10">
-              <div className="flex items-center gap-2 min-w-0">
-                <Zap className={`w-3.5 h-3.5 shrink-0 ${polling.isActive ? 'text-emerald-400' : 'text-gray-500'}`} />
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-emerald-500/20">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`p-2 rounded-lg shrink-0 ${polling.isActive ? 'bg-emerald-500/20' : 'bg-slate-800/50'}`}>
+                  <Zap className={`w-4 h-4 ${polling.isActive ? 'text-emerald-300' : 'text-gray-500'}`} />
+                </div>
                 <div className="min-w-0">
-                  <div className="text-xs text-white font-medium flex items-center gap-1 flex-wrap">
+                  <div className="text-sm text-white font-medium flex items-center gap-2 flex-wrap">
                     Auto-promoção local
                     {polling.isActive && (
-                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] px-1 py-0 animate-pulse">
+                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/40 text-xs px-2 py-0.5 animate-pulse shadow-lg shadow-emerald-500/20">
                         ATIVO
                       </Badge>
                     )}
                   </div>
-                  <p className="text-[10px] text-gray-400 truncate">
+                  <p className="text-xs text-emerald-200/70 mt-0.5">
                     {polling.isActive
                       ? `A cada 2 min nesta sessão · ${polling.totalPromoted} promovido(s)${polling.lastCheck ? ` · ${formatRelativeTime(polling.lastCheck)}` : ''}`
                       : 'Fallback local: curated → rascunhos via backend central; exige dashboard aberta e utilizador autenticado'}
@@ -1173,7 +1287,7 @@ export function NewsPipelineCard() {
               <Switch
                 checked={polling.isActive}
                 onCheckedChange={(checked) => checked ? polling.start() : polling.stop()}
-                className="data-[state=checked]:bg-emerald-600 shrink-0"
+                className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-green-600 shrink-0"
               />
             </div>
           </div>
@@ -1181,13 +1295,17 @@ export function NewsPipelineCard() {
 
         {/* ── No workflows warning ── */}
         {!loading && !pipelineFound && (
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5 text-center">
-            <p className="text-xs text-amber-400">
+          <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/10 p-5 text-center shadow-lg shadow-amber-500/10">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+              <p className="text-sm font-medium text-amber-300">Workflows não encontrados</p>
+            </div>
+            <p className="text-xs text-amber-200/80">
               n8n offline ou nenhum workflow do pipeline encontrado. Use "Promover Curados para Rascunhos" para mover artigos curados existentes.
             </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
