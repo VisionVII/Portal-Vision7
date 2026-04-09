@@ -276,6 +276,12 @@
       "version": "1.2.0",
       "author": "Vision7 Team",
       "description": "AdminAutomationPanel substituído por AutomationDashboard modular (automation-engine v2). Dashboard de automações agora é gerido pelo módulo automation-engine."
+    },
+    {
+      "date": "2026-06-06",
+      "version": "1.2.1",
+      "author": "Vision7 Team",
+      "description": "AutomationDashboard V1, AutomationKPIBar e AutomationCategoryTabs removidos do codebase. Apenas AutomationDashboardV2 em uso. Componente dashboard-section removido. DOM nesting errors corrigidos. Vercel Analytics adicionado."
     }
   ]
 }

@@ -31,8 +31,8 @@ Skill especializada em projetar, implementar e manter automações no portal Vis
 - `n8n_credentials` — Vault de chaves encriptadas AES-GCM
 
 ### Stack Frontend
-- **Dashboard**: `AutomationDashboard` → tabs por categoria
-- **Cards**: `AutomationCard` c/ status badge, métricas, ações inline
+- **Dashboard**: `AutomationDashboardV2` → tabs por categoria, layout unificado sem Card nesting, cores theme-aware
+- **Cards**: `AutomationCard` c/ status badge, métricas, ações inline (sem Card wrapper externo)
 - **Forms**: `AutomationForm` dinâmico baseado no `config_schema` da categoria
 - **Execuções**: `ExecutionTimeline` vertical cronológica + `ExecutionDetail` expandível
 - **Templates**: `AutomationTemplateGallery` com filtro por categoria

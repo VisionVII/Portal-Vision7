@@ -111,11 +111,11 @@ const AdminAutomationLab: React.FC = () => {
               <h1 className="text-lg font-semibold">Laboratório de Automações</h1>
             </div>
           </div>
-          <a href={N8N_LAB_URL} target="_blank" rel="noreferrer">
-            <Button className="gap-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400">
+          <Button asChild className="gap-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400">
+            <a href={N8N_LAB_URL} target="_blank" rel="noreferrer">
               Abrir n8n externo <ExternalLink className="h-4 w-4" />
-            </Button>
-          </a>
+            </a>
+          </Button>
         </div>
       </header>
 
@@ -132,9 +132,9 @@ const AdminAutomationLab: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="mb-3 flex flex-wrap gap-2">
-              <a href={N8N_LAB_URL} target="_blank" rel="noreferrer">
-                <Button className="gap-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400">Abrir ambiente real do n8n <ExternalLink className="h-4 w-4" /></Button>
-              </a>
+              <Button asChild className="gap-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400">
+                <a href={N8N_LAB_URL} target="_blank" rel="noreferrer">Abrir ambiente real do n8n <ExternalLink className="h-4 w-4" /></a>
+              </Button>
             </div>
 
             {internalReady === false && (

@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "owner": "Vision7 Core Team",
   "status": "Em desenvolvimento",
-  "last_updated": "2026-04-08",
+  "last_updated": "2026-06-06",
   "objective": "Motor de automações escalável para portal enterprise: suporta múltiplas categorias (conteúdo, email, auditoria, notificações, integrações externas), com pipeline visual, histórico de execuções filtrado, templates reutilizáveis e arquitetura modular preparada para centenas de automações.",
   "supersedes": "automation-n8n.json (v1.1.0) — mantido como referência legacy",
 
@@ -14,7 +14,7 @@
         "name": "Presentation",
         "description": "Dashboard modular com tabs por categoria, timeline de execuções, e forms dinâmicos baseados no tipo de automação",
         "components": [
-          "AutomationDashboard (orchestrador de tabs)",
+          "AutomationDashboardV2 (orchestrador de tabs, layout unificado sem Card nesting)",
           "AutomationCategoryTab (genérico por categoria)",
           "AutomationCard (card individual de automação)",
           "AutomationForm (form dinâmico por tipo)",
@@ -426,9 +426,7 @@
       "src/types/automation.ts (refatorado com categorias, execuções, templates)"
     ],
     "components": [
-      "src/components/admin/automation/AutomationDashboard.tsx",
-      "src/components/admin/automation/AutomationKPIBar.tsx",
-      "src/components/admin/automation/AutomationCategoryTabs.tsx",
+      "src/components/admin/automation/AutomationDashboardV2.tsx",
       "src/components/admin/automation/AutomationCard.tsx",
       "src/components/admin/automation/AutomationForm.tsx",
       "src/components/admin/automation/AutomationTemplateGallery.tsx",
@@ -459,9 +457,9 @@
     "layout": {
       "type": "Full-width dashboard com sidebar do admin",
       "sections": [
-        "KPI Bar (topo, sempre visível)",
+        "Overview KPIs (estat. inline, sem KPIBar separado)",
         "Category Tabs (conteúdo | email | auditoria | processos | integrações | todas)",
-        "Cards Grid (2-3 colunas, cards de automação filtradas por tab ativa)",
+        "Cards Grid (2-3 colunas, cards theme-aware sem Card nesting)",
         "Drawer/Panel (lateral direita, abre ao clicar num card para edição ou timeline)",
         "Create Button (FAB ou botão no header, abre form de criação)"
       ]
