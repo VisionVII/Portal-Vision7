@@ -32,8 +32,7 @@ const CookieBanner = () => {
         const parsed = JSON.parse(stored) as CookieConsent;
         setCookieConsent(parsed);
         setIsVisible(false);
-      } catch (error) {
-        console.warn('Falha ao ler o consentimento guardado:', error);
+      } catch {
         setCookieConsent(null);
         setIsVisible(true);
       }
@@ -98,7 +97,6 @@ const CookieBanner = () => {
 
   const requestGeolocation = () => {
     if (!navigator.geolocation) {
-      console.warn('Geolocation not supported');
       return;
     }
 
@@ -121,8 +119,7 @@ const CookieBanner = () => {
               })
             );
           },
-          (error) => {
-            console.warn('Geolocation error:', error);
+          () => {
             localStorage.setItem('geo-consent', 'rejected');
           }
         );
