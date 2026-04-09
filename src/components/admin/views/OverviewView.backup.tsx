@@ -17,8 +17,8 @@ import {
   Search,
   FileText,
   X,
-  TrendingUp,
 } from 'lucide-react';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -126,9 +126,11 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
   };
 
   return (
-    <div className="space-y-6">
-      {/* ═══ KPIs + Insights + Actions ═══ */}
-      <section className="space-y-5">
+    <div className="space-y-0">
+      {/* ═══════════════════════════════════════════════════════
+          FOLD 1 — KPIs + Insights + Quick Actions
+          ═══════════════════════════════════════════════════════ */}
+      <section className="space-y-5 pb-8">
         <AdminStatsCards />
 
         {insights.length > 0 && (
@@ -136,7 +138,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
             {insights.map((insight, i) => (
               <div
                 key={i}
-                className={`flex flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center ${
+                className={`flex flex-col gap-3 rounded-2xl border px-4 py-3 sm:flex-row sm:items-center ${
                   insight.type === 'success'
                     ? 'border-emerald-200/50 bg-emerald-50/40 dark:border-emerald-800/25 dark:bg-emerald-950/15'
                     : insight.type === 'warning'
@@ -158,7 +160,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-9 shrink-0 rounded-xl text-xs"
+                    className="h-9 shrink-0 justify-center rounded-xl text-xs sm:justify-start"
                     onClick={() => {
                       if (insight.action === 'Criar post') onNewPost();
                       else if (insight.action === 'Ver rascunhos') onNavigate('content');
@@ -174,27 +176,27 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         )}
 
         {/* Quick actions */}
-        <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap">
+        <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center">
           {allowedViews.includes('content') && (
-            <Button onClick={onNewPost} size="lg" className="col-span-2 h-11 gap-2 rounded-xl sm:col-span-1">
+            <Button onClick={onNewPost} size="lg" className="col-span-2 h-12 gap-2 rounded-2xl shadow-sm sm:col-span-1">
               <Plus className="h-4 w-4" />
               Novo Post
             </Button>
           )}
           {allowedViews.includes('builder') && (
-            <Button variant="outline" size="sm" onClick={() => onNavigate('builder')} className="h-11 gap-1.5 rounded-xl">
+            <Button variant="outline" size="sm" onClick={() => onNavigate('builder')} className="h-11 gap-1.5 rounded-2xl justify-center">
               <LayoutTemplate className="h-3.5 w-3.5" />
               Homepage
             </Button>
           )}
           {allowedViews.includes('automations') && (
-            <Button variant="secondary" size="sm" onClick={() => onNavigate('automations')} className="h-11 gap-1.5 rounded-xl">
+            <Button variant="secondary" size="sm" onClick={() => onNavigate('automations')} className="h-11 gap-1.5 rounded-2xl justify-center">
               <Bot className="h-3.5 w-3.5" />
               Automações
             </Button>
           )}
           <Link to="/" target="_blank">
-            <Button variant="outline" size="sm" className="h-11 w-full gap-1.5 rounded-xl text-muted-foreground sm:w-auto">
+            <Button variant="outline" size="sm" className="h-11 w-full gap-1.5 rounded-2xl text-muted-foreground justify-center sm:w-auto">
               <Globe className="h-3.5 w-3.5" />
               Portal
             </Button>
@@ -202,8 +204,13 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         </div>
       </section>
 
-      {/* ═══ Posts Recentes ═══ */}
-      <section className="space-y-4">
+      {/* fold separator */}
+      <div className="border-t border-border/20 dark:border-border/10" />
+
+      {/* ═══════════════════════════════════════════════════════
+          FOLD 2 — Posts Recentes (Image Cards)
+          ═══════════════════════════════════════════════════════ */}
+      <section className="space-y-5 py-8">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold tracking-tight">Posts Recentes</h3>
           <div className="flex gap-1.5">
@@ -213,7 +220,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
           </div>
         </div>
 
-        {/* Search + filter */}
+        {/* Search + filter pills */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -229,7 +236,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${statusFilter === s ? 'bg-primary-600 text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
               >
                 {s === 'all' ? 'Todos' : s === 'published' ? 'Publicados' : 'Rascunhos'}
               </button>
@@ -237,16 +244,16 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
           </div>
         </div>
 
-        {/* Post cards grid */}
+        {/* Post image cards grid */}
         {postsLoading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="aspect-[4/5] w-full rounded-xl" />
+              <Skeleton key={i} className="aspect-[4/5] w-full rounded-2xl" />
             ))}
           </div>
         ) : filteredPosts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/40 py-16">
-            <div className="rounded-xl bg-muted/40 p-4">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/40 py-16 dark:border-border/20">
+            <div className="rounded-2xl bg-muted/40 p-4 dark:bg-muted/20">
               <FileText className="h-8 w-8 text-muted-foreground/50" />
             </div>
             <p className="mt-4 text-sm font-medium text-foreground/70">
@@ -265,29 +272,25 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
               return (
                 <div
                   key={post.id}
-                  className="group relative cursor-pointer overflow-hidden rounded-xl border border-border/30 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border/30 bg-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 dark:border-border/20"
                   onClick={() => setExpandedPost(isExpanded ? null : post.id)}
                 >
                   {/* Image area */}
-                  <div className="relative aspect-[4/5] w-full overflow-hidden bg-gradient-to-br from-muted/50 to-muted/20">
+                  <div className="relative aspect-[4/5] w-full overflow-hidden bg-gradient-to-br from-primary-100 to-secondary-100 dark:from-primary-900/30 dark:to-secondary-900/30">
                     {imgSrc ? (
                       <img
                         src={imgSrc}
                         alt={post.title}
                         className={`h-full w-full object-cover transition-transform duration-500 ${isExpanded ? 'scale-105 brightness-[0.4]' : 'group-hover:scale-[1.03]'}`}
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          e.currentTarget.parentElement!.querySelector('.fallback-icon')!.classList.remove('hidden');
-                        }}
                       />
-                    ) : null}
-                    <div className="fallback-icon flex h-full w-full items-center justify-center">
-                      <FileText className="h-12 w-12 text-muted-foreground/20" />
-                    </div>
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <FileText className="h-12 w-12 text-muted-foreground/20" />
+                      </div>
+                    )}
 
-                    {/* Default overlay */}
-                    <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity ${isExpanded ? 'opacity-0' : 'opacity-100'}`}>
+                    {/* Default overlay — title + category at bottom */}
+                    <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300 ${isExpanded ? 'opacity-0' : 'opacity-100'}`}>
                       {post.categories && (
                         <span
                           className="mb-2 inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/90"
@@ -306,7 +309,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                       </div>
                     </div>
 
-                    {/* Status badge */}
+                    {/* Status badge — top right */}
                     <div className="absolute right-2.5 top-2.5">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm backdrop-blur-sm ${
                         post.status === 'published'
@@ -317,12 +320,12 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                       </span>
                     </div>
 
-                    {/* Expanded overlay */}
-                    <div className={`absolute inset-0 flex flex-col justify-between p-4 transition-opacity ${isExpanded ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
+                    {/* Expanded overlay — full details + actions */}
+                    <div className={`absolute inset-0 flex flex-col justify-between p-4 transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
                       <div className="flex justify-end">
                         <button
                           onClick={(e) => { e.stopPropagation(); setExpandedPost(null); }}
-                          className="rounded-full bg-white/20 p-1.5 backdrop-blur-sm hover:bg-white/30"
+                          className="rounded-full bg-white/20 p-1.5 backdrop-blur-sm transition-colors hover:bg-white/30"
                         >
                           <X className="h-4 w-4 text-white" />
                         </button>
@@ -381,62 +384,70 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         )}
       </section>
 
-      {/* ═══ Analytics ═══ */}
-      <section className="space-y-4">
-        <h3 className="text-lg font-bold tracking-tight">Análise</h3>
-        
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* fold separator */}
+      <div className="border-t border-border/20 dark:border-border/10" />
+
+      {/* ═══════════════════════════════════════════════════════
+          FOLD 3 — Análise (Gráfico + Categorias + Ecossistema)
+          ═══════════════════════════════════════════════════════ */}
+      <section className="space-y-5 py-8">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {/* Weekly chart */}
-          <div className="rounded-xl border border-border/30 bg-card p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              <h4 className="text-sm font-semibold">Publicações semanais</h4>
-              {weeklyChange !== 0 && (
-                <span className={`ml-auto inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  weeklyChange > 0
-                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
-                    : 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
-                }`}>
-                  <ArrowUpRight className={`h-2.5 w-2.5 ${weeklyChange < 0 ? 'rotate-90' : ''}`} />
-                  {weeklyChange > 0 ? '+' : ''}{weeklyChange}
-                </span>
+          <Card className="border-border/30 dark:border-border/20">
+            <div className="px-6 py-4">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-sm font-semibold">Publicações semanais</CardTitle>
+                {weeklyChange !== 0 && (
+                  <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    weeklyChange > 0
+                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+                      : 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
+                  }`}>
+                    <ArrowUpRight className={`h-2.5 w-2.5 ${weeklyChange < 0 ? 'rotate-90' : ''}`} />
+                    {weeklyChange > 0 ? '+' : ''}{weeklyChange}
+                  </span>
+                )}
+              </div>
+            </div>
+            <CardContent className="pt-0">
+              <div className="flex items-end gap-2">
+                {weeklyPosts.map((count, i) => {
+                  const isLatest = i === 3;
+                  return (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                      <span className={`text-xs font-bold ${isLatest ? 'text-primary-600 dark:text-primary-400' : 'text-foreground/50'}`}>{count}</span>
+                      <div
+                        className={`w-full rounded-md transition-all duration-300 ${
+                          isLatest ? 'bg-primary-500 dark:bg-primary-400/80' : 'bg-muted/80 dark:bg-muted/40'
+                        }`}
+                        style={{ height: `${Math.max((count / maxWeekly) * 64, 4)}px` }}
+                      />
+                      <span className="text-[9px] font-medium text-muted-foreground">S{i + 1}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {weeklyPosts.every((w) => w === 0) && (
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  Sem publicações nas últimas 4 semanas
+                </p>
               )}
-            </div>
-            <div className="flex items-end gap-2">
-              {weeklyPosts.map((count, i) => {
-                const isLatest = i === 3;
-                return (
-                  <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                    <span className={`text-xs font-bold ${isLatest ? 'text-primary' : 'text-foreground/50'}`}>{count}</span>
-                    <div
-                      className={`w-full rounded-md transition-all ${
-                        isLatest ? 'bg-primary' : 'bg-muted/80'
-                      }`}
-                      style={{ height: `${Math.max((count / maxWeekly) * 64, 4)}px` }}
-                    />
-                    <span className="text-[9px] font-medium text-muted-foreground">S{i + 1}</span>
-                  </div>
-                );
-              })}
-            </div>
-            {weeklyPosts.every((w) => w === 0) && (
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                Sem publicações nas últimas 4 semanas
-              </p>
-            )}
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Top categories */}
-          <div className="rounded-xl border border-border/30 bg-card p-5">
-            <h4 className="mb-4 text-sm font-semibold">Top categorias</h4>
-            <div className="space-y-2.5">
+          <Card className="border-border/30 dark:border-border/20">
+            <div className="px-6 py-4">
+              <CardTitle className="text-sm font-semibold">Top categorias</CardTitle>
+            </div>
+            <CardContent className="space-y-2.5 pt-0">
               {postsByCategory.length > 0 ? (
                 postsByCategory.map(([cat, count]) => (
                   <div key={cat} className="flex items-center gap-3">
                     <span className="min-w-0 flex-1 truncate text-sm text-foreground/80">{cat}</span>
-                    <div className="h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-muted/50">
+                    <div className="h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-muted/50 dark:bg-muted/25">
                       <div
-                        className="h-full rounded-full bg-primary/80"
+                        className="h-full rounded-full bg-primary-500/80 dark:bg-primary-400/60"
                         style={{ width: `${Math.round((count / Math.max(publishedPosts.length, 1)) * 100)}%` }}
                       />
                     </div>
@@ -446,30 +457,34 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
               ) : (
                 <p className="py-4 text-center text-xs text-muted-foreground">Sem dados de categorias</p>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Ecosystem */}
-        <div className="rounded-xl border border-border/30 bg-card overflow-hidden">
+        {/* Ecosystem — collapsible */}
+        <Card className="border-border/30 dark:border-border/20">
           <button
             type="button"
             onClick={() => setShowEcosystem((v) => !v)}
-            className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-muted/30"
+            className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-muted/30"
           >
             <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold">Ecossistema</span>
+              <Zap className="h-4 w-4 text-primary-500" />
+              <span className="text-sm font-semibold text-foreground">Ecossistema</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">
                 {publishedPosts.length + draftPosts.length + audiocasts.length + courses.length} itens
               </span>
-              {showEcosystem ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              {showEcosystem ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
             </div>
           </button>
           {showEcosystem && (
-            <div className="border-t border-border/20 p-5">
+            <CardContent className="border-t border-border/20 pt-4">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
                 {[
                   { label: 'Publicados', value: publishedPosts.length, color: 'text-emerald-600 dark:text-emerald-400' },
@@ -479,15 +494,15 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                   { label: 'Audiocasts', value: audiocasts.length, color: 'text-pink-500' },
                   { label: 'Categorias', value: categories?.length || 0, color: 'text-foreground/70' },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-lg bg-muted/30 p-3">
+                  <div key={s.label} className="rounded-lg bg-muted/30 p-3 dark:bg-muted/15">
                     <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{s.label}</p>
                     <p className={`mt-1 text-lg font-bold ${s.color}`}>{s.value}</p>
                   </div>
                 ))}
               </div>
-            </div>
+            </CardContent>
           )}
-        </div>
+        </Card>
       </section>
     </div>
   );
