@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Pause, X, SkipBack, SkipForward, Headphones, Volume2, VolumeX, ChevronUp } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { useAudioPlayerOptional } from '@/contexts/AudioPlayerContext';
+import { useAudioPlayerOptional } from '@/contexts/audio-player';
 import { formatDuration } from '@/lib/utils';
 
 const MiniPlayer: React.FC = () => {

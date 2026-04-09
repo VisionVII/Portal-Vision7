@@ -1,56 +1,10 @@
-import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 
-export interface AudioTrack {
-  id: string;
-  title: string;
-  audio_url: string;
-  cover_url?: string | null;
-  duration?: number | null;
-  description?: string | null;
-  slug?: string;
-}
-
-interface AudioPlayerState {
-  track: AudioTrack | null;
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  volume: number;
-  isMuted: boolean;
-  isMinimized: boolean;
-  isLoading: boolean;
-}
-
-interface AudioPlayerActions {
-  play: (track: AudioTrack) => void;
-  pause: () => void;
-  resume: () => void;
-  toggle: () => void;
-  seek: (time: number) => void;
-  setVolume: (vol: number) => void;
-  toggleMute: () => void;
-  skipForward: (seconds?: number) => void;
-  skipBackward: (seconds?: number) => void;
-  minimize: () => void;
-  maximize: () => void;
-  close: () => void;
-}
-
-type AudioPlayerContextType = AudioPlayerState & AudioPlayerActions;
-
-const AudioPlayerContext = createContext<AudioPlayerContextType | null>(null);
-
-export const useAudioPlayer = () => {
-  const ctx = useContext(AudioPlayerContext);
-  if (!ctx) throw new Error('useAudioPlayer must be used within AudioPlayerProvider');
-  return ctx;
-};
-
-export const useAudioPlayerOptional = () => useContext(AudioPlayerContext);
+import { AudioPlayerContext, AudioPlayerContextType, AudioTrack } from '@/contexts/audio-player';
 
 export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [state, setState] = useState<AudioPlayerState>({
+  const [state, setState] = useState<Omit<AudioPlayerContextType, 'play' | 'pause' | 'resume' | 'toggle' | 'seek' | 'setVolume' | 'toggleMute' | 'skipForward' | 'skipBackward' | 'minimize' | 'maximize' | 'close'>>({
     track: null,
     isPlaying: false,
     currentTime: 0,

@@ -16,7 +16,7 @@ import {
 import { useTrackAudiocastPlay, useTrackAudiocastDownload } from '@/hooks/useAudiocasts';
 import { useToast } from '@/hooks/use-toast';
 import { formatDuration } from '@/lib/utils';
-import { useAudioPlayerOptional } from '@/contexts/AudioPlayerContext';
+import { useAudioPlayerOptional } from '@/contexts/audio-player';
 
 interface AudiocastPlayerProps {
   podcast: {

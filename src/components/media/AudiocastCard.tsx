@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Play, Clock, Calendar, Headphones, Download } from 'lucide-react';
 import { formatDuration } from '@/lib/utils';
-import { useAudioPlayerOptional } from '@/contexts/AudioPlayerContext';
+import { useAudioPlayerOptional } from '@/contexts/audio-player';
 
 interface AudiocastCardProps {
   podcast: {
