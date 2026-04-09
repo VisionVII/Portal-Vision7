@@ -19,6 +19,7 @@ interface AudioPlayerState {
   isMuted: boolean;
   isMinimized: boolean;
   isLoading: boolean;
+  playbackRate: number;
 }
 
 interface AudioPlayerActions {
@@ -31,6 +32,7 @@ interface AudioPlayerActions {
   toggleMute: () => void;
   skipForward: (seconds?: number) => void;
   skipBackward: (seconds?: number) => void;
+  setPlaybackRate: (rate: number) => void;
   minimize: () => void;
   maximize: () => void;
   close: () => void;
