@@ -21,6 +21,7 @@ import { ExecutionTimeline } from './ExecutionTimeline';
 import { NewsPipelineCard } from './NewsPipelineCard';
 import { CuratedPostsReview } from './CuratedPostsReview';
 import { N8nWorkflowsPanel } from './N8nWorkflowsPanel';
+import { EmailTemplateCampaignPanel } from './EmailTemplateCampaignPanel';
 import { AdsSection } from '@/components/admin/ad-manager';
 
 import { useAutomationsV2 } from '@/hooks/useAutomationsV2';
@@ -77,9 +78,9 @@ function Section({
 }) {
   const [open, setOpen] = useState(defaultExpanded);
   return (
-    <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+    <section className="space-y-4 border-l-2 border-primary/20 pl-4 sm:pl-6">
       <div
-        className={`flex items-center justify-between gap-3 px-5 py-4 ${collapsible ? 'cursor-pointer hover:bg-muted/30 transition-colors' : ''}`}
+        className={`flex items-center justify-between gap-3 ${collapsible ? 'cursor-pointer transition-opacity hover:opacity-80' : ''}`}
         onClick={collapsible ? () => setOpen((v) => !v) : undefined}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -96,8 +97,8 @@ function Section({
           )}
         </div>
       </div>
-      {open && <div className="px-5 pb-5">{children}</div>}
-    </div>
+      {open && <div className="border-t border-border/30 pt-4">{children}</div>}
+    </section>
   );
 }
 
@@ -250,31 +251,33 @@ export function AutomationDashboardV2({
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* ═══ Header ═══ */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Automação & Workflows</h1>
-          <p className="text-sm text-muted-foreground">Gerencie automações, monitore execuções e analise performance</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 rounded-full border border-border/50 bg-muted/40 px-3 py-1.5 text-xs font-medium">
-            <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-primary' : 'bg-destructive'}`} />
-            n8n {isConnected ? 'Online' : 'Offline'}
+      <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-white via-blue-50/70 to-white p-5 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Automacao & Workflows</h1>
+            <p className="text-sm text-muted-foreground">Operacao editorial, orquestracao n8n e validacao de comunicacoes do portal</p>
           </div>
-          <Button
-            variant={keepAlive.isActive ? 'default' : 'outline'}
-            size="sm"
-            className="h-8 rounded-lg text-xs"
-            onClick={() => keepAlive.isActive ? keepAlive.stop() : keepAlive.start()}
-          >
-            <Zap className={`h-3.5 w-3.5 mr-1.5 ${keepAlive.isActive ? 'animate-pulse' : ''}`} />
-            Keep-Alive {keepAlive.isActive ? 'ON' : 'OFF'}
-          </Button>
-          <Button size="sm" className="h-8 rounded-lg text-xs" onClick={() => { setEditingAutomation(null); setSelectedTemplate(null); setShowForm(true); }}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Nova Automação
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-white/70 px-3 py-1.5 text-xs font-medium dark:bg-slate-900/40">
+              <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-primary' : 'bg-destructive'}`} />
+              n8n {isConnected ? 'Online' : 'Offline'}
+            </div>
+            <Button
+              variant={keepAlive.isActive ? 'default' : 'outline'}
+              size="sm"
+              className="h-8 rounded-lg text-xs"
+              onClick={() => keepAlive.isActive ? keepAlive.stop() : keepAlive.start()}
+            >
+              <Zap className={`h-3.5 w-3.5 mr-1.5 ${keepAlive.isActive ? 'animate-pulse' : ''}`} />
+              Keep-Alive {keepAlive.isActive ? 'ON' : 'OFF'}
+            </Button>
+            <Button size="sm" className="h-8 rounded-lg text-xs" onClick={() => { setEditingAutomation(null); setSelectedTemplate(null); setShowForm(true); }}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
+              Nova Automacao
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -291,26 +294,26 @@ export function AutomationDashboardV2({
       {/* ═══ OVERVIEW TAB ═══ */}
       {activeView === 'overview' && (
         <div className="space-y-5">
-          {/* KPI Row — flat divs, no Card */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {/* KPI Row - open layout */}
+          <div className="grid gap-2">
             {[
               { label: 'Total Automações', value: counts.all, sub: `${activeAutomations} ativas`, icon: Workflow, accent: 'text-primary bg-primary/10' },
               { label: 'Execuções (24h)', value: totalExecutions, sub: `${successCount} bem-sucedidas`, icon: PlayCircle, accent: 'text-blue-500 bg-blue-500/10' },
               { label: 'Taxa de Sucesso', value: `${successRate}%`, sub: 'Últimas 100 execuções', icon: TrendingUp, accent: 'text-violet-500 bg-violet-500/10' },
               { label: 'Workflows n8n', value: workflows.length, sub: `${workflows.filter((w) => w.active).length} ativos`, icon: Zap, accent: 'text-amber-500 bg-amber-500/10' },
             ].map((kpi) => (
-              <div key={kpi.label} className="rounded-xl border border-border/30 bg-card p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{kpi.label}</p>
-                    <p className="mt-1 text-2xl font-bold text-foreground">{kpi.value}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">{kpi.sub}</p>
-                  </div>
-                  <Ic icon={kpi.icon} className={kpi.accent} />
+              <div key={kpi.label} className="flex items-center justify-between border-b border-border/35 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{kpi.label}</p>
+                  <p className="text-xl font-bold text-foreground">{kpi.value}</p>
+                  <p className="text-[11px] text-muted-foreground">{kpi.sub}</p>
                 </div>
+                <Ic icon={kpi.icon} className={kpi.accent} />
               </div>
             ))}
           </div>
+
+          <EmailTemplateCampaignPanel />
 
           {/* Pipeline de Notícias IA */}
           <Section
@@ -334,7 +337,7 @@ export function AutomationDashboardV2({
             <CuratedPostsReview />
           </Section>
 
-          {/* Workflows & Executions side by side */}
+          {/* Workflows & Executions */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <Section
               title="Workflows n8n"
