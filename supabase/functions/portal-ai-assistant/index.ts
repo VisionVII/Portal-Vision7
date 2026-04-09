@@ -7,6 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY') ?? '';
+const HF_API_TOKEN = Deno.env.get('HF_API_TOKEN') ?? '';
 const N8N_CREDENTIALS_ENCRYPTION_KEY = Deno.env.get('N8N_CREDENTIALS_ENCRYPTION_KEY') ?? '';
 const DEFAULT_MODEL = Deno.env.get('PORTAL_ASSISTANT_MODEL') ?? 'llama-3.1-8b-instant';
 const SDD_PATH = new URL('../../../sdd/modules/portal-assistant.json', import.meta.url);
@@ -218,25 +219,43 @@ async function loadAssistantSdd() {
   }
 }
 
-async function loadGroqKey(adminClient: ReturnType<typeof createClient>) {
-  if (GROQ_API_KEY) return GROQ_API_KEY;
+async function loadApiKey(adminClient: ReturnType<typeof createClient>): Promise<{ key: string; provider: 'huggingface' | 'groq' }> {
+  // 1. Try HF env var first
+  if (HF_API_TOKEN) return { key: HF_API_TOKEN, provider: 'huggingface' };
+  // 2. Try Groq env var
+  if (GROQ_API_KEY) return { key: GROQ_API_KEY, provider: 'groq' };
 
-  const { data: credential } = await adminClient
+  // 3. Try HF_API_TOKEN from DB
+  const { data: hfCred } = await adminClient
+    .from('n8n_credentials')
+    .select('encrypted_value')
+    .eq('key_name', 'HF_API_TOKEN')
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (hfCred?.encrypted_value && N8N_CREDENTIALS_ENCRYPTION_KEY) {
+    try {
+      const key = await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, hfCred.encrypted_value);
+      if (key) return { key, provider: 'huggingface' };
+    } catch { /* fall through */ }
+  }
+
+  // 4. Try GROQ_API_KEY from DB
+  const { data: groqCred } = await adminClient
     .from('n8n_credentials')
     .select('encrypted_value')
     .eq('key_name', 'GROQ_API_KEY')
     .eq('status', 'active')
     .maybeSingle();
 
-  if (!credential?.encrypted_value || !N8N_CREDENTIALS_ENCRYPTION_KEY) {
-    return '';
+  if (groqCred?.encrypted_value && N8N_CREDENTIALS_ENCRYPTION_KEY) {
+    try {
+      const key = await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, groqCred.encrypted_value);
+      if (key) return { key, provider: 'groq' };
+    } catch { /* fall through */ }
   }
 
-  try {
-    return await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, credential.encrypted_value);
-  } catch {
-    return '';
-  }
+  return { key: '', provider: 'groq' };
 }
 
 function buildSystemPrompt(sdd: Record<string, unknown>) {
@@ -300,55 +319,88 @@ Deno.serve(async (req: Request) => {
     const viewerContext = sanitizeViewerContext(body?.viewerContext);
     const sdd = await loadAssistantSdd();
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const groqKey = await loadGroqKey(adminClient);
+    const { key: apiKey, provider: llmProvider } = await loadApiKey(adminClient);
 
-    if (!groqKey) {
-      return jsonResponse({ error: 'GROQ_API_KEY nao configurada para o assistente' }, 503, cors);
+    if (!apiKey) {
+      return jsonResponse({ error: 'Nenhuma chave de IA configurada (HF_API_TOKEN ou GROQ_API_KEY). Configure via dashboard em Automação > Configurações.' }, 503, cors);
     }
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${groqKey}`,
-      },
-      body: JSON.stringify({
-        model: String(body?.model || DEFAULT_MODEL),
-        temperature: 0.28,
-        top_p: 0.9,
-        max_tokens: 900,
-        messages: [
-          {
-            role: 'system',
-            content: buildSystemPrompt(sdd),
-          },
-          ...conversation.map((turn) => ({
-            role: turn.role,
-            content: turn.text,
-          })),
-          {
-            role: 'user',
-            content: JSON.stringify({
-              question,
-              knowledge,
-              viewer_context: viewerContext,
-              assistant_id: String(body?.assistantId || 'vision7-assistant-core'),
-              note: 'Use apenas estes dados do portal, respeite os padroes de rota internos, utilize clima/localizacao apenas com consentimento e devolva apenas JSON valido.',
-            }),
-          },
-        ],
-      }),
+    const systemPrompt = buildSystemPrompt(sdd);
+    const userPayload = JSON.stringify({
+      question,
+      knowledge,
+      viewer_context: viewerContext,
+      assistant_id: String(body?.assistantId || 'vision7-assistant-core'),
+      note: 'Use apenas estes dados do portal, respeite os padroes de rota internos, utilize clima/localizacao apenas com consentimento e devolva apenas JSON valido.',
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      return jsonResponse({ error: data?.error?.message || data?.message || 'Groq request failed' }, response.status, cors);
+    let content = '';
+    let usedProvider = llmProvider;
+
+    if (llmProvider === 'huggingface') {
+      const hfPrompt = systemPrompt + '\n\n' +
+        conversation.map((turn) => (turn.role === 'user' ? '[INST] ' + turn.text + ' [/INST]' : turn.text)).join('\n') +
+        '\n[INST] ' + userPayload + ' [/INST]';
+
+      const hfResponse = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          inputs: '<s>' + hfPrompt,
+          parameters: {
+            max_new_tokens: 900,
+            temperature: 0.28,
+            return_full_text: false,
+          },
+        }),
+      });
+
+      const hfData = await hfResponse.json();
+      if (!hfResponse.ok) {
+        const errMsg = hfData?.error || hfData?.message || 'HuggingFace request failed';
+        return jsonResponse({ error: errMsg }, hfResponse.status, cors);
+      }
+
+      content = Array.isArray(hfData) ? (hfData[0]?.generated_text ?? '') : (hfData?.generated_text ?? '');
+      usedProvider = 'huggingface';
+    } else {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: String(body?.model || DEFAULT_MODEL),
+          temperature: 0.28,
+          top_p: 0.9,
+          max_tokens: 900,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...conversation.map((turn) => ({
+              role: turn.role,
+              content: turn.text,
+            })),
+            { role: 'user', content: userPayload },
+          ],
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return jsonResponse({ error: data?.error?.message || data?.message || 'Groq request failed' }, response.status, cors);
+      }
+
+      content = data?.choices?.[0]?.message?.content ?? '';
+      usedProvider = 'groq';
     }
 
-    const content = data?.choices?.[0]?.message?.content ?? '';
     const parsed = parseAssistantResponse(String(content));
     if (!parsed) {
-      return jsonResponse({ error: 'Resposta invalida do modelo Groq' }, 502, cors);
+      return jsonResponse({ error: `Resposta invalida do modelo (${usedProvider})`, raw_preview: String(content).slice(0, 200) }, 502, cors);
     }
 
     return jsonResponse({
@@ -357,7 +409,7 @@ Deno.serve(async (req: Request) => {
         ? parsed.suggestions.map((value: unknown) => String(value ?? '').trim()).filter(Boolean).slice(0, 4)
         : [],
       links: sanitizeLinks(parsed.links),
-      provider: 'groq-edge',
+      provider: usedProvider === 'huggingface' ? 'hf-edge' : 'groq-edge',
       assistantId: String(body?.assistantId || 'vision7-assistant-core'),
       sddVersion: String(sdd.version ?? '0.1.0'),
       sddModule: String(sdd.module ?? 'Portal Assistant'),

@@ -32,15 +32,15 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
 
   return (
     <div className={cn('flex flex-col', showTagline && !compact ? 'gap-1' : 'gap-0', className)}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 overflow-visible">
         <img
           src={activeLogo}
           alt={`${brandName} premium logo`}
           className={cn(
             'w-auto object-contain drop-shadow-[0_4px_14px_rgba(34,211,238,0.18)]',
             compact
-              ? 'h-10 max-w-[132px] sm:h-11 sm:max-w-[150px]'
-              : 'h-[40px] max-w-[132px] sm:h-[50px] sm:max-w-[170px] lg:h-[60px] lg:max-w-[200px]'
+              ? 'h-12 max-w-[152px] sm:h-14 sm:max-w-[170px]'
+              : 'h-[56px] max-w-[180px] sm:h-[68px] sm:max-w-[220px] lg:h-[78px] lg:max-w-[260px]'
           )}
         />
         <span className="sr-only">{brandName}</span>
