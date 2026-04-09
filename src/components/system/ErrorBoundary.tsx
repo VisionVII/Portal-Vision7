@@ -20,7 +20,9 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error', error, errorInfo);
+    if (import.meta.env.DEV) {
+      console.error('ErrorBoundary caught an error', error, errorInfo);
+    }
   }
 
   render() {
@@ -30,7 +32,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           <div className="max-w-lg text-center border rounded-lg border-border bg-card p-8 shadow-lg">
             <h1 className="text-2xl font-bold mb-4">Ocorreu um erro inesperado</h1>
             <p className="mb-4 text-muted-foreground">Tente recarregar a página ou volte mais tarde.</p>
-            <pre className="text-xs text-red-500 whitespace-pre-wrap break-words">{this.state.error?.message}</pre>
             <button
               onClick={() => window.location.reload()}
               className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
