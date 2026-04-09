@@ -121,8 +121,10 @@ export const useCourses = (adminView = false) => {
         ? ((data as unknown as Course[]) ?? [])
         : ((data as Array<Partial<Course> & { created_at?: string; published_at?: string | null }>)?.map((course) => normalizePublicCourse(course)) ?? fallbackCourses);
     },
-    retry: 1,
-    staleTime: 120_000,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 };
 

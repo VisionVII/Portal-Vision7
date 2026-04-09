@@ -13,7 +13,7 @@ const ThemeToggle = ({ className, compact = false }: ThemeToggleProps) => {
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-full border border-border/80 bg-background/90 p-1 text-foreground shadow-sm backdrop-blur',
+        'inline-flex items-center rounded-full bg-muted/50 p-1 text-foreground',
         compact ? 'gap-1' : 'gap-1.5 p-1.5',
         className
       )}
@@ -34,7 +34,7 @@ const ThemeToggle = ({ className, compact = false }: ThemeToggleProps) => {
               'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:text-sm',
               compact && 'px-2.5 py-1 text-[11px] sm:text-xs',
               isActive
-                ? 'bg-primary text-primary-foreground shadow-sm'
+                ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             )}
             aria-pressed={isActive}

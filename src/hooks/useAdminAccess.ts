@@ -51,7 +51,9 @@ export const useRegistrationInvites = () => {
 
       return (data as RegistrationInvite[]) ?? [];
     },
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 60 * 1000,
   });
 };
 
@@ -73,7 +75,9 @@ export const useRoleAssignments = () => {
 
       return (data as UserRoleAssignment[]) ?? [];
     },
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 60 * 1000,
   });
 };
 
