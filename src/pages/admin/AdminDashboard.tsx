@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import DashboardHeader from '@/components/admin/DashboardHeader';
 import DashboardSidebar from '@/components/admin/DashboardSidebar';
 import type { AdminView } from '@/components/admin/dashboard-types';
@@ -32,11 +33,25 @@ const AdminDashboard = () => {
   const [showPostForm, setShowPostForm] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [activeView, setActiveView] = useState<AdminView>('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('admin-sidebar-collapsed');
+    return saved === 'true';
+  });
+  
   const { user, isAdmin, canAccessDashboard, roles, isLoading: authLoading, isAccessReady } = useAuth();
   const { data: posts } = usePosts(true);
   const navigate = useNavigate();
 
   const draftCount = useMemo(() => posts?.filter((p) => p.status === 'draft').length ?? 0, [posts]);
+
+  // Toggle sidebar and persist to localStorage
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const newValue = !prev;
+      localStorage.setItem('admin-sidebar-collapsed', String(newValue));
+      return newValue;
+    });
+  }, []);
 
   // Only redirect ONCE after the initial auth check resolves.
   // Subsequent auth state changes (token refresh, etc.) should not cause navigation.
@@ -81,9 +96,28 @@ const AdminDashboard = () => {
 
   // Helper: wrap lazy view in a div that hides when not active (keeps state mounted)
   const Panel = useCallback(
-    ({ view, children }: { view: AdminView; children: React.ReactNode }) => (
-      <div className={activeView === view ? undefined : 'hidden'}>{children}</div>
-    ),
+    ({ view, children }: { view: AdminView; children: React.ReactNode }) => {
+      const isActive = activeView === view;
+      
+      return (
+        <AnimatePresence mode="wait">
+          {isActive && (
+            <motion.div
+              key={view}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{
+                duration: 0.3,
+                ease: [0.4, 0, 0.2, 1], // ease-out cubic-bezier
+              }}
+            >
+              {children}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      );
+    },
     [activeView],
   );
 
@@ -116,13 +150,17 @@ const AdminDashboard = () => {
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         {/* Desktop sidebar — fixed left column */}
-        <div className="hidden w-60 shrink-0 border-r border-border/30 bg-card/50 backdrop-blur-sm lg:block xl:w-72 dark:bg-card/30">
+        <div className={`hidden shrink-0 border-r border-border/30 bg-card/50 backdrop-blur-sm lg:block dark:bg-card/30 transition-all duration-300 ${
+          sidebarCollapsed ? 'w-16' : 'w-60 xl:w-72'
+        }`}>
           <div className="sticky top-14 p-3 xl:p-4">
             <DashboardSidebar
               activeView={activeView}
               onViewChange={setActiveView}
               allowedViews={allowedViews}
               draftCount={draftCount}
+              collapsed={sidebarCollapsed}
+              onToggleCollapse={toggleSidebar}
             />
           </div>
         </div>

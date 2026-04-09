@@ -711,7 +711,7 @@ const AdminCmsCustomizer = () => {
                   <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:26px_26px]" />
 
                   <div className="relative z-10 flex min-h-[420px] items-end justify-center px-6 py-8 text-center sm:min-h-[460px] sm:px-10 lg:min-h-[520px]">
-                    <span className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_16px_48px_rgba(255,255,255,0.18)]">
+                    <span className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white drop-shadow-2xl">
                       {config.primaryCtaLabel || 'Explorar Notícias'}
                     </span>
                   </div>
