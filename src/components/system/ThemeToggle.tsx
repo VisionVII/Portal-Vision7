@@ -13,7 +13,7 @@ const ThemeToggle = ({ className, compact = false }: ThemeToggleProps) => {
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-full border border-border/80 bg-background/90 p-1 text-foreground shadow-sm backdrop-blur',
+        'inline-flex items-center rounded-full bg-muted/50 p-1 text-foreground',
         compact ? 'gap-1' : 'gap-1.5 p-1.5',
         className
       )}
