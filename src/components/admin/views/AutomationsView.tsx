@@ -1,6 +1,6 @@
 import React from 'react';
-import { AutomationDashboard } from '@/components/admin/automation';
+import { AutomationDashboardV2 } from '@/components/admin/automation';
 
-const AutomationsView: React.FC<{ isActive?: boolean }> = () => <AutomationDashboard />;
+const AutomationsView: React.FC<{ isActive?: boolean }> = () => <AutomationDashboardV2 />;
 
 export default AutomationsView;

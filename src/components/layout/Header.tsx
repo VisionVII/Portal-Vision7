@@ -268,7 +268,7 @@ const Header = () => {
               <SheetContent side="right" className="flex w-[80vw] max-w-sm flex-col border-l border-border bg-background px-4">
                 <SheetHeader className="shrink-0 border-b border-border pb-3 text-left">
                   <SheetTitle className="sr-only">Menu Vision</SheetTitle>
-                  <BrandLogo compact showTagline={false} logoUrl="/logo7.jpg" className="items-start" />
+                  <BrandLogo compact showTagline={false} className="items-start" />
                 </SheetHeader>
 
                 <div className="flex flex-1 flex-col gap-3 overflow-hidden pt-3">

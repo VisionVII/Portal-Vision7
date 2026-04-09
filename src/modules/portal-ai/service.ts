@@ -102,15 +102,16 @@ export const buildPortalAssistantReply = (
   if (!cleanQuestion) {
     return {
       summary:
-        'Sou o Vision7 AI. Posso orientar leituras, categorias, cursos e audiocasts do portal, sempre com foco prático e sem sair do ecossistema Vision7.',
+        'Olá! Sou o assistente Vision7. Posso ajudá-lo a encontrar conteúdos, navegar categorias, descobrir cursos e muito mais. Comece fazendo uma pergunta ou explorando as sugestões abaixo.',
       suggestions: [
-        'Peça uma rota de leitura por tema ou categoria',
-        'Pergunte o que há de mais recente no portal',
-        'Procure cursos, audiocasts ou conteúdos publicados',
+        'Mostre-me as últimas notícias do portal',
+        'Que cursos vocês recomendam?',
+        'Fale-me sobre as categorias disponíveis',
+        'O que há de interessante nos audiocasts?',
       ],
       links: [
-        { label: 'Ir para a homepage', href: '/', type: 'action' },
-        { label: 'Abrir audiocasts', href: '/audiocasts', type: 'action' },
+        { label: 'Ver página inicial', href: '/', type: 'action' },
+        { label: 'Explorar audiocasts', href: '/audiocasts', type: 'action' },
       ],
       provider: 'local-preview',
     };
@@ -203,15 +204,16 @@ export const buildPortalAssistantReply = (
   if (!links.length) {
     return {
       summary:
-        'Ainda não encontrei uma correspondência forte dentro do Vision7 para esse pedido, mas posso afinar a busca por categoria, formato de conteúdo ou objetivo de leitura.',
+        'Ainda não encontrei conteúdo específico para essa pergunta no portal. Tente reformular ou me diga mais sobre o que procura - posso buscar por categoria, tipo de conteúdo ou tema específico.',
       suggestions: [
-        'Experimente citar o tema principal ou a categoria desejada',
-        'Peça leituras recentes, cursos ou audiocasts sobre um assunto',
-        'Se quiser, eu também posso sugerir por objetivo: aprender, atualizar-se ou explorar',
+        'Experimente mencionar um tema ou categoria',
+        'Peça para ver os conteúdos mais recentes',
+        'Pergunte sobre cursos ou audiocasts específicos',
+        'Diga-me que tipo de informação você procura',
       ],
       links: [
-        { label: 'Ver notícias recentes', href: '/#noticias', type: 'action' },
-        { label: 'Abrir audiocasts', href: '/audiocasts', type: 'action' },
+        { label: 'Ver todas as notícias', href: '/#noticias', type: 'action' },
+        { label: 'Explorar categorias', href: '/', type: 'action' },
       ],
       provider: 'local-preview',
     };
@@ -220,38 +222,39 @@ export const buildPortalAssistantReply = (
   const primaryLink = links[0];
   const summaryParts = [
     matchedPosts.length
-      ? `Encontrei ${matchedPosts.length} leitura(s) com boa aderência ao que pediu.`
+      ? `Encontrei ${matchedPosts.length} ${matchedPosts.length === 1 ? 'artigo' : 'artigos'} relacionado${matchedPosts.length === 1 ? '' : 's'} ao que você perguntou.`
       : wantsRecent
-        ? 'Separei um ponto de partida com o que está mais recente no portal.'
+        ? 'Aqui estão alguns dos conteúdos mais recentes do portal.'
         : null,
     matchedCourses.length
-      ? `${matchedCourses.length} curso(s) ou parceria(s) também encaixam bem neste contexto.`
+      ? `Também temos ${matchedCourses.length} curso${matchedCourses.length === 1 ? '' : 's'} que pode${matchedCourses.length === 1 ? '' : 'm'} interessar.`
       : wantsCourses && knowledge.courses.length
-        ? 'Também identifiquei um caminho de aprendizagem relevante dentro da área de cursos.'
+        ? 'Temos alguns cursos que podem ser úteis nesta área.'
         : null,
     matchedCategories.length || wantsCategories
-      ? 'Há secções do Vision7 que ajudam a aprofundar este tema sem dispersar a navegação.'
-      : null,
-    primaryLink
-      ? `Se quiser um próximo passo objetivo, eu começaria por "${primaryLink.label}".`
+      ? 'Você pode explorar mais conteúdo semelhante nas categorias relacionadas.'
       : null,
   ].filter(Boolean);
 
   const suggestions = Array.from(
     new Set(
       [
-        primaryLink?.type === 'post' ? 'Abra a leitura sugerida e depois eu posso indicar um segundo conteúdo complementar.' : '',
-        wantsRecent ? 'Se quiser, eu filtro agora por uma categoria específica do portal.' : 'Posso afinar isto por categoria, nível ou formato de conteúdo.',
-        matchedCourses.length || wantsCourses ? 'Também posso cruzar este tema com cursos ou trilhas já disponíveis no portal.' : 'Se fizer sentido, eu também posso procurar cursos ou audiocasts relacionados.',
-        wantsAudiocasts ? 'Se preferir, levo-o diretamente para episódios com esse foco.' : 'Se preferir áudio, também posso redirecionar para os audiocasts relevantes.',
+        links.length > 1 ? `Veja ${links.length > 2 ? 'todos os' : 'os'} links sugeridos abaixo` : '',
+        'Quer que eu refine a busca por categoria específica?',
+        matchedCourses.length || wantsCourses ? 'Posso detalhar mais sobre os cursos disponíveis' : 'Quer saber sobre outros formatos de conteúdo?',
+        'Precisa de mais informações sobre algum desses conteúdos?',
       ].filter(Boolean),
     ),
-  ).slice(0, 4);
+  ).slice(0, 3);
+
+  const summary = summaryParts.length > 0
+    ? summaryParts.join(' ')
+    : `Encontrei ${links.length} ${links.length === 1 ? 'resultado' : 'resultados'} que podem ajudar.`;
 
   return {
-    summary: summaryParts.join(' ').trim(),
+    summary: summary.trim(),
     suggestions,
-    links: links.slice(0, 5),
+    links: links.slice(0, 6),
     provider: 'local-preview',
   };
 };

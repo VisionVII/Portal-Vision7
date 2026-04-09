@@ -193,7 +193,12 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       setMessages([{
         id: 'welcome',
         role: 'assistant',
-        text: 'Sou o Vision7 AI. Posso orientar leituras, cursos, audiocasts e categorias do portal, e também usar clima e contexto local quando a privacidade estiver autorizada. O que quer resolver agora?',
+        text: 'Olá! Sou o assistente Vision7. Posso ajudá-lo a navegar pelo portal, encontrar conteúdos relevantes e responder perguntas sobre o que temos disponível. Como posso ajudar?',
+        suggestions: [
+          'Mostre-me as notícias mais recentes',
+          'Quais cursos vocês oferecem?',
+          'Fale-me sobre as categorias do portal',
+        ],
         provider: activeProvider,
       }]);
     }
@@ -250,28 +255,8 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       return [] as AssistantMessageCard[];
     }
 
-    return links.slice(0, 4).map((link, index) => {
-      const mapped = contentCardsByHref.get(link.href);
-
-      if (mapped) {
-        return {
-          ...mapped,
-          id: `${link.type}-${index}-${link.href}`,
-        };
-      }
-
-      return {
-        id: `${link.type}-${index}-${link.href}`,
-        kind: 'content',
-        title: link.label,
-        description: 'Abrir este atalho contextual dentro do Vision7.',
-        badge: link.type,
-        href: link.href,
-        imageUrl: null,
-        ctaLabel: 'Abrir atalho',
-        meta: ['Vision7'],
-      } satisfies AssistantMessageCard;
-    });
+    // Only show cards for weather/consent - keep content suggestions as simple links
+    return [];
   };
 
   const handleSend = async (input: string) => {

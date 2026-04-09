@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   CheckCircle2, XCircle, Eye, ArrowUpRight, Sparkles, Filter,
-  ChevronDown, Star,
+  ChevronDown, Star, Code, FileText,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,13 +12,14 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   useCuratedPosts,
   usePromoteCuratedPost,
   useRejectCuratedPost,
 } from '@/hooks/useCuratedPosts';
 import type { CuratedPost } from '@/hooks/useCuratedPosts';
-import { sanitizeRichContent } from '@/lib/richContent';
+import { RichContentPreview } from '@/components/admin/RichContentPreview';
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   ready: { label: 'Pronto', className: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
@@ -54,10 +55,6 @@ export function CuratedPostsReview() {
   const rejectMutation = useRejectCuratedPost();
 
   const [previewPost, setPreviewPost] = useState<CuratedPost | null>(null);
-  const sanitizedPreviewHtml = useMemo(
-    () => (previewPost?.body_html ? sanitizeRichContent(previewPost.body_html) : ''),
-    [previewPost?.body_html],
-  );
 
   const handlePromote = (post: CuratedPost) => {
     promoteMutation.mutate(post);
@@ -133,10 +130,16 @@ export function CuratedPostsReview() {
                         <ScoreBadge score={Number(post.editorial_score)} />
                         <span className="text-[10px] text-gray-600">{formatDate(post.created_at)}</span>
                       </div>
-                      <h4 className="text-sm font-medium text-white leading-snug">{post.title}</h4>
-                      {post.excerpt && (
-                        <p className="text-xs text-gray-400 mt-1.5 line-clamp-2 leading-relaxed">{post.excerpt}</p>
-                      )}
+                      <h4 className="text-sm font-medium text-white leading-snug mb-2">{post.title}</h4>
+                      {post.body_html ? (
+                        <RichContentPreview 
+                          html={post.body_html} 
+                          variant="card"
+                          className="text-xs"
+                        />
+                      ) : post.excerpt ? (
+                        <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">{post.excerpt}</p>
+                      ) : null}
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -182,61 +185,98 @@ export function CuratedPostsReview() {
 
       {/* ── Preview dialog ── */}
       <Dialog open={!!previewPost} onOpenChange={(open) => !open && setPreviewPost(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-slate-900 border-slate-700">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700/50 shadow-2xl">
           {previewPost && (
             <>
-              <DialogHeader>
-                <DialogTitle className="text-white">{previewPost.title}</DialogTitle>
+              <DialogHeader className="border-b border-white/10 pb-4">
+                <DialogTitle className="text-xl font-bold text-white pr-8">{previewPost.title}</DialogTitle>
                 {previewPost.subtitle && (
-                  <DialogDescription>{previewPost.subtitle}</DialogDescription>
+                  <DialogDescription className="text-base text-gray-300 mt-1">{previewPost.subtitle}</DialogDescription>
                 )}
-              </DialogHeader>
-              <div className="flex items-center gap-2 mb-3">
-                <Badge
-                  variant="outline"
-                  className={`text-xs ${STATUS_BADGE[previewPost.status]?.className ?? ''}`}
-                >
-                  {STATUS_BADGE[previewPost.status]?.label ?? previewPost.status}
-                </Badge>
-                <ScoreBadge score={Number(previewPost.editorial_score)} />
-                <span className="text-xs text-gray-500">
-                  Confiança: {Number(previewPost.confidence_score).toFixed(0)}%
-                </span>
-              </div>
-              {previewPost.body_html ? (
-                <div
-                  className="prose prose-sm prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: sanitizedPreviewHtml }}
-                />
-              ) : (
-                <div className="whitespace-pre-wrap text-sm text-gray-300">
-                  {previewPost.body_markdown}
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <Badge
+                    variant="outline"
+                    className={`text-xs ${STATUS_BADGE[previewPost.status]?.className ?? ''}`}
+                  >
+                    {STATUS_BADGE[previewPost.status]?.label ?? previewPost.status}
+                  </Badge>
+                  <ScoreBadge score={Number(previewPost.editorial_score)} />
+                  <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
+                    Confiança: {Number(previewPost.confidence_score).toFixed(0)}%
+                  </Badge>
+                  {previewPost.theme && (
+                    <Badge variant="outline" className="text-xs border-cyan-500/40 text-cyan-300">
+                      {previewPost.theme}
+                    </Badge>
+                  )}
                 </div>
-              )}
-              <DialogFooter className="pt-4">
+              </DialogHeader>
+
+              <Tabs defaultValue="preview" className="flex-1 overflow-hidden flex flex-col">
+                <TabsList className="bg-slate-800/50 border-b border-white/5 w-full justify-start rounded-none h-auto p-1">
+                  <TabsTrigger value="preview" className="gap-2 data-[state=active]:bg-slate-700 data-[state=active]:text-white">
+                    <FileText className="w-4 h-4" />
+                    Preview Formatado
+                  </TabsTrigger>
+                  <TabsTrigger value="source" className="gap-2 data-[state=active]:bg-slate-700 data-[state=active]:text-white">
+                    <Code className="w-4 h-4" />
+                    Código Fonte
+                  </TabsTrigger>
+                </TabsList>
+
+                <div className="flex-1 overflow-y-auto px-6 py-5">
+                  <TabsContent value="preview" className="mt-0">
+                    {previewPost.body_html ? (
+                      <RichContentPreview 
+                        html={previewPost.body_html} 
+                        variant="full"
+                      />
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500 text-sm">Sem conteúdo HTML formatado</p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="source" className="mt-0">
+                    {previewPost.body_markdown ? (
+                      <pre className="whitespace-pre-wrap text-sm text-gray-300 bg-slate-950/50 rounded-lg p-4 border border-slate-700/50 font-mono">
+                        {previewPost.body_markdown}
+                      </pre>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500 text-sm">Sem código fonte markdown disponível</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </div>
+              </Tabs>
+
+              <DialogFooter className="border-t border-white/10 pt-4">
                 {previewPost.status === 'ready' && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 w-full sm:w-auto">
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
+                      className="flex-1 sm:flex-none border-red-500/40 text-red-400 hover:bg-red-500/10"
                       disabled={rejectMutation.isPending}
                       onClick={() => {
                         handleReject(previewPost.id);
                         setPreviewPost(null);
                       }}
                     >
-                      <XCircle className="w-3.5 h-3.5 mr-1" /> Rejeitar
+                      <XCircle className="w-3.5 h-3.5 mr-1.5" /> Rejeitar
                     </Button>
                     <Button
                       size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-700"
+                      className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg shadow-emerald-500/30"
                       disabled={promoteMutation.isPending}
                       onClick={() => {
                         handlePromote(previewPost);
                         setPreviewPost(null);
                       }}
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Promover para Rascunho
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Promover para Rascunho
                     </Button>
                   </div>
                 )}
