@@ -274,19 +274,19 @@ const Header = () => {
                 <div className="flex flex-1 flex-col gap-3 overflow-hidden pt-3">
                   <ThemeToggle className="shrink-0" />
 
-                  {/* ─── Context info (compact horizontal strip) ─── */}
-                  <div className="shrink-0 rounded-2xl border border-border bg-card p-3">
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
+                  {/* ─── Context info premium — inspired by weather card ─── */}
+                  <div className="shrink-0 overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-3.5 shadow-sm">
+                    <div className="grid grid-cols-2 gap-3 text-[12px]">
                       {/* Day/Night */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 rounded-xl bg-background/40 px-2.5 py-2 backdrop-blur-sm">
                         <SkyIcon isDaytime={skyInfo.isDaytime} moonEmoji={skyInfo.moonEmoji} className="h-4 w-4 shrink-0" />
-                        <span className="truncate font-medium text-foreground">
+                        <span className="truncate font-semibold text-foreground">
                           {skyInfo.isDaytime ? 'Dia' : skyInfo.moonPhaseName}
                         </span>
                       </div>
 
                       {/* Temperature */}
-                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1 ${skyInfo.temperatureBg}`}>
+                      <div className={`flex items-center gap-2 rounded-xl px-2.5 py-2 ${skyInfo.temperatureBg} backdrop-blur-sm`}>
                         <TemperatureIcon icon={skyInfo.temperatureIcon} className={`h-4 w-4 shrink-0 ${skyInfo.temperatureColor}`} />
                         <span className={`truncate font-bold ${skyInfo.temperatureColor}`}>{temperatureLabel}</span>
                       </div>
@@ -294,19 +294,19 @@ const Header = () => {
                       {/* Date — opens calendar */}
                       <CalendarPopover
                         localDateLabel={localDateLabel}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 rounded-xl bg-background/40 px-2.5 py-2 backdrop-blur-sm"
                       />
 
                       {/* Clock */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 rounded-xl bg-background/40 px-2.5 py-2 backdrop-blur-sm">
                         <Clock3 className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="truncate font-medium text-foreground">{localTime}</span>
+                        <span className="truncate font-semibold text-foreground">{localTime}</span>
                       </div>
 
                       {/* Location — full width */}
-                      <div className="col-span-2 flex items-center gap-2">
+                      <div className="col-span-2 flex items-center gap-2 rounded-xl bg-primary/8 px-2.5 py-2 backdrop-blur-sm">
                         <MapPin className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="truncate font-medium text-foreground">{locationLabel}</span>
+                        <span className="truncate font-semibold text-foreground">{locationLabel}</span>
                       </div>
                     </div>
                   </div>
