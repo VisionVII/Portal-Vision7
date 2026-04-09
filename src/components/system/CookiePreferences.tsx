@@ -50,8 +50,8 @@ const CookiePreferences: React.FC<CookiePreferencesProps> = ({ isOpen, onClose }
         consentDate: parsed.consentDate ?? new Date().toISOString(),
         version: parsed.version ?? 2,
       });
-    } catch (error) {
-      console.warn('Falha ao ler as preferências guardadas.', error);
+    } catch {
+      // Ignore invalid local preference payloads and fall back to defaults.
     }
   }, [isOpen]);
 
@@ -227,7 +227,7 @@ const CookiePreferences: React.FC<CookiePreferencesProps> = ({ isOpen, onClose }
           {/* Marketing */}
           <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card/80 px-3 py-2.5">
             <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 flex-shrink-0 text-violet-600 dark:text-violet-400" />
+              <Shield className="h-4 w-4 flex-shrink-0 text-primary-600 dark:text-primary-400" />
               <span className="text-sm font-medium text-foreground">Marketing</span>
             </div>
             <button type="button" onClick={() => handleToggle('marketing')} aria-pressed={preferences.marketing} className={toggleClasses(preferences.marketing)}>

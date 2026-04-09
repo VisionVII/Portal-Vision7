@@ -5,9 +5,10 @@ import { sendNewsletterWelcome } from '@/services/email';
 export const useSubscribeNewsletter = () => {
   return useMutation({
     mutationFn: async (email: string) => {
+      const normalizedEmail = email.trim().toLowerCase();
       const { error } = await supabase
         .from('newsletter_subscribers')
-        .insert([{ email }]);
+        .insert([{ email: normalizedEmail }]);
       
       if (error) {
         if (error.code === '23505') {
@@ -16,10 +17,12 @@ export const useSubscribeNewsletter = () => {
         throw error;
       }
 
-      // Send welcome email (fire-and-forget — don't block the subscription)
-      sendNewsletterWelcome(email).catch((err) => {
-        console.warn('[Newsletter] Failed to send welcome email:', err);
-      });
+      const { error: welcomeError } = await sendNewsletterWelcome(normalizedEmail);
+
+      return {
+        email: normalizedEmail,
+        welcomeEmailSent: !welcomeError,
+      };
     },
   });
 };

@@ -81,7 +81,7 @@ export interface PortalAssistantViewerContext {
 export interface PortalAssistantRequest {
   question: string;
   assistantId: string;
-  provider: 'local-preview' | 'groq-edge';
+  provider: 'local-preview' | 'groq-edge' | 'hf-edge';
   knowledge: PortalAssistantKnowledge;
   conversation?: PortalAssistantConversationTurn[];
   viewerContext?: PortalAssistantViewerContext;

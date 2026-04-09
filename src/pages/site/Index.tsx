@@ -33,8 +33,7 @@ const parseCourseMeta = (rawValue?: string | null): Record<string, CourseMeta> =
 
   try {
     return JSON.parse(rawValue) as Record<string, CourseMeta>;
-  } catch (error) {
-    console.warn('Falha ao interpretar as parcerias de cursos.', error);
+  } catch {
     return {};
   }
 };
@@ -421,7 +420,7 @@ const Index = () => {
                   <Link
                     key={category.id}
                     to={`/${category.slug}`}
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
                   >
                     {category.name}
                   </Link>

@@ -6,8 +6,8 @@ const Mundo = () => (
     slug="mundo"
     title="Mundo"
     description="Notícias internacionais e atualidade global"
-    heroColor="bg-orange-600"
-    defaultCategoryColor="bg-orange-600"
+    heroColor="bg-secondary-600"
+    defaultCategoryColor="bg-secondary-600"
     otherCategories={[
       { name: 'Tecnologia', slug: 'tecnologia' },
       { name: 'Desporto', slug: 'desporto' },

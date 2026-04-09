@@ -65,11 +65,11 @@ function getTemperatureStyle(temp: number | null): {
   if (temp <= 20)
     return { color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/60', icon: 'mild' };
   if (temp <= 25)
-    return { color: 'text-yellow-600', bg: 'bg-yellow-50 dark:bg-yellow-950/60', icon: 'mild' };
+    return { color: 'text-sky-700', bg: 'bg-sky-50 dark:bg-sky-950/60', icon: 'mild' };
   if (temp <= 30)
-    return { color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/60', icon: 'warm' };
+    return { color: 'text-blue-700', bg: 'bg-blue-50 dark:bg-blue-950/60', icon: 'warm' };
   if (temp <= 35)
-    return { color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/60', icon: 'hot' };
+    return { color: 'text-indigo-700', bg: 'bg-indigo-50 dark:bg-indigo-950/60', icon: 'hot' };
   if (temp <= 40)
     return { color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-950/60', icon: 'hot' };
   return { color: 'text-rose-700', bg: 'bg-rose-100 dark:bg-rose-950/60', icon: 'extreme' };

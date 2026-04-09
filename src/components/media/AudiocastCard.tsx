@@ -70,7 +70,7 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
   if (compact) {
     return (
       <Link to={`/audiocast/${podcast.slug}`} className="group block">
-        <div className="flex gap-3 rounded-xl p-2 transition-colors hover:bg-accent/50">
+        <div className="flex gap-3 rounded-xl p-2 transition-colors hover:bg-muted/60">
           {/* Thumbnail */}
           <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg">
             {hasCover ? (
