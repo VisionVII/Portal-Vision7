@@ -421,7 +421,7 @@ const Index = () => {
                   <Link
                     key={category.id}
                     to={`/${category.slug}`}
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
                   >
                     {category.name}
                   </Link>

@@ -134,27 +134,27 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
             )}
           </div>
 
-            {/* Sidebar */}
-            <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
-              <AdSpace size="square" position={`Lateral ${title}`} className="mx-auto" />
+          {/* Sidebar */}
+          <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
+            <AdSpace size="square" position={`Lateral ${title}`} className="mx-auto" />
 
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="mb-3 text-lg font-headline font-bold text-card-foreground">Outras Categorias</h3>
-                <div className="space-y-1">
-                  {otherCategories.map((cat) => (
-                    <Link
-                      key={cat.slug}
-                      to={`/${cat.slug}`}
-                      className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
-                    >
-                      {cat.name}
-                    </Link>
-                  ))}
-                </div>
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h3 className="mb-3 text-lg font-headline font-bold text-card-foreground">Outras Categorias</h3>
+              <div className="space-y-1">
+                {otherCategories.map((cat) => (
+                  <Link
+                    key={cat.slug}
+                    to={`/${cat.slug}`}
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
               </div>
+            </div>
 
-              <AdSpace size="square" position={`Lateral 2 ${title}`} className="mx-auto hidden lg:flex" />
-            </aside>
+            <AdSpace size="square" position={`Lateral 2 ${title}`} className="mx-auto hidden lg:flex" />
+          </aside>
           </div>
         </div>
       </div>
