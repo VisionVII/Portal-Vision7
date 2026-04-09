@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { CalendarDays, Clock3, CloudSnow, Flame, MapPin, Menu, Sun, Thermometer, Wind } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,44 +61,6 @@ const Header = () => {
   const { data: siteSettings } = useSiteSettings();
   const { region, timezone, localTime, temperatureC, hasConsent, isLoading: locationLoading } = useUserLocation();
   const skyInfo = useSkyInfo(temperatureC, localTime);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [hideTopBar, setHideTopBar] = useState(false);
-  const stateRef = useRef({ isScrolled: false, hideTopBar: false, ticking: false });
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (stateRef.current.ticking) return;
-      stateRef.current.ticking = true;
-
-      window.requestAnimationFrame(() => {
-        const y = window.scrollY;
-        const s = stateRef.current;
-
-        const nextScrolled = y > 10;
-        // Hysteresis: hide at 100px, show back at 20px — prevents oscillation loop
-        const nextHide = s.hideTopBar ? y > 20 : y > 100;
-
-        if (nextScrolled !== s.isScrolled) {
-          s.isScrolled = nextScrolled;
-          setIsScrolled(nextScrolled);
-        }
-        if (nextHide !== s.hideTopBar) {
-          s.hideTopBar = nextHide;
-          setHideTopBar(nextHide);
-        }
-
-        s.ticking = false;
-      });
-    };
-
-    const rafId = requestAnimationFrame(() => handleScroll());
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   const navigationCategories = useMemo(
     () =>
@@ -145,34 +107,26 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/98 backdrop-blur-md supports-[backdrop-filter]:bg-background/95">
       {/* Top brand bar — professional clean design */}
-      <div
-        className="overflow-hidden border-b border-border/30 bg-background"
-        style={{
-          maxHeight: hideTopBar ? 0 : 72,
-          opacity: hideTopBar ? 0 : 1,
-          transition: 'max-height 0.25s ease-out, opacity 0.2s ease-out',
-          willChange: 'max-height',
-        }}
-      >
-        <div className={`container mx-auto flex items-center justify-between gap-3 px-3 sm:px-5 transition-[padding] duration-200 ${isScrolled ? 'py-2.5 sm:py-3' : 'py-3 sm:py-4'}`}>
-          <Link to="/" className="flex shrink-0 items-center transition-opacity hover:opacity-80">
+      <div className="border-b border-border/30 bg-background">
+        <div className="container mx-auto flex min-h-[72px] items-center justify-between gap-3 px-4 py-2.5 sm:min-h-[76px] sm:px-5 sm:py-3">
+          <Link to="/" className="flex shrink-0 items-center py-0.5 transition-opacity hover:opacity-80">
             <BrandLogo siteName={siteSettings?.site_name} showTagline={false} />
           </Link>
 
-          <div className="hidden shrink-0 items-center md:flex">
+          <div className="hidden shrink-0 items-center py-0.5 md:flex">
             <PortalAIAssistantButton />
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <div className="flex shrink-0 items-center gap-2 py-0.5 md:hidden">
             <PortalAIAssistantButton compact />
           </div>
         </div>
       </div>
 
       <nav className="bg-primary dark:bg-background/98">
-        <div className="container mx-auto px-3 sm:px-5">
+        <div className="container mx-auto px-4 sm:px-5">
           {/* ═══════════ DESKTOP NAV ═══════════ */}
-          <div className={`hidden items-center gap-6 md:flex ${isScrolled ? 'py-3' : 'py-4'}`}>
+          <div className="hidden min-h-[58px] items-center gap-6 py-2.5 md:flex">
             <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {primaryNavItems.map((item) => (
                 <NavLink
@@ -219,7 +173,7 @@ const Header = () => {
           </div>
 
           {/* ═══════════ MOBILE NAV ═══════════ */}
-          <div className={`flex items-center gap-1.5 md:hidden ${isScrolled ? 'py-2.5' : 'py-3'}`}>
+          <div className="flex min-h-[56px] items-center gap-1.5 py-2 md:hidden">
             <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {primaryNavItems.slice(1, 4).map((item) => (
                 <NavLink
