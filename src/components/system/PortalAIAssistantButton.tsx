@@ -21,6 +21,7 @@ import {
   portalAssistantConfig,
   selectPortalAssistantContext,
 } from '@/modules/portal-ai';
+import BrandLogo from '@/components/system/BrandLogo';
 
 interface AssistantCardAction {
   label: string;
@@ -179,8 +180,6 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     }),
     [country, hasConsent, localTime, region, temperatureC, timezone],
   );
-
-  const providerLabel = activeProvider === 'groq-edge' ? 'Groq' : activeProvider === 'hf-edge' ? 'HF' : 'Local';
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -445,15 +444,15 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
     if (card.kind === 'consent') {
       return (
-        <div key={card.id} className="rounded-2xl border border-amber-300/30 bg-gradient-to-br from-amber-500/12 to-slate-950 p-4 shadow-[0_14px_34px_rgba(120,53,15,0.18)]">
+        <div key={card.id} className="rounded-2xl border border-primary-300/25 bg-gradient-to-br from-primary-800/20 to-slate-950 p-4 shadow-[0_14px_34px_rgba(2,132,199,0.2)]">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/18 text-amber-300">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-500/20 text-primary-300">
               <ShieldAlert className="h-5 w-5" />
             </div>
-            <div>
-              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-200/70">{card.badge}</p> : null}
+            <div className="min-w-0">
+              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-200/80">{card.badge}</p> : null}
               <h4 className="mt-1 text-base font-semibold text-white">{card.title}</h4>
-              <p className="mt-1 text-sm text-slate-300">{card.description}</p>
+              <p className="mt-1 text-sm text-slate-200">{card.description}</p>
             </div>
           </div>
 
@@ -525,24 +524,14 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="flex w-[95vw] flex-col gap-0 p-0 sm:max-w-md">
+      <SheetContent
+        side="right"
+        className="flex w-[95vw] flex-col gap-0 p-0 sm:max-w-md [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-white/15 [&>button]:p-1.5 [&>button]:text-white [&>button]:opacity-100 [&>button:hover]:bg-white/25 [&>button:hover]:text-white"
+      >
         {/* Chat header */}
         <div className="shrink-0 border-b border-border bg-gradient-to-r from-primary-600 to-primary-700 px-5 py-4 dark:from-primary-800 dark:to-primary-900">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-white">Assistente Vision7</h2>
-                <p className="text-[11px] text-white/60">Curadoria, navegação e insights dentro do escopo do portal</p>
-              </div>
-            </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-              <Badge variant="secondary" className="border-white/15 bg-white/10 text-[10px] uppercase tracking-wide text-white">
-                {providerLabel}
-              </Badge>
-            </div>
+          <div className="flex items-center min-h-[36px] pr-12">
+            <BrandLogo compact showTagline={false} className="[&_img]:h-8 [&_img]:max-w-[130px] sm:[&_img]:h-9 sm:[&_img]:max-w-[145px]" />
           </div>
         </div>
 
@@ -555,7 +544,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                     <Bot className="h-4 w-4 text-primary-600 dark:text-primary-400" />
                   </div>
                 )}
-                <div className={`max-w-[85%] space-y-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                <div className={`max-w-[92%] space-y-2 sm:max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'rounded-br-md bg-primary-600 text-white'
@@ -582,7 +571,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                   )}
 
                   {msg.cards && msg.cards.length > 0 ? (
-                    <div className="grid gap-2.5 pl-1 sm:grid-cols-2">
+                    <div className={`grid gap-2.5 ${msg.cards.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
                       {msg.cards.map((card) => renderMessageCard(card))}
                     </div>
                   ) : null}
