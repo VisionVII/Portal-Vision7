@@ -38,19 +38,39 @@ export default defineConfig(({ mode }) => ({
           }
 
           if (
-            id.includes("react-dom") ||
-            id.includes("react-router") ||
-            id.includes("@tanstack/react-query") ||
-            id.includes("/react/")
+            id.includes("/node_modules/react/") ||
+            id.includes("/node_modules/react-dom/") ||
+            id.includes("/node_modules/scheduler/") ||
+            id.includes("/node_modules/use-sync-external-store/")
           ) {
             return "vendor-react";
+          }
+
+          if (
+            id.includes("react-router-dom") ||
+            id.includes("react-router") ||
+            id.includes("@remix-run/router") ||
+            id.includes("/node_modules/history/")
+          ) {
+            return "vendor-router";
+          }
+
+          if (
+            id.includes("@tanstack/react-query") ||
+            id.includes("@tanstack/query-core")
+          ) {
+            return "vendor-query";
           }
 
           if (id.includes("@supabase")) {
             return "vendor-supabase";
           }
 
-          if (id.includes("@tiptap") || id.includes("dompurify")) {
+          if (
+            id.includes("@tiptap") ||
+            id.includes("prosemirror") ||
+            id.includes("dompurify")
+          ) {
             return "vendor-editor";
           }
 
