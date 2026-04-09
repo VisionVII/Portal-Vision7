@@ -101,7 +101,7 @@ src/components/admin/
 │   ├── DeveloperView.tsx         ← NOVO (wrapper developer)
 │   └── SettingsView.tsx          ← NOVO (wrapper settings)
 ├── AdminStatsCards.tsx           ← REDESENHADO
-├── AdminAutomationPanel.tsx      ← MANTIDO (funcional)
+├── AdminAutomationPanel.tsx      ← REMOVIDO (substituído por AutomationDashboardV2)
 ├── AdminAccessManager.tsx        ← MANTIDO
 ├── AdminCmsCustomizer.tsx        ← MANTIDO
 ├── AdminCoursesManager.tsx       ← MANTIDO
@@ -132,7 +132,7 @@ Nenhum pacote adicional necessário — Recharts já é dependency transitiva do
 | Break de funcionalidade ao split | Testes manuais por view após cada extração |
 | Performance regressão | Lazy loading + Suspense boundaries |
 | Mobile UX degradação | Testar em 375px a cada fase |
-| N8n panel regression | AdminAutomationPanel mantém-se inalterado |
+| N8n panel regression | AutomationDashboardV2 substituiu AdminAutomationPanel com layout modular |
 
 ---
 

@@ -376,14 +376,6 @@ export const getWorkflows = async () => {
     query: { excludePinnedData: true },
   });
   const workflows = normalizeCollection<N8nWorkflow>(payload).filter((workflow) => workflow.isArchived !== true);
-  console.log('[n8n] Workflows raw:', payload);
-  console.log('[n8n] Workflows normalized:', workflows.map(w => ({
-    id: w.id,
-    name: w.name,
-    active: w.active,
-    isArchived: w.isArchived,
-    tags: w.tags
-  })));
   return workflows;
 };
 

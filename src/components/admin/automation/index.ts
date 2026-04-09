@@ -1,7 +1,4 @@
-export { AutomationDashboard } from './AutomationDashboard';
 export { AutomationDashboardV2 } from './AutomationDashboardV2';
-export { AutomationKPIBar } from './AutomationKPIBar';
-export { AutomationCategoryTabs } from './AutomationCategoryTabs';
 export { AutomationCard } from './AutomationCard';
 export { AutomationForm } from './AutomationForm';
 export { AutomationTemplateGallery } from './AutomationTemplateGallery';

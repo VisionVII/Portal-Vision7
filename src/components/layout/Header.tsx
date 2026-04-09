@@ -182,7 +182,7 @@ const Header = () => {
                   className={({ isActive }) =>
                     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold tracking-tight transition-all ${
                       isActive
-                        ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
+                        ? 'bg-primary/10 text-primary'
                         : 'text-foreground/70 hover:bg-muted hover:text-foreground'
                     }`
                   }
@@ -229,8 +229,8 @@ const Header = () => {
                   className={({ isActive }) =>
                     `flex-shrink-0 rounded-lg px-3.5 py-2 text-xs font-semibold tracking-tight transition-all ${
                       isActive
-                        ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
-                        : 'bg-muted/50 text-foreground/70 hover:bg-muted hover:text-foreground'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-foreground/70 hover:bg-muted/50 hover:text-foreground'
                     }`
                   }
                 >
@@ -307,7 +307,7 @@ const Header = () => {
                             className={({ isActive }) =>
                               `flex min-h-[44px] items-center justify-start rounded-lg px-3.5 py-2.5 text-left text-sm font-semibold tracking-tight transition-all ${
                                 isActive
-                                  ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
+                                  ? 'bg-primary/10 text-primary'
                                   : 'bg-muted/30 text-foreground/70 hover:bg-muted/60 hover:text-foreground'
                               }`
                             }

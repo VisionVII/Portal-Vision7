@@ -12,7 +12,7 @@ interface AuthShellProps {
 
 const AuthShell = ({ title, description, children, footer, note }: AuthShellProps) => {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.18),_transparent_34%),linear-gradient(180deg,_hsl(var(--background)),_hsl(var(--muted)))] dark:bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_28%),linear-gradient(180deg,_hsl(var(--neutral-950)),_hsl(var(--background)))]">
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_rgba(2,132,199,0.22),_transparent_50%),radial-gradient(ellipse_at_bottom_right,_rgba(2,132,199,0.08),_transparent_40%),linear-gradient(180deg,_hsl(var(--background)),_hsl(var(--muted)))] dark:bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_28%),linear-gradient(180deg,_hsl(var(--neutral-950)),_hsl(var(--background)))]">
       <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.35)_50%,transparent_100%)] opacity-40 dark:opacity-10" />
 
       <div className="absolute right-4 top-4 z-10 sm:right-6 sm:top-6">

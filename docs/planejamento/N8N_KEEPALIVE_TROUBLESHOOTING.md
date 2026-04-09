@@ -18,7 +18,7 @@
 [KeepAlive] ✓ n8n responded OK
 ```
 
-### 2. **Dashboard Polling** (`src/components/admin/automation/AutomationDashboard.tsx`)
+### 2. **Dashboard Polling** (`src/components/admin/automation/AutomationDashboardV2.tsx`)
 **Antes:** Polling agressivo a cada 30s — causava timeouts em cascata
 **Agora:** **Polling adaptativo:**
 - **2 minutos** quando n8n está conectado
