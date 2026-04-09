@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import NewsletterForm from '@/components/content/NewsletterForm';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import BrandLogo from '@/components/system/BrandLogo';
-import { useAudioPlayerOptional } from '@/contexts/AudioPlayerContext';
+import { useAudioPlayerOptional } from '@/contexts/audio-player';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
