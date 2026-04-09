@@ -24,61 +24,61 @@ const AdminStatsCards = () => {
   const total = stats?.total || 0;
   const totalViews = stats?.totalViews || 0;
   const drafts = stats?.drafts || 0;
-  const monthlyTarget = 4;
+  const monthlyTarget = Math.max(Math.ceil(total / 30), 1);
   const targetProgress = Math.min((thisMonth / monthlyTarget) * 100, 100);
 
   return (
     <div className="space-y-4">
       {/* ── HERO KPI: dominant metric ── */}
-      <Card className="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-700 text-white shadow-[0_24px_60px_rgba(37,99,235,0.18)] dark:from-primary-700 dark:via-primary-800 dark:to-secondary-800">
+      <Card className="relative overflow-hidden rounded-[28px] border border-border/20 bg-gradient-to-br from-slate-50 via-white to-slate-50 shadow-[0_8px_32px_rgba(15,23,42,0.08)] dark:border-border/10 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950">
         <CardContent className="p-6 sm:p-7">
           <div className="flex min-h-[210px] flex-col justify-between gap-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   Performance este mês
                 </p>
-                <p className="mt-3 text-5xl font-extrabold tracking-tight sm:text-6xl">
+                <p className="mt-3 text-5xl font-extrabold tracking-tight text-foreground sm:text-6xl">
                   {thisMonth}
                 </p>
-                <p className="mt-1 text-sm font-medium text-white/70">
+                <p className="mt-1 text-sm font-medium text-muted-foreground">
                   {thisMonth === 1 ? 'publicação' : 'publicações'}
                 </p>
                 <div className="mt-3 flex items-center gap-1.5">
-                  {thisMonth >= 4 ? (
-                    <div className="flex items-center gap-0.5 rounded-full bg-white/15 px-2 py-0.5 backdrop-blur-sm">
+                  {thisMonth >= monthlyTarget ? (
+                    <div className="flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
                       <ArrowUpRight className="h-3 w-3" />
-                      <span className="text-xs font-semibold">Bom ritmo</span>
+                      <span className="text-xs font-semibold">Meta atingida</span>
                     </div>
                   ) : thisMonth > 0 ? (
-                    <div className="flex items-center gap-0.5 rounded-full bg-amber-400/20 px-2 py-0.5 backdrop-blur-sm">
+                    <div className="flex items-center gap-0.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
                       <Minus className="h-3 w-3" />
-                      <span className="text-xs font-semibold">Publique +{4 - thisMonth} para consistência</span>
+                      <span className="text-xs font-semibold">Publique +{monthlyTarget - thisMonth} para meta</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-0.5 rounded-full bg-red-400/20 px-2 py-0.5 backdrop-blur-sm">
+                    <div className="flex items-center gap-0.5 rounded-full bg-red-500/10 px-2 py-0.5 text-red-600 dark:bg-red-500/15 dark:text-red-400">
                       <ArrowDownRight className="h-3 w-3" />
                       <span className="text-xs font-semibold">Nenhuma publicação ainda</span>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="shrink-0 rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
-                <TrendingUp className="h-6 w-6" />
+              <div className="shrink-0 rounded-2xl bg-primary/10 p-3 dark:bg-primary/15">
+                <TrendingUp className="h-6 w-6 text-primary" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Meta editorial
               </p>
-              <div className="flex items-center justify-between gap-3 text-[11px] text-white/70">
-                <span>Objetivo mínimo</span>
-                <span>{Math.min(thisMonth, monthlyTarget)}/{monthlyTarget} publicações</span>
+              <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+                <span>Objetivo mensal (total/30)</span>
+                <span className="font-semibold text-foreground">{Math.min(thisMonth, monthlyTarget)}/{monthlyTarget} publicações</span>
               </div>
-              <div className="h-2 rounded-full bg-white/12">
+              <div className="h-2.5 rounded-full bg-muted/50 dark:bg-muted/30">
                 <div
-                  className="h-2 rounded-full bg-white transition-all duration-500"
+                  className="h-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500 dark:from-emerald-400 dark:to-emerald-500"
                   style={{ width: `${Math.max(targetProgress, thisMonth > 0 ? 10 : 0)}%` }}
                 />
               </div>
@@ -86,8 +86,8 @@ const AdminStatsCards = () => {
           </div>
         </CardContent>
         {/* decorative accent */}
-        <div className="absolute -bottom-8 -right-8 h-32 w-32 rounded-full bg-white/5" />
-        <div className="absolute -top-4 right-20 h-16 w-16 rounded-full bg-white/5" />
+        <div className="absolute -bottom-8 -right-8 h-32 w-32 rounded-full bg-primary/5 dark:bg-primary/10" />
+        <div className="absolute -top-4 right-20 h-16 w-16 rounded-full bg-secondary/5 dark:bg-secondary/10" />
       </Card>
 
       {/* ── SECONDARY KPIs: 2-col mobile, 3-col sm+ ── */}
