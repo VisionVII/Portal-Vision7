@@ -148,13 +148,13 @@ const Header = () => {
       <div
         className="overflow-hidden border-b border-border/30 bg-background"
         style={{
-          maxHeight: hideTopBar ? 0 : 80,
+          maxHeight: hideTopBar ? 0 : 72,
           opacity: hideTopBar ? 0 : 1,
           transition: 'max-height 0.25s ease-out, opacity 0.2s ease-out',
           willChange: 'max-height',
         }}
       >
-        <div className={`container mx-auto flex items-center justify-between gap-4 px-5 transition-[padding] duration-200 ${isScrolled ? 'py-3 sm:py-3.5' : 'py-4 sm:py-5'}`}>
+        <div className={`container mx-auto flex items-center justify-between gap-3 px-3 sm:px-5 transition-[padding] duration-200 ${isScrolled ? 'py-2.5 sm:py-3' : 'py-3 sm:py-4'}`}>
           <Link to="/" className="flex shrink-0 items-center transition-opacity hover:opacity-80">
             <BrandLogo siteName={siteSettings?.site_name} showTagline={false} />
           </Link>
@@ -170,7 +170,7 @@ const Header = () => {
       </div>
 
       <nav className="bg-primary dark:bg-background/98">
-        <div className="container mx-auto px-5">
+        <div className="container mx-auto px-3 sm:px-5">
           {/* ═══════════ DESKTOP NAV ═══════════ */}
           <div className={`hidden items-center gap-6 md:flex ${isScrolled ? 'py-3' : 'py-4'}`}>
             <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -219,15 +219,15 @@ const Header = () => {
           </div>
 
           {/* ═══════════ MOBILE NAV ═══════════ */}
-          <div className={`flex items-center gap-2 md:hidden ${isScrolled ? 'py-2.5' : 'py-3'}`}>
-            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {primaryNavItems.slice(0, 4).map((item) => (
+          <div className={`flex items-center gap-1.5 md:hidden ${isScrolled ? 'py-2.5' : 'py-3'}`}>
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {primaryNavItems.slice(1, 4).map((item) => (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   end={item.path === '/'}
                   className={({ isActive }) =>
-                    `flex-shrink-0 rounded-lg px-3.5 py-2 text-xs font-semibold tracking-tight transition-all ${
+                    `flex-shrink-0 rounded-lg px-3 py-2 text-xs font-semibold tracking-tight transition-all ${
                       isActive
                         ? 'bg-white/20 text-white dark:bg-primary/10 dark:text-primary'
                         : 'text-white/80 hover:bg-white/10 hover:text-white dark:text-foreground/70 dark:hover:bg-muted/50 dark:hover:text-foreground'

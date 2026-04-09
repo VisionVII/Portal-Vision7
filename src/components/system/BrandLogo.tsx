@@ -39,8 +39,8 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
           className={cn(
             'w-auto object-contain drop-shadow-[0_4px_14px_rgba(34,211,238,0.18)]',
             compact
-              ? 'h-12 max-w-[152px] sm:h-14 sm:max-w-[170px]'
-              : 'h-[56px] max-w-[180px] sm:h-[68px] sm:max-w-[220px] lg:h-[78px] lg:max-w-[260px]'
+              ? 'h-10 max-w-[140px] sm:h-12 sm:max-w-[160px]'
+              : 'h-11 max-w-[152px] sm:h-12 sm:max-w-[172px] lg:h-14 lg:max-w-[210px]'
           )}
         />
         <span className="sr-only">{brandName}</span>
