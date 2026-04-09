@@ -158,7 +158,10 @@ export const useAudiocasts = (adminView = false) => {
         ? ((data as Audiocast[]) ?? [])
         : ((data as Partial<Audiocast>[] | null)?.map((podcast) => normalizePublicAudiocast(podcast)) ?? []);
     },
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 
@@ -185,7 +188,10 @@ export const useAudiocastsByCategory = (categorySlug: string) => {
       return (data as Partial<Audiocast>[] | null)?.map((podcast) => normalizePublicAudiocast(podcast)) ?? [];
     },
     enabled: !!categorySlug,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 
@@ -209,7 +215,10 @@ export const useAudiocast = (slug: string) => {
       return data as Audiocast | null;
     },
     enabled: !!slug,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 
@@ -233,7 +242,10 @@ export const useAudiocastById = (id: string) => {
       return data as Audiocast | null;
     },
     enabled: !!id,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 
@@ -260,7 +272,10 @@ export const useAudiocastsByPost = (postId: string) => {
       return (data as Partial<Audiocast>[] | null)?.map((podcast) => normalizePublicAudiocast(podcast)) ?? [];
     },
     enabled: !!postId,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 

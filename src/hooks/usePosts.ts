@@ -190,7 +190,10 @@ export const usePost = (slug: string) => {
       return (data as Post | null) ?? null;
     },
     enabled: !!slug,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 
@@ -210,7 +213,10 @@ export const usePostById = (id: string) => {
       return (data as Post | null) ?? null;
     },
     enabled: !!id,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 
@@ -320,6 +326,10 @@ export const usePostStats = () => {
 
       return { total, drafts, totalViews, thisMonth };
     },
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 

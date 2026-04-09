@@ -15,6 +15,7 @@ import ThemeProvider from "@/components/system/ThemeProvider";
 import CookieBanner from "@/components/system/CookieBanner";
 import ProtectedRoute from "@/components/system/ProtectedRoute";
 import PageTransition from "@/components/system/PageTransition";
+import NetworkStatusNotifier from "@/components/system/NetworkStatusNotifier";
 
 const Index = lazy(() => import("@/pages/site/Index"));
 const Tecnologia = lazy(() => import("@/pages/site/Tecnologia"));
@@ -43,7 +44,14 @@ const PublicPrivacyControls = () => {
   return <CookieBanner />;
 };
 
-const RouteFallback = () => <div className="min-h-screen bg-background" />;
+const RouteFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <p className="text-sm text-muted-foreground">A carregar...</p>
+    </div>
+  </div>
+);
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -111,10 +119,15 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
+      staleTime: 60 * 1000,
+      gcTime: 5 * 60 * 1000,
       retry: (failureCount, error) => {
         if (error instanceof DOMException && error.name === 'AbortError') return false;
-        return failureCount < 2;
+        if (failureCount >= 3) return false;
+        return true;
       },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      networkMode: 'online',
     },
   },
 });
@@ -131,6 +144,7 @@ const App = () => (
           <ErrorBoundary>
             <BrowserRouter>
               <ScrollToTop />
+              <NetworkStatusNotifier />
               <Suspense fallback={<RouteFallback />}>
                 <AnimatedRoutes />
               </Suspense>
