@@ -65,7 +65,7 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
   const [credentialsError, setCredentialsError] = useState<string | null>(null);
 
   /* ── New key form ── */
-  const [newKeyName, setNewKeyName] = useState<'GROQ_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY'>('GROQ_API_KEY');
+  const [newKeyName, setNewKeyName] = useState<'GROQ_API_KEY' | 'HF_API_TOKEN' | 'SUPABASE_SERVICE_ROLE_KEY'>('GROQ_API_KEY');
   const [newKeyValue, setNewKeyValue] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -432,16 +432,17 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
               <select
                 className="h-7 text-xs bg-muted border border-border rounded px-2 text-foreground"
                 value={newKeyName}
-                onChange={(e) => setNewKeyName(e.target.value as 'GROQ_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY')}
+                onChange={(e) => setNewKeyName(e.target.value as 'GROQ_API_KEY' | 'HF_API_TOKEN' | 'SUPABASE_SERVICE_ROLE_KEY')}
               >
-                <option value="GROQ_API_KEY">GROQ_API_KEY (IA)</option>
+                <option value="GROQ_API_KEY">GROQ_API_KEY (IA Groq)</option>
+                <option value="HF_API_TOKEN">HF_API_TOKEN (Hugging Face)</option>
                 <option value="SUPABASE_SERVICE_ROLE_KEY">SUPABASE_SERVICE_ROLE_KEY</option>
               </select>
             </div>
             <div className="flex gap-1.5">
               <Input
                 type="password"
-                placeholder={newKeyName === 'GROQ_API_KEY' ? 'gsk_...' : 'eyJ...'}
+                placeholder={newKeyName === 'GROQ_API_KEY' ? 'gsk_...' : newKeyName === 'HF_API_TOKEN' ? 'hf_...' : 'eyJ...'}
                 className="h-7 text-xs bg-muted border-border font-mono"
                 value={newKeyValue}
                 onChange={(e) => setNewKeyValue(e.target.value)}
@@ -459,7 +460,9 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
             <p className="text-[9px] text-muted-foreground/60">
               {newKeyName === 'GROQ_API_KEY'
                 ? 'Obtenha em console.groq.com → API Keys. O WF-03 lê esta chave para gerar artigos com IA.'
-                : 'Supabase → Settings → API → service_role key. Os workflows usam para ler/gravar tabelas.'}
+                : newKeyName === 'HF_API_TOKEN'
+                  ? 'Obtenha em huggingface.co/settings/tokens. Token Read gratuito para Inference API.'
+                  : 'Supabase → Settings → API → service_role key. Os workflows usam para ler/gravar tabelas.'}
             </p>
           </div>
         </div>
