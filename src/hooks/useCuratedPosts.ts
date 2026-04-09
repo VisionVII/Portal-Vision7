@@ -2,9 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { sendEmail } from '@/services/email';
-
-const PRIMARY_ADMIN_EMAIL = import.meta.env.VITE_ADMIN_PRIMARY_EMAIL ?? '';
 
 /* ── Types ── */
 export interface CuratedPost {
@@ -30,6 +27,14 @@ export interface CuratedPost {
 }
 
 const QUERY_KEY = ['curated_posts'] as const;
+
+type PromoteCuratedPostResult = {
+  promoted: boolean;
+  status: 'promoted' | 'duplicate' | 'already_published';
+  postId?: string;
+  slug?: string;
+  tags?: string[];
+};
 
 /* ── Fetch curated posts ── */
 export function useCuratedPosts(statusFilter?: string) {
@@ -80,45 +85,35 @@ export function useCuratedPostsStats() {
   });
 }
 
-/* ── Notify admin via email when a post is promoted ── */
-async function getNotificationEmails() {
-  const emails = new Map<string, string>();
-
-  if (PRIMARY_ADMIN_EMAIL) {
-    emails.set(PRIMARY_ADMIN_EMAIL.toLowerCase(), PRIMARY_ADMIN_EMAIL);
-  }
-
-  const { data: authData } = await supabase.auth.getUser();
-  const currentEmail = authData.user?.email;
-  if (currentEmail) {
-    emails.set(currentEmail.toLowerCase(), currentEmail);
-  }
-
-  return [...emails.values()];
-}
-
-async function notifyAdminPostReady(curated: CuratedPost) {
+/* ── Notify editorial team via backend when a curated post is ready ── */
+async function notifyAdminPostReady(curatedPostId: string) {
   try {
-    const adminEmails = await getNotificationEmails();
-    if (!adminEmails.length) return;
+    const { error } = await supabase.functions.invoke('notify-curated-post', {
+      body: { curatedPostId },
+    });
 
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-
-    for (const email of adminEmails) {
-      await sendEmail({
-        to: email,
-        template: 'automation_post_ready',
-        data: {
-          postTitle: curated.title,
-          postExcerpt: curated.excerpt || curated.subtitle || '',
-          editorialScore: Number(curated.editorial_score),
-          reviewUrl: `${baseUrl}/admin`,
-        },
-      });
+    if (error) {
+      throw new Error(error.message || 'Falha ao disparar notificacao da curadoria');
     }
   } catch (err) {
     console.warn('[CuratedPosts] Failed to send admin notification:', err);
   }
+}
+
+async function promoteCuratedPost(curatedPostId: string): Promise<PromoteCuratedPostResult> {
+  const { data, error } = await supabase.functions.invoke('promote-curated-post', {
+    body: { curatedPostId },
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Falha ao promover artigo curado');
+  }
+
+  if (!data || typeof data !== 'object' || typeof data.status !== 'string') {
+    throw new Error('Resposta inválida da função de promoção');
+  }
+
+  return data as PromoteCuratedPostResult;
 }
 
 /* ── Promote curated post → editorial post (draft) ── */
@@ -128,50 +123,30 @@ export function usePromoteCuratedPost() {
 
   return useMutation({
     mutationFn: async (curated: CuratedPost) => {
-      const slug =
-        curated.slug ||
-        curated.title
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, '');
-
-      const { data, error } = await supabase
-        .from('posts')
-        .insert([
-          {
-            title: curated.title,
-            slug: `${slug}-${Date.now().toString(36)}`,
-            excerpt: curated.excerpt || curated.subtitle || '',
-            content: curated.body_html || curated.body_markdown,
-            status: 'draft',
-            featured: false,
-            tags: ['automação', 'ia'],
-            read_time: `${Math.max(1, Math.ceil((curated.body_markdown?.length ?? 0) / 1200))} min`,
-            author_name: 'Vision7 IA',
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Mark curated as published
-      await supabase
-        .from('curated_posts')
-        .update({ status: 'published' })
-        .eq('id', curated.id);
-
-      return data;
+      return promoteCuratedPost(curated.id);
     },
-    onSuccess: (_data, curated) => {
+    onSuccess: (result, curated) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
-      toast({ title: 'Post promovido', description: 'O artigo foi movido para rascunhos editoriais.' });
 
-      // Send email notification to admin (fire-and-forget)
-      void notifyAdminPostReady(curated);
+      if (result.status === 'promoted') {
+        toast({ title: 'Post promovido', description: 'O artigo foi movido para rascunhos editoriais.' });
+        void notifyAdminPostReady(curated.id);
+        return;
+      }
+
+      if (result.status === 'duplicate') {
+        toast({
+          title: 'Duplicado resolvido',
+          description: 'Já existia um rascunho semelhante; o item curado foi encerrado sem duplicar.',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Já promovido',
+        description: 'Este item já tinha sido promovido anteriormente.',
+      });
     },
     onError: (err: Error) => {
       toast({ title: 'Erro ao promover', description: err.message, variant: 'destructive' });
@@ -205,41 +180,6 @@ export function useRejectCuratedPost() {
 
 /* ── Auto-promote all 'ready' curated posts → draft posts + email ── */
 
-/** Promotes a single curated post to the posts table as draft */
-async function promoteSingleCurated(curated: CuratedPost) {
-  const slug =
-    curated.slug ||
-    curated.title
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-
-  const { error } = await supabase
-    .from('posts')
-    .insert([
-      {
-        title: curated.title,
-        slug: `${slug}-${Date.now().toString(36)}`,
-        excerpt: curated.excerpt || curated.subtitle || '',
-        content: curated.body_html || curated.body_markdown,
-        status: 'draft',
-        featured: false,
-        tags: ['automação', 'ia'],
-        read_time: `${Math.max(1, Math.ceil((curated.body_markdown?.length ?? 0) / 1200))} min`,
-        author_name: 'Vision7 IA',
-      },
-    ]);
-
-  if (error) throw error;
-
-  await supabase
-    .from('curated_posts')
-    .update({ status: 'published' })
-    .eq('id', curated.id);
-}
-
 export function useAutoPromoteCurated() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -259,26 +199,44 @@ export function useAutoPromoteCurated() {
       if (readyPosts.length === 0) return { promoted: 0 };
 
       let promoted = 0;
+      let duplicates = 0;
+      let alreadyPublished = 0;
       for (const curated of readyPosts) {
         try {
-          await promoteSingleCurated(curated);
-          promoted++;
-          // Email admin for each promoted post (fire-and-forget)
-          void notifyAdminPostReady(curated);
+          const result = await promoteCuratedPost(curated.id);
+          if (result.status === 'promoted') {
+            promoted++;
+            console.info(`[AutoPromote] Promoted: "${curated.title}" (score: ${curated.editorial_score})`);
+            void notifyAdminPostReady(curated.id);
+          } else if (result.status === 'duplicate') {
+            duplicates++;
+            console.info(`[AutoPromote] Duplicate skipped: "${curated.title}"`);
+          } else {
+            alreadyPublished++;
+            console.info(`[AutoPromote] Already published: "${curated.title}"`);
+          }
         } catch (err) {
           console.warn(`[AutoPromote] Failed to promote "${curated.title}":`, err);
         }
       }
 
-      return { promoted };
+      return { promoted, duplicates, alreadyPublished };
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
-      if (result && result.promoted > 0) {
+
+      if (!result) return;
+
+      const details: string[] = [];
+      if (result.promoted > 0) details.push(`${result.promoted} em rascunho`);
+      if ((result.duplicates ?? 0) > 0) details.push(`${result.duplicates} duplicado(s) encerrado(s)`);
+      if ((result.alreadyPublished ?? 0) > 0) details.push(`${result.alreadyPublished} já promovido(s)`);
+
+      if (details.length > 0) {
         toast({
-          title: `${result.promoted} artigo${result.promoted > 1 ? 's' : ''} promovido${result.promoted > 1 ? 's' : ''}`,
-          description: 'Artigos curados movidos para rascunhos editoriais. Admin notificado por email.',
+          title: 'Lote de promoção concluído',
+          description: details.join(' · '),
         });
       }
     },
@@ -328,23 +286,31 @@ export function useAutoPromotePolling() {
       if (readyPosts.length === 0) return;
 
       let promoted = 0;
+      let duplicates = 0;
       for (const curated of readyPosts) {
         try {
-          await promoteSingleCurated(curated);
-          promoted++;
-          void notifyAdminPostReady(curated);
+          const result = await promoteCuratedPost(curated.id);
+          if (result.status === 'promoted') {
+            promoted++;
+            void notifyAdminPostReady(curated.id);
+          } else if (result.status === 'duplicate') {
+            duplicates++;
+          }
         } catch (err) {
           console.warn(`[AutoPromote] Failed: "${curated.title}"`, err);
         }
       }
 
-      if (promoted > 0) {
+      if (promoted > 0 || duplicates > 0) {
         setTotalPromoted((prev) => prev + promoted);
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
         queryClient.invalidateQueries({ queryKey: ['posts'] });
         toast({
-          title: `${promoted} novo${promoted > 1 ? 's' : ''} rascunho${promoted > 1 ? 's' : ''}`,
-          description: `Pipeline automática: ${promoted} artigo${promoted > 1 ? 's' : ''} promovido${promoted > 1 ? 's' : ''} para rascunhos. Notificação enviada.`,
+          title: 'Verificação automática concluída',
+          description:
+            promoted > 0
+              ? `${promoted} artigo${promoted > 1 ? 's' : ''} promovido${promoted > 1 ? 's' : ''} para rascunhos${duplicates > 0 ? ` · ${duplicates} duplicado(s) encerrado(s)` : ''}`
+              : `${duplicates} duplicado(s) encerrado(s) sem criar rascunho novo`,
         });
       }
     } catch (err) {
@@ -374,7 +340,7 @@ export function useAutoPromotePolling() {
     setIsActive(true);
     toast({
       title: 'Pipeline ativada',
-      description: 'Verificação automática a cada 2 min. Posts curados serão promovidos para rascunhos com notificação.',
+      description: 'Verificação automática a cada 2 min nesta sessão aberta. A promoção passa pela Edge Function central do portal.',
     });
   }, [toast]);
 

@@ -144,6 +144,14 @@ export type N8nWorkflow = {
   id: string | number;
   name: string;
   active?: boolean;
+  isArchived?: boolean;
+  versionId?: string | null;
+  activeVersionId?: string | null;
+  activeVersion?: {
+    versionId?: string | null;
+    nodes?: unknown;
+  } | null;
+  nodes?: unknown;
   createdAt?: string;
   updatedAt?: string;
   tags?: Array<{ id?: string; name?: string }>;

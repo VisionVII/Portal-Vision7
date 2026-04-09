@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, FlaskConical, ExternalLink } from 'lucide-react';
+import { ArrowLeft, FlaskConical, ExternalLink, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -35,6 +35,8 @@ const AdminAutomationLab: React.FC = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [internalReady, setInternalReady] = useState<boolean | null>(null);
   const [showFallback, setShowFallback] = useState(false);
+  const [coldStarting, setColdStarting] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Carregando n8n...');
 
   useEffect(() => {
     setIframeLoaded(false);
@@ -48,12 +50,40 @@ const AdminAutomationLab: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+    
     const checkInternalRoute = async () => {
       try {
+        setLoadingMessage('Verificando disponibilidade do n8n...');
         const resp = await fetch('/n8n/rest/login', { method: 'GET', credentials: 'include' });
         if (!mounted) return;
-        // Any non-404 response indicates the internal proxy route exists.
+        
+        // 503 = Render cold-start
+        if (resp.status === 503) {
+          setColdStarting(true);
+          setLoadingMessage('n8n a iniciar no Render (30-60s)...');
+          
+          // Retry após 45s
+          if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            setTimeout(() => {
+              if (mounted) {
+                setLoadingMessage(`Aguardando n8n ficar online (tentativa ${retryCount}/${MAX_RETRIES})...`);
+                void checkInternalRoute();
+              }
+            }, 45000);
+          } else {
+            setLoadingMessage('n8n ainda a iniciar, mas pode tentar usar o iframe...');
+            setInternalReady(true);
+            setColdStarting(false);
+          }
+          return;
+        }
+        
+        // Any non-404 response indicates the internal proxy route exists
         setInternalReady(resp.status !== 404);
+        setColdStarting(false);
       } catch {
         if (!mounted) return;
         setInternalReady(false);
@@ -119,14 +149,46 @@ const AdminAutomationLab: React.FC = () => {
               </div>
             )}
 
-            <div className="h-[78vh] overflow-hidden rounded-xl border border-cyan-300/20 bg-black/20">
+            <div className="relative h-[78vh] overflow-hidden rounded-xl border border-cyan-300/20 bg-black/20">
+              {!iframeLoaded && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                  <Loader2 className="h-12 w-12 animate-spin text-cyan-400" />
+                  <p className="text-lg font-medium text-cyan-300">{loadingMessage}</p>
+                  {coldStarting && (
+                    <>
+                      <p className="max-w-md text-center text-sm text-slate-400">
+                        O n8n está a iniciar no servidor (Render free tier). Isto pode demorar 30-90 segundos na primeira execução.
+                      </p>
+                      <Button
+                        onClick={() => {
+                          setIframeLoaded(false);
+                          const iframe = document.querySelector('iframe[title="Vision7 Automation Lab"]') as HTMLIFrameElement;
+                          if (iframe) {
+                            const currentSrc = iframe.getAttribute('src') ?? N8N_INTERNAL_URL;
+                            iframe.src = currentSrc;
+                          }
+                        }}
+                        className="mt-2 bg-cyan-500 text-slate-950 hover:bg-cyan-400"
+                      >
+                        Recarregar iframe
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
               <iframe
                 src={N8N_INTERNAL_URL}
                 title="Vision7 Automation Lab"
                 className="h-full w-full border-0"
                 sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
                 allow="clipboard-read; clipboard-write"
-                onLoad={() => setIframeLoaded(true)}
+                onLoad={() => {
+                  setIframeLoaded(true);
+                  setColdStarting(false);
+                }}
+                onError={() => {
+                  console.warn('[Lab] iframe load error, n8n may still be starting');
+                }}
               />
             </div>
           </CardContent>

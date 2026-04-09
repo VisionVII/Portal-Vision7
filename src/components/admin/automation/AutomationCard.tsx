@@ -128,16 +128,16 @@ export function AutomationCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 pt-2 border-t border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1.5 pt-3 border-t border-slate-700/50">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 w-7 p-0 text-emerald-400 hover:text-emerald-300"
+                className="h-8 w-8 p-0 text-emerald-400 hover:text-emerald-300"
                 onClick={onExecute}
               >
-                <Play className="w-3.5 h-3.5" />
+                <Play className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -152,10 +152,10 @@ export function AutomationCard({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 w-7 p-0 text-amber-400 hover:text-amber-300"
+                className="h-8 w-8 p-0 text-amber-400 hover:text-amber-300"
                 onClick={onToggle}
               >
-                {automation.status === 'active' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                {automation.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               </Button>
             </TooltipTrigger>
             <TooltipContent>{automation.status === 'active' ? 'Pausar' : 'Ativar'}</TooltipContent>
@@ -163,8 +163,8 @@ export function AutomationCard({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-blue-400 hover:text-blue-300" onClick={onEdit}>
-                <Pencil className="w-3.5 h-3.5" />
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300" onClick={onEdit}>
+                <Pencil className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Editar</TooltipContent>
@@ -172,8 +172,8 @@ export function AutomationCard({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-violet-400 hover:text-violet-300" onClick={onClone}>
-                <Copy className="w-3.5 h-3.5" />
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-violet-400 hover:text-violet-300" onClick={onClone}>
+                <Copy className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Clonar</TooltipContent>
@@ -183,8 +183,8 @@ export function AutomationCard({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-400 hover:text-red-300" onClick={onDelete}>
-                <Trash2 className="w-3.5 h-3.5" />
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:text-red-300" onClick={onDelete}>
+                <Trash2 className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Remover</TooltipContent>

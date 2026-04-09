@@ -16,12 +16,11 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "https://stpusdeqwbckvfsitsld.supabase.co/rest/v1/news_staging",
+        "url": "={{ ($env.SUPABASE_URL || "https://stpusdeqwbckvfsitsld.supabase.co") + "/rest/v1/news_staging" }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "SUA_SERVICE_ROLE_KEY" },
-            { "name": "Authorization", "value": "Bearer SUA_SERVICE_ROLE_KEY" }
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" }
           ]
         },
         "sendQuery": true,
@@ -53,12 +52,11 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://stpusdeqwbckvfsitsld.supabase.co/rest/v1/news_clusters",
+        "url": "={{ ($env.SUPABASE_URL || "https://stpusdeqwbckvfsitsld.supabase.co") + "/rest/v1/news_clusters" }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "SUA_SERVICE_ROLE_KEY" },
-            { "name": "Authorization", "value": "Bearer SUA_SERVICE_ROLE_KEY" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
             { "name": "Content-Type", "value": "application/json" },
             { "name": "Prefer", "value": "resolution=merge-duplicates" }
           ]
@@ -93,12 +91,11 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "https://stpusdeqwbckvfsitsld.supabase.co/rest/v1/news_staging",
+        "url": "={{ ($env.SUPABASE_URL || "https://stpusdeqwbckvfsitsld.supabase.co") + "/rest/v1/news_staging" }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "SUA_SERVICE_ROLE_KEY" },
-            { "name": "Authorization", "value": "Bearer SUA_SERVICE_ROLE_KEY" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
             { "name": "Content-Type", "value": "application/json" }
           ]
         },

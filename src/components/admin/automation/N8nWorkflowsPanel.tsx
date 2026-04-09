@@ -12,6 +12,7 @@ import {
   activateWorkflow,
   deactivateWorkflow,
   executeWorkflow,
+  CronWorkflowError,
 } from '@/services/n8n';
 import type { N8nWorkflow } from '@/types/automation';
 
@@ -53,7 +54,7 @@ export function N8nWorkflowsPanel({
         await deactivateWorkflow(id);
         toast({ title: 'Workflow desativado', description: wf.name ?? id });
       } else {
-        await activateWorkflow(id);
+        await activateWorkflow(wf);
         toast({ title: 'Workflow ativado', description: wf.name ?? id });
       }
       onRefresh();
@@ -76,9 +77,16 @@ export function N8nWorkflowsPanel({
     const id = String(wf.id);
     setExecutingIds((prev) => new Set([...prev, id]));
     try {
-      await executeWorkflow(id);
-      toast({ title: 'Workflow executado', description: wf.name ?? id });
+      const result = await executeWorkflow(wf);
+      toast({ title: 'Workflow executado', description: `${wf.name ?? id} (${result.method})` });
     } catch (err) {
+      if (err instanceof CronWorkflowError) {
+        toast({
+          title: 'Workflow automático',
+          description: `${wf.name ?? id} executa automaticamente por cron/schedule no n8n.`,
+        });
+        return;
+      }
       toast({
         title: 'Erro na execução',
         description: err instanceof Error ? err.message : 'Erro desconhecido',
@@ -96,14 +104,14 @@ export function N8nWorkflowsPanel({
   if (!isConnected) {
     return (
       <Card className="bg-slate-800/50 border-slate-700/50">
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <Workflow className="w-4 h-4 text-gray-500" />
-            <CardTitle className="text-sm font-semibold text-gray-400">Workflows n8n</CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2.5">
+            <Workflow className="w-5 h-5 text-gray-500" />
+            <CardTitle className="text-base font-semibold text-gray-400">Workflows n8n</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-gray-500 text-center py-4">
+          <p className="text-sm text-gray-500 text-center py-6">
             n8n offline — impossível listar workflows.
           </p>
         </CardContent>
@@ -113,26 +121,26 @@ export function N8nWorkflowsPanel({
 
   return (
     <Card className="bg-slate-800/50 border-slate-700/50">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Workflow className="w-4 h-4 text-cyan-400" />
-            <CardTitle className="text-sm font-semibold text-white">Workflows n8n</CardTitle>
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-slate-600 text-slate-400">
+          <div className="flex items-center gap-2.5">
+            <Workflow className="w-5 h-5 text-cyan-400" />
+            <CardTitle className="text-base font-semibold text-white">Workflows n8n</CardTitle>
+            <Badge variant="outline" className="text-xs px-2 py-0.5 border-slate-600 text-slate-400">
               {activeCount}/{workflows.length} ativos
             </Badge>
           </div>
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 text-gray-400 hover:text-white"
+            className="h-8 w-8 p-0 text-gray-400 hover:text-white"
             onClick={onRefresh}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-2.5">
         {workflows.length === 0 ? (
           <p className="text-xs text-gray-500 text-center py-3">
             Nenhum workflow encontrado no n8n.
@@ -146,48 +154,48 @@ export function N8nWorkflowsPanel({
             return (
               <div
                 key={id}
-                className={`rounded-lg border p-2.5 transition-all ${
+                className={`rounded-lg border p-3 transition-all ${
                   wf.active
                     ? 'border-slate-600/50 bg-slate-800/80'
                     : 'border-slate-700/30 bg-slate-900/50 opacity-70'
                 }`}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     {wf.active ? (
-                      <Radio className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <Radio className="w-4 h-4 text-emerald-400 shrink-0" />
                     ) : (
-                      <Pause className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                      <Pause className="w-4 h-4 text-gray-500 shrink-0" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <span className="text-xs font-medium text-white block truncate">
+                      <span className="text-sm font-medium text-white block truncate">
                         {wf.name ?? `Workflow #${id}`}
                       </span>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[9px] font-mono text-gray-600">ID: {id}</span>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="text-[10px] font-mono text-gray-600 hidden sm:inline">ID: {id}</span>
                         {wf.updatedAt && (
-                          <span className="text-[9px] text-gray-500 flex items-center gap-0.5">
-                            <Clock className="w-2.5 h-2.5" />
+                          <span className="text-[10px] text-gray-500 flex items-center gap-0.5">
+                            <Clock className="w-3 h-3" />
                             {formatRelativeTime(wf.updatedAt)}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 text-gray-400 hover:text-cyan-400"
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-cyan-400"
                           disabled={isExecuting}
                           onClick={() => void handleExecute(wf)}
                         >
                           {isExecuting ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <Play className="w-3 h-3" />
+                            <Play className="w-4 h-4" />
                           )}
                         </Button>
                       </TooltipTrigger>
@@ -198,7 +206,7 @@ export function N8nWorkflowsPanel({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className={`h-6 w-6 p-0 ${
+                          className={`h-8 w-8 p-0 ${
                             wf.active
                               ? 'text-emerald-400 hover:text-amber-400'
                               : 'text-gray-500 hover:text-emerald-400'
@@ -207,11 +215,11 @@ export function N8nWorkflowsPanel({
                           onClick={() => void handleToggle(wf)}
                         >
                           {isToggling ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : wf.active ? (
-                            <CheckCircle2 className="w-3 h-3" />
+                            <CheckCircle2 className="w-4 h-4" />
                           ) : (
-                            <XCircle className="w-3 h-3" />
+                            <XCircle className="w-4 h-4" />
                           )}
                         </Button>
                       </TooltipTrigger>
