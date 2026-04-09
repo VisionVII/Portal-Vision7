@@ -1,9 +1,9 @@
 {
   "module": "Frontend & UI",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-07",
+  "last_updated": "2026-06-06",
   "objective": "Interface pública do portal Vision7 com design responsivo, tema dark/light, navegação por categorias e jornadas específicas para pedidos de acesso, convites e validação hierárquica de entrada.",
   "functional_requirements": [
     {
@@ -131,6 +131,7 @@
       "react-dom",
       "react-router-dom",
       "@tanstack/react-query",
+      "@vercel/analytics",
       "tailwindcss",
       "lucide-react",
       "dompurify",
@@ -311,6 +312,12 @@
       "version": "1.1.2",
       "author": "sdd-sync",
       "description": "Auto-sync: file list updated"
+    },
+    {
+      "date": "2026-06-06",
+      "version": "1.2.0",
+      "author": "Vision7 Team",
+      "description": "Vercel Analytics integrado em main.tsx. ThemeToggle simplificado (bordas e backgrounds removidos). Bordas de categorias no Header removidas (ring-1, shadow-sm). Gradiente de login AuthShell atualizado com Ocean Blue (primary-600). DOM nesting errors corrigidos. Dead code removido (AutomationDashboard V1, KPIBar, CategoryTabs, DashboardSection)."
     }
   ]
 }

@@ -3,8 +3,8 @@
   "version": "1.1.0",
   "owner": "Vision7 Core Team",
   "status": "Depreciado",
-  "last_updated": "2026-04-08",
-  "deprecated_note": "Substituído por automation-engine.json (v2.0.0). Este módulo é mantido apenas como referência histórica. Ver sdd/modules/automation-engine.json para a especificação ativa.",
+  "last_updated": "2026-06-06",
+  "deprecated_note": "Substituído por automation-engine.json (v2.0.0). Os ficheiros AdminAutomationPanel.tsx, AutomationDashboard.tsx (V1), AutomationKPIBar.tsx e AutomationCategoryTabs.tsx foram removidos do codebase. Ver sdd/modules/automation-engine.json para a especificação ativa.",
   "superseded_by": "automation-engine.json",
   "objective": "[LEGACY] Integração com n8n para automação de workflows: ingestão de RSS feeds, curadoria AI de conteúdo, execução e monitoramento de workflows, com dashboard administrativo completo.",
   "functional_requirements": [
