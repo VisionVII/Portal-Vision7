@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, Bot, CloudSun, Loader2, MapPin, Newspaper, Search, Send, ShieldAlert, Sparkles, TrendingUp, User } from 'lucide-react';
+import { ArrowUpRight, Bot, CloudSun, Loader2, Lock, MapPin, Newspaper, Search, Send, Sparkles, TrendingUp, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -416,12 +416,12 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   const renderMessageCard = (card: AssistantMessageCard) => {
     if (card.kind === 'weather') {
       return (
-        <div key={card.id} className="overflow-hidden rounded-2xl border border-sky-200/20 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.22),transparent_36%),linear-gradient(135deg,rgba(8,47,73,0.96),rgba(15,23,42,0.96))] p-4 text-white shadow-[0_18px_42px_rgba(8,47,73,0.3)]">
+        <div key={card.id} className="overflow-hidden rounded-2xl border border-primary-200/60 bg-gradient-to-br from-primary-50 via-background to-secondary-50 p-4 text-foreground shadow-[0_16px_34px_rgba(14,116,217,0.12)] dark:border-sky-200/20 dark:bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.22),transparent_36%),linear-gradient(135deg,rgba(8,47,73,0.96),rgba(15,23,42,0.96))] dark:text-white dark:shadow-[0_18px_42px_rgba(8,47,73,0.3)]">
           <div className="flex items-start justify-between gap-3">
             <div>
-              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/60">{card.badge}</p> : null}
-              <h4 className="mt-1 text-base font-semibold">{card.title}</h4>
-              <p className="mt-1 text-sm text-white/72">{card.description}</p>
+              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-700/80 dark:text-white/60">{card.badge}</p> : null}
+              <h4 className="mt-1 text-base font-semibold text-foreground dark:text-white">{card.title}</h4>
+              <p className="mt-1 text-sm text-muted-foreground dark:text-white/72">{card.description}</p>
             </div>
             <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${skyInfo.temperatureBg}`}>
               <CloudSun className={`h-5 w-5 ${skyInfo.temperatureColor}`} />
@@ -431,9 +431,9 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
           {card.stats?.length ? (
             <div className="mt-4 grid grid-cols-3 gap-2">
               {card.stats.map((stat) => (
-                <div key={`${card.id}-${stat.label}`} className="rounded-2xl border border-white/10 bg-white/6 px-3 py-2.5">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/52">{stat.label}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{stat.value}</p>
+                <div key={`${card.id}-${stat.label}`} className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5 dark:border-white/10 dark:bg-white/6">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground dark:text-white/52">{stat.label}</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground dark:text-white">{stat.value}</p>
                 </div>
               ))}
             </div>
@@ -444,15 +444,15 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
     if (card.kind === 'consent') {
       return (
-        <div key={card.id} className="rounded-2xl border border-primary-300/25 bg-gradient-to-br from-primary-800/20 to-slate-950 p-4 shadow-[0_14px_34px_rgba(2,132,199,0.2)]">
+        <div key={card.id} className="rounded-2xl border border-primary-200/70 bg-gradient-to-br from-primary-50 via-background to-secondary-50 p-4 shadow-[0_14px_30px_rgba(14,116,217,0.14)] dark:border-primary-300/25 dark:bg-gradient-to-br dark:from-primary-800/20 dark:to-slate-950 dark:shadow-[0_14px_34px_rgba(2,132,199,0.2)]">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-500/20 text-primary-300">
-              <ShieldAlert className="h-5 w-5" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300">
+              <Lock className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-200/80">{card.badge}</p> : null}
-              <h4 className="mt-1 text-base font-semibold text-white">{card.title}</h4>
-              <p className="mt-1 text-sm text-slate-200">{card.description}</p>
+              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-700/80 dark:text-primary-200/80">{card.badge}</p> : null}
+              <h4 className="mt-1 text-base font-semibold text-foreground dark:text-white">{card.title}</h4>
+              <p className="mt-1 text-sm text-muted-foreground dark:text-slate-200">{card.description}</p>
             </div>
           </div>
 
