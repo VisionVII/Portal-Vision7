@@ -82,7 +82,7 @@ const Audiocasts = () => {
           {!isLoading && featuredAudiocast && (
             <section id="audiocast-destaque" className="mb-10 scroll-mt-28">
               <div className="mb-4 flex items-center gap-2">
-                <div className="h-1 w-8 rounded-full bg-primary" />
+                <div className="h-[2px] w-10 rounded-full bg-gradient-to-r from-primary-500 to-primary-400/35" />
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Em destaque
                 </h2>
