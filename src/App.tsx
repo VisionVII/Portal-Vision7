@@ -4,15 +4,17 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
-import MiniPlayer from "@/components/media/MiniPlayerExpanded";
+import MiniPlayer from "@/components/media/MiniPlayerV2";
 import DynamicFavicon from "@/components/system/DynamicFavicon";
 import ErrorBoundary from "@/components/system/ErrorBoundary";
 import ScrollToTop from "@/components/system/ScrollToTop";
 import ThemeProvider from "@/components/system/ThemeProvider";
 import CookieBanner from "@/components/system/CookieBanner";
 import ProtectedRoute from "@/components/system/ProtectedRoute";
+import PageTransition from "@/components/system/PageTransition";
 
 const Index = lazy(() => import("@/pages/site/Index"));
 const Tecnologia = lazy(() => import("@/pages/site/Tecnologia"));
@@ -43,6 +45,68 @@ const PublicPrivacyControls = () => {
 
 const RouteFallback = () => <div className="min-h-screen bg-background" />;
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/tecnologia" element={<PageTransition><Tecnologia /></PageTransition>} />
+        <Route path="/desporto" element={<PageTransition><Desporto /></PageTransition>} />
+        <Route path="/musica" element={<PageTransition><Musica /></PageTransition>} />
+        <Route path="/saude" element={<PageTransition><Saude /></PageTransition>} />
+        <Route path="/mundo" element={<PageTransition><Mundo /></PageTransition>} />
+        <Route path="/audiocasts" element={<PageTransition><Audiocasts /></PageTransition>} />
+        <Route path="/audiocast/:id" element={<PageTransition><Audiocast /></PageTransition>} />
+        <Route path="/post/:slug" element={<PageTransition><Post /></PageTransition>} />
+        <Route path="/curso/:slug" element={<PageTransition><Course /></PageTransition>} />
+        <Route path="/politica-privacidade" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
+
+        {/* ── Auth routes ── */}
+        <Route path="/admin/login" element={<PageTransition><AdminLogin /></PageTransition>} />
+        <Route path="/acesso/equipa" element={<PageTransition><UserLogin /></PageTransition>} />
+
+        {/* ── Legacy redirects ── */}
+        <Route path="/podcasts" element={<Navigate to="/audiocasts" replace />} />
+        <Route path="/podcast/:id" element={<Navigate to="/audiocasts" replace />} />
+        <Route path="/validar/entrada/tipodeuser" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/acesso/admin/controlado" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/register" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/acesso/convidado" element={<Navigate to="/acesso/equipa" replace />} />
+
+        {/* ── Protected admin routes ── */}
+        <Route
+          path="/admin/dashboard"
+          element={(
+            <PageTransition>
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            </PageTransition>
+          )}
+        />
+        <Route
+          path="/admin/automation-lab"
+          element={(
+            <PageTransition>
+              <ProtectedRoute>
+                <AdminAutomationLab />
+              </ProtectedRoute>
+            </PageTransition>
+          )}
+        />
+        <Route path="/admin/laboratorio-automacao" element={<Navigate to="/admin/automation-lab" replace />} />
+        <Route path="/admin/automacao-legacy" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/automation" element={<Navigate to="/admin/dashboard" replace />} />
+        
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -68,55 +132,7 @@ const App = () => (
             <BrowserRouter>
               <ScrollToTop />
               <Suspense fallback={<RouteFallback />}>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/tecnologia" element={<Tecnologia />} />
-                  <Route path="/desporto" element={<Desporto />} />
-                  <Route path="/musica" element={<Musica />} />
-                  <Route path="/saude" element={<Saude />} />
-                  <Route path="/mundo" element={<Mundo />} />
-                  <Route path="/audiocasts" element={<Audiocasts />} />
-                  <Route path="/audiocast/:id" element={<Audiocast />} />
-                  <Route path="/post/:slug" element={<Post />} />
-                  <Route path="/curso/:slug" element={<Course />} />
-                  <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
-
-                  {/* ── Auth routes ── */}
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/acesso/equipa" element={<UserLogin />} />
-
-                  {/* ── Legacy redirects ── */}
-                  <Route path="/podcasts" element={<Navigate to="/audiocasts" replace />} />
-                  <Route path="/podcast/:id" element={<Navigate to="/audiocasts" replace />} />
-                  <Route path="/validar/entrada/tipodeuser" element={<Navigate to="/admin/login" replace />} />
-                  <Route path="/acesso/admin/controlado" element={<Navigate to="/admin/login" replace />} />
-                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                  <Route path="/admin/register" element={<Navigate to="/admin/login" replace />} />
-                  <Route path="/acesso/convidado" element={<Navigate to="/acesso/equipa" replace />} />
-
-                  {/* ── Protected admin routes ── */}
-                  <Route
-                    path="/admin/dashboard"
-                    element={(
-                      <ProtectedRoute>
-                        <AdminDashboard />
-                      </ProtectedRoute>
-                    )}
-                  />
-                  <Route
-                    path="/admin/automation-lab"
-                    element={(
-                      <ProtectedRoute>
-                        <AdminAutomationLab />
-                      </ProtectedRoute>
-                    )}
-                  />
-                  <Route path="/admin/laboratorio-automacao" element={<Navigate to="/admin/automation-lab" replace />} />
-                  <Route path="/admin/automacao-legacy" element={<Navigate to="/admin/dashboard" replace />} />
-                  <Route path="/admin/automation" element={<Navigate to="/admin/dashboard" replace />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <AnimatedRoutes />
               </Suspense>
               <MiniPlayer />
               <PublicPrivacyControls />
