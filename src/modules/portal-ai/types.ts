@@ -13,7 +13,7 @@ export interface PortalAssistantSkill {
 }
 
 export interface PortalAssistantConfig {
-  provider: 'local-preview' | 'openai-compatible' | 'groq-edge';
+  provider: 'local-preview' | 'openai-compatible' | 'groq-edge' | 'hf-edge';
   model: string;
   enabled: boolean;
   requiresApiKey: boolean;
@@ -21,7 +21,7 @@ export interface PortalAssistantConfig {
   scope: string[];
   assistantId?: string;
   edgeFunctionName?: string;
-  fallbackProvider?: 'local-preview' | 'openai-compatible' | 'groq-edge';
+  fallbackProvider?: 'local-preview' | 'openai-compatible' | 'groq-edge' | 'hf-edge';
   sddPath?: string;
 }
 
@@ -35,7 +35,7 @@ export interface PortalAssistantReply {
   summary: string;
   suggestions: string[];
   links: PortalAssistantReplyLink[];
-  provider?: 'local-preview' | 'groq-edge';
+  provider?: 'local-preview' | 'groq-edge' | 'hf-edge';
   assistantId?: string;
   sddVersion?: string;
 }
