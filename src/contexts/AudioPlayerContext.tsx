@@ -4,7 +4,7 @@ import { AudioPlayerContext, AudioPlayerContextType, AudioTrack } from '@/contex
 
 export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [state, setState] = useState<Omit<AudioPlayerContextType, 'play' | 'pause' | 'resume' | 'toggle' | 'seek' | 'setVolume' | 'toggleMute' | 'skipForward' | 'skipBackward' | 'minimize' | 'maximize' | 'close'>>({
+  const [state, setState] = useState<Omit<AudioPlayerContextType, 'play' | 'pause' | 'resume' | 'toggle' | 'seek' | 'setVolume' | 'toggleMute' | 'skipForward' | 'skipBackward' | 'setPlaybackRate' | 'minimize' | 'maximize' | 'close'>>({
     track: null,
     isPlaying: false,
     currentTime: 0,
@@ -13,6 +13,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isMuted: false,
     isMinimized: true,
     isLoading: false,
+    playbackRate: 1,
   });
 
   // Lazy init the audio element once
@@ -124,6 +125,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     audio.currentTime = Math.max(0, audio.currentTime - seconds);
   }, []);
 
+  const setPlaybackRate = useCallback((rate: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.playbackRate = rate;
+    setState(s => ({ ...s, playbackRate: rate }));
+  }, []);
+
   const minimize = useCallback(() => setState(s => ({ ...s, isMinimized: true })), []);
   const maximize = useCallback(() => setState(s => ({ ...s, isMinimized: false })), []);
 
@@ -154,6 +162,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     toggleMute,
     skipForward,
     skipBackward,
+    setPlaybackRate,
     minimize,
     maximize,
     close,
