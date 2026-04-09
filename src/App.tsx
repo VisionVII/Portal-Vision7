@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import MiniPlayer from "@/components/media/MiniPlayer";
@@ -10,6 +10,7 @@ import DynamicFavicon from "@/components/system/DynamicFavicon";
 import ErrorBoundary from "@/components/system/ErrorBoundary";
 import ScrollToTop from "@/components/system/ScrollToTop";
 import ThemeProvider from "@/components/system/ThemeProvider";
+import CookieBanner from "@/components/system/CookieBanner";
 import Index from "@/pages/site/Index";
 import Tecnologia from "@/pages/site/Tecnologia";
 import Desporto from "@/pages/site/Desporto";
@@ -27,6 +28,16 @@ import ProtectedRoute from "@/components/system/ProtectedRoute";
 import PrivacyPolicy from "@/pages/site/PrivacyPolicy";
 import Course from "@/pages/site/Course";
 import Audiocasts from "@/pages/site/Audiocasts";
+
+const PublicPrivacyControls = () => {
+  const location = useLocation();
+
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
+
+  return <CookieBanner />;
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,6 +112,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
               </Routes>
               <MiniPlayer />
+              <PublicPrivacyControls />
             </BrowserRouter>
           </ErrorBoundary>
           </AudioPlayerProvider>
