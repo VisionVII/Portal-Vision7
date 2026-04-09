@@ -33,8 +33,7 @@ const parseCourseMeta = (rawValue?: string | null): Record<string, CourseMeta> =
 
   try {
     return JSON.parse(rawValue) as Record<string, CourseMeta>;
-  } catch (error) {
-    console.warn('Falha ao interpretar as parcerias de cursos.', error);
+  } catch {
     return {};
   }
 };
