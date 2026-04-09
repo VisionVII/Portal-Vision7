@@ -143,11 +143,10 @@ const Header = () => {
   const mobileCategoryItems = primaryNavItems.slice(2);
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85">
-      {/* Top brand bar — always rendered but hidden visually when scrolled down.
-          Uses overflow:hidden + max-height with a fixed ceiling so it never triggers layout reflow loops. */}
+    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/98 backdrop-blur-md supports-[backdrop-filter]:bg-background/95">
+      {/* Top brand bar — professional clean design */}
       <div
-        className="overflow-hidden border-b border-border/60 bg-[linear-gradient(135deg,hsl(var(--neutral-950)),hsl(var(--primary-900)))] text-white dark:bg-[linear-gradient(135deg,hsl(var(--neutral-950)),hsl(var(--primary-800)))]"
+        className="overflow-hidden border-b border-border/30 bg-background"
         style={{
           maxHeight: hideTopBar ? 0 : 80,
           opacity: hideTopBar ? 0 : 1,
@@ -155,8 +154,8 @@ const Header = () => {
           willChange: 'max-height',
         }}
       >
-        <div className={`container mx-auto flex items-center justify-between gap-3 px-4 transition-[padding] duration-200 ${isScrolled ? 'py-2 sm:py-2.5' : 'py-2.5 sm:py-3'}`}>
-          <Link to="/" className="flex shrink-0 items-center transition-opacity hover:opacity-95">
+        <div className={`container mx-auto flex items-center justify-between gap-4 px-5 transition-[padding] duration-200 ${isScrolled ? 'py-3 sm:py-3.5' : 'py-4 sm:py-5'}`}>
+          <Link to="/" className="flex shrink-0 items-center transition-opacity hover:opacity-80">
             <BrandLogo siteName={siteSettings?.site_name} showTagline={false} />
           </Link>
 
@@ -170,25 +169,21 @@ const Header = () => {
         </div>
       </div>
 
-      <nav
-        className={`border-t border-border/70 bg-background/95 text-foreground backdrop-blur transition-shadow duration-200 supports-[backdrop-filter]:bg-background/90 dark:border-white/10 dark:bg-background/95 dark:text-white ${
-          isScrolled ? 'shadow-[0_16px_36px_rgba(5,12,32,0.14)]' : 'shadow-[0_10px_30px_rgba(5,12,32,0.08)]'
-        }`}
-      >
-        <div className="container mx-auto px-3 sm:px-4">
+      <nav className="bg-background/98">
+        <div className="container mx-auto px-5">
           {/* ═══════════ DESKTOP NAV ═══════════ */}
-          <div className={`hidden items-center gap-3 md:flex ${isScrolled ? 'py-1.5' : 'py-2.5'}`}>
-            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className={`hidden items-center gap-6 md:flex ${isScrolled ? 'py-3' : 'py-4'}`}>
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {primaryNavItems.map((item) => (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   end={item.path === '/'}
                   className={({ isActive }) =>
-                    `whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-all ${
+                    `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold tracking-tight transition-all ${
                       isActive
-                        ? 'bg-primary-600 text-white shadow-sm'
-                        : 'text-slate-700 hover:bg-slate-100 hover:text-primary-700 dark:text-white/90 dark:hover:bg-white/10 dark:hover:text-secondary-200'
+                        ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
+                        : 'text-foreground/70 hover:bg-muted hover:text-foreground'
                     }`
                   }
                 >
@@ -197,55 +192,45 @@ const Header = () => {
               ))}
             </div>
 
-            {/* ─── Context toolbar (desktop) ─── */}
-            <div className="hidden shrink-0 items-center gap-1.5 rounded-[20px] border border-slate-200 bg-slate-50/90 px-2.5 py-1.5 shadow-sm lg:flex dark:border-white/10 dark:bg-white/5">
+            {/* ─── Context toolbar (desktop) - professional minimal ─── */}
+            <div className="hidden shrink-0 items-center gap-2 lg:flex">
               {/* Calendar (opens popup) */}
               <CalendarPopover
                 localDateLabel={localDateLabel}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 transition-colors hover:bg-primary-50 hover:text-primary-700 dark:bg-white/10 dark:text-slate-200 dark:hover:bg-white/20"
+                className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-foreground/80 transition-colors hover:border-primary/40 hover:bg-muted/50 hover:text-foreground"
               />
 
               {/* Clock */}
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:bg-white/10 dark:text-slate-200">
-                <Clock3 className="h-3.5 w-3.5 text-primary-600" />
+              <span className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-foreground/80">
+                <Clock3 className="h-3.5 w-3.5 text-primary" />
                 {localTime}
               </span>
 
-              {/* Location */}
-              <span className="hidden items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 xl:inline-flex dark:bg-white/10 dark:text-slate-200">
-                <MapPin className="h-3.5 w-3.5 text-primary-600" />
-                {locationLabel}
-              </span>
-
               {/* Temperature (colour-coded) */}
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${skyInfo.temperatureBg} ${skyInfo.temperatureColor}`}>
+              <span className={`inline-flex items-center gap-2 rounded-lg border border-border/50 px-3 py-1.5 text-xs font-semibold ${skyInfo.temperatureBg} ${skyInfo.temperatureColor}`}>
                 <TemperatureIcon icon={skyInfo.temperatureIcon} className="h-3.5 w-3.5" />
                 {temperatureLabel}
               </span>
 
-              {/* Day/Night + Moon phase */}
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:bg-white/10 dark:text-slate-200">
-                <SkyIcon isDaytime={skyInfo.isDaytime} moonEmoji={skyInfo.moonEmoji} className="h-3.5 w-3.5" />
-                {skyInfo.isDaytime ? 'Dia' : skyInfo.moonPhaseName}
-              </span>
+              <div className="mx-2 h-6 w-px bg-border/50" />
 
               <ThemeToggle compact />
             </div>
           </div>
 
           {/* ═══════════ MOBILE NAV ═══════════ */}
-          <div className={`flex items-center gap-2 md:hidden ${isScrolled ? 'py-1.5' : 'py-2.5'}`}>
-            <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className={`flex items-center gap-2 md:hidden ${isScrolled ? 'py-2.5' : 'py-3'}`}>
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {primaryNavItems.slice(0, 4).map((item) => (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   end={item.path === '/'}
                   className={({ isActive }) =>
-                    `flex-shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+                    `flex-shrink-0 rounded-lg px-3.5 py-2 text-xs font-semibold tracking-tight transition-all ${
                       isActive
-                        ? 'border-primary/30 bg-primary text-white shadow-sm'
-                        : 'border-border bg-card text-foreground hover:border-primary/30 hover:bg-muted'
+                        ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
+                        : 'bg-muted/50 text-foreground/70 hover:bg-muted hover:text-foreground'
                     }`
                   }
                 >
@@ -274,56 +259,56 @@ const Header = () => {
                 <div className="flex flex-1 flex-col gap-3 overflow-hidden pt-3">
                   <ThemeToggle className="shrink-0" />
 
-                  {/* ─── Context info premium — inspired by weather card ─── */}
-                  <div className="shrink-0 overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-3.5 shadow-sm">
-                    <div className="grid grid-cols-2 gap-3 text-[12px]">
+                  {/* ─── Context info - professional minimal ─── */}
+                  <div className="shrink-0 space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {/* Date — opens calendar */}
+                      <CalendarPopover
+                        localDateLabel={localDateLabel}
+                        className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-2.5 py-2 text-foreground/80 hover:border-primary/40 hover:bg-muted/50"
+                      />
+
+                      {/* Clock */}
+                      <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-2.5 py-2">
+                        <Clock3 className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        <span className="truncate font-medium text-foreground/80">{localTime}</span>
+                      </div>
+
+                      {/* Temperature */}
+                      <div className={`flex items-center gap-2 rounded-lg border border-border/50 px-2.5 py-2 ${skyInfo.temperatureBg}`}>
+                        <TemperatureIcon icon={skyInfo.temperatureIcon} className={`h-3.5 w-3.5 shrink-0 ${skyInfo.temperatureColor}`} />
+                        <span className={`truncate font-semibold ${skyInfo.temperatureColor}`}>{temperatureLabel}</span>
+                      </div>
+
                       {/* Day/Night */}
-                      <div className="flex items-center gap-2 rounded-xl bg-background/40 px-2.5 py-2 backdrop-blur-sm">
-                        <SkyIcon isDaytime={skyInfo.isDaytime} moonEmoji={skyInfo.moonEmoji} className="h-4 w-4 shrink-0" />
-                        <span className="truncate font-semibold text-foreground">
+                      <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-2.5 py-2">
+                        <SkyIcon isDaytime={skyInfo.isDaytime} moonEmoji={skyInfo.moonEmoji} className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate font-medium text-foreground/80">
                           {skyInfo.isDaytime ? 'Dia' : skyInfo.moonPhaseName}
                         </span>
                       </div>
 
-                      {/* Temperature */}
-                      <div className={`flex items-center gap-2 rounded-xl px-2.5 py-2 ${skyInfo.temperatureBg} backdrop-blur-sm`}>
-                        <TemperatureIcon icon={skyInfo.temperatureIcon} className={`h-4 w-4 shrink-0 ${skyInfo.temperatureColor}`} />
-                        <span className={`truncate font-bold ${skyInfo.temperatureColor}`}>{temperatureLabel}</span>
-                      </div>
-
-                      {/* Date — opens calendar */}
-                      <CalendarPopover
-                        localDateLabel={localDateLabel}
-                        className="flex items-center gap-2 rounded-xl bg-background/40 px-2.5 py-2 backdrop-blur-sm"
-                      />
-
-                      {/* Clock */}
-                      <div className="flex items-center gap-2 rounded-xl bg-background/40 px-2.5 py-2 backdrop-blur-sm">
-                        <Clock3 className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="truncate font-semibold text-foreground">{localTime}</span>
-                      </div>
-
                       {/* Location — full width */}
-                      <div className="col-span-2 flex items-center gap-2 rounded-xl bg-primary/8 px-2.5 py-2 backdrop-blur-sm">
-                        <MapPin className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="truncate font-semibold text-foreground">{locationLabel}</span>
+                      <div className="col-span-2 flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-2.5 py-2">
+                        <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        <span className="truncate font-medium text-primary">{locationLabel}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* ─── Categories grid ─── */}
-                  <div className="flex flex-1 flex-col gap-2 overflow-hidden">
-                    <p className="shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/60">Categorias</p>
+                  <div className="flex flex-1 flex-col gap-2.5 overflow-hidden">
+                    <p className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-foreground/50">Categorias</p>
                     <div className="grid grid-cols-2 gap-2">
                       {mobileCategoryItems.map((item) => (
                         <SheetClose asChild key={item.path}>
                           <NavLink
                             to={item.path}
                             className={({ isActive }) =>
-                              `flex min-h-[40px] items-center justify-start rounded-xl border px-4 py-2 text-left text-[13px] font-medium transition-colors ${
+                              `flex min-h-[44px] items-center justify-start rounded-lg px-3.5 py-2.5 text-left text-sm font-semibold tracking-tight transition-all ${
                                 isActive
-                                  ? 'border-primary/30 bg-primary/10 text-foreground'
-                                  : 'border-border bg-card text-foreground hover:border-primary/30 hover:bg-muted'
+                                  ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
+                                  : 'bg-muted/30 text-foreground/70 hover:bg-muted/60 hover:text-foreground'
                               }`
                             }
                           >
