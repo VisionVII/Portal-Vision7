@@ -329,48 +329,46 @@ const Index = () => {
         contentClassName="max-w-[34rem] pb-2 text-left sm:pb-6 lg:pb-10 xl:pl-6"
         actionsSlot={(
           <div className="flex flex-col items-start gap-4 pt-6 sm:pt-8">
-            <div className="inline-flex w-full max-w-[22rem] flex-col items-start gap-4 rounded-[28px] border border-white/12 bg-slate-950/42 px-4 py-4 shadow-[0_24px_80px_rgba(2,6,23,0.32)] backdrop-blur-md sm:px-5 sm:py-5">
-              {isExternalBannerHref ? (
-                <a
-                  href={bannerHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
-                >
-                  {bannerCtaLabel}
-                </a>
-              ) : isHashBannerHref ? (
-                <a
-                  href={bannerHref}
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
-                >
-                  {bannerCtaLabel}
-                </a>
-              ) : (
-                <Link
-                  to={bannerHref}
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
-                >
-                  {bannerCtaLabel}
-                </Link>
-              )}
+            {isExternalBannerHref ? (
+              <a
+                href={bannerHref}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+              >
+                {bannerCtaLabel}
+              </a>
+            ) : isHashBannerHref ? (
+              <a
+                href={bannerHref}
+                className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+              >
+                {bannerCtaLabel}
+              </a>
+            ) : (
+              <Link
+                to={bannerHref}
+                className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+              >
+                {bannerCtaLabel}
+              </Link>
+            )}
 
-              {activeBanners.length > 1 ? (
-                <div className="flex items-center gap-2">
-                  {activeBanners.map((banner, index) => (
-                    <button
-                      key={`dot-${banner.id}`}
-                      type="button"
-                      aria-label={`Abrir banner ${index + 1}`}
-                      onClick={() => setActiveBannerIndex(index)}
-                      className={`h-2.5 rounded-full transition-all duration-300 ${
-                        activeBannerIndex === index ? 'w-10 bg-white shadow-[0_0_24px_rgba(255,255,255,0.45)]' : 'w-2.5 bg-white/35 hover:bg-white/55'
-                      }`}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            {activeBanners.length > 1 ? (
+              <div className="flex items-center gap-2">
+                {activeBanners.map((banner, index) => (
+                  <button
+                    key={`dot-${banner.id}`}
+                    type="button"
+                    aria-label={`Abrir banner ${index + 1}`}
+                    onClick={() => setActiveBannerIndex(index)}
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                      activeBannerIndex === index ? 'w-10 bg-white shadow-[0_0_24px_rgba(255,255,255,0.45)]' : 'w-2.5 bg-white/35 hover:bg-white/55'
+                    }`}
+                  />
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
       />
