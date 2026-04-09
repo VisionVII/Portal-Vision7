@@ -1,19 +1,150 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Play, Pause, X, SkipBack, SkipForward, Headphones, Volume2, VolumeX, ChevronUp } from 'lucide-react';
+import { 
+  Play, 
+  Pause, 
+  X, 
+  SkipBack, 
+  SkipForward, 
+  Headphones, 
+  Volume2, 
+  VolumeX, 
+  ChevronUp, 
+  ChevronDown,
+  Repeat,
+  Repeat1,
+  Share2,
+  Download,
+  Clock,
+  Gauge,
+  ListMusic,
+  Heart,
+  MoreHorizontal
+} from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
 import { useAudioPlayerOptional } from '@/contexts/audio-player';
 import { formatDuration } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+
+type RepeatMode = 'off' | 'all' | 'one';
 
 const MiniPlayer: React.FC = () => {
   const player = useAudioPlayerOptional();
+  const { toast } = useToast();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isFavorite, setIsFavorite] = useState(false);
+
   if (!player || !player.track) return null;
 
-  const { track, isPlaying, currentTime, duration, isLoading, isMuted, toggle, seek, close, skipForward, skipBackward, toggleMute } = player;
+  const { 
+    track, 
+    isPlaying, 
+    currentTime, 
+    duration, 
+    isLoading, 
+    isMuted, 
+    volume,
+    toggle, 
+    seek, 
+    close, 
+    skipForward, 
+    skipBackward, 
+    toggleMute,
+    setVolume
+  } = player;
+  
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+  const handleShare = async () => {
+    const url = track.slug ? `${window.location.origin}/audiocast/${track.slug}` : `${window.location.origin}/audiocast/${track.id}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: track.title, text: track.description || '', url });
+      } catch {}
+    } else {
+      navigator.clipboard.writeText(url);
+      toast({ title: 'Link copiado', description: 'Link copiado para área de transferência.' });
+    }
+  };
+
+  const handleDownload = () => {
+    if (!track.audio_url) return;
+    const link = document.createElement('a');
+    link.href = track.audio_url;
+    link.download = `${track.title}.mp3`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({ title: 'Download iniciado', description: 'O audiocast está sendo baixado.' });
+  };
+
+  const cycleRepeatMode = () => {
+    setRepeatMode(prev => prev === 'off' ? 'all' : prev === 'all' ? 'one' : 'off');
+  };
+
+  const cyclePlaybackSpeed = () => {
+    const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+    const currentIndex = speeds.indexOf(playbackSpeed);
+    const nextSpeed = speeds[(currentIndex + 1) % speeds.length];
+    setPlaybackSpeed(nextSpeed);
+    toast({ title: 'Velocidade alterada', description: `${nextSpeed}x` });
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-card/95 shadow-2xl shadow-black/20 backdrop-blur-xl transition-transform duration-300">
+    <>
+      {/* ═══ EXPANDED PLAYER OVERLAY ═══ */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[60] bg-gradient-to-b from-background via-background to-muted/30 backdrop-blur-2xl"
+            onClick={() => setIsExpanded(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="h-full overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="container mx-auto max-w-4xl px-4 py-8">
+                {/* Header */}
+                <div className="mb-8 flex items-center justify-between">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsExpanded(false)}
+                    className="gap-2"
+                  >
+                    <ChevronDown className="h-5 w-5" />
+                    Minimizar
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" onClick={handleShare}>
+                      <Share2 className="h-5 w-5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setIsFavorite(!isFavorite)}>
+                      <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Cover Art */}
+                <div className="mb-8 flex justify-center">
+                  <div className="relative aspect-square w-full max-w-md overflow-hidden rounded-3xl shadow-2xl">
+                    {track.
       {/* Thin progress bar at very top */}
       <div className="h-0.5 w-full bg-border/30">
         <div
