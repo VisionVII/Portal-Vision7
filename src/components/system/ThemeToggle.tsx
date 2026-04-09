@@ -34,7 +34,7 @@ const ThemeToggle = ({ className, compact = false }: ThemeToggleProps) => {
               'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:text-sm',
               compact && 'px-2.5 py-1 text-[11px] sm:text-xs',
               isActive
-                ? 'bg-primary text-primary-foreground shadow-sm'
+                ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             )}
             aria-pressed={isActive}
