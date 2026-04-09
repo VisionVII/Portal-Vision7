@@ -27,19 +27,24 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ variant = 'sidebar' }) 
     }
 
     try {
-      await subscribe.mutateAsync(email);
+      const result = await subscribe.mutateAsync(trimmed);
       setSubscribed(true);
       setEmail('');
       toast({
-        title: "Subscrito com sucesso! 🎉",
-        description: "Receberá as nossas notícias no seu email.",
+        title: 'Subscrição concluída!',
+        description: result?.welcomeEmailSent
+          ? 'Subscrição ativa e email de boas-vindas enviado.'
+          : 'Subscrição ativa. O email de boas-vindas pode demorar alguns minutos.',
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : '';
+      const safeDescription = message.includes('já está subscrito')
+        ? message
+        : 'Não foi possível concluir a subscrição agora. Tente novamente em instantes.';
       toast({
-        title: "Erro",
-        description: message || "Erro ao subscrever. Tente novamente.",
-        variant: "destructive",
+        title: 'Erro',
+        description: safeDescription,
+        variant: 'destructive',
       });
     }
   };
