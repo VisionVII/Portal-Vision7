@@ -27,19 +27,24 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ variant = 'sidebar' }) 
     }
 
     try {
-      await subscribe.mutateAsync(email);
+      const result = await subscribe.mutateAsync(trimmed);
       setSubscribed(true);
       setEmail('');
       toast({
-        title: "Subscrito com sucesso! 🎉",
-        description: "Receberá as nossas notícias no seu email.",
+        title: 'Subscrição concluída!',
+        description: result?.welcomeEmailSent
+          ? 'Subscrição ativa e email de boas-vindas enviado.'
+          : 'Subscrição ativa. O email de boas-vindas pode demorar alguns minutos.',
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : '';
+      const safeDescription = message.includes('já está subscrito')
+        ? message
+        : 'Não foi possível concluir a subscrição agora. Tente novamente em instantes.';
       toast({
-        title: "Erro",
-        description: message || "Erro ao subscrever. Tente novamente.",
-        variant: "destructive",
+        title: 'Erro',
+        description: safeDescription,
+        variant: 'destructive',
       });
     }
   };
@@ -61,6 +66,9 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ variant = 'sidebar' }) 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Seu melhor email"
+          autoComplete="email"
+          inputMode="email"
+          aria-label="Email para subscrição da newsletter"
           className="w-full rounded-lg border border-primary-900/30 bg-gray-900 px-3 py-2 text-white focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
           required
         />
@@ -82,6 +90,9 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ variant = 'sidebar' }) 
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Seu melhor email"
+        autoComplete="email"
+        inputMode="email"
+        aria-label="Email para subscrição da newsletter"
         className="w-full rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-secondary-300"
         required
       />

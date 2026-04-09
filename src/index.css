@@ -19,17 +19,17 @@
     --primary-800: 214 95% 28%;      /* #075985 */
     --primary-900: 217 91% 18%;      /* #0C4A6E */
 
-    /* Secundária: Electric Violet - Roxo elétrico premium */
-    --secondary-50: 270 100% 98%;    /* #FAF5FF */
-    --secondary-100: 269 100% 95%;   /* #F3E8FF */
-    --secondary-200: 269 100% 92%;   /* #E9D5FF */
-    --secondary-300: 269 97% 85%;    /* #D8B4FE */
-    --secondary-400: 270 95% 75%;    /* #C084FC */
-    --secondary-500: 271 91% 65%;    /* #A855F7 */
-    --secondary-600: 272 81% 56%;    /* #9333EA */
-    --secondary-700: 273 76% 47%;    /* #7E22CE */
-    --secondary-800: 274 70% 39%;    /* #6B21A8 */
-    --secondary-900: 274 65% 31%;    /* #581C87 */
+    /* Secundária: Vision Blue - Azul institucional premium */
+    --secondary-50: 210 100% 97%;    /* #F0F7FF */
+    --secondary-100: 210 96% 93%;    /* #DCEEFF */
+    --secondary-200: 210 94% 86%;    /* #B8DDFF */
+    --secondary-300: 210 92% 76%;    /* #88C4FB */
+    --secondary-400: 210 90% 64%;    /* #4FA5F0 */
+    --secondary-500: 210 90% 52%;    /* #1985E0 */
+    --secondary-600: 210 90% 40%;    /* #0A64C0 */
+    --secondary-700: 211 88% 33%;    /* #0B539E */
+    --secondary-800: 212 82% 27%;    /* #0D4480 */
+    --secondary-900: 213 75% 22%;    /* #0F3766 */
 
     /* Acento: Amber Glow - Dourado vibrante */
     --accent-50: 48 100% 96%;        /* #FFFBEB */
@@ -59,12 +59,12 @@
     /* Color Mappings Light */
     --primary: 208 98% 45%;
     --primary-foreground: 210 100% 98%;
-    --secondary: 272 81% 56%;
-    --secondary-foreground: 270 100% 98%;
+    --secondary: 210 90% 40%;
+    --secondary-foreground: 210 100% 97%;
     --muted: 210 16% 96%;
     --muted-foreground: 215 14% 34%;
-    --accent: 38 92% 50%;
-    --accent-foreground: 48 100% 96%;
+    --accent: 210 16% 96%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --success: 142 76% 36%;
@@ -287,7 +287,7 @@
 
   .section-title::after {
     content: '';
-    @apply block w-12 h-1 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-full mt-2;
+    @apply block w-16 h-[2px] bg-gradient-to-r from-primary-500 via-secondary-500/60 to-transparent rounded-full mt-3;
   }
 
   .prose,

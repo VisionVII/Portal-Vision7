@@ -82,7 +82,7 @@ const Audiocasts = () => {
           {!isLoading && featuredAudiocast && (
             <section id="audiocast-destaque" className="mb-10 scroll-mt-28">
               <div className="mb-4 flex items-center gap-2">
-                <div className="h-1 w-8 rounded-full bg-primary" />
+                <div className="h-[2px] w-10 rounded-full bg-gradient-to-r from-primary-500 to-primary-400/35" />
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Em destaque
                 </h2>
@@ -95,7 +95,7 @@ const Audiocasts = () => {
             {/* Main grid */}
             <div className="min-w-0">
               <div className="mb-5 flex items-center gap-2">
-                <div className="h-1 w-8 rounded-full bg-secondary-500" />
+                <div className="h-[2px] w-10 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-400/40" />
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Todos os episódios
                 </h2>
@@ -138,7 +138,7 @@ const Audiocasts = () => {
                       <Link
                         key={cat.id}
                         to={`/${cat.slug}`}
-                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: cat.color }} />
                         {cat.name}

@@ -50,7 +50,7 @@ interface ChatMessage {
   suggestions?: string[];
   links?: Array<{ label: string; href: string; type: string }>;
   cards?: AssistantMessageCard[];
-  provider?: 'groq-edge' | 'local-preview';
+  provider?: 'groq-edge' | 'hf-edge' | 'local-preview';
 }
 
 interface PortalAIAssistantButtonProps {
@@ -516,11 +516,11 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
         <Button
           className={`shrink-0 text-white shadow-lg shadow-primary-500/20 hover:bg-primary-700 ${
             compact
-              ? 'h-10 w-10 rounded-xl border border-white/15 bg-primary-600/95 p-0'
+              ? 'h-9 w-9 rounded-lg border border-white/15 bg-primary-600/95 p-0'
               : 'rounded-full bg-primary-600 px-3.5 py-2 text-sm'
           }`}
         >
-          <Bot className={`${compact ? '' : 'mr-2 '}h-4 w-4`} />
+          <Bot className={`${compact ? '' : 'mr-2 '}${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
           {!compact && 'Vision7 AI'}
         </Button>
       </SheetTrigger>
