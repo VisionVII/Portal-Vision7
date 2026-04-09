@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import {
-  Workflow, Play, Pause, RefreshCw, ExternalLink,
+  Workflow, Play, Pause, RefreshCw,
   CheckCircle2, XCircle, Clock, Loader2, Radio,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -103,50 +102,47 @@ export function N8nWorkflowsPanel({
 
   if (!isConnected) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700/50">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2.5">
-            <Workflow className="w-5 h-5 text-gray-500" />
-            <CardTitle className="text-base font-semibold text-gray-400">Workflows n8n</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-500 text-center py-6">
-            n8n offline — impossível listar workflows.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2.5">
+          <Workflow className="w-5 h-5 text-muted-foreground" />
+          <h3 className="text-base font-semibold text-foreground">Workflows n8n</h3>
+        </div>
+        <p className="text-sm text-muted-foreground text-center py-6">
+          n8n offline — impossível listar workflows.
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700/50">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Workflow className="w-5 h-5 text-cyan-400" />
-            <CardTitle className="text-base font-semibold text-white">Workflows n8n</CardTitle>
-            <Badge variant="outline" className="text-xs px-2 py-0.5 border-slate-600 text-slate-400">
-              {activeCount}/{workflows.length} ativos
-            </Badge>
-          </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-8 w-8 p-0 text-gray-400 hover:text-white"
-            onClick={onRefresh}
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
+    <div className="space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <Workflow className="w-5 h-5 text-blue-500" />
+          <h3 className="text-base font-semibold text-foreground">Workflows n8n</h3>
+          <Badge variant="outline" className="text-xs px-2 py-0.5 border-border text-muted-foreground">
+            {activeCount}/{workflows.length} ativos
+          </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-2.5">
-        {workflows.length === 0 ? (
-          <p className="text-xs text-gray-500 text-center py-3">
-            Nenhum workflow encontrado no n8n.
-          </p>
-        ) : (
-          workflows.map((wf) => {
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+          onClick={onRefresh}
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
+
+      {/* List */}
+      {workflows.length === 0 ? (
+        <p className="text-xs text-muted-foreground text-center py-3">
+          Nenhum workflow encontrado no n8n.
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {workflows.map((wf) => {
             const id = String(wf.id);
             const isToggling = togglingIds.has(id);
             const isExecuting = executingIds.has(id);
@@ -156,25 +152,25 @@ export function N8nWorkflowsPanel({
                 key={id}
                 className={`rounded-lg border p-3 transition-all ${
                   wf.active
-                    ? 'border-slate-600/50 bg-slate-800/80'
-                    : 'border-slate-700/30 bg-slate-900/50 opacity-70'
+                    ? 'border-border/50 bg-muted/30'
+                    : 'border-border/20 bg-muted/10 opacity-70'
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     {wf.active ? (
-                      <Radio className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <Radio className="w-4 h-4 text-primary shrink-0" />
                     ) : (
-                      <Pause className="w-4 h-4 text-gray-500 shrink-0" />
+                      <Pause className="w-4 h-4 text-muted-foreground shrink-0" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <span className="text-sm font-medium text-white block truncate">
+                      <span className="text-sm font-medium text-foreground block truncate">
                         {wf.name ?? `Workflow #${id}`}
                       </span>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-[10px] font-mono text-gray-600 hidden sm:inline">ID: {id}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground/50 hidden sm:inline">ID: {id}</span>
                         {wf.updatedAt && (
-                          <span className="text-[10px] text-gray-500 flex items-center gap-0.5">
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                             <Clock className="w-3 h-3" />
                             {formatRelativeTime(wf.updatedAt)}
                           </span>
@@ -188,7 +184,7 @@ export function N8nWorkflowsPanel({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0 text-gray-400 hover:text-cyan-400"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-blue-500"
                           disabled={isExecuting}
                           onClick={() => void handleExecute(wf)}
                         >
@@ -208,8 +204,8 @@ export function N8nWorkflowsPanel({
                           variant="ghost"
                           className={`h-8 w-8 p-0 ${
                             wf.active
-                              ? 'text-emerald-400 hover:text-amber-400'
-                              : 'text-gray-500 hover:text-emerald-400'
+                              ? 'text-primary hover:text-amber-500'
+                              : 'text-muted-foreground hover:text-primary'
                           }`}
                           disabled={isToggling}
                           onClick={() => void handleToggle(wf)}
@@ -231,9 +227,9 @@ export function N8nWorkflowsPanel({
                 </div>
               </div>
             );
-          })
-        )}
-      </CardContent>
-    </Card>
+          })}
+        </div>
+      )}
+    </div>
   );
 }

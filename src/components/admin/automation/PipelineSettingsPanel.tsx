@@ -343,14 +343,14 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
   const n8nKey = credentials.find((c) => c.key_name === 'N8N_API_KEY' && c.status === 'active');
 
   return (
-    <Card className="bg-slate-800/80 border-slate-700/60">
+    <Card className="bg-muted/80 border-border/60">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-cyan-400" />
-            <CardTitle className="text-sm text-white">Configurações do Pipeline</CardTitle>
+            <Shield className="w-4 h-4 text-blue-500" />
+            <CardTitle className="text-sm text-foreground">Configurações do Pipeline</CardTitle>
           </div>
-          <Button size="sm" variant="ghost" className="h-6 text-xs text-gray-400" onClick={onClose}>
+          <Button size="sm" variant="ghost" className="h-6 text-xs text-muted-foreground" onClick={onClose}>
             Fechar
           </Button>
         </div>
@@ -359,17 +359,17 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
       <CardContent className="space-y-4">
         {/* ── API Keys Section ── */}
         <div className="space-y-2">
-          <h4 className="text-xs font-medium text-white flex items-center gap-1.5">
+          <h4 className="text-xs font-medium text-foreground flex items-center gap-1.5">
             <Key className="w-3 h-3 text-amber-400" />
             Chaves API (encriptadas)
           </h4>
-          <p className="text-[10px] text-gray-500">
+          <p className="text-[10px] text-muted-foreground">
             As chaves são armazenadas com encriptação AES-GCM. Os workflows leem do Supabase em runtime.
           </p>
 
           {loadingCreds && (
-            <div className="flex items-center gap-2 rounded border border-slate-700/50 bg-slate-900/40 px-2.5 py-2 text-[11px] text-slate-300">
-              <Loader2 className="w-3 h-3 animate-spin text-cyan-400" />
+            <div className="flex items-center gap-2 rounded border border-border/40 bg-muted/20 px-2.5 py-2 text-[11px] text-foreground/80">
+              <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
               <span>A carregar chaves do pipeline...</span>
             </div>
           )}
@@ -380,7 +380,7 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
               <Button
                 size="sm"
                 variant="ghost"
-                className="mt-2 h-6 px-2 text-[10px] text-red-200 hover:bg-red-500/10 hover:text-white"
+                className="mt-2 h-6 px-2 text-[10px] text-red-200 hover:bg-red-500/10 hover:text-foreground"
                 onClick={() => void loadCredentials()}
               >
                 Tentar novamente
@@ -394,9 +394,9 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
             <div className="flex items-center gap-2 text-[11px]">
               {groqKey ? (
                 <>
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                  <span className="text-emerald-400">GROQ_API_KEY</span>
-                  <span className="text-gray-500">ativa · {new Date(groqKey.activated_at ?? groqKey.created_at).toLocaleDateString('pt-BR')}</span>
+                  <CheckCircle2 className="w-3 h-3 text-primary" />
+                  <span className="text-primary">GROQ_API_KEY</span>
+                  <span className="text-muted-foreground">ativa · {new Date(groqKey.activated_at ?? groqKey.created_at).toLocaleDateString('pt-BR')}</span>
                   <Button size="sm" variant="ghost" className="h-5 ml-auto px-1 text-red-400 hover:text-red-300" onClick={() => void handleDelete(groqKey.id)}>
                     <Trash2 className="w-2.5 h-2.5" />
                   </Button>
@@ -412,9 +412,9 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
             <div className="flex items-center gap-2 text-[11px]">
               {n8nKey ? (
                 <>
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                  <span className="text-emerald-400">N8N_API_KEY</span>
-                  <span className="text-gray-500">ativa</span>
+                  <CheckCircle2 className="w-3 h-3 text-primary" />
+                  <span className="text-primary">N8N_API_KEY</span>
+                  <span className="text-muted-foreground">ativa</span>
                 </>
               ) : (
                 <>
@@ -427,10 +427,10 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
           )}
 
           {/* Add new key form */}
-          <div className="rounded border border-slate-700 bg-slate-900/60 p-2.5 space-y-2">
+          <div className="rounded border border-border bg-muted/60 p-2.5 space-y-2">
             <div className="flex items-center gap-2">
               <select
-                className="h-7 text-xs bg-slate-800 border border-slate-700 rounded px-2 text-white"
+                className="h-7 text-xs bg-muted border border-border rounded px-2 text-foreground"
                 value={newKeyName}
                 onChange={(e) => setNewKeyName(e.target.value as 'GROQ_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY')}
               >
@@ -442,7 +442,7 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
               <Input
                 type="password"
                 placeholder={newKeyName === 'GROQ_API_KEY' ? 'gsk_...' : 'eyJ...'}
-                className="h-7 text-xs bg-slate-900 border-slate-700 font-mono"
+                className="h-7 text-xs bg-muted border-border font-mono"
                 value={newKeyValue}
                 onChange={(e) => setNewKeyValue(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') void handleSaveKey(); }}
@@ -456,7 +456,7 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Salvar'}
               </Button>
             </div>
-            <p className="text-[9px] text-gray-600">
+            <p className="text-[9px] text-muted-foreground/60">
               {newKeyName === 'GROQ_API_KEY'
                 ? 'Obtenha em console.groq.com → API Keys. O WF-03 lê esta chave para gerar artigos com IA.'
                 : 'Supabase → Settings → API → service_role key. Os workflows usam para ler/gravar tabelas.'}
@@ -466,27 +466,27 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
 
         {/* ── Timing Explanation ── */}
         <div className="space-y-1.5">
-          <h4 className="text-xs font-medium text-white flex items-center gap-1.5">
-            <Clock className="w-3 h-3 text-cyan-400" />
+          <h4 className="text-xs font-medium text-foreground flex items-center gap-1.5">
+            <Clock className="w-3 h-3 text-blue-500" />
             Temporização dos Workflows (cron)
           </h4>
-          <div className="rounded border border-slate-700/50 bg-slate-900/40 p-2 space-y-1 text-[10px]">
+          <div className="rounded border border-border/40 bg-muted/20 p-2 space-y-1 text-[10px]">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-cyan-500/30 text-cyan-400 shrink-0">WF-01</Badge>
-              <span className="text-gray-400">Coleta RSS — a cada <span className="text-white font-medium">30 min</span></span>
-              <span className="text-gray-600 ml-auto">~300 artigos/ciclo</span>
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-cyan-500/30 text-blue-500 shrink-0">WF-01</Badge>
+              <span className="text-muted-foreground">Coleta RSS — a cada <span className="text-foreground font-medium">30 min</span></span>
+              <span className="text-muted-foreground/60 ml-auto">~300 artigos/ciclo</span>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-cyan-500/30 text-cyan-400 shrink-0">WF-02</Badge>
-              <span className="text-gray-400">Cluster & Dedup — a cada <span className="text-white font-medium">20 min</span></span>
-              <span className="text-gray-600 ml-auto">agrupa por fingerprint</span>
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-cyan-500/30 text-blue-500 shrink-0">WF-02</Badge>
+              <span className="text-muted-foreground">Cluster & Dedup — a cada <span className="text-foreground font-medium">20 min</span></span>
+              <span className="text-muted-foreground/60 ml-auto">agrupa por fingerprint</span>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-cyan-500/30 text-cyan-400 shrink-0">WF-03</Badge>
-              <span className="text-gray-400">IA Reescrita — a cada <span className="text-white font-medium">60 min</span></span>
-              <span className="text-gray-600 ml-auto">máx. 3 artigos/ciclo</span>
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-cyan-500/30 text-blue-500 shrink-0">WF-03</Badge>
+              <span className="text-muted-foreground">IA Reescrita — a cada <span className="text-foreground font-medium">60 min</span></span>
+              <span className="text-muted-foreground/60 ml-auto">máx. 3 artigos/ciclo</span>
             </div>
-            <div className="border-t border-slate-700/30 pt-1 mt-1 text-gray-500">
+            <div className="border-t border-border/30 pt-1 mt-1 text-muted-foreground">
               <p>Cadência teórica do WF-03: ~1 artigo curado a cada {cadencePerCuratedMinutes} min.</p>
               <p>Sem backlog: lead time médio ~{Math.round(avgCronWaitMinutes)} min e pior caso ~{Math.round(worstCaseCronWaitMinutes)} min até entrar em curated_posts.</p>
               <p>Capacidade máxima atual: {WF03_CAPACITY_PER_HOUR.toFixed(0)} curados/hora (~{Math.round(WF03_CAPACITY_PER_HOUR * 24)} por dia).</p>
@@ -504,15 +504,15 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
             </div>
           </div>
 
-          <div className="rounded border border-slate-700/40 bg-slate-950/30 p-2 space-y-1 text-[10px] text-gray-400">
-            <p className="font-medium text-gray-300">Execução média real recente</p>
+          <div className="rounded border border-border/40 bg-muted/30 p-2 space-y-1 text-[10px] text-muted-foreground">
+            <p className="font-medium text-foreground/80">Execução média real recente</p>
             {executionSummaries.length > 0 ? executionSummaries.map((summary) => (
               <div key={summary.id} className="flex items-center gap-2">
-                <span className="truncate text-white">{summary.name}</span>
+                <span className="truncate text-foreground">{summary.name}</span>
                 <span className="ml-auto">{formatDurationMs(summary.avgDurationMs)}</span>
-                <span className="text-gray-600">{summary.sampleCount} exec.</span>
+                <span className="text-muted-foreground/60">{summary.sampleCount} exec.</span>
                 {(summary.avgItemsProcessed > 0 || summary.avgItemsCreated > 0) && (
-                  <span className="text-gray-600">
+                  <span className="text-muted-foreground/60">
                     proc. {summary.avgItemsProcessed.toFixed(1)} · criados {summary.avgItemsCreated.toFixed(1)}
                   </span>
                 )}
@@ -525,24 +525,24 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
 
         {/* ── Data Cleanup ── */}
         <div className="space-y-2">
-          <h4 className="text-xs font-medium text-white flex items-center gap-1.5">
+          <h4 className="text-xs font-medium text-foreground flex items-center gap-1.5">
             <Trash2 className="w-3 h-3 text-amber-400" />
             Limpeza de Dados
           </h4>
-          <p className="text-[10px] text-gray-500">
+          <p className="text-[10px] text-muted-foreground">
             O fluxo atual só limpa staging/clusters automaticamente na promoção final para published/duplicate. Não limpa quando o artigo entra em curated_posts.
           </p>
           {diagnostics && (
-            <div className="rounded border border-slate-700/40 bg-slate-950/30 p-2 text-[10px] text-gray-400 space-y-1">
+            <div className="rounded border border-border/40 bg-muted/30 p-2 text-[10px] text-muted-foreground space-y-1">
               <p>Backlog observado agora: {diagnostics.staging.unprocessed} staging não processados · {diagnostics.clusters.highConfidence} clusters ≥60% · {diagnostics.curated.ready} curados prontos.</p>
               <p>Limpeza segura: remove apenas processados/publicados/rejeitados antigos.</p>
               <p>Purge de backlog: remove staging bruto antigo e clusters órfãos antigos, sem tocar em curados draft/ready.</p>
             </div>
           )}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-400">Mais antigos que:</span>
+            <span className="text-[10px] text-muted-foreground">Mais antigos que:</span>
             <select
-              className="h-7 text-xs bg-slate-800 border border-slate-700 rounded px-2 text-white"
+              className="h-7 text-xs bg-muted border border-border rounded px-2 text-foreground"
               value={cleanupHours}
               onChange={(e) => setCleanupHours(Number(e.target.value))}
             >
@@ -572,7 +572,7 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
             </Button>
           </div>
           {cleanupResult && (
-            <p className="text-[10px] text-emerald-400">{cleanupResult}</p>
+            <p className="text-[10px] text-primary">{cleanupResult}</p>
           )}
           <Button
             size="sm"
