@@ -13,8 +13,8 @@ const ThemeToggle = ({ className, compact = false }: ThemeToggleProps) => {
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-full bg-muted/50 p-1 text-foreground',
-        compact ? 'gap-1' : 'gap-1.5 p-1.5',
+        'inline-flex items-center rounded-full p-0.5',
+        compact ? 'gap-0.5' : 'gap-1',
         className
       )}
       aria-label="Alternar tema"
@@ -35,7 +35,7 @@ const ThemeToggle = ({ className, compact = false }: ThemeToggleProps) => {
               compact && 'px-2.5 py-1 text-[11px] sm:text-xs',
               isActive
                 ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             )}
             aria-pressed={isActive}
           >

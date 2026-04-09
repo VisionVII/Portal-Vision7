@@ -2,7 +2,7 @@
   "$schema": "./templates/module_schema.json",
   "project": "Vision7 Portal",
   "version": "1.0.0",
-  "last_updated": "2026-04-07",
+  "last_updated": "2026-06-06",
   "description": "Índice central SDD do projeto Vision7 — mapa de todos os módulos, dependências e status.",
   "modules": [
     {
