@@ -25,12 +25,12 @@ export function AutomationCategoryTabs({
 }: AutomationCategoryTabsProps) {
   return (
     <Tabs value={activeCategory} onValueChange={(v) => onCategoryChange(v as AutomationCategory | 'all')}>
-      <TabsList className="bg-slate-800/60 border border-slate-700/50 h-auto flex-wrap gap-1 p-1 mb-4">
+      <TabsList className="bg-slate-800/60 border border-slate-700/50 h-auto flex-wrap gap-1.5 p-1.5 mb-5">
         <TabsTrigger
           value="all"
-          className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-xs gap-1.5 px-3 py-1.5"
+          className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-xs gap-1.5 px-3.5 py-2"
         >
-          <LayoutGrid className="w-3.5 h-3.5" />
+          <LayoutGrid className="w-4 h-4" />
           Todas
           <span className="text-[10px] opacity-60 ml-1">{counts.all}</span>
         </TabsTrigger>
@@ -42,9 +42,9 @@ export function AutomationCategoryTabs({
             <TabsTrigger
               key={cat}
               value={cat}
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-xs gap-1.5 px-3 py-1.5"
+              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-xs gap-1.5 px-3.5 py-2"
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-4 h-4" />
               {meta.label}
               <span className="text-[10px] opacity-60 ml-1">{counts[cat]}</span>
             </TabsTrigger>

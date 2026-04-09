@@ -16,7 +16,7 @@ const env = import.meta.env as Record<string, string | undefined>;
 const primaryAdminEmail = env.VITE_ADMIN_PRIMARY_EMAIL || 'admin@vision-portal.pt';
 
 const DeveloperControlCenter = () => {
-  const { data: siteSettings } = useSiteSettings();
+  const { data: siteSettings } = useSiteSettings({ includePrivate: true });
   const { data: posts = [] } = usePosts(true);
   const { data: courses = [] } = useCourses(true);
   const { data: audiocasts = [] } = useAudiocasts(true);
@@ -131,7 +131,7 @@ const DeveloperControlCenter = () => {
             <div className="rounded-xl border border-border bg-muted/20 p-4">
               <p className="text-sm font-semibold text-foreground">Sessão atual</p>
               <p className="mt-1 text-sm text-muted-foreground">User: {user?.email || 'sem autenticação'} </p>
-              <p className="text-sm text-muted-foreground">Session ID: {session?.access_token ? `${session.access_token.slice(0, 18)}...` : 'n/d'}</p>
+              <p className="text-sm text-muted-foreground">Estado: {session ? 'sessão ativa e protegida' : 'n/d'}</p>
             </div>
           </CardContent>
         </Card>

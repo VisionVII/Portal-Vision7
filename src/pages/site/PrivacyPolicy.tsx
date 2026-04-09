@@ -1,13 +1,49 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import SectionPageHero from '@/components/content/SectionPageHero';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { parseSectionPageBanners, SECTION_PAGE_BANNERS_KEY } from '@/lib/sectionPageConfig';
 
 const PrivacyPolicy = () => {
+  const { data: siteSettings } = useSiteSettings();
+  const sectionPageBanners = useMemo(
+    () => parseSectionPageBanners(siteSettings?.[SECTION_PAGE_BANNERS_KEY]),
+    [siteSettings],
+  );
+  const privacyHero = sectionPageBanners.privacy;
+  const updatedAt = new Date().toLocaleDateString('pt-PT');
+
   return (
-    <div className="bg-background text-foreground py-12">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-2">Política de Privacidade</h1>
-          <p className="text-muted-foreground mb-8">Última atualização: {new Date().toLocaleDateString('pt-PT')}</p>
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
+
+      <SectionPageHero
+        title="Política de Privacidade"
+        description="Explicamos com transparência como o portal recolhe, utiliza e protege dados, preferências e permissões do utilizador em conformidade com RGPD e LGPD."
+        align="left"
+        fallbackClassName="bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800"
+        media={privacyHero.bannerUrl || privacyHero.mobileBannerUrl ? {
+          desktopUrl: privacyHero.bannerUrl,
+          mobileUrl: privacyHero.mobileBannerUrl,
+          alt: 'Banner da página de política de privacidade',
+        } : null}
+        metaSlot={(
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/88 backdrop-blur-sm">
+              Legal & Transparência
+            </span>
+            <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
+              Atualizado em {updatedAt}
+            </span>
+          </div>
+        )}
+      />
+
+      <div className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-4xl">
 
           <div className="space-y-8">
             {/* Introdução */}
@@ -247,13 +283,16 @@ const PrivacyPolicy = () => {
             </Card>
           </div>
 
-          <div className="mt-12 p-6 bg-primary-50 dark:bg-primary-900/30 rounded-lg border border-primary-200 dark:border-primary-800">
+          <div className="mt-12 rounded-lg border border-primary-200 bg-primary-50 p-6 dark:border-primary-800 dark:bg-primary-900/30">
             <p className="text-sm text-primary-900 dark:text-primary-100">
               <strong>Conformidade:</strong> Esta política está em conformidade com o Regulamento Geral de Proteção de Dados (RGPD) UE 2016/679 e com a Lei Geral de Proteção de Dados (LGPD) do Brasil (Lei 13.709/2018).
             </p>
           </div>
         </div>
+        </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

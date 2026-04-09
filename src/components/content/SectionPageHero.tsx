@@ -56,6 +56,9 @@ const SectionPageHero: React.FC<SectionPageHeroProps> = ({
             src={desktopUrl}
             alt={media?.alt || title}
             className="absolute inset-0 h-full w-full object-cover object-center"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
           />
         </picture>
       ) : (
@@ -65,19 +68,19 @@ const SectionPageHero: React.FC<SectionPageHeroProps> = ({
         </>
       )}
 
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.18)_0%,rgba(2,6,23,0.52)_40%,rgba(2,6,23,0.94)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.08)_0%,rgba(2,6,23,0.34)_42%,rgba(2,6,23,0.86)_100%)]" />
       <div
         className={cn(
-          'absolute inset-0 bg-[linear-gradient(118deg,rgba(2,6,23,0.94)_0%,rgba(2,6,23,0.36)_44%,rgba(2,6,23,0.84)_100%)]',
+          'pointer-events-none absolute inset-0 bg-[linear-gradient(118deg,rgba(2,6,23,0.82)_0%,rgba(2,6,23,0.22)_44%,rgba(2,6,23,0.72)_100%)]',
           overlayClassName,
         )}
       />
-      <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:26px_26px]" />
+      <div className="pointer-events-none absolute inset-0 opacity-12 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:26px_26px]" />
 
       <div className="container relative mx-auto px-4">
         <div
           className={cn(
-            'flex min-h-[calc(100svh-8rem)] py-8 sm:min-h-[calc(100svh-7.5rem)] sm:py-10 lg:min-h-[calc(100svh-7rem)] lg:py-14',
+            'flex min-h-[calc(100svh-8rem)] py-10 sm:min-h-[calc(100svh-7.5rem)] sm:py-12 lg:min-h-[calc(100svh-7rem)] lg:py-16',
             align === 'center' ? 'items-end justify-center md:items-center' : 'items-end justify-start',
           )}
         >
