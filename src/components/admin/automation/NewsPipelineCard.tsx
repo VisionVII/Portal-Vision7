@@ -897,7 +897,7 @@ export function NewsPipelineCard() {
             )}
             {diagnostics.clusters.highConfidence > 0 && diagnostics.curated.total === 0 && (
               <div className="text-[10px] text-red-400">
-                ⚠ {diagnostics.clusters.highConfidence} cluster(s) com confiança ≥60% mas 0 curados — WF-03 (IA) pode ter falha na API Groq ou ainda não executou
+                ⚠ {diagnostics.clusters.highConfidence} cluster(s) com confiança ≥60% mas 0 curados — WF-03 (IA) pode ter falha na API (HuggingFace/Groq) ou ainda não executou
               </div>
             )}
             {diagnostics.staging.total === 0 && diagnostics.clusters.total === 0 && diagnostics.curated.total === 0 && (

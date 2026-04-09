@@ -88,8 +88,8 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeProvider, setActiveProvider] = useState<'groq-edge' | 'local-preview'>(
-    portalAssistantConfig.provider === 'groq-edge' ? 'groq-edge' : 'local-preview'
+  const [activeProvider, setActiveProvider] = useState<'groq-edge' | 'hf-edge' | 'local-preview'>(
+    portalAssistantConfig.provider === 'groq-edge' ? 'groq-edge' : portalAssistantConfig.provider === 'hf-edge' ? 'hf-edge' : 'local-preview'
   );
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -180,7 +180,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     [country, hasConsent, localTime, region, temperatureC, timezone],
   );
 
-  const providerLabel = activeProvider === 'groq-edge' ? 'Groq' : 'Local';
+  const providerLabel = activeProvider === 'groq-edge' ? 'Groq' : activeProvider === 'hf-edge' ? 'HF' : 'Local';
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -208,7 +208,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     summary: string;
     suggestions?: string[];
     links?: Array<{ label: string; href: string; type: string }>;
-    provider?: 'groq-edge' | 'local-preview';
+    provider?: 'groq-edge' | 'hf-edge' | 'local-preview';
   }, cards: AssistantMessageCard[] = []): ChatMessage => ({
     id: `a-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     role: 'assistant',
@@ -308,7 +308,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
       if (
         portalAssistantConfig.enabled &&
-        portalAssistantConfig.provider === 'groq-edge' &&
+        (portalAssistantConfig.provider === 'groq-edge' || portalAssistantConfig.provider === 'hf-edge') &&
         portalAssistantConfig.edgeFunctionName
       ) {
         const { data, error } = await supabase.functions.invoke(
@@ -566,7 +566,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
                   {msg.role === 'assistant' && msg.provider && (
                     <p className="pl-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                      {msg.provider === 'groq-edge' ? 'Resposta Vision7 com Groq' : 'Resposta Vision7 em modo local'}
+                      {msg.provider === 'groq-edge' ? 'Resposta Vision7 com Groq' : msg.provider === 'hf-edge' ? 'Resposta Vision7 com HuggingFace' : 'Resposta Vision7 em modo local'}
                     </p>
                   )}
 

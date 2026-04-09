@@ -20,7 +20,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const CREDENTIALS_ENCRYPTION_KEY = Deno.env.get('N8N_CREDENTIALS_ENCRYPTION_KEY') ?? '';
 
-const ALLOWED_KEY_NAMES = new Set(['GROQ_API_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'N8N_API_KEY']);
+const ALLOWED_KEY_NAMES = new Set(['GROQ_API_KEY', 'HF_API_TOKEN', 'SUPABASE_SERVICE_ROLE_KEY', 'N8N_API_KEY']);
 
 /* ── Crypto helpers (same as n8n-settings) ── */
 function utf8ToBytes(text: string): Uint8Array {
