@@ -52,7 +52,7 @@ const SkyIcon: React.FC<{ isDaytime: boolean; moonEmoji: string; className?: str
   moonEmoji,
   className = '',
 }) => {
-  if (isDaytime) return <Sun className={`${className} text-amber-500`} />;
+  if (isDaytime) return <Sun className={`${className} text-white/80 dark:text-primary`} />;
   return <span className={className} aria-label="moon">{moonEmoji}</span>;
 };
 
@@ -169,7 +169,7 @@ const Header = () => {
         </div>
       </div>
 
-      <nav className="bg-background/98">
+      <nav className="bg-primary dark:bg-background/98">
         <div className="container mx-auto px-5">
           {/* ═══════════ DESKTOP NAV ═══════════ */}
           <div className={`hidden items-center gap-6 md:flex ${isScrolled ? 'py-3' : 'py-4'}`}>
@@ -182,8 +182,8 @@ const Header = () => {
                   className={({ isActive }) =>
                     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold tracking-tight transition-all ${
                       isActive
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-foreground/70 hover:bg-muted hover:text-foreground'
+                        ? 'bg-white/20 text-white dark:bg-primary/10 dark:text-primary'
+                        : 'text-white/80 hover:bg-white/10 hover:text-white dark:text-foreground/70 dark:hover:bg-muted dark:hover:text-foreground'
                     }`
                   }
                 >
@@ -197,22 +197,22 @@ const Header = () => {
               {/* Calendar (opens popup) */}
               <CalendarPopover
                 localDateLabel={localDateLabel}
-                className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-foreground/80 transition-colors hover:border-primary/40 hover:bg-muted/50 hover:text-foreground"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition-colors hover:bg-white/15 hover:text-white dark:border-border/50 dark:bg-muted/30 dark:text-foreground/80 dark:hover:border-primary/40 dark:hover:bg-muted/50 dark:hover:text-foreground"
               />
 
               {/* Clock */}
-              <span className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-foreground/80">
-                <Clock3 className="h-3.5 w-3.5 text-primary" />
+              <span className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 dark:border-border/50 dark:bg-muted/30 dark:text-foreground/80">
+                <Clock3 className="h-3.5 w-3.5 text-white/80 dark:text-primary" />
                 {localTime}
               </span>
 
-              {/* Temperature (colour-coded) */}
-              <span className={`inline-flex items-center gap-2 rounded-lg border border-border/50 px-3 py-1.5 text-xs font-semibold ${skyInfo.temperatureBg} ${skyInfo.temperatureColor}`}>
+              {/* Temperature */}
+              <span className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90 dark:border-border/50 dark:bg-muted/30 dark:text-foreground/80">
                 <TemperatureIcon icon={skyInfo.temperatureIcon} className="h-3.5 w-3.5" />
                 {temperatureLabel}
               </span>
 
-              <div className="mx-2 h-6 w-px bg-border/50" />
+              <div className="mx-2 h-6 w-px bg-white/20 dark:bg-border/50" />
 
               <ThemeToggle compact />
             </div>
@@ -229,8 +229,8 @@ const Header = () => {
                   className={({ isActive }) =>
                     `flex-shrink-0 rounded-lg px-3.5 py-2 text-xs font-semibold tracking-tight transition-all ${
                       isActive
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-foreground/70 hover:bg-muted/50 hover:text-foreground'
+                        ? 'bg-white/20 text-white dark:bg-primary/10 dark:text-primary'
+                        : 'text-white/80 hover:bg-white/10 hover:text-white dark:text-foreground/70 dark:hover:bg-muted/50 dark:hover:text-foreground'
                     }`
                   }
                 >
@@ -245,7 +245,7 @@ const Header = () => {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-10 w-10 rounded-xl border-border bg-card text-foreground shadow-sm hover:bg-muted"
+                  className="h-10 w-10 rounded-xl border-white/20 bg-white/10 text-white shadow-sm hover:bg-white/20 dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>

@@ -64,7 +64,9 @@ const MiniPlayerExpanded: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({ title: track.title, text: track.description || '', url });
-      } catch {}
+      } catch {
+        // User cancelled native share dialog.
+      }
     } else {
       navigator.clipboard.writeText(url);
       toast({ title: 'Link copiado', description: 'Link copiado para área de transferência.' });
@@ -380,7 +382,7 @@ const MiniPlayerExpanded: React.FC = () => {
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             <button
               onClick={() => skipBackward(15)}
-              className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:inline-flex"
+              className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
               title="Recuar 15s"
             >
               <SkipBack className="h-4 w-4" />
@@ -396,7 +398,7 @@ const MiniPlayerExpanded: React.FC = () => {
 
             <button
               onClick={() => skipForward(15)}
-              className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:inline-flex"
+              className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
               title="Avançar 15s"
             >
               <SkipForward className="h-4 w-4" />
@@ -404,7 +406,7 @@ const MiniPlayerExpanded: React.FC = () => {
 
             <button
               onClick={toggleMute}
-              className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:inline-flex"
+              className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:inline-flex"
               title={isMuted ? 'Ativar som' : 'Silenciar'}
             >
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -412,7 +414,7 @@ const MiniPlayerExpanded: React.FC = () => {
 
             <button
               onClick={() => setIsExpanded(true)}
-              className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:inline-flex"
+              className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
               title="Expandir player"
             >
               <ChevronUp className="h-4 w-4" />
