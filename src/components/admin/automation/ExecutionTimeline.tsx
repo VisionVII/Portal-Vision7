@@ -1,5 +1,5 @@
 import {
-  CheckCircle2, XCircle, AlertTriangle, Clock, Loader2,
+  Clock, Loader2,
   ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -48,6 +48,7 @@ interface ExecutionTimelineProps {
   executions: AutomationExecution[];
   total: number;
   isLoading: boolean;
+  error?: string | null;
   statusFilter: ExecutionStatus | '';
   onStatusFilterChange: (s: ExecutionStatus | '') => void;
 }
@@ -56,6 +57,7 @@ export function ExecutionTimeline({
   executions,
   total,
   isLoading,
+  error,
   statusFilter,
   onStatusFilterChange,
 }: ExecutionTimelineProps) {
@@ -91,6 +93,10 @@ export function ExecutionTimeline({
           <div className="flex items-center justify-center py-8 text-gray-500">
             <Loader2 className="w-5 h-5 animate-spin mr-2" />
             Carregando...
+          </div>
+        ) : error ? (
+          <div className="rounded-md border border-red-500/20 bg-red-500/5 px-3 py-4 text-sm text-red-300">
+            Falha ao carregar execuções reais: {error}
           </div>
         ) : executions.length === 0 ? (
           <div className="text-center py-8 text-gray-500 text-sm">

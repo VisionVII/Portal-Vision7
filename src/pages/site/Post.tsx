@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import DOMPurify from 'dompurify';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AdSpace from '@/components/content/AdSpace';
@@ -8,6 +7,7 @@ import RelatedPosts from '@/components/content/RelatedPosts';
 import { usePost, usePosts, useTrackPostView } from '@/hooks/usePosts';
 import { Calendar, User, ArrowLeft, Share2, Check, Clock, Tag } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { sanitizeRichContent } from '@/lib/richContent';
 
 const Post = () => {
   const { slug } = useParams();
@@ -27,6 +27,8 @@ const Post = () => {
       trackPostView.mutate(post.id);
     }
   }, [post?.id, trackPostView]);
+
+  const sanitizedContent = useMemo(() => sanitizeRichContent(post?.content || ''), [post?.content]);
 
   if (isLoading) {
     return (
@@ -210,13 +212,9 @@ const Post = () => {
             <div className="min-w-0">
               <div className="rounded-2xl border border-border bg-card p-4 shadow-md sm:p-6 lg:p-8">
                 <div
-                  className="prose prose-base max-w-none break-words leading-relaxed text-foreground dark:prose-invert dark:text-gray-300 sm:prose-lg"
+                  className="prose prose-base max-w-none break-words text-foreground dark:prose-invert dark:text-gray-300 sm:prose-lg [&_h1:first-child]:mt-0 [&_h1]:mt-10 [&_h1]:mb-4 [&_h1]:text-3xl [&_h1]:font-bold sm:[&_h1]:text-4xl [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold sm:[&_h2]:text-3xl [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold sm:[&_h3]:text-2xl [&_h4]:mt-5 [&_h4]:mb-2 [&_h4]:text-lg [&_h4]:font-semibold [&_p]:my-4 [&_p]:leading-8 [&_ul]:my-4 [&_ol]:my-4 [&_li]:my-1 [&_blockquote]:my-6 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/35 [&_blockquote]:pl-4 [&_blockquote]:italic [&_img]:my-6 [&_img]:w-full [&_img]:rounded-2xl [&_img]:border [&_img]:border-border [&_img]:shadow-lg [&_figure]:my-8 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-muted-foreground [&_hr]:my-8 [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary/80 [&_code]:rounded-md [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_pre]:overflow-x-auto [&_pre]:rounded-2xl [&_pre]:bg-slate-950 [&_pre]:p-4 [&_pre]:text-slate-100"
                   dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(post.content, {
-                      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'a', 'img', 'figcaption', 'figure', 'code', 'pre'],
-                      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'target', 'rel', 'class'],
-                      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.-]*(?:[^a-z+.-:]|$))/i,
-                    })
+                    __html: sanitizedContent,
                   }}
                 />
 

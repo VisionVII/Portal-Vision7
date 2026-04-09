@@ -10,13 +10,45 @@ export interface SiteSetting {
 
 export type SiteSettingsMap = Record<string, string | null>;
 
-export const useSiteSettings = () => {
+interface UseSiteSettingsOptions {
+  keys?: string[];
+  includePrivate?: boolean;
+}
+
+export const PUBLIC_SITE_SETTING_KEYS = [
+  'site_name',
+  'logo_url',
+  'course_partner_meta',
+  'section_page_banners',
+  'home_page_config',
+];
+
+const normalizeSiteSettingKeys = (keys?: string[]) => Array.from(new Set((keys?.length ? keys : PUBLIC_SITE_SETTING_KEYS)
+  .map((key) => key.trim())
+  .filter(Boolean))).sort();
+
+export const useSiteSettings = (options: UseSiteSettingsOptions = {}) => {
+  const { keys, includePrivate = false } = options;
+  const keysToLoad = includePrivate ? [] : normalizeSiteSettingKeys(keys);
+
   return useQuery({
-    queryKey: ['site-settings'],
+    queryKey: ['site-settings', includePrivate ? 'all' : 'public', ...keysToLoad],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!includePrivate && keysToLoad.length === 0) {
+        return {} as SiteSettingsMap;
+      }
+
+      let query = supabase
         .from('site_settings')
-        .select('*');
+        .select('id, key, value, updated_at')
+        .order('key', { ascending: true });
+
+      if (!includePrivate) {
+        query = query.in('key', keysToLoad);
+      }
+
+      const { data, error } = await query;
+
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404') && !/AbortError|signal is aborted/i.test(error.message ?? '')) {
           console.warn('useSiteSettings supabase query error', error);

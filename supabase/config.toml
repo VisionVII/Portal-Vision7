@@ -17,3 +17,15 @@ verify_jwt = false
 
 [functions.n8n-settings]
 verify_jwt = false
+
+[functions.get-pipeline-secret]
+verify_jwt = false
+
+[functions.promote-curated-post]
+verify_jwt = false
+
+[functions.notify-curated-post]
+verify_jwt = false
+
+[functions.portal-ai-assistant]
+verify_jwt = false

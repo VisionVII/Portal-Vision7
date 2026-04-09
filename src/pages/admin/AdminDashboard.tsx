@@ -116,7 +116,7 @@ const AdminDashboard = () => {
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         {/* Desktop sidebar — fixed left column */}
-        <div className="hidden w-56 shrink-0 border-r border-border/30 bg-card/50 backdrop-blur-sm lg:block xl:w-64 dark:bg-card/30">
+        <div className="hidden w-60 shrink-0 border-r border-border/30 bg-card/50 backdrop-blur-sm lg:block xl:w-72 dark:bg-card/30">
           <div className="sticky top-14 p-3 xl:p-4">
             <DashboardSidebar
               activeView={activeView}
@@ -129,7 +129,7 @@ const AdminDashboard = () => {
 
         {/* Main content — grows to fill remaining width */}
         <main className="min-w-0 flex-1 overflow-x-hidden">
-          <div className="mx-auto max-w-6xl px-3 py-6 sm:px-5 sm:py-7 lg:px-6 xl:px-8">
+          <div className="mx-auto max-w-[1380px] px-3 py-6 sm:px-5 sm:py-7 lg:px-6 xl:px-8">
 
             <Suspense fallback={<ViewSkeleton />}>
               <Panel view="overview">

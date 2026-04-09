@@ -52,6 +52,86 @@ export interface UpdateAudiocastData extends Partial<CreateAudiocastData> {
   id: string;
 }
 
+const PODCAST_CATEGORY_SELECT = `
+  categories (
+    id,
+    name,
+    slug,
+    color
+  )
+`;
+
+const PODCAST_POST_SELECT = `
+  posts (
+    id,
+    title,
+    slug
+  )
+`;
+
+const PUBLIC_AUDIOCAST_SELECT = `
+  id,
+  title,
+  slug,
+  description,
+  audio_url,
+  cover_url,
+  duration,
+  status,
+  published_at,
+  category_id,
+  views,
+  downloads,
+  created_at,
+  ${PODCAST_CATEGORY_SELECT}
+`;
+
+const FULL_AUDIOCAST_SELECT = `
+  id,
+  title,
+  slug,
+  description,
+  audio_url,
+  cover_url,
+  duration,
+  transcript,
+  status,
+  published_at,
+  author_id,
+  category_id,
+  post_id,
+  tags,
+  views,
+  downloads,
+  created_at,
+  updated_at,
+  ${PODCAST_CATEGORY_SELECT},
+  ${PODCAST_POST_SELECT}
+`;
+
+const normalizePublicAudiocast = (podcast: Partial<Audiocast>): Audiocast => ({
+  id: podcast.id || '',
+  title: podcast.title || '',
+  slug: podcast.slug || '',
+  description: podcast.description || null,
+  audio_url: podcast.audio_url || null,
+  cover_url: podcast.cover_url || null,
+  duration: podcast.duration || null,
+  transcript: null,
+  status: podcast.status || 'published',
+  published_at: podcast.published_at || null,
+  author_id: null,
+  category_id: podcast.category_id || null,
+  post_id: null,
+  tags: null,
+  views: podcast.views || 0,
+  downloads: podcast.downloads || 0,
+  created_at: podcast.created_at || new Date(0).toISOString(),
+  updated_at: podcast.updated_at || podcast.created_at || new Date(0).toISOString(),
+  categories: podcast.categories || null,
+  posts: null,
+});
+
 // Fetch all podcasts (published for public, all for admin)
 export const useAudiocasts = (adminView = false) => {
   return useQuery({
@@ -59,20 +139,7 @@ export const useAudiocasts = (adminView = false) => {
     queryFn: async () => {
       let query = supabase
         .from('podcasts')
-        .select(`
-          *,
-          categories (
-            id,
-            name,
-            slug,
-            color
-          ),
-          posts (
-            id,
-            title,
-            slug
-          )
-        `)
+        .select(adminView ? FULL_AUDIOCAST_SELECT : PUBLIC_AUDIOCAST_SELECT)
         .order('created_at', { ascending: false });
 
       if (!adminView) {
@@ -87,7 +154,9 @@ export const useAudiocasts = (adminView = false) => {
         }
         return [] as Audiocast[];
       }
-      return (data as Audiocast[]) ?? [];
+      return adminView
+        ? ((data as Audiocast[]) ?? [])
+        : ((data as Partial<Audiocast>[] | null)?.map((podcast) => normalizePublicAudiocast(podcast)) ?? []);
     },
     retry: false,
   });
@@ -101,18 +170,7 @@ export const useAudiocastsByCategory = (categorySlug: string) => {
       const { data, error } = await supabase
         .from('podcasts')
         .select(`
-          *,
-          categories!inner (
-            id,
-            name,
-            slug,
-            color
-          ),
-          posts (
-            id,
-            title,
-            slug
-          )
+          ${PUBLIC_AUDIOCAST_SELECT.replace('categories (', 'categories!inner (')}
         `)
         .eq('categories.slug', categorySlug)
         .eq('status', 'published')
@@ -124,7 +182,7 @@ export const useAudiocastsByCategory = (categorySlug: string) => {
         }
         return [] as Audiocast[];
       }
-      return (data as Audiocast[]) ?? [];
+      return (data as Partial<Audiocast>[] | null)?.map((podcast) => normalizePublicAudiocast(podcast)) ?? [];
     },
     enabled: !!categorySlug,
     retry: false,
@@ -138,20 +196,7 @@ export const useAudiocast = (slug: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('podcasts')
-        .select(`
-          *,
-          categories (
-            id,
-            name,
-            slug,
-            color
-          ),
-          posts (
-            id,
-            title,
-            slug
-          )
-        `)
+        .select(FULL_AUDIOCAST_SELECT)
         .eq('slug', slug)
         .maybeSingle();
 
@@ -175,20 +220,7 @@ export const useAudiocastById = (id: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('podcasts')
-        .select(`
-          *,
-          categories (
-            id,
-            name,
-            slug,
-            color
-          ),
-          posts (
-            id,
-            title,
-            slug
-          )
-        `)
+        .select(FULL_AUDIOCAST_SELECT)
         .eq('id', id)
         .maybeSingle();
 
@@ -213,13 +245,7 @@ export const useAudiocastsByPost = (postId: string) => {
       const { data, error } = await supabase
         .from('podcasts')
         .select(`
-          *,
-          categories (
-            id,
-            name,
-            slug,
-            color
-          )
+          ${PUBLIC_AUDIOCAST_SELECT}
         `)
         .eq('post_id', postId)
         .eq('status', 'published')
@@ -231,7 +257,7 @@ export const useAudiocastsByPost = (postId: string) => {
         }
         return [] as Audiocast[];
       }
-      return (data as Audiocast[]) ?? [];
+      return (data as Partial<Audiocast>[] | null)?.map((podcast) => normalizePublicAudiocast(podcast)) ?? [];
     },
     enabled: !!postId,
     retry: false,

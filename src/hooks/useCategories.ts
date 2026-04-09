@@ -15,7 +15,7 @@ export const useCategories = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select('*')
+        .select('id, name, slug, color, created_at')
         .order('name', { ascending: true });
 
       if (error) throw new Error(error.message);
@@ -32,7 +32,7 @@ export const useCategoryBySlug = (slug: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select('*')
+        .select('id, name, slug, color, created_at')
         .eq('slug', slug)
         .maybeSingle();
       

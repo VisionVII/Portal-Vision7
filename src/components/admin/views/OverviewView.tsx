@@ -138,7 +138,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
             {insights.map((insight, i) => (
               <div
                 key={i}
-                className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${
+                className={`flex flex-col gap-3 rounded-2xl border px-4 py-3 sm:flex-row sm:items-center ${
                   insight.type === 'success'
                     ? 'border-emerald-200/50 bg-emerald-50/40 dark:border-emerald-800/25 dark:bg-emerald-950/15'
                     : insight.type === 'warning'
@@ -146,15 +146,21 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                       : 'border-blue-200/50 bg-blue-50/40 dark:border-blue-800/25 dark:bg-blue-950/15'
                 }`}
               >
-                <Lightbulb className={`h-4 w-4 shrink-0 ${
-                  insight.type === 'success' ? 'text-emerald-500' : insight.type === 'warning' ? 'text-amber-500' : 'text-blue-500'
-                }`} />
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                  insight.type === 'success'
+                    ? 'bg-emerald-500/10 text-emerald-500'
+                    : insight.type === 'warning'
+                      ? 'bg-amber-500/10 text-amber-500'
+                      : 'bg-blue-500/10 text-blue-500'
+                }`}>
+                  <Lightbulb className="h-4 w-4" />
+                </div>
                 <p className="min-w-0 flex-1 text-sm text-foreground/80">{insight.text}</p>
                 {insight.action && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="shrink-0 text-xs"
+                    className="h-9 shrink-0 justify-center rounded-xl text-xs sm:justify-start"
                     onClick={() => {
                       if (insight.action === 'Criar post') onNewPost();
                       else if (insight.action === 'Ver rascunhos') onNavigate('content');
@@ -170,27 +176,27 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         )}
 
         {/* Quick actions */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center">
           {allowedViews.includes('content') && (
-            <Button onClick={onNewPost} size="lg" className="gap-2 rounded-xl shadow-sm">
+            <Button onClick={onNewPost} size="lg" className="col-span-2 h-12 gap-2 rounded-2xl shadow-sm sm:col-span-1">
               <Plus className="h-4 w-4" />
               Novo Post
             </Button>
           )}
           {allowedViews.includes('builder') && (
-            <Button variant="outline" size="sm" onClick={() => onNavigate('builder')} className="gap-1.5 rounded-lg">
+            <Button variant="outline" size="sm" onClick={() => onNavigate('builder')} className="h-11 gap-1.5 rounded-2xl justify-center">
               <LayoutTemplate className="h-3.5 w-3.5" />
               Homepage
             </Button>
           )}
           {allowedViews.includes('automations') && (
-            <Button variant="outline" size="sm" onClick={() => onNavigate('automations')} className="gap-1.5 rounded-lg">
+            <Button variant="secondary" size="sm" onClick={() => onNavigate('automations')} className="h-11 gap-1.5 rounded-2xl justify-center">
               <Bot className="h-3.5 w-3.5" />
               Automações
             </Button>
           )}
           <Link to="/" target="_blank">
-            <Button variant="ghost" size="sm" className="gap-1.5 rounded-lg text-muted-foreground">
+            <Button variant="outline" size="sm" className="h-11 w-full gap-1.5 rounded-2xl text-muted-foreground justify-center sm:w-auto">
               <Globe className="h-3.5 w-3.5" />
               Portal
             </Button>

@@ -18,6 +18,64 @@ export interface UpdateCourseData extends Partial<CreateCourseData> {
   id: string;
 }
 
+const COURSE_CATEGORY_SELECT = `
+  categories (
+    id,
+    name,
+    slug,
+    color
+  )
+`;
+
+const PUBLIC_COURSE_SELECT = `
+  id,
+  title,
+  slug,
+  description,
+  level,
+  duration,
+  category,
+  category_id,
+  instructor,
+  published_at,
+  created_at,
+  status,
+  ${COURSE_CATEGORY_SELECT}
+`;
+
+const FULL_COURSE_SELECT = `
+  id,
+  title,
+  slug,
+  description,
+  level,
+  duration,
+  category,
+  category_id,
+  instructor,
+  published_at,
+  created_at,
+  status,
+  tags,
+  ${COURSE_CATEGORY_SELECT}
+`;
+
+const normalizePublicCourse = (course: Partial<Course> & { created_at?: string; published_at?: string | null }): Course => ({
+  id: course.id || '',
+  title: course.title || '',
+  slug: course.slug || '',
+  description: course.description || '',
+  level: course.level || 'Iniciante',
+  duration: course.duration || 'n/d',
+  category: course.category,
+  category_id: course.category_id || null,
+  instructor: course.instructor,
+  published_at: course.published_at || course.created_at || new Date(0).toISOString(),
+  status: course.status || 'published',
+  tags: course.tags || [],
+  categories: course.categories || null,
+});
+
 const fallbackCourses: Course[] = initialCourses.map((course) => ({
   ...course,
   status: 'published',
@@ -39,15 +97,7 @@ export const useCourses = (adminView = false) => {
     queryFn: async () => {
       let query = supabase
         .from('courses')
-        .select(`
-          *,
-          categories (
-            id,
-            name,
-            slug,
-            color
-          )
-        `)
+        .select(adminView ? FULL_COURSE_SELECT : PUBLIC_COURSE_SELECT)
         .order('published_at', { ascending: false });
 
       if (!adminView) {
@@ -67,7 +117,9 @@ export const useCourses = (adminView = false) => {
         return adminView ? [] : fallbackCourses;
       }
 
-      return (data as unknown as Course[]) ?? (adminView ? [] : fallbackCourses);
+      return adminView
+        ? ((data as unknown as Course[]) ?? [])
+        : ((data as Array<Partial<Course> & { created_at?: string; published_at?: string | null }>)?.map((course) => normalizePublicCourse(course)) ?? fallbackCourses);
     },
     retry: 1,
     staleTime: 120_000,

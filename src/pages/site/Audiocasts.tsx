@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AudiocastCard from '@/components/media/AudiocastCard';
@@ -10,42 +10,77 @@ import { usePagination } from '@/hooks/usePagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { Headphones } from 'lucide-react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { parseSectionPageBanners, SECTION_PAGE_BANNERS_KEY } from '@/lib/sectionPageConfig';
+import SectionPageHero from '@/components/content/SectionPageHero';
 
 const Audiocasts = () => {
   const { data: podcasts, isLoading } = useAudiocasts();
   const { data: categories } = useCategories();
+  const { data: siteSettings } = useSiteSettings();
   const featuredAudiocast = podcasts?.[0];
   const restAudiocasts = podcasts?.slice(1) ?? [];
   const { paginatedItems, currentPage, totalPages, goToPage } = usePagination(restAudiocasts, { pageSize: 9 });
+  const sectionPageBanners = useMemo(
+    () => parseSectionPageBanners(siteSettings?.[SECTION_PAGE_BANNERS_KEY]),
+    [siteSettings],
+  );
+  const heroBannerUrl = sectionPageBanners.audiocasts.bannerUrl;
+  const heroMobileBannerUrl = sectionPageBanners.audiocasts.mobileBannerUrl;
+  const totalAudiocasts = podcasts?.length ?? 0;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800 py-12 text-white md:py-16">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvc3ZnPg==')] opacity-50" />
-        <div className="container relative mx-auto px-4">
-          <div className="mx-auto max-w-4xl text-center">
-            <h1 className="mb-3 text-4xl font-headline font-bold sm:text-5xl md:text-6xl">
-              Audiocasts
-            </h1>
-            <p className="mx-auto max-w-2xl text-base text-white/70 sm:text-lg">
-              Conteúdo educativo em áudio sobre tecnologia, automação e inovação.
-              Ouça quando quiser, onde quiser.
-            </p>
+      <SectionPageHero
+        title="Audiocasts"
+        description="Conteúdo educativo em áudio sobre tecnologia, automação e inovação. Ouça com calma, descubra novas ideias e acompanhe o portal em formato conversável."
+        align="center"
+        fallbackClassName="bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800"
+        media={heroBannerUrl || heroMobileBannerUrl ? {
+          desktopUrl: heroBannerUrl,
+          mobileUrl: heroMobileBannerUrl,
+          alt: 'Banner da secção Audiocasts',
+        } : null}
+        metaSlot={(
+          <div className="flex flex-wrap justify-center gap-2">
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/88 backdrop-blur-sm">
+              Biblioteca Vision7 Audio
+            </span>
+            <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-white/92 backdrop-blur-sm">
+              {totalAudiocasts} episódio{totalAudiocasts === 1 ? '' : 's'}
+            </span>
           </div>
-        </div>
-      </section>
+        )}
+        actionsSlot={(
+          <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-center">
+            <a
+              href="#episodios"
+              className="inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-white/90"
+            >
+              Explorar episódios
+            </a>
+            {featuredAudiocast ? (
+              <a
+                href="#audiocast-destaque"
+                className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/15"
+              >
+                Ouvir destaque
+              </a>
+            ) : null}
+          </div>
+        )}
+      />
 
-      <div className="container mx-auto px-4 py-8 sm:py-10">
+      <div id="episodios" className="container mx-auto px-4 py-8 sm:py-10">
         <div className="mx-auto max-w-7xl">
           {/* Top Ad */}
           <AdSpace size="leaderboard" position="Topo Audiocasts" className="mb-8" />
 
           {/* Featured Audiocast */}
           {!isLoading && featuredAudiocast && (
-            <section className="mb-10">
+            <section id="audiocast-destaque" className="mb-10 scroll-mt-28">
               <div className="mb-4 flex items-center gap-2">
                 <div className="h-1 w-8 rounded-full bg-primary" />
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">

@@ -1,22 +1,35 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, Eye, GripVertical, ImagePlus, LayoutTemplate, RotateCcw, Save, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowUp, Eye, GripVertical, ImagePlus, LayoutTemplate, RotateCcw, Save, Sparkles, Upload, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useSiteSettings, useUpdateSiteSetting } from '@/hooks/useSiteSettings';
 import { useToast } from '@/hooks/use-toast';
-
-type HeroAlignment = 'left' | 'center' | 'right';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  ALLOWED_HOME_BANNER_TYPES,
+  buildBannerUploadPath,
+  defaultHomePageConfig,
+  HOME_BANNER_STORAGE_BUCKET,
+  HOME_PAGE_CONFIG_KEY,
+  MAX_HOME_BANNER_SIZE_BYTES,
+  parseHomePageConfig,
+  type HomePageConfig,
+} from '@/lib/homepage-config';
+import {
+  ALLOWED_SECTION_PAGE_BANNER_TYPES,
+  buildSectionPageBannerUploadPath,
+  MAX_SECTION_PAGE_BANNER_SIZE_BYTES,
+  parseSectionPageBanners,
+  SECTION_PAGE_BANNERS_KEY,
+  SECTION_PAGE_BANNER_CATALOG,
+  SECTION_PAGE_BANNER_STORAGE_BUCKET,
+  type SectionPageBannerEntry,
+  type SectionPageId,
+  type SectionPageBannerVariant,
+} from '@/lib/sectionPageConfig';
 
 type SectionId = 'latest' | 'featured' | 'courses' | 'more' | 'newsletter';
 
@@ -25,77 +38,6 @@ interface HomeSection {
   label: string;
   enabled: boolean;
 }
-
-interface HomePageConfig {
-  heroBadge: string;
-  heroTitle: string;
-  heroDescription: string;
-  heroAlignment: HeroAlignment;
-  primaryCtaLabel: string;
-  secondaryCtaLabel: string;
-  tertiaryCtaLabel: string;
-  bannerUrl: string;
-  sections: HomeSection[];
-}
-
-const HOME_PAGE_CONFIG_KEY = 'home_page_config';
-
-const defaultConfig: HomePageConfig = {
-  heroBadge: '',
-  heroTitle: 'Vision7',
-  heroDescription: 'portal tecnológico com notícias, cultura, negócios, saúde e tendências globais — com curadoria inteligente, leitura clara e visão de futuro.',
-  heroAlignment: 'left',
-  primaryCtaLabel: 'Explorar Notícias',
-  secondaryCtaLabel: '',
-  tertiaryCtaLabel: '',
-  bannerUrl: '/Verde Neon Exploração Blog Banner.png',
-  sections: [
-    { id: 'featured', label: 'Destaque', enabled: true },
-    { id: 'latest', label: 'Últimas Notícias', enabled: true },
-    { id: 'courses', label: 'Cursos em Destaque', enabled: true },
-    { id: 'more', label: 'Mais Notícias', enabled: true },
-    { id: 'newsletter', label: 'Newsletter', enabled: true },
-  ],
-};
-
-const parseConfig = (rawValue?: string | null): HomePageConfig => {
-  if (!rawValue) return defaultConfig;
-
-  try {
-    const parsed = JSON.parse(rawValue) as Partial<HomePageConfig>;
-
-    return {
-      ...defaultConfig,
-      ...parsed,
-      heroBadge:
-        !parsed.heroBadge || /bem-vindo|vision7/i.test(parsed.heroBadge)
-          ? defaultConfig.heroBadge
-          : parsed.heroBadge,
-      heroTitle: !parsed.heroTitle || /^vision$/i.test(parsed.heroTitle) ? defaultConfig.heroTitle : parsed.heroTitle,
-      heroDescription:
-        !parsed.heroDescription || /jornal digital premium com curadoria/i.test(parsed.heroDescription)
-          ? defaultConfig.heroDescription
-          : parsed.heroDescription,
-      secondaryCtaLabel:
-        !parsed.secondaryCtaLabel || /^newsletter$/i.test(parsed.secondaryCtaLabel)
-          ? defaultConfig.secondaryCtaLabel
-          : parsed.secondaryCtaLabel,
-      tertiaryCtaLabel:
-        !parsed.tertiaryCtaLabel || /^dashboard$|^abrir workspace$/i.test(parsed.tertiaryCtaLabel)
-          ? defaultConfig.tertiaryCtaLabel
-          : parsed.tertiaryCtaLabel,
-      sections: Array.isArray(parsed.sections) && parsed.sections.length
-        ? parsed.sections.map((section) => ({
-            enabled: true,
-            ...section,
-          })) as HomeSection[]
-        : defaultConfig.sections,
-    };
-  } catch (error) {
-    console.warn('Falha ao ler a configuração da homepage.', error);
-    return defaultConfig;
-  }
-};
 
 const sectionPreviewDescription: Record<SectionId, string> = {
   featured: 'Bloco editorial com a principal matéria e destaque visual.',
@@ -109,12 +51,15 @@ const AdminCmsCustomizer = () => {
   const { data: siteSettings } = useSiteSettings();
   const updateSetting = useUpdateSiteSetting();
   const { toast } = useToast();
-  const [config, setConfig] = useState<HomePageConfig>(defaultConfig);
+  const [config, setConfig] = useState<HomePageConfig>(defaultHomePageConfig);
+  const [sectionPageBanners, setSectionPageBanners] = useState(parseSectionPageBanners(null));
   const [draggedSectionId, setDraggedSectionId] = useState<SectionId | null>(null);
   const [dragOverSectionId, setDragOverSectionId] = useState<SectionId | null>(null);
+  const [uploadingBannerKey, setUploadingBannerKey] = useState<string | null>(null);
 
   useEffect(() => {
-    setConfig(parseConfig(siteSettings?.[HOME_PAGE_CONFIG_KEY]));
+    setConfig(parseHomePageConfig(siteSettings?.[HOME_PAGE_CONFIG_KEY]));
+    setSectionPageBanners(parseSectionPageBanners(siteSettings?.[SECTION_PAGE_BANNERS_KEY]));
   }, [siteSettings]);
 
   const enabledSections = useMemo(
@@ -186,11 +131,149 @@ const AdminCmsCustomizer = () => {
     }
   };
 
-  const alignmentClass = {
-    left: 'items-start text-left',
-    center: 'items-center text-center',
-    right: 'items-end text-right',
-  }[config.heroAlignment];
+  const handleHomeBannerUpload = async (variant: 'desktop' | 'mobile', file?: File | null) => {
+    if (!file) return;
+
+    if (!ALLOWED_HOME_BANNER_TYPES.includes(file.type as (typeof ALLOWED_HOME_BANNER_TYPES)[number])) {
+      toast({
+        title: 'Formato inválido',
+        description: 'Use PNG, JPG ou WEBP para o banner principal.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > MAX_HOME_BANNER_SIZE_BYTES) {
+      toast({
+        title: 'Imagem demasiado grande',
+        description: 'O banner principal não pode exceder 5MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const uploadKey = `home:${variant}`;
+    setUploadingBannerKey(uploadKey);
+
+    try {
+      const uploadPath = buildBannerUploadPath('homepage', variant, file.name);
+      const { error: uploadError } = await supabase.storage
+        .from(HOME_BANNER_STORAGE_BUCKET)
+        .upload(uploadPath, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from(HOME_BANNER_STORAGE_BUCKET)
+        .getPublicUrl(uploadPath);
+
+      setConfig((prev) => ({
+        ...prev,
+        ...(variant === 'desktop'
+          ? { bannerUrl: data.publicUrl }
+          : { mobileBannerUrl: data.publicUrl }),
+      }));
+
+      toast({
+        title: 'Banner principal carregado',
+        description: `A versão ${variant === 'desktop' ? 'desktop' : 'mobile'} já está pronta para a primeira dobra.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao carregar banner',
+        description: error instanceof Error ? error.message : 'Não foi possível enviar a imagem principal.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingBannerKey(null);
+    }
+  };
+
+  const updateSectionPageBanner = (sectionId: SectionPageId, patch: Partial<SectionPageBannerEntry>) => {
+    setSectionPageBanners((prev) => ({
+      ...prev,
+      [sectionId]: {
+        ...prev[sectionId],
+        ...patch,
+      },
+    }));
+  };
+
+  const handleSectionBannerUpload = async (sectionId: SectionPageId, variant: SectionPageBannerVariant, file?: File | null) => {
+    if (!file) return;
+
+    if (!ALLOWED_SECTION_PAGE_BANNER_TYPES.includes(file.type as (typeof ALLOWED_SECTION_PAGE_BANNER_TYPES)[number])) {
+      toast({
+        title: 'Formato inválido',
+        description: 'Use PNG, JPG ou WEBP para o banner da secção.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > MAX_SECTION_PAGE_BANNER_SIZE_BYTES) {
+      toast({
+        title: 'Imagem demasiado grande',
+        description: 'O banner da secção não pode exceder 5MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const uploadKey = `${sectionId}:${variant}`;
+    setUploadingBannerKey(uploadKey);
+
+    try {
+      const uploadPath = buildSectionPageBannerUploadPath(sectionId, variant, file.name);
+      const { error: uploadError } = await supabase.storage
+        .from(SECTION_PAGE_BANNER_STORAGE_BUCKET)
+        .upload(uploadPath, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from(SECTION_PAGE_BANNER_STORAGE_BUCKET)
+        .getPublicUrl(uploadPath);
+
+      updateSectionPageBanner(sectionId, variant === 'desktop' ? { bannerUrl: data.publicUrl } : { mobileBannerUrl: data.publicUrl });
+      toast({
+        title: 'Banner carregado',
+        description: `A versão ${variant === 'desktop' ? 'desktop' : 'mobile'} foi preparada para ${sectionPageBanners[sectionId].label}.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao carregar banner',
+        description: error instanceof Error ? error.message : 'Não foi possível enviar a imagem da secção.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingBannerKey(null);
+    }
+  };
+
+  const handleSaveSectionBanners = async () => {
+    try {
+      await updateSetting.mutateAsync({
+        key: SECTION_PAGE_BANNERS_KEY,
+        value: JSON.stringify(sectionPageBanners),
+      });
+
+      toast({
+        title: 'Banners de secção guardados',
+        description: 'As categorias e páginas fixas do portal já podem refletir os novos banners responsivos.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao guardar banners',
+        description: error instanceof Error ? error.message : 'Não foi possível guardar os banners de secção.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
@@ -206,52 +289,12 @@ const AdminCmsCustomizer = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="hero-badge">Badge superior</Label>
-              <Input
-                id="hero-badge"
-                value={config.heroBadge}
-                onChange={(event) => setConfig((prev) => ({ ...prev, heroBadge: event.target.value }))}
-              />
+            <div className="rounded-2xl border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+              O hero principal da homepage agora ocupa sempre a primeira dobra e mostra apenas o CTA principal.
+              Use uma versão horizontal para desktop e uma versão vertical para mobile.
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="hero-title">Título principal</Label>
-              <Input
-                id="hero-title"
-                value={config.heroTitle}
-                onChange={(event) => setConfig((prev) => ({ ...prev, heroTitle: event.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="hero-description">Descrição editorial</Label>
-              <Textarea
-                id="hero-description"
-                value={config.heroDescription}
-                onChange={(event) => setConfig((prev) => ({ ...prev, heroDescription: event.target.value }))}
-                className="min-h-[110px]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Alinhamento do bloco principal</Label>
-              <Select
-                value={config.heroAlignment}
-                onValueChange={(value: HeroAlignment) => setConfig((prev) => ({ ...prev, heroAlignment: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Escolha a posição do texto" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="left">Esquerda</SelectItem>
-                  <SelectItem value="center">Centro</SelectItem>
-                  <SelectItem value="right">Direita</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-1">
               <div className="space-y-2">
                 <Label htmlFor="cta-primary">CTA primária</Label>
                 <Input
@@ -260,35 +303,94 @@ const AdminCmsCustomizer = () => {
                   onChange={(event) => setConfig((prev) => ({ ...prev, primaryCtaLabel: event.target.value }))}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="cta-secondary">CTA secundária</Label>
-                <Input
-                  id="cta-secondary"
-                  value={config.secondaryCtaLabel}
-                  onChange={(event) => setConfig((prev) => ({ ...prev, secondaryCtaLabel: event.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cta-tertiary">CTA terciária</Label>
-                <Input
-                  id="cta-tertiary"
-                  value={config.tertiaryCtaLabel}
-                  onChange={(event) => setConfig((prev) => ({ ...prev, tertiaryCtaLabel: event.target.value }))}
-                />
-              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="banner-url" className="flex items-center gap-2">
-                <ImagePlus className="h-4 w-4 text-primary-500" />
-                Banner principal
-              </Label>
-              <Input
-                id="banner-url"
-                value={config.bannerUrl}
-                onChange={(event) => setConfig((prev) => ({ ...prev, bannerUrl: event.target.value }))}
-                placeholder="/Verde Neon Exploração Blog Banner.png"
-              />
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-background p-4">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Banner desktop</p>
+                  <p className="text-xs text-muted-foreground">Imagem horizontal para desktop e notebook.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="home-banner-url" className="flex items-center gap-2">
+                    <ImagePlus className="h-4 w-4 text-primary-500" />
+                    URL pública desktop
+                  </Label>
+                  <Input
+                    id="home-banner-url"
+                    value={config.bannerUrl}
+                    onChange={(event) => setConfig((prev) => ({ ...prev, bannerUrl: event.target.value }))}
+                    placeholder="https://... ou URL pública do Storage"
+                  />
+                </div>
+                <input
+                  id="home-banner-desktop-upload"
+                  type="file"
+                  accept={ALLOWED_HOME_BANNER_TYPES.join(',')}
+                  className="hidden"
+                  onChange={(event) => {
+                    const nextFile = event.target.files?.[0] ?? null;
+                    void handleHomeBannerUpload('desktop', nextFile);
+                    event.currentTarget.value = '';
+                  }}
+                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    disabled={uploadingBannerKey === 'home:desktop'}
+                    onClick={() => document.getElementById('home-banner-desktop-upload')?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    {uploadingBannerKey === 'home:desktop' ? 'A carregar…' : 'Subir desktop'}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">PNG, JPG ou WEBP até 5MB.</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-background p-4">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Banner mobile</p>
+                  <p className="text-xs text-muted-foreground">Imagem vertical para smartphones e primeira dobra.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="home-banner-mobile-url" className="flex items-center gap-2">
+                    <ImagePlus className="h-4 w-4 text-primary-500" />
+                    URL pública mobile
+                  </Label>
+                  <Input
+                    id="home-banner-mobile-url"
+                    value={config.mobileBannerUrl}
+                    onChange={(event) => setConfig((prev) => ({ ...prev, mobileBannerUrl: event.target.value }))}
+                    placeholder="https://... ou URL pública do Storage"
+                  />
+                </div>
+                <input
+                  id="home-banner-mobile-upload"
+                  type="file"
+                  accept={ALLOWED_HOME_BANNER_TYPES.join(',')}
+                  className="hidden"
+                  onChange={(event) => {
+                    const nextFile = event.target.files?.[0] ?? null;
+                    void handleHomeBannerUpload('mobile', nextFile);
+                    event.currentTarget.value = '';
+                  }}
+                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    disabled={uploadingBannerKey === 'home:mobile'}
+                    onClick={() => document.getElementById('home-banner-mobile-upload')?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    {uploadingBannerKey === 'home:mobile' ? 'A carregar…' : 'Subir mobile'}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">PNG, JPG ou WEBP até 5MB.</span>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-2">
@@ -299,13 +401,188 @@ const AdminCmsCustomizer = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setConfig(defaultConfig)}
+                onClick={() => setConfig(defaultHomePageConfig)}
                 className="gap-2"
               >
                 <RotateCcw className="h-4 w-4" />
                 Reset
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ImagePlus className="h-4 w-4 text-primary-600" />
+              Banners de secção
+            </CardTitle>
+            <CardDescription>
+              Use uma imagem deitada para desktop e uma imagem vertical para mobile. O hero ocupa sempre a primeira dobra.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="rounded-2xl border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+              Desktop: priorize composições horizontais, entre 1600x900 e 1920x1080.
+              Mobile: use corte vertical, entre 1080x1350 e 1080x1920, para preencher melhor a tela.
+            </div>
+
+            {SECTION_PAGE_BANNER_CATALOG.map((section) => {
+              const entry = sectionPageBanners[section.id];
+              const desktopInputId = `section-banner-${section.id}-desktop`;
+              const mobileInputId = `section-banner-${section.id}-mobile`;
+              const hasAnyBanner = Boolean(entry.bannerUrl || entry.mobileBannerUrl);
+
+              return (
+                <div key={section.id} className="space-y-4 border-b border-border/50 pb-6 last:border-0 last:pb-0">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-foreground">{entry.label}</p>
+                      <p className="text-sm text-muted-foreground">{entry.description}</p>
+                    </div>
+                    {hasAnyBanner ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2 text-muted-foreground hover:text-destructive"
+                        onClick={() => updateSectionPageBanner(section.id, { bannerUrl: '', mobileBannerUrl: '' })}
+                      >
+                        <X className="h-4 w-4" />
+                        Limpar versões
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  <div className="overflow-hidden rounded-3xl border border-border/60 bg-slate-950/95">
+                    {hasAnyBanner ? (
+                      <div className="grid gap-3 p-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(180px,0.7fr)]">
+                        <div className="space-y-2">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">Desktop</p>
+                          {entry.bannerUrl ? (
+                            <img
+                              src={entry.bannerUrl}
+                              alt={`Preview desktop do banner ${entry.label}`}
+                              className="h-48 w-full rounded-2xl object-cover object-center lg:h-56"
+                            />
+                          ) : (
+                            <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-white/12 bg-white/5 text-xs text-white/55 lg:h-56">
+                              Sem imagem desktop
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">Mobile</p>
+                          {entry.mobileBannerUrl ? (
+                            <img
+                              src={entry.mobileBannerUrl}
+                              alt={`Preview mobile do banner ${entry.label}`}
+                              className="h-48 w-full rounded-2xl object-cover object-center lg:h-56"
+                            />
+                          ) : (
+                            <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-white/12 bg-white/5 text-xs text-white/55 lg:h-56">
+                              Sem imagem mobile
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex h-40 items-center justify-center text-sm text-white/55">
+                        Nenhuma imagem configurada para esta secção.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="space-y-3 rounded-2xl border border-border/60 bg-background p-4">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">Versão desktop</p>
+                        <p className="text-xs text-muted-foreground">Paisagem ampla para notebook e desktop.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`${desktopInputId}-url`}>URL pública</Label>
+                        <Input
+                          id={`${desktopInputId}-url`}
+                          value={entry.bannerUrl}
+                          onChange={(event) => updateSectionPageBanner(section.id, { bannerUrl: event.target.value })}
+                          placeholder="https://... ou URL pública do Storage"
+                        />
+                      </div>
+                      <input
+                        id={desktopInputId}
+                        type="file"
+                        accept={ALLOWED_SECTION_PAGE_BANNER_TYPES.join(',')}
+                        className="hidden"
+                        onChange={(event) => {
+                          const nextFile = event.target.files?.[0] ?? null;
+                          void handleSectionBannerUpload(section.id, 'desktop', nextFile);
+                          event.currentTarget.value = '';
+                        }}
+                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="gap-2"
+                          disabled={uploadingBannerKey === `${section.id}:desktop`}
+                          onClick={() => document.getElementById(desktopInputId)?.click()}
+                        >
+                          <Upload className="h-4 w-4" />
+                          {uploadingBannerKey === `${section.id}:desktop` ? 'A carregar…' : 'Subir desktop'}
+                        </Button>
+                        <span className="text-xs text-muted-foreground">PNG, JPG ou WEBP até 5MB.</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 rounded-2xl border border-border/60 bg-background p-4">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">Versão mobile</p>
+                        <p className="text-xs text-muted-foreground">Imagem vertical para smartphones e primeira dobra.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`${mobileInputId}-url`}>URL pública</Label>
+                        <Input
+                          id={`${mobileInputId}-url`}
+                          value={entry.mobileBannerUrl}
+                          onChange={(event) => updateSectionPageBanner(section.id, { mobileBannerUrl: event.target.value })}
+                          placeholder="https://... ou URL pública do Storage"
+                        />
+                      </div>
+                      <input
+                        id={mobileInputId}
+                        type="file"
+                        accept={ALLOWED_SECTION_PAGE_BANNER_TYPES.join(',')}
+                        className="hidden"
+                        onChange={(event) => {
+                          const nextFile = event.target.files?.[0] ?? null;
+                          void handleSectionBannerUpload(section.id, 'mobile', nextFile);
+                          event.currentTarget.value = '';
+                        }}
+                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="gap-2"
+                          disabled={uploadingBannerKey === `${section.id}:mobile`}
+                          onClick={() => document.getElementById(mobileInputId)?.click()}
+                        >
+                          <Upload className="h-4 w-4" />
+                          {uploadingBannerKey === `${section.id}:mobile` ? 'A carregar…' : 'Subir mobile'}
+                        </Button>
+                        <span className="text-xs text-muted-foreground">PNG, JPG ou WEBP até 5MB.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <Button onClick={handleSaveSectionBanners} className="w-full gap-2" variant="secondary">
+              <Save className="h-4 w-4" />
+              Guardar banners de secção
+            </Button>
           </CardContent>
         </Card>
 
@@ -416,45 +693,58 @@ const AdminCmsCustomizer = () => {
           </CardHeader>
           <CardContent className="space-y-6 p-4 md:p-6">
             <div className="overflow-hidden rounded-2xl border border-primary-900/20 bg-gradient-to-br from-primary-50 via-secondary-50 to-background dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-950">
-              <div className="grid gap-5 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(260px,360px)] lg:items-center">
-                <div className={`flex min-h-[280px] flex-col justify-center gap-4 rounded-2xl bg-background/80 px-6 py-8 shadow-sm md:px-8 ${alignmentClass}`}>
-                  {config.heroBadge ? (
-                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400">
-                      {config.heroBadge}
-                    </span>
-                  ) : null}
-                  <h2 className="max-w-3xl text-4xl font-headline font-bold text-foreground md:text-5xl">
-                    {config.heroTitle}
-                  </h2>
-                  <p className="max-w-2xl text-base text-muted-foreground md:text-lg">
-                    {config.heroDescription}
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    <span className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white">
+              <div className="grid gap-4 p-4 md:p-6 xl:grid-cols-[minmax(0,1.35fr)_240px]">
+                <div className="relative overflow-hidden rounded-[2rem] bg-slate-950 shadow-[0_30px_90px_rgba(8,18,44,0.35)]">
+                  <picture className="absolute inset-0 block h-full w-full">
+                    <source media="(max-width: 767px)" srcSet={config.mobileBannerUrl || config.bannerUrl || defaultHomePageConfig.mobileBannerUrl} />
+                    <img
+                      src={config.bannerUrl || defaultHomePageConfig.bannerUrl}
+                      alt="Preview do banner principal"
+                      className="absolute inset-0 h-full w-full object-cover object-center"
+                      onError={(event) => {
+                        event.currentTarget.src = defaultHomePageConfig.bannerUrl;
+                      }}
+                    />
+                  </picture>
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.18)_0%,rgba(2,6,23,0.54)_48%,rgba(2,6,23,0.9)_100%)]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(118deg,rgba(2,6,23,0.74)_0%,rgba(2,6,23,0.16)_44%,rgba(2,6,23,0.78)_100%)]" />
+                  <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:26px_26px]" />
+
+                  <div className="relative z-10 flex min-h-[420px] items-end justify-center px-6 py-8 text-center sm:min-h-[460px] sm:px-10 lg:min-h-[520px]">
+                    <span className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_16px_48px_rgba(255,255,255,0.18)]">
                       {config.primaryCtaLabel || 'Explorar Notícias'}
                     </span>
-                    {config.secondaryCtaLabel ? (
-                      <span className="rounded-lg border border-primary-400 px-4 py-2 text-sm font-semibold text-primary-700 dark:text-primary-300">
-                        {config.secondaryCtaLabel}
-                      </span>
-                    ) : null}
-                    {config.tertiaryCtaLabel ? (
-                      <span className="rounded-lg border border-secondary-500 px-4 py-2 text-sm font-semibold text-secondary-700 dark:text-secondary-300">
-                        {config.tertiaryCtaLabel}
-                      </span>
-                    ) : null}
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                  <img
-                    src={config.bannerUrl || defaultConfig.bannerUrl}
-                    alt="Preview do banner principal"
-                    className="h-[180px] w-full object-cover md:h-[240px] lg:h-[280px]"
-                    onError={(event) => {
-                      event.currentTarget.src = defaultConfig.bannerUrl;
-                    }}
-                  />
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                  <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="border-b border-border/70 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Desktop
+                    </div>
+                    <img
+                      src={config.bannerUrl || defaultHomePageConfig.bannerUrl}
+                      alt="Preview desktop do banner principal"
+                      className="h-[180px] w-full object-cover object-center"
+                      onError={(event) => {
+                        event.currentTarget.src = defaultHomePageConfig.bannerUrl;
+                      }}
+                    />
+                  </div>
+
+                  <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="border-b border-border/70 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Mobile
+                    </div>
+                    <img
+                      src={config.mobileBannerUrl || config.bannerUrl || defaultHomePageConfig.mobileBannerUrl}
+                      alt="Preview mobile do banner principal"
+                      className="h-[180px] w-full object-cover object-center"
+                      onError={(event) => {
+                        event.currentTarget.src = defaultHomePageConfig.mobileBannerUrl;
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

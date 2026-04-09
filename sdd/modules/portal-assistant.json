@@ -1,0 +1,83 @@
+{
+  "module": "Portal Assistant",
+  "version": "0.1.0",
+  "owner": "Vision7 Core Team",
+  "status": "Em desenvolvimento",
+  "last_updated": "2026-04-09",
+  "objective": "Assistente conversacional do Vision7 conectado ao Groq com escopo estrito de portal, navegação interna, curadoria e apoio contextual sem fugir do universo Vision7.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Responder apenas com base em dados fornecidos pelo portal: posts publicados, categorias, cursos, parcerias e rotas internas.",
+      "priority": "Crítica",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-002",
+      "description": "Usar Groq como camada de linguagem mantendo fallback local controlado quando a API estiver indisponível.",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-003",
+      "description": "Retornar apenas respostas estruturadas com resumo, sugestões e links internos válidos.",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
+    }
+  ],
+  "allowed_scope": [
+    "Noticias e posts publicados no portal",
+    "Categorias, cursos, audiocasts e seções do Vision7",
+    "Ajuda de navegação e descoberta interna",
+    "Contexto editorial e operacional do portal"
+  ],
+  "forbidden_scope": [
+    "Consultoria fora do ecossistema Vision7",
+    "Promessas de integrações, produtos ou dados que não existem no portal",
+    "Links externos como resposta principal",
+    "Respostas genéricas sem base no conteúdo recebido"
+  ],
+  "retrieval_sources": [
+    "posts publicados carregados pelo frontend",
+    "cursos e parcerias ativas do CMS",
+    "categorias e rotas públicas do site",
+    "configuração local do módulo src/modules/portal-ai"
+  ],
+  "response_contract": {
+    "format": "json",
+    "fields": [
+      "summary",
+      "suggestions",
+      "links"
+    ],
+    "rules": [
+      "Todos os links devem ser internos e começar com /",
+      "As sugestões devem orientar o próximo passo dentro do portal",
+      "Quando faltar contexto, a resposta deve admitir limite e pedir reformulação dentro do escopo"
+    ]
+  },
+  "files": {
+    "frontend": [
+      "src/components/system/PortalAIAssistantButton.tsx",
+      "src/modules/portal-ai/config.ts",
+      "src/modules/portal-ai/service.ts",
+      "src/modules/portal-ai/types.ts"
+    ],
+    "backend": [
+      "supabase/functions/portal-ai-assistant/index.ts"
+    ],
+    "supporting_sdds": [
+      "sdd/modules/agents-skills-ai.json",
+      "sdd/modules/cms.json",
+      "sdd/modules/frontend-ui.json"
+    ]
+  },
+  "change_history": [
+    {
+      "date": "2026-04-09",
+      "version": "0.1.0",
+      "author": "GitHub Copilot",
+      "description": "SDD inicial do assistente Vision7 com Groq, fallback local e guardrails estritos de portal."
+    }
+  ]
+}
