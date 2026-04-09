@@ -13,6 +13,7 @@ export interface HomePageBanner {
   title: string;
   description: string;
   imageUrl: string;
+  mobileImageUrl: string;
   ctaLabel: string;
   ctaHref: string;
   enabled: boolean;
@@ -27,6 +28,7 @@ export interface HomePageConfig {
   secondaryCtaLabel: string;
   tertiaryCtaLabel: string;
   bannerUrl: string;
+  mobileBannerUrl: string;
   rotatingBanners: HomePageBanner[];
   sections: HomeSection[];
 }
@@ -46,6 +48,7 @@ export const defaultHomePageBanners: HomePageBanner[] = [
     title: 'Exploração inteligente para quem decide rápido',
     description: defaultBannerDescription,
     imageUrl: defaultBannerImage,
+    mobileImageUrl: defaultBannerImage,
     ctaLabel: 'Explorar Notícias',
     ctaHref: '#noticias',
     enabled: true,
@@ -62,6 +65,7 @@ export const defaultHomePageConfig: HomePageConfig = {
   secondaryCtaLabel: '',
   tertiaryCtaLabel: '',
   bannerUrl: defaultBannerImage,
+  mobileBannerUrl: defaultBannerImage,
   rotatingBanners: defaultHomePageBanners,
   sections: [
     { id: 'featured', label: 'Destaque', enabled: true },
@@ -89,12 +93,17 @@ const normalizeBanners = (parsed: Partial<HomePageConfig>): HomePageBanner[] => 
     typeof parsed.bannerUrl === 'string' && parsed.bannerUrl.trim()
       ? parsed.bannerUrl.trim()
       : defaultHomePageConfig.bannerUrl;
+  const fallbackMobileImageUrl =
+    typeof parsed.mobileBannerUrl === 'string' && parsed.mobileBannerUrl.trim()
+      ? parsed.mobileBannerUrl.trim()
+      : fallbackImageUrl;
 
   if (!Array.isArray(parsed.rotatingBanners) || !parsed.rotatingBanners.length) {
     return defaultHomePageBanners.map((banner, index) => ({
       ...banner,
       id: `${banner.id}-${index}`,
       imageUrl: fallbackImageUrl,
+      mobileImageUrl: fallbackMobileImageUrl,
     }));
   }
 
@@ -106,6 +115,7 @@ const normalizeBanners = (parsed: Partial<HomePageConfig>): HomePageBanner[] => 
         ? defaultBannerDescription
         : banner.description,
     imageUrl: banner.imageUrl || fallbackImageUrl,
+      mobileImageUrl: banner.mobileImageUrl || fallbackMobileImageUrl || banner.imageUrl || fallbackImageUrl,
     ctaLabel: banner.ctaLabel || 'Explorar Notícias',
     ctaHref: banner.ctaHref || '#noticias',
     enabled: banner.enabled !== false,
@@ -145,6 +155,10 @@ export const parseHomePageConfig = (rawValue?: string | null): HomePageConfig =>
         typeof parsed.bannerUrl === 'string' && parsed.bannerUrl.trim()
           ? parsed.bannerUrl.trim()
           : defaultHomePageConfig.bannerUrl,
+      mobileBannerUrl:
+        typeof parsed.mobileBannerUrl === 'string' && parsed.mobileBannerUrl.trim()
+          ? parsed.mobileBannerUrl.trim()
+          : defaultHomePageConfig.mobileBannerUrl,
       rotatingBanners: normalizeBanners(parsed),
       sections: normalizeSections(parsed.sections),
     };
@@ -155,7 +169,7 @@ export const parseHomePageConfig = (rawValue?: string | null): HomePageConfig =>
 };
 
 export const getEnabledHomePageBanners = (
-  config: Pick<HomePageConfig, 'rotatingBanners' | 'bannerUrl'>
+  config: Pick<HomePageConfig, 'rotatingBanners' | 'bannerUrl' | 'mobileBannerUrl'>
 ): HomePageBanner[] => {
   const enabledBanners = config.rotatingBanners.filter((banner) => banner.enabled !== false);
 
@@ -167,6 +181,7 @@ export const getEnabledHomePageBanners = (
     ...banner,
     id: `${banner.id}-fallback-${index}`,
     imageUrl: config.bannerUrl || banner.imageUrl,
+    mobileImageUrl: config.mobileBannerUrl || banner.mobileImageUrl || config.bannerUrl || banner.imageUrl,
   }));
 };
 
@@ -175,12 +190,13 @@ export const createEmptyBanner = (seed = Date.now()): HomePageBanner => ({
   title: 'Novo banner Vision7',
   description: 'Descreva a mensagem central desta campanha, anúncio ou destaque editorial.',
   imageUrl: defaultBannerImage,
+  mobileImageUrl: defaultBannerImage,
   ctaLabel: 'Saiba mais',
   ctaHref: '#noticias',
   enabled: true,
 });
 
-export const buildBannerUploadPath = (bannerId: string, originalName: string) => {
+export const buildBannerUploadPath = (bannerId: string, variant: 'desktop' | 'mobile', originalName: string) => {
   const extension = originalName.split('.').pop()?.toLowerCase() || 'png';
   const normalizedName = originalName
     .replace(/\.[^.]+$/, '')
@@ -191,5 +207,5 @@ export const buildBannerUploadPath = (bannerId: string, originalName: string) =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 48) || 'banner';
 
-  return `${HOME_BANNER_STORAGE_PREFIX}/${bannerId}-${Date.now()}-${normalizedName}.${extension}`;
+  return `${HOME_BANNER_STORAGE_PREFIX}/${bannerId}-${variant}-${Date.now()}-${normalizedName}.${extension}`;
 };

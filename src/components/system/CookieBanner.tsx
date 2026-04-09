@@ -42,12 +42,18 @@ const CookieBanner = () => {
     syncStoredConsent();
     window.addEventListener('cookie-preferences-updated', syncStoredConsent);
     window.addEventListener('cookie-preferences-reset', syncStoredConsent);
+    window.addEventListener('open-cookie-preferences', handleOpenPreferences);
 
     return () => {
       window.removeEventListener('cookie-preferences-updated', syncStoredConsent);
       window.removeEventListener('cookie-preferences-reset', syncStoredConsent);
+      window.removeEventListener('open-cookie-preferences', handleOpenPreferences);
     };
   }, []);
+
+  const handleOpenPreferences = () => {
+    setShowPreferences(true);
+  };
 
   const clearLocationData = () => {
     localStorage.removeItem('user-geo');
