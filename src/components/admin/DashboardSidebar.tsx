@@ -122,7 +122,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       <nav className="hidden lg:block">
         {/* Toggle button */}
         {onToggleCollapse && (
-          <div className="mb-3 flex justify-end">
+          <div className="mb-4 flex justify-end">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -146,21 +146,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             </Tooltip>
           </div>
         )}
-
-        <AnimatePresence initial={false} mode="wait">
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="mb-5 overflow-hidden rounded-xl bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-700 px-4 py-3.5 text-white shadow-sm dark:from-primary-800 dark:via-primary-900 dark:to-secondary-900"
-            >
-              <p className="text-xs font-bold tracking-wide">Painel de controlo</p>
-              <p className="mt-0.5 text-[10px] text-white/50">{navigationItems.length} áreas</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <div className="space-y-5">
           {groups.map((group, groupIndex) => (
