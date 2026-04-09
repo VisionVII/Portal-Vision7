@@ -1,9 +1,9 @@
 import type { EmailTemplateType, EmailTemplateData } from './types';
 
 const BRAND_NAME = 'Vision VII';
-const BRAND_COLOR = '#2563EB';
-const BRAND_SECONDARY = '#0891B2';
-const BRAND_DARK = '#020817';
+const BRAND_COLOR = '#0a64c0';
+const BRAND_SECONDARY = '#3b82f6';
+const BRAND_DARK = '#0a64c0';
 const BRAND_URL = typeof window !== 'undefined' ? window.location.origin : 'https://vision-portal.pt';
 
 /* ------------------------------------------------------------------ */
@@ -23,7 +23,7 @@ function wrapInLayout(title: string, bodyHtml: string, preheader = ''): string {
     table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
     img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
     a { color: ${BRAND_COLOR}; text-decoration: none; }
-    .code-block { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 32px; letter-spacing: 8px; font-weight: 700; color: ${BRAND_COLOR}; background: #F0F4FF; border-radius: 12px; padding: 16px 28px; display: inline-block; border: 2px dashed ${BRAND_COLOR}40; }
+    .code-block { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 32px; letter-spacing: 8px; font-weight: 700; color: ${BRAND_COLOR}; background: #EFF6FF; border-radius: 12px; padding: 16px 28px; display: inline-block; border: 2px dashed ${BRAND_COLOR}40; }
     .btn-primary { display: inline-block; background: linear-gradient(135deg, ${BRAND_COLOR}, ${BRAND_SECONDARY}); color: #ffffff !important; font-weight: 600; padding: 14px 32px; border-radius: 10px; font-size: 15px; text-decoration: none; }
     .btn-primary:hover { opacity: 0.9; }
     @media only screen and (max-width: 600px) {
@@ -32,17 +32,17 @@ function wrapInLayout(title: string, bodyHtml: string, preheader = ''): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;">
+<body style="margin:0;padding:0;background-color:#f8fbff;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;">
   ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</div>` : ''}
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f9;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fbff;">
     <tr>
       <td align="center" style="padding:32px 16px;">
-        <table role="presentation" class="container" width="580" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+        <table role="presentation" class="container" width="580" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 28px rgba(10,100,192,0.12);border:1px solid #dbeafe;">
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,${BRAND_DARK},#071d49);padding:28px 32px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.02em;">${BRAND_NAME}</h1>
-              <p style="margin:4px 0 0;color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">Portal de Informação</p>
+            <td style="background:linear-gradient(180deg,#eff6ff,#ffffff);border-bottom:1px solid #dbeafe;padding:24px 32px;text-align:center;">
+              <h1 style="margin:0;color:${BRAND_DARK};font-size:22px;font-weight:700;letter-spacing:-0.02em;">${BRAND_NAME}</h1>
+              <p style="margin:4px 0 0;color:#3b82f6;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">Portal de Informacao</p>
             </td>
           </tr>
           <!-- Body -->
@@ -53,7 +53,7 @@ function wrapInLayout(title: string, bodyHtml: string, preheader = ''): string {
           </tr>
           <!-- Footer -->
           <tr>
-            <td style="padding:20px 32px;background-color:#f8fafc;border-top:1px solid #e2e8f0;">
+            <td style="padding:20px 32px;background-color:#f8fbff;border-top:1px solid #dbeafe;">
               <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.6;">
                 &copy; ${new Date().getFullYear()} ${BRAND_NAME}. Todos os direitos reservados.<br/>
                 <a href="${BRAND_URL}/politica-privacidade" style="color:#64748b;">Política de Privacidade</a>
