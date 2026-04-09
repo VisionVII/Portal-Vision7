@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, Bot, CloudSun, Loader2, MapPin, Newspaper, Search, Send, ShieldAlert, Sparkles, TrendingUp, User } from 'lucide-react';
+import { ArrowUpRight, Bot, CloudSun, Loader2, Lock, MapPin, Newspaper, Search, Send, Sparkles, TrendingUp, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
   portalAssistantConfig,
   selectPortalAssistantContext,
 } from '@/modules/portal-ai';
+import BrandLogo from '@/components/system/BrandLogo';
 
 interface AssistantCardAction {
   label: string;
@@ -179,8 +180,6 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     }),
     [country, hasConsent, localTime, region, temperatureC, timezone],
   );
-
-  const providerLabel = activeProvider === 'groq-edge' ? 'Groq' : activeProvider === 'hf-edge' ? 'HF' : 'Local';
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -417,12 +416,12 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   const renderMessageCard = (card: AssistantMessageCard) => {
     if (card.kind === 'weather') {
       return (
-        <div key={card.id} className="overflow-hidden rounded-2xl border border-sky-200/20 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.22),transparent_36%),linear-gradient(135deg,rgba(8,47,73,0.96),rgba(15,23,42,0.96))] p-4 text-white shadow-[0_18px_42px_rgba(8,47,73,0.3)]">
+        <div key={card.id} className="overflow-hidden rounded-2xl border border-primary-200/60 bg-gradient-to-br from-primary-50 via-background to-secondary-50 p-4 text-foreground shadow-[0_16px_34px_rgba(14,116,217,0.12)] dark:border-sky-200/20 dark:bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.22),transparent_36%),linear-gradient(135deg,rgba(8,47,73,0.96),rgba(15,23,42,0.96))] dark:text-white dark:shadow-[0_18px_42px_rgba(8,47,73,0.3)]">
           <div className="flex items-start justify-between gap-3">
             <div>
-              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/60">{card.badge}</p> : null}
-              <h4 className="mt-1 text-base font-semibold">{card.title}</h4>
-              <p className="mt-1 text-sm text-white/72">{card.description}</p>
+              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-700/80 dark:text-white/60">{card.badge}</p> : null}
+              <h4 className="mt-1 text-base font-semibold text-foreground dark:text-white">{card.title}</h4>
+              <p className="mt-1 text-sm text-muted-foreground dark:text-white/72">{card.description}</p>
             </div>
             <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${skyInfo.temperatureBg}`}>
               <CloudSun className={`h-5 w-5 ${skyInfo.temperatureColor}`} />
@@ -432,9 +431,9 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
           {card.stats?.length ? (
             <div className="mt-4 grid grid-cols-3 gap-2">
               {card.stats.map((stat) => (
-                <div key={`${card.id}-${stat.label}`} className="rounded-2xl border border-white/10 bg-white/6 px-3 py-2.5">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/52">{stat.label}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{stat.value}</p>
+                <div key={`${card.id}-${stat.label}`} className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5 dark:border-white/10 dark:bg-white/6">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground dark:text-white/52">{stat.label}</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground dark:text-white">{stat.value}</p>
                 </div>
               ))}
             </div>
@@ -445,15 +444,15 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
     if (card.kind === 'consent') {
       return (
-        <div key={card.id} className="rounded-2xl border border-amber-300/30 bg-gradient-to-br from-amber-500/12 to-slate-950 p-4 shadow-[0_14px_34px_rgba(120,53,15,0.18)]">
+        <div key={card.id} className="rounded-2xl border border-primary-200/70 bg-gradient-to-br from-primary-50 via-background to-secondary-50 p-4 shadow-[0_14px_30px_rgba(14,116,217,0.14)] dark:border-primary-300/25 dark:bg-gradient-to-br dark:from-primary-800/20 dark:to-slate-950 dark:shadow-[0_14px_34px_rgba(2,132,199,0.2)]">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/18 text-amber-300">
-              <ShieldAlert className="h-5 w-5" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300">
+              <Lock className="h-5 w-5" />
             </div>
-            <div>
-              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-200/70">{card.badge}</p> : null}
-              <h4 className="mt-1 text-base font-semibold text-white">{card.title}</h4>
-              <p className="mt-1 text-sm text-slate-300">{card.description}</p>
+            <div className="min-w-0">
+              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-700/80 dark:text-primary-200/80">{card.badge}</p> : null}
+              <h4 className="mt-1 text-base font-semibold text-foreground dark:text-white">{card.title}</h4>
+              <p className="mt-1 text-sm text-muted-foreground dark:text-slate-200">{card.description}</p>
             </div>
           </div>
 
@@ -525,24 +524,14 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="flex w-[95vw] flex-col gap-0 p-0 sm:max-w-md">
+      <SheetContent
+        side="right"
+        className="flex w-[95vw] flex-col gap-0 p-0 sm:max-w-md [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-white/15 [&>button]:p-1.5 [&>button]:text-white [&>button]:opacity-100 [&>button:hover]:bg-white/25 [&>button:hover]:text-white"
+      >
         {/* Chat header */}
         <div className="shrink-0 border-b border-border bg-gradient-to-r from-primary-600 to-primary-700 px-5 py-4 dark:from-primary-800 dark:to-primary-900">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-white">Assistente Vision7</h2>
-                <p className="text-[11px] text-white/60">Curadoria, navegação e insights dentro do escopo do portal</p>
-              </div>
-            </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-              <Badge variant="secondary" className="border-white/15 bg-white/10 text-[10px] uppercase tracking-wide text-white">
-                {providerLabel}
-              </Badge>
-            </div>
+          <div className="flex items-center min-h-[36px] pr-12">
+            <BrandLogo compact showTagline={false} className="[&_img]:h-8 [&_img]:max-w-[130px] sm:[&_img]:h-9 sm:[&_img]:max-w-[145px]" />
           </div>
         </div>
 
@@ -555,7 +544,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                     <Bot className="h-4 w-4 text-primary-600 dark:text-primary-400" />
                   </div>
                 )}
-                <div className={`max-w-[85%] space-y-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                <div className={`max-w-[92%] space-y-2 sm:max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'rounded-br-md bg-primary-600 text-white'
@@ -582,7 +571,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                   )}
 
                   {msg.cards && msg.cards.length > 0 ? (
-                    <div className="grid gap-2.5 pl-1 sm:grid-cols-2">
+                    <div className={`grid gap-2.5 ${msg.cards.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
                       {msg.cards.map((card) => renderMessageCard(card))}
                     </div>
                   ) : null}
