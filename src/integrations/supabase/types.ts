@@ -709,34 +709,40 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          default_post_tags: string[]
           id: string
           is_active: boolean
           label: string
           language: string | null
           region: string | null
           tags: string[]
+          theme_rules: Json
           updated_at: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          default_post_tags?: string[]
           id?: string
           is_active?: boolean
           label: string
           language?: string | null
           region?: string | null
           tags?: string[]
+          theme_rules?: Json
           updated_at?: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          default_post_tags?: string[]
           id?: string
           is_active?: boolean
           label?: string
           language?: string | null
           region?: string | null
           tags?: string[]
+          theme_rules?: Json
           updated_at?: string
         }
         Relationships: []
@@ -934,6 +940,158 @@ export type Database = {
           details?: Json
           ip_address?: string | null
           created_at?: string
+        }
+        Relationships: []
+      }
+      news_staging: {
+        Row: {
+          id: string
+          source_name: string
+          source_url: string
+          canonical_url: string | null
+          title: string
+          summary: string | null
+          content: string | null
+          language: string | null
+          topic: string | null
+          published_at: string | null
+          collected_at: string
+          trust_score: number | null
+          duplicate_fingerprint: string | null
+          processed: boolean
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          source_name: string
+          source_url: string
+          canonical_url?: string | null
+          title: string
+          summary?: string | null
+          content?: string | null
+          language?: string | null
+          topic?: string | null
+          published_at?: string | null
+          collected_at?: string
+          trust_score?: number | null
+          duplicate_fingerprint?: string | null
+          processed?: boolean
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          source_name?: string
+          source_url?: string
+          canonical_url?: string | null
+          title?: string
+          summary?: string | null
+          content?: string | null
+          language?: string | null
+          topic?: string | null
+          published_at?: string | null
+          collected_at?: string
+          trust_score?: number | null
+          duplicate_fingerprint?: string | null
+          processed?: boolean
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      news_clusters: {
+        Row: {
+          id: string
+          topic: string | null
+          primary_staging_id: string | null
+          fingerprint: string
+          source_count: number
+          confidence_score: number
+          entities: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          topic?: string | null
+          primary_staging_id?: string | null
+          fingerprint: string
+          source_count?: number
+          confidence_score?: number
+          entities?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          topic?: string | null
+          primary_staging_id?: string | null
+          fingerprint?: string
+          source_count?: number
+          confidence_score?: number
+          entities?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_clusters_primary_staging_id_fkey"
+            columns: ["primary_staging_id"]
+            isOneToOne: false
+            referencedRelation: "news_staging"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      n8n_credentials: {
+        Row: {
+          id: string
+          key_name: string
+          encrypted_value: string
+          expires_at: string
+          status: string
+          notes: string | null
+          reminder_email: string | null
+          remind_days_before: number
+          last_reminder_sent_at: string | null
+          activated_at: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          key_name: string
+          encrypted_value: string
+          expires_at: string
+          status?: string
+          notes?: string | null
+          reminder_email?: string | null
+          remind_days_before?: number
+          last_reminder_sent_at?: string | null
+          activated_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          key_name?: string
+          encrypted_value?: string
+          expires_at?: string
+          status?: string
+          notes?: string | null
+          reminder_email?: string | null
+          remind_days_before?: number
+          last_reminder_sent_at?: string | null
+          activated_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
