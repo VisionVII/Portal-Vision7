@@ -107,11 +107,11 @@ function parseListInput(value: string): string[] {
 }
 
 const LOG_TYPE_STYLES: Record<string, string> = {
-  info: 'text-gray-400',
-  success: 'text-emerald-400',
+  info: 'text-muted-foreground',
+  success: 'text-primary',
   error: 'text-red-400',
   warn: 'text-amber-400',
-  running: 'text-cyan-400',
+  running: 'text-blue-500',
 };
 
 export function NewsPipelineCard() {
@@ -497,46 +497,46 @@ export function NewsPipelineCard() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-sm">
+    <div className="relative overflow-hidden rounded-2xl bg-card backdrop-blur-sm">
       {/* Decorative gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-violet-500/5 pointer-events-none" />
-      <div className="absolute -top-24 -right-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5 pointer-events-none" />
+      <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header Section */}
-      <div className="relative border-b border-white/5 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl">
+      <div className="relative border-b border-border/30 bg-muted/30 backdrop-blur-xl">
         <div className="px-5 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             {/* Title & Status */}
             <div className="flex items-start gap-4 min-w-0">
               <div className={`p-3.5 rounded-2xl shrink-0 bg-gradient-to-br transition-all duration-300 ${
                 pipelineRunning || hasRunningExecution 
-                  ? 'from-cyan-500/30 via-cyan-400/20 to-cyan-500/30 shadow-lg shadow-cyan-500/30 animate-pulse' 
-                  : 'from-cyan-500/20 via-cyan-400/10 to-violet-500/20 shadow-xl shadow-cyan-500/10'
+                  ? 'from-blue-500/20 via-blue-400/10 to-blue-500/20  animate-pulse' 
+                  : 'from-blue-500/15 via-blue-400/10 to-violet-500/15 '
               }`}>
-                <Zap className={`w-6 h-6 ${pipelineRunning || hasRunningExecution ? 'text-cyan-300' : 'text-cyan-400'}`} />
+                <Zap className={`w-6 h-6 ${pipelineRunning || hasRunningExecution ? 'text-blue-400' : 'text-blue-500'}`} />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-3 flex-wrap mb-1.5">
-                  <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-white via-cyan-50 to-violet-200 bg-clip-text text-transparent">
+                  <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-white via-foreground to-foreground/80 bg-clip-text text-transparent">
                     {activeConfig?.label ? `${activeConfig.label} — Pipeline IA` : 'Pipeline de Notícias IA'}
                   </h2>
                   {(pipelineRunning || hasRunningExecution) && (
-                    <Badge className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-400/40 text-xs px-2.5 py-0.5 animate-pulse shadow-lg shadow-cyan-500/30">
+                    <Badge className="bg-gradient-to-r from-blue-500/15 to-violet-500/15 text-blue-500 border-blue-500/30 text-xs px-2.5 py-0.5 animate-pulse ">
                       <Radio className="w-3 h-3 mr-1.5" />
                       AO VIVO
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs sm:text-sm text-gray-400 flex items-center gap-2 flex-wrap">
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                   <span className="flex items-center gap-1.5">
                     <Workflow className="w-3.5 h-3.5" />
                     {pipelineWorkflows.length} workflow{pipelineWorkflows.length !== 1 ? 's' : ''}
                   </span>
-                  <span className="text-gray-600">•</span>
+                  <span className="text-muted-foreground/60">•</span>
                   <span>Coleta → Cluster → Reescrita</span>
                   {someActive && !allActive && <Badge variant="outline" className="border-amber-500/40 text-amber-400 text-[10px] px-1.5 py-0">Parcial</Badge>}
-                  {allActive && <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px] px-1.5 py-0">Todos ativos</Badge>}
+                  {allActive && <Badge variant="outline" className="border-primary/30 text-primary text-[10px] px-1.5 py-0">Todos ativos</Badge>}
                 </p>
               </div>
             </div>
@@ -545,7 +545,7 @@ export function NewsPipelineCard() {
             <div className="flex items-center gap-2 self-end sm:self-auto">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/5" onClick={openConfig}>
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30" onClick={openConfig}>
                     <Settings2 className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
@@ -553,7 +553,7 @@ export function NewsPipelineCard() {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/5" onClick={() => { void fetchWorkflows(); void fetchRecentExecutions(); }}>
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30" onClick={() => { void fetchWorkflows(); void fetchRecentExecutions(); }}>
                     <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                   </Button>
                 </TooltipTrigger>
@@ -564,7 +564,7 @@ export function NewsPipelineCard() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className={`h-8 w-8 p-0 ${showSettings ? 'text-amber-400' : 'text-gray-400'} hover:text-white hover:bg-white/5`}
+                    className={`h-8 w-8 p-0 ${showSettings ? 'text-amber-400' : 'text-muted-foreground'} hover:text-foreground hover:bg-muted/30`}
                     onClick={() => setShowSettings(!showSettings)}
                   >
                     <Shield className="w-4 h-4" />
@@ -577,7 +577,7 @@ export function NewsPipelineCard() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className={`h-8 w-8 p-0 ${showLog ? 'text-cyan-400' : 'text-gray-400'} hover:text-white hover:bg-white/5`}
+                    className={`h-8 w-8 p-0 ${showLog ? 'text-blue-500' : 'text-muted-foreground'} hover:text-foreground hover:bg-muted/30`}
                     onClick={() => setShowLog(!showLog)}
                   >
                     <Activity className="w-4 h-4" />
@@ -585,8 +585,8 @@ export function NewsPipelineCard() {
                 </TooltipTrigger>
                 <TooltipContent>Log da sessão</TooltipContent>
               </Tooltip>
-              <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/10">
-                <span className="text-xs text-gray-400 hidden sm:inline">Auto</span>
+              <div className="flex items-center gap-2 ml-2 pl-3 border-l border-border/40">
+                <span className="text-xs text-muted-foreground hidden sm:inline">Auto</span>
                 <Switch
                   checked={allActive}
                   disabled={!pipelineFound}
@@ -616,32 +616,32 @@ export function NewsPipelineCard() {
 
         {/* ── Editorial Theme Summary ── */}
         {activeConfig && !showConfig && (
-          <div className="rounded-xl bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/5 p-4 space-y-3">
+          <div className="rounded-xl bg-muted/20 border border-border/30 p-4 space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="p-1.5 rounded-lg bg-cyan-500/10">
-                <Tag className="w-3.5 h-3.5 text-cyan-400" />
+              <div className="p-1.5 rounded-lg bg-blue-500/5">
+                <Tag className="w-3.5 h-3.5 text-blue-500" />
               </div>
-              <span className="text-xs font-medium text-gray-300">Temas editoriais configurados</span>
+              <span className="text-xs font-medium text-foreground/80">Temas editoriais configurados</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {activeConfig.themeRules.map((theme) => (
-                <Badge key={theme.id} variant="outline" className="text-sm px-3 py-1 border-cyan-500/40 text-cyan-300 bg-cyan-500/5">
+                <Badge key={theme.id} variant="outline" className="text-sm px-3 py-1 border-blue-500/30 text-blue-400 bg-blue-500/5">
                   {theme.label}
                 </Badge>
               ))}
-              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10" onClick={openConfig}>
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-blue-500 hover:text-blue-400 hover:bg-blue-500/5" onClick={openConfig}>
                 Editar temas
               </Button>
             </div>
-            <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-white/5">
-              <Badge variant="outline" className="text-xs px-2.5 py-1 border-slate-600 text-slate-300 bg-slate-800/50">
-                <span className="text-gray-400 mr-1.5">Idioma:</span>{activeConfig.language}
+            <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/30">
+              <Badge variant="outline" className="text-xs px-2.5 py-1 border-border text-foreground/80 bg-muted/30">
+                <span className="text-muted-foreground mr-1.5">Idioma:</span>{activeConfig.language}
               </Badge>
-              <Badge variant="outline" className="text-xs px-2.5 py-1 border-slate-600 text-slate-300 bg-slate-800/50">
-                <span className="text-gray-400 mr-1.5">Região:</span>{activeConfig.region}
+              <Badge variant="outline" className="text-xs px-2.5 py-1 border-border text-foreground/80 bg-muted/30">
+                <span className="text-muted-foreground mr-1.5">Região:</span>{activeConfig.region}
               </Badge>
               {activeConfig.defaultPostTags.map((tag) => (
-                <Badge key={`post-${tag}`} variant="outline" className="text-xs px-2.5 py-1 border-emerald-500/40 text-emerald-300 bg-emerald-500/5">
+                <Badge key={`post-${tag}`} variant="outline" className="text-xs px-2.5 py-1 border-primary/30 text-primary/80 bg-primary/5">
                   #{tag}
                 </Badge>
               ))}
@@ -651,44 +651,44 @@ export function NewsPipelineCard() {
 
         {/* ── Editorial Config Panel ── */}
         {showConfig && (
-          <div className="rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-800/60 to-slate-900/60 backdrop-blur-xl p-5 space-y-4 shadow-xl">
+          <div className="rounded-xl border border-border/40 bg-muted/30 backdrop-blur-xl p-5 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-cyan-500/10">
-                  <Settings2 className="w-4 h-4 text-cyan-400" />
+                <div className="p-2 rounded-lg bg-blue-500/5">
+                  <Settings2 className="w-4 h-4 text-blue-500" />
                 </div>
-                <span className="text-sm font-semibold text-white">Configuração Editorial</span>
+                <span className="text-sm font-semibold text-foreground">Configuração Editorial</span>
               </div>
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-white/5" onClick={() => setShowConfig(false)}>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30" onClick={() => setShowConfig(false)}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div>
-                <span className="text-xs font-medium text-gray-300 block mb-1.5">Nome editorial</span>
+                <span className="text-xs font-medium text-foreground/80 block mb-1.5">Nome editorial</span>
                 <Input
                   value={editConfigLabel}
                   onChange={(e) => setEditConfigLabel(e.target.value)}
-                  className="h-9 text-sm bg-slate-900/80 border-slate-700/50 focus:border-cyan-500/50"
+                  className="h-9 text-sm bg-muted/40 border-border/40 focus:border-primary/50"
                   placeholder="Ex: Tecnologia Portugal"
                 />
               </div>
               <div>
-                <span className="text-xs font-medium text-gray-300 block mb-1.5">Idioma</span>
+                <span className="text-xs font-medium text-foreground/80 block mb-1.5">Idioma</span>
                 <Input
                   value={editLanguage}
                   onChange={(e) => setEditLanguage(e.target.value)}
-                  className="h-9 text-sm bg-slate-900/80 border-slate-700/50 focus:border-cyan-500/50"
+                  className="h-9 text-sm bg-muted/40 border-border/40 focus:border-primary/50"
                   placeholder="pt-PT"
                 />
               </div>
               <div>
-                <span className="text-xs font-medium text-gray-300 block mb-1.5">Região</span>
+                <span className="text-xs font-medium text-foreground/80 block mb-1.5">Região</span>
                 <Input
                   value={editRegion}
                   onChange={(e) => setEditRegion(e.target.value)}
-                  className="mt-1 h-8 text-xs bg-slate-900 border-slate-700"
+                  className="mt-1 h-8 text-xs bg-muted border-border"
                   placeholder="PT"
                 />
               </div>
@@ -696,14 +696,14 @@ export function NewsPipelineCard() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400">Tags finais dos posts</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Tags finais dos posts</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {editDefaultPostTags.map((tag) => (
                   <Badge
                     key={`default-${tag}`}
                     variant="outline"
-                    className="text-xs px-2 py-0.5 border-emerald-500/30 text-emerald-400 gap-1 cursor-pointer hover:border-red-500/30 hover:text-red-400"
+                    className="text-xs px-2 py-0.5 border-primary/25 text-primary gap-1 cursor-pointer hover:border-red-500/30 hover:text-red-400"
                     onClick={() => removeDefaultPostTag(tag)}
                   >
                     {tag} <X className="w-2.5 h-2.5" />
@@ -713,7 +713,7 @@ export function NewsPipelineCard() {
               <div className="flex gap-1.5">
                 <Input
                   placeholder="Ex: portal, tecnologia, portugal"
-                  className="h-7 text-xs bg-slate-900 border-slate-700"
+                  className="h-7 text-xs bg-muted border-border"
                   value={newDefaultPostTag}
                   onChange={(e) => setNewDefaultPostTag(e.target.value)}
                   onKeyDown={(e) => {
@@ -728,55 +728,55 @@ export function NewsPipelineCard() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400">Temas editoriais</span>
-                <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-cyan-400 hover:text-cyan-300" onClick={addThemeRule}>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Temas editoriais</span>
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-blue-500 hover:text-blue-400" onClick={addThemeRule}>
                   Novo tema
                 </Button>
               </div>
               <div className="space-y-2">
                 {editThemeRules.map((theme, index) => (
-                  <div key={theme.id} className="rounded-lg border border-slate-700/70 bg-slate-900/40 p-2.5 space-y-2">
+                  <div key={theme.id} className="rounded-lg border border-border/50 bg-muted/20 p-2.5 space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-gray-400">Tema {index + 1}</span>
+                      <span className="text-[10px] text-muted-foreground">Tema {index + 1}</span>
                       <Button size="sm" variant="ghost" className="h-5 px-1 text-[10px] text-red-400 hover:text-red-300" onClick={() => removeThemeRule(theme.id)}>
                         Remover
                       </Button>
                     </div>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       <div>
-                        <span className="text-[10px] text-gray-500">Nome visível</span>
+                        <span className="text-[10px] text-muted-foreground">Nome visível</span>
                         <Input
                           value={theme.label}
                           onChange={(e) => updateThemeRule(theme.id, { label: e.target.value })}
-                          className="mt-1 h-7 text-xs bg-slate-950 border-slate-700"
+                          className="mt-1 h-7 text-xs bg-muted border-border"
                           placeholder="Ex: Inteligência Artificial"
                         />
                       </div>
                       <div>
-                        <span className="text-[10px] text-gray-500">Slug do tema</span>
+                        <span className="text-[10px] text-muted-foreground">Slug do tema</span>
                         <Input
                           value={theme.slug}
                           onChange={(e) => updateThemeRule(theme.id, { slug: e.target.value })}
-                          className="mt-1 h-7 text-xs bg-slate-950 border-slate-700"
+                          className="mt-1 h-7 text-xs bg-muted border-border"
                           placeholder="Ex: ia"
                         />
                       </div>
                     </div>
                     <div>
-                      <span className="text-[10px] text-gray-500">Termos de pesquisa</span>
+                      <span className="text-[10px] text-muted-foreground">Termos de pesquisa</span>
                       <Input
                         value={theme.searchTerms.join(', ')}
                         onChange={(e) => updateThemeRule(theme.id, { searchTerms: parseListInput(e.target.value) })}
-                        className="mt-1 h-7 text-xs bg-slate-950 border-slate-700"
+                        className="mt-1 h-7 text-xs bg-muted border-border"
                         placeholder="Ex: inteligência artificial, openai, agentes IA"
                       />
                     </div>
                     <div>
-                      <span className="text-[10px] text-gray-500">Tags finais desse tema</span>
+                      <span className="text-[10px] text-muted-foreground">Tags finais desse tema</span>
                       <Input
                         value={theme.postTags.join(', ')}
                         onChange={(e) => updateThemeRule(theme.id, { postTags: parseListInput(e.target.value) })}
-                        className="mt-1 h-7 text-xs bg-slate-950 border-slate-700"
+                        className="mt-1 h-7 text-xs bg-muted border-border"
                         placeholder="Ex: ia, inteligência artificial, agentes"
                       />
                     </div>
@@ -785,7 +785,7 @@ export function NewsPipelineCard() {
               </div>
             </div>
 
-            <p className="text-[10px] text-gray-500">
+            <p className="text-[10px] text-muted-foreground">
               Cada tema controla os termos usados na coleta e as tags finais aplicadas aos posts promovidos para o portal.
             </p>
 
@@ -814,51 +814,51 @@ export function NewsPipelineCard() {
         )}
 
         {diagnostics && (
-          <div className="rounded-lg border border-slate-700/50 bg-slate-800/40 p-2.5 space-y-1.5">
+          <div className="rounded-lg border border-border/40 bg-muted/20 p-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <Database className="w-3 h-3 text-cyan-400" />
-                <span className="text-[10px] font-medium text-gray-300">Estado do Pipeline (DB)</span>
+                <Database className="w-3 h-3 text-blue-500" />
+                <span className="text-[10px] font-medium text-foreground/80">Estado do Pipeline (DB)</span>
               </div>
-              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-gray-500 hover:text-white" onClick={() => void refetchDiagnostics()}>
+              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground" onClick={() => void refetchDiagnostics()}>
                 <RefreshCw className="w-2.5 h-2.5" />
               </Button>
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px]">
-              <span className="text-gray-400">
-                Staging: <span className={diagnostics.staging.total > 0 ? 'text-cyan-400 font-medium' : 'text-gray-500'}>{diagnostics.staging.total}</span>
+              <span className="text-muted-foreground">
+                Staging: <span className={diagnostics.staging.total > 0 ? 'text-blue-500 font-medium' : 'text-muted-foreground'}>{diagnostics.staging.total}</span>
                 {diagnostics.staging.unprocessed > 0 && (
                   <span className="text-amber-400 ml-1">({diagnostics.staging.unprocessed} não processados)</span>
                 )}
               </span>
-              <span className="text-gray-400">
-                Clusters: <span className={diagnostics.clusters.total > 0 ? 'text-cyan-400 font-medium' : 'text-gray-500'}>{diagnostics.clusters.total}</span>
+              <span className="text-muted-foreground">
+                Clusters: <span className={diagnostics.clusters.total > 0 ? 'text-blue-500 font-medium' : 'text-muted-foreground'}>{diagnostics.clusters.total}</span>
                 {diagnostics.clusters.highConfidence > 0 && (
-                  <span className="text-emerald-400 ml-1">({diagnostics.clusters.highConfidence} ≥60%)</span>
+                  <span className="text-primary ml-1">({diagnostics.clusters.highConfidence} ≥60%)</span>
                 )}
               </span>
-              <span className="text-gray-400">
-                Curados: <span className={diagnostics.curated.total > 0 ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>{diagnostics.curated.total}</span>
-                {diagnostics.curated.ready > 0 && <span className="text-emerald-400 ml-1">({diagnostics.curated.ready} prontos)</span>}
+              <span className="text-muted-foreground">
+                Curados: <span className={diagnostics.curated.total > 0 ? 'text-primary font-medium' : 'text-red-400 font-medium'}>{diagnostics.curated.total}</span>
+                {diagnostics.curated.ready > 0 && <span className="text-primary ml-1">({diagnostics.curated.ready} prontos)</span>}
                 {diagnostics.curated.draft > 0 && <span className="text-amber-400 ml-1">({diagnostics.curated.draft} rascunho)</span>}
               </span>
               {diagnostics.configLabel && (
-                <span className="text-gray-400">
-                  Editorial: <span className="text-slate-200">{diagnostics.configLabel}</span>
-                  {diagnostics.themeRuleCount > 0 && <span className="text-cyan-400 ml-1">({diagnostics.themeRuleCount} tema(s))</span>}
+                <span className="text-muted-foreground">
+                  Editorial: <span className="text-foreground/80">{diagnostics.configLabel}</span>
+                  {diagnostics.themeRuleCount > 0 && <span className="text-blue-500 ml-1">({diagnostics.themeRuleCount} tema(s))</span>}
                 </span>
               )}
               {diagnostics.configLanguage && diagnostics.configRegion && (
-                <span className="text-gray-400">
-                  Locale: <span className="text-slate-200">{diagnostics.configLanguage} / {diagnostics.configRegion}</span>
+                <span className="text-muted-foreground">
+                  Locale: <span className="text-foreground/80">{diagnostics.configLanguage} / {diagnostics.configRegion}</span>
                 </span>
               )}
             </div>
             {diagnostics.defaultPostTags.length > 0 && (
-              <div className="flex flex-wrap gap-1 text-[10px] text-gray-400">
+              <div className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
                 <span>Tags finais:</span>
                 {diagnostics.defaultPostTags.map((tag) => (
-                  <Badge key={`diag-${tag}`} variant="outline" className="px-1 py-0 text-[9px] border-emerald-500/30 text-emerald-400">
+                  <Badge key={`diag-${tag}`} variant="outline" className="px-1 py-0 text-[9px] border-primary/25 text-primary">
                     #{tag}
                   </Badge>
                 ))}
@@ -871,7 +871,7 @@ export function NewsPipelineCard() {
                 const dashTags = [...activeConfig.tags].sort().join(',');
                 const synced = dbTags === dashTags;
                 return synced ? (
-                  <div className="flex items-center gap-1 text-[10px] text-emerald-500">
+                  <div className="flex items-center gap-1 text-[10px] text-primary">
                     <CheckCircle2 className="w-2.5 h-2.5" />
                     Tags sincronizadas: {diagnostics.configTags.join(', ')}
                   </div>
@@ -901,7 +901,7 @@ export function NewsPipelineCard() {
               </div>
             )}
             {diagnostics.staging.total === 0 && diagnostics.clusters.total === 0 && diagnostics.curated.total === 0 && (
-              <div className="text-[10px] text-gray-500">
+              <div className="text-[10px] text-muted-foreground">
                 Pipeline vazio — execute os workflows ou aguarde os crons automáticos
               </div>
             )}
@@ -912,7 +912,7 @@ export function NewsPipelineCard() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Fluxo de Execução</span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fluxo de Execução</span>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
           </div>
 
@@ -933,7 +933,7 @@ export function NewsPipelineCard() {
                   {/* Connecting arrow for lg+ screens */}
                   {idx < PIPELINE_STEPS.length - 1 && (
                     <div className="hidden lg:block absolute top-1/2 -right-[18px] -translate-y-1/2 z-10">
-                      <ChevronRight className="w-5 h-5 text-cyan-400/50" />
+                      <ChevronRight className="w-5 h-5 text-blue-500/50" />
                     </div>
                   )}
 
@@ -944,10 +944,10 @@ export function NewsPipelineCard() {
                       : isFailed
                       ? 'bg-gradient-to-br from-red-500/10 via-red-400/5 to-red-500/10 ring-1 ring-red-500/30'
                       : isCompleted
-                      ? 'bg-gradient-to-br from-emerald-500/10 via-emerald-400/5 to-emerald-500/10 ring-1 ring-emerald-500/30'
+                      ? 'bg-primary/10 ring-1 ring-primary/30'
                       : isActive
-                      ? 'bg-gradient-to-br from-slate-800/80 to-slate-900/80 ring-1 ring-white/10 hover:ring-cyan-400/30'
-                      : 'bg-gradient-to-br from-slate-900/50 to-slate-950/50 ring-1 ring-white/5 opacity-60'
+                      ? 'bg-muted/40 ring-1 ring-border/40 hover:ring-primary/30'
+                      : 'bg-muted/20 ring-1 ring-border/20 opacity-60'
                   }`}>
                     {/* Decorative gradient */}
                     {isRunning && (
@@ -964,28 +964,28 @@ export function NewsPipelineCard() {
                               : isFailed
                               ? 'bg-red-500/20 ring-1 ring-red-500/30'
                               : isCompleted
-                              ? 'bg-emerald-500/20 ring-1 ring-emerald-500/30'
+                              ? 'bg-primary/15 ring-1 ring-primary/30'
                               : isActive
                               ? 'bg-gradient-to-br from-cyan-500/10 to-violet-500/10'
-                              : 'bg-slate-800/50'
+                              : 'bg-muted/30'
                           }`}>
                             {isRunning ? (
-                              <Loader2 className="w-5 h-5 text-cyan-300 animate-spin" />
+                              <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
                             ) : isFailed ? (
                               <AlertTriangle className="w-5 h-5 text-red-400" />
                             ) : isCompleted ? (
-                              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                              <CheckCircle2 className="w-5 h-5 text-primary" />
                             ) : (
-                              <StepIcon className={`w-5 h-5 ${isActive ? 'text-cyan-400' : 'text-gray-600'}`} />
+                              <StepIcon className={`w-5 h-5 ${isActive ? 'text-blue-500' : 'text-muted-foreground/60'}`} />
                             )}
                           </div>
                           <div>
-                            <h3 className="text-sm font-semibold text-white">{step.label}</h3>
-                            <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+                            <h3 className="text-sm font-semibold text-foreground">{step.label}</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
                           </div>
                         </div>
                         {isActive && (
-                          <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/50 animate-pulse" title="Workflow ativo" />
+                          <div className="w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/30 animate-pulse" title="Workflow ativo" />
                         )}
                       </div>
 
@@ -993,14 +993,14 @@ export function NewsPipelineCard() {
                       <div className="flex items-center gap-2">
                         <Badge className={`text-xs px-2.5 py-0.5 ${
                           isRunning
-                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40'
+                            ? 'bg-cyan-500/20 text-blue-400 border-blue-500/30'
                             : isFailed
                             ? 'bg-red-500/20 text-red-300 border-red-400/40'
                             : isCompleted
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                            ? 'bg-primary/15 text-primary/80 border-primary/30'
                             : isActive
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                            : 'bg-slate-800 text-slate-500 border-slate-700'
+                            ? 'bg-primary/10 text-primary border-primary/25'
+                            : 'bg-muted text-muted-foreground border-border'
                         }`}>
                           {isRunning ? (
                             <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Executando...</>
@@ -1016,9 +1016,9 @@ export function NewsPipelineCard() {
                         </Badge>
                         {wfExec && (
                           <Badge variant="outline" className={`text-xs px-2 py-0.5 ${
-                            wfExec.status === 'success' ? 'border-emerald-500/30 text-emerald-400' :
+                            wfExec.status === 'success' ? 'border-primary/25 text-primary' :
                             wfExec.status === 'error' ? 'border-red-500/30 text-red-400' :
-                            wfExec.status === 'running' ? 'border-cyan-500/30 text-cyan-400' : 'border-slate-600 text-slate-400'
+                            wfExec.status === 'running' ? 'border-blue-500/30 text-blue-500' : 'border-border text-muted-foreground'
                           }`}>
                             {formatRelativeTime(wfExec.startedAt)}
                           </Badge>
@@ -1026,18 +1026,18 @@ export function NewsPipelineCard() {
                       </div>
 
                       {/* Workflow Meta */}
-                      <div className="pt-3 border-t border-white/5 space-y-1">
+                      <div className="pt-3 border-t border-border/30 space-y-1">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500">Workflow ID</span>
-                          <span className="font-mono text-gray-400">{wf.id}</span>
+                          <span className="text-muted-foreground">Workflow ID</span>
+                          <span className="font-mono text-muted-foreground">{wf.id}</span>
                         </div>
                         {wfExec && (
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-500">Última exec.</span>
+                            <span className="text-muted-foreground">Última exec.</span>
                             <span className={`font-medium ${
-                              wfExec.status === 'success' ? 'text-emerald-400' :
+                              wfExec.status === 'success' ? 'text-primary' :
                               wfExec.status === 'error' ? 'text-red-400' :
-                              wfExec.status === 'running' ? 'text-cyan-400' : 'text-gray-400'
+                              wfExec.status === 'running' ? 'text-blue-500' : 'text-muted-foreground'
                             }`}>
                               {wfExec.status === 'running' ? 'A correr' : wfExec.status}
                             </span>
@@ -1054,15 +1054,15 @@ export function NewsPipelineCard() {
 
         {/* ── Activity Log ── */}
         {showLog && (
-          <div className="rounded-lg border border-slate-700/50 bg-slate-900/60">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/30">
+          <div className="rounded-lg border border-border/40 bg-muted/60">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border/30">
               <div className="flex items-center gap-2">
-                <Activity className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="text-xs font-medium text-white">Log da Sessão</span>
-                <Badge variant="outline" className="text-[9px] px-1 py-0 border-cyan-500/30 text-cyan-300">
+                <Activity className="w-3.5 h-3.5 text-blue-500" />
+                <span className="text-xs font-medium text-foreground">Log da Sessão</span>
+                <Badge variant="outline" className="text-[9px] px-1 py-0 border-blue-500/30 text-blue-400">
                   Sessão
                 </Badge>
-                <Badge variant="outline" className="text-[9px] px-1 py-0 border-slate-600 text-slate-400">
+                <Badge variant="outline" className="text-[9px] px-1 py-0 border-border text-muted-foreground">
                   {activityLog.length}
                 </Badge>
               </div>
@@ -1071,7 +1071,7 @@ export function NewsPipelineCard() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-5 px-1.5 text-[10px] text-gray-500 hover:text-white"
+                    className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-foreground"
                     onClick={() => setActivityLog([])}
                   >
                     Limpar
@@ -1080,7 +1080,7 @@ export function NewsPipelineCard() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-5 w-5 p-0 text-gray-500 hover:text-white"
+                  className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
                   onClick={() => setShowLog(false)}
                 >
                   <X className="w-3 h-3" />
@@ -1090,26 +1090,26 @@ export function NewsPipelineCard() {
             <ScrollArea className="h-[180px]">
               <div className="p-2 space-y-0.5">
                 {activityLog.length === 0 ? (
-                  <p className="text-xs text-gray-600 text-center py-4">Nenhuma atividade nesta sessão. O estado real continua disponível via n8n e banco.</p>
+                  <p className="text-xs text-muted-foreground/60 text-center py-4">Nenhuma atividade nesta sessão. O estado real continua disponível via n8n e banco.</p>
                 ) : (
                   activityLog.map((entry) => (
-                    <div key={entry.id} className="flex items-start gap-2 py-0.5 hover:bg-slate-800/30 px-1 rounded">
-                      <span className="text-[9px] text-gray-600 font-mono shrink-0 mt-0.5 tabular-nums">
+                    <div key={entry.id} className="flex items-start gap-2 py-0.5 hover:bg-muted/20 px-1 rounded">
+                      <span className="text-[9px] text-muted-foreground/60 font-mono shrink-0 mt-0.5 tabular-nums">
                         {formatTime(entry.timestamp)}
                       </span>
                       <Badge
                         variant="outline"
                         className={`text-[8px] px-1 py-0 shrink-0 mt-0.5 ${
-                          entry.type === 'running' ? 'border-cyan-500/30 text-cyan-400' :
-                          entry.type === 'success' ? 'border-emerald-500/30 text-emerald-400' :
+                          entry.type === 'running' ? 'border-blue-500/30 text-blue-500' :
+                          entry.type === 'success' ? 'border-primary/25 text-primary' :
                           entry.type === 'error' ? 'border-red-500/30 text-red-400' :
                           entry.type === 'warn' ? 'border-amber-500/30 text-amber-400' :
-                          'border-slate-600 text-slate-400'
+                          'border-border text-muted-foreground'
                         }`}
                       >
                         {entry.step}
                       </Badge>
-                      <span className={`text-[10px] ${LOG_TYPE_STYLES[entry.type] ?? 'text-gray-400'}`}>
+                      <span className={`text-[10px] ${LOG_TYPE_STYLES[entry.type] ?? 'text-muted-foreground'}`}>
                         {entry.type === 'running' && <Loader2 className="w-2.5 h-2.5 inline animate-spin mr-1" />}
                         {entry.message}
                       </span>
@@ -1124,8 +1124,8 @@ export function NewsPipelineCard() {
         {/* ── Recent n8n Executions ── */}
         {recentExecutions.length > 0 && !showLog && (
           <div className="flex items-center gap-2 flex-wrap">
-            <Eye className="w-3 h-3 text-gray-500" />
-            <span className="text-[10px] text-gray-500">Recentes:</span>
+            <Eye className="w-3 h-3 text-muted-foreground" />
+            <span className="text-[10px] text-muted-foreground">Recentes:</span>
             {recentExecutions.slice(0, 5).map((exec) => {
               const wfName = workflows.find((w) => String(w.id) === String(exec.workflowId))?.name;
               const statusLabel = exec.status === 'success' ? 'OK' : exec.status === 'error' ? 'Erro' : exec.status === 'running' ? 'A correr' : exec.status;
@@ -1134,10 +1134,10 @@ export function NewsPipelineCard() {
                   key={String(exec.id)}
                   variant="outline"
                   className={`text-[9px] px-1.5 py-0 ${
-                    exec.status === 'success' ? 'border-emerald-500/30 text-emerald-400' :
+                    exec.status === 'success' ? 'border-primary/25 text-primary' :
                     exec.status === 'error' ? 'border-red-500/30 text-red-400' :
-                    exec.status === 'running' ? 'border-cyan-500/30 text-cyan-400 animate-pulse' :
-                    'border-slate-600 text-slate-400'
+                    exec.status === 'running' ? 'border-blue-500/30 text-blue-500 animate-pulse' :
+                    'border-border text-muted-foreground'
                   }`}
                 >
                   {exec.status === 'running' && <Loader2 className="w-2 h-2 animate-spin mr-0.5" />}
@@ -1185,8 +1185,8 @@ export function NewsPipelineCard() {
                   size="lg"
                   className={`h-11 px-6 text-sm font-medium gap-2 shadow-lg transition-all duration-300 ${
                     pipelineFound
-                      ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 text-emerald-300 border-2 border-emerald-500/50 hover:border-emerald-400/60'
-                      : 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-emerald-500/30'
+                      ? 'bg-gradient-to-r from-primary/15 to-primary/10 hover:from-primary/25 hover:to-primary/15 text-primary/80 border-2 border-primary/40 hover:border-primary/50'
+                      : 'bg-gradient-to-r from-primary to-primary/90 hover:bg-primary/80 shadow-primary/20'
                   }`}
                   disabled={promoting}
                   onClick={() => void handlePromoteOnly()}
@@ -1221,12 +1221,12 @@ export function NewsPipelineCard() {
             {/* Stats */}
             {stats && (
               <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/50 border border-white/5">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-300">{stats.total} curados</span>
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/30 border border-border/30">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-foreground/80">{stats.total} curados</span>
                 </div>
                 {stats.ready > 0 && (
-                  <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-emerald-500/40 px-3 py-1.5 text-sm animate-pulse shadow-lg shadow-emerald-500/20">
+                  <Badge className="bg-gradient-to-r from-primary/15 to-primary/10 text-primary/80 border-primary/30 px-3 py-1.5 text-sm animate-pulse shadow-lg shadow-primary/15">
                     {stats.ready} prontos
                   </Badge>
                 )}
@@ -1242,8 +1242,8 @@ export function NewsPipelineCard() {
                 )}
                 {stats.avgScore > 0 && (
                   <div className="flex items-center gap-2 px-3 py-1.5">
-                    <span className="text-xs text-gray-400">Score</span>
-                    <span className="text-sm font-semibold text-cyan-400">{stats.avgScore}</span>
+                    <span className="text-xs text-muted-foreground">Score</span>
+                    <span className="text-sm font-semibold text-blue-500">{stats.avgScore}</span>
                   </div>
                 )}
               </div>
@@ -1253,31 +1253,31 @@ export function NewsPipelineCard() {
 
         {/* ── Cron schedule info + auto-promote toggle ── */}
         {pipelineFound && allActive && (
-          <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-green-500/5 to-emerald-500/10 p-5 space-y-3 shadow-lg shadow-emerald-500/10">
+          <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10 p-5 space-y-3 shadow-lg shadow-primary/10">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/20 shrink-0">
-                <Clock className="w-4 h-4 text-emerald-300" />
+              <div className="p-2 rounded-lg bg-primary/15 shrink-0">
+                <Clock className="w-4 h-4 text-primary/80" />
               </div>
-              <p className="text-sm text-emerald-200">
+              <p className="text-sm text-primary/80">
                 <span className="font-semibold">Pipeline automático ativo</span>
-                <span className="hidden sm:inline text-emerald-300/80"> — o n8n gera curadoria mesmo sem login no portal; a promoção final passa pela Edge Function do portal.</span>
+                <span className="hidden sm:inline text-primary/80/80"> — o n8n gera curadoria mesmo sem login no portal; a promoção final passa pela Edge Function do portal.</span>
               </p>
             </div>
-            <div className="flex items-center justify-between gap-3 pt-2 border-t border-emerald-500/20">
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-primary/20">
               <div className="flex items-center gap-3 min-w-0">
-                <div className={`p-2 rounded-lg shrink-0 ${polling.isActive ? 'bg-emerald-500/20' : 'bg-slate-800/50'}`}>
-                  <Zap className={`w-4 h-4 ${polling.isActive ? 'text-emerald-300' : 'text-gray-500'}`} />
+                <div className={`p-2 rounded-lg shrink-0 ${polling.isActive ? 'bg-primary/15' : 'bg-muted/30'}`}>
+                  <Zap className={`w-4 h-4 ${polling.isActive ? 'text-primary/80' : 'text-muted-foreground'}`} />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm text-white font-medium flex items-center gap-2 flex-wrap">
+                  <div className="text-sm text-foreground font-medium flex items-center gap-2 flex-wrap">
                     Auto-promoção local
                     {polling.isActive && (
-                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/40 text-xs px-2 py-0.5 animate-pulse shadow-lg shadow-emerald-500/20">
+                      <Badge className="bg-primary/15 text-primary/80 border-primary/30 text-xs px-2 py-0.5 animate-pulse shadow-lg shadow-primary/15">
                         ATIVO
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-emerald-200/70 mt-0.5">
+                  <p className="text-xs text-primary/70 mt-0.5">
                     {polling.isActive
                       ? `A cada 2 min nesta sessão · ${polling.totalPromoted} promovido(s)${polling.lastCheck ? ` · ${formatRelativeTime(polling.lastCheck)}` : ''}`
                       : 'Fallback local: curated → rascunhos via backend central; exige dashboard aberta e utilizador autenticado'}
@@ -1287,7 +1287,7 @@ export function NewsPipelineCard() {
               <Switch
                 checked={polling.isActive}
                 onCheckedChange={(checked) => checked ? polling.start() : polling.stop()}
-                className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-green-600 shrink-0"
+                className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-primary data-[state=checked]:to-primary/90 shrink-0"
               />
             </div>
           </div>
