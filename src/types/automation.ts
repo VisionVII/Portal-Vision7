@@ -16,7 +16,7 @@ export const CATEGORY_META: Record<
   { label: string; icon: string; color: string }
 > = {
   content_pipeline: { label: 'Pipeline de Conteúdo', icon: 'Newspaper', color: 'cyan' },
-  email_campaigns: { label: 'Email & Notificações', icon: 'Mail', color: 'violet' },
+  email_campaigns: { label: 'Email & Notificações', icon: 'Mail', color: 'blue' },
   audit_security: { label: 'Auditoria & Segurança', icon: 'Shield', color: 'amber' },
   process_internal: { label: 'Processos Internos', icon: 'Cog', color: 'slate' },
   integrations: { label: 'Integrações Externas', icon: 'Plug', color: 'emerald' },

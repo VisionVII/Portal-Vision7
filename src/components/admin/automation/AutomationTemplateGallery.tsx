@@ -25,7 +25,7 @@ export function AutomationTemplateGallery({
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-4 h-4 text-violet-400" />
+        <Sparkles className="w-4 h-4 text-primary-400" />
         <h4 className="text-sm font-medium text-gray-300">Templates rápidos</h4>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-700">
@@ -43,7 +43,7 @@ export function AutomationTemplateGallery({
                     {meta.label}
                   </Badge>
                   {tpl.isSystem && (
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-violet-500/30 text-violet-400">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary-500/30 text-primary-400">
                       Sistema
                     </Badge>
                   )}

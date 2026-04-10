@@ -499,9 +499,9 @@ export function NewsPipelineCard() {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-card backdrop-blur-sm">
       {/* Decorative gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary-500/5 pointer-events-none" />
       <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header Section */}
       <div className="relative border-b border-border/30 bg-muted/30 backdrop-blur-xl">
@@ -511,8 +511,8 @@ export function NewsPipelineCard() {
             <div className="flex items-start gap-4 min-w-0">
               <div className={`p-3.5 rounded-2xl shrink-0 bg-gradient-to-br transition-all duration-300 ${
                 pipelineRunning || hasRunningExecution 
-                  ? 'from-blue-500/20 via-blue-400/10 to-blue-500/20  animate-pulse' 
-                  : 'from-blue-500/15 via-blue-400/10 to-violet-500/15 '
+                  ? 'from-blue-500/20 via-blue-400/10 to-blue-500/20 animate-pulse' 
+                  : 'from-blue-500/15 via-blue-400/10 to-primary-500/15'
               }`}>
                 <Zap className={`w-6 h-6 ${pipelineRunning || hasRunningExecution ? 'text-blue-400' : 'text-blue-500'}`} />
               </div>
@@ -522,7 +522,7 @@ export function NewsPipelineCard() {
                     {activeConfig?.label ? `${activeConfig.label} — Pipeline IA` : 'Pipeline de Notícias IA'}
                   </h2>
                   {(pipelineRunning || hasRunningExecution) && (
-                    <Badge className="bg-gradient-to-r from-blue-500/15 to-violet-500/15 text-blue-500 border-blue-500/30 text-xs px-2.5 py-0.5 animate-pulse ">
+                    <Badge className="bg-gradient-to-r from-blue-500/15 to-primary-500/15 text-blue-500 border-blue-500/30 text-xs px-2.5 py-0.5 animate-pulse">
                       <Radio className="w-3 h-3 mr-1.5" />
                       AO VIVO
                     </Badge>
@@ -966,7 +966,7 @@ export function NewsPipelineCard() {
                               : isCompleted
                               ? 'bg-primary/15 ring-1 ring-primary/30'
                               : isActive
-                              ? 'bg-gradient-to-br from-cyan-500/10 to-violet-500/10'
+                              ? 'bg-gradient-to-br from-cyan-500/10 to-primary-500/10'
                               : 'bg-muted/30'
                           }`}>
                             {isRunning ? (

@@ -299,7 +299,7 @@ export function AutomationDashboardV2({
             {[
               { label: 'Total Automações', value: counts.all, sub: `${activeAutomations} ativas`, icon: Workflow, accent: 'text-primary bg-primary/10' },
               { label: 'Execuções (24h)', value: totalExecutions, sub: `${successCount} bem-sucedidas`, icon: PlayCircle, accent: 'text-blue-500 bg-blue-500/10' },
-              { label: 'Taxa de Sucesso', value: `${successRate}%`, sub: 'Últimas 100 execuções', icon: TrendingUp, accent: 'text-violet-500 bg-violet-500/10' },
+              { label: 'Taxa de Sucesso', value: `${successRate}%`, sub: 'Últimas 100 execuções', icon: TrendingUp, accent: 'text-primary-500 bg-primary-500/10' },
               { label: 'Workflows n8n', value: workflows.length, sub: `${workflows.filter((w) => w.active).length} ativos`, icon: Zap, accent: 'text-amber-500 bg-amber-500/10' },
             ].map((kpi) => (
               <div key={kpi.label} className="flex items-center justify-between border-b border-border/35 py-2.5">
@@ -330,7 +330,7 @@ export function AutomationDashboardV2({
           <Section
             title="Curadoria de Artigos"
             description="Revisão e aprovação de posts gerados pela IA"
-            icon={<Ic icon={Activity} className="text-violet-500 bg-violet-500/10" />}
+            icon={<Ic icon={Activity} className="text-primary-500 bg-primary-500/10" />}
             collapsible
             defaultExpanded
           >
@@ -387,7 +387,7 @@ export function AutomationDashboardV2({
           <Section
             title="Galeria de Templates"
             description="Templates pré-configurados para criar automações rapidamente"
-            icon={<Ic icon={LayoutGrid} className="text-violet-500 bg-violet-500/10" />}
+            icon={<Ic icon={LayoutGrid} className="text-primary-500 bg-primary-500/10" />}
             collapsible
           >
             <AutomationTemplateGallery
@@ -467,7 +467,7 @@ export function AutomationDashboardV2({
             {[
               { label: 'Automações', value: `${activeAutomations} ativas`, icon: Zap, accent: 'text-primary' },
               { label: 'Pipeline n8n', value: `${workflows.filter((w) => /WF-0[1-3]/i.test(w.name ?? '')).filter((w) => w.active).length}/${workflows.filter((w) => /WF-0[1-3]/i.test(w.name ?? '')).length}`, icon: Workflow, accent: 'text-blue-500' },
-              { label: 'Exec. Hoje', value: String(executions.filter((e) => e.startedAt?.startsWith(new Date().toISOString().slice(0, 10))).length), icon: PlayCircle, accent: 'text-violet-500' },
+              { label: 'Exec. Hoje', value: String(executions.filter((e) => e.startedAt?.startsWith(new Date().toISOString().slice(0, 10))).length), icon: PlayCircle, accent: 'text-primary-500' },
               { label: 'Taxa Sucesso', value: `${successRate}%`, icon: TrendingUp, accent: 'text-amber-500' },
             ].map((kpi) => (
               <div key={kpi.label} className="flex items-center gap-3 rounded-lg border border-border/30 bg-muted/30 p-3">

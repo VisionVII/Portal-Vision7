@@ -9,6 +9,63 @@ import { Calendar, User, ArrowLeft, Share2, Check, Clock, Tag } from 'lucide-rea
 import { Skeleton } from '@/components/ui/skeleton';
 import { sanitizeRichContent } from '@/lib/richContent';
 
+const SITE_URL = 'https://www.vision7.pt';
+const DEFAULT_SEO = {
+  title: 'Vision7 - Portal Tecnologico',
+  description: 'Vision7 reúne notícias, análises e conteúdos premium sobre tecnologia, negócios, cultura, saúde e tendências globais.',
+  image: `${SITE_URL}/vision-logo-premium-default.png`,
+  url: `${SITE_URL}/`,
+};
+
+const upsertMetaTag = (attribute: 'name' | 'property', key: string, content: string) => {
+  let element = document.head.querySelector(`meta[${attribute}="${key}"]`) as HTMLMetaElement | null;
+
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute(attribute, key);
+    document.head.appendChild(element);
+  }
+
+  element.setAttribute('content', content);
+};
+
+const upsertCanonicalLink = (href: string) => {
+  let element = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+
+  if (!element) {
+    element = document.createElement('link');
+    element.setAttribute('rel', 'canonical');
+    document.head.appendChild(element);
+  }
+
+  element.setAttribute('href', href);
+};
+
+const toAbsoluteUrl = (value?: string | null) => {
+  if (!value) return DEFAULT_SEO.image;
+  if (/^https?:\/\//i.test(value)) return value;
+  return new URL(value.startsWith('/') ? value : `/${value}`, DEFAULT_SEO.url).toString();
+};
+
+const resetSeo = () => {
+  document.title = DEFAULT_SEO.title;
+  upsertCanonicalLink(DEFAULT_SEO.url);
+  upsertMetaTag('name', 'description', DEFAULT_SEO.description);
+  upsertMetaTag('property', 'og:title', DEFAULT_SEO.title);
+  upsertMetaTag('property', 'og:description', DEFAULT_SEO.description);
+  upsertMetaTag('property', 'og:type', 'website');
+  upsertMetaTag('property', 'og:url', DEFAULT_SEO.url);
+  upsertMetaTag('property', 'og:image', DEFAULT_SEO.image);
+  upsertMetaTag('property', 'og:image:secure_url', DEFAULT_SEO.image);
+  upsertMetaTag('property', 'og:image:alt', DEFAULT_SEO.title);
+  upsertMetaTag('name', 'twitter:card', 'summary_large_image');
+  upsertMetaTag('name', 'twitter:title', DEFAULT_SEO.title);
+  upsertMetaTag('name', 'twitter:description', DEFAULT_SEO.description);
+  upsertMetaTag('name', 'twitter:url', DEFAULT_SEO.url);
+  upsertMetaTag('name', 'twitter:image', DEFAULT_SEO.image);
+  upsertMetaTag('name', 'twitter:image:alt', DEFAULT_SEO.title);
+};
+
 const Post = () => {
   const { slug } = useParams();
   const { data: post, isLoading } = usePost(slug || '');
@@ -29,6 +86,39 @@ const Post = () => {
   }, [post?.id, trackPostView]);
 
   const sanitizedContent = useMemo(() => sanitizeRichContent(post?.content || ''), [post?.content]);
+
+  useEffect(() => {
+    if (!post) {
+      resetSeo();
+      return;
+    }
+
+    const title = `${post.title} | Vision7`;
+    const description = post.excerpt?.trim() || DEFAULT_SEO.description;
+    const url = `${SITE_URL}/post/${post.slug}`;
+    const image = toAbsoluteUrl(post.banner_url || post.image_url || DEFAULT_SEO.image);
+
+    document.title = title;
+    upsertCanonicalLink(url);
+    upsertMetaTag('name', 'description', description);
+    upsertMetaTag('property', 'og:title', title);
+    upsertMetaTag('property', 'og:description', description);
+    upsertMetaTag('property', 'og:type', 'article');
+    upsertMetaTag('property', 'og:url', url);
+    upsertMetaTag('property', 'og:image', image);
+    upsertMetaTag('property', 'og:image:secure_url', image);
+    upsertMetaTag('property', 'og:image:alt', post.title);
+    upsertMetaTag('name', 'twitter:card', 'summary_large_image');
+    upsertMetaTag('name', 'twitter:title', title);
+    upsertMetaTag('name', 'twitter:description', description);
+    upsertMetaTag('name', 'twitter:url', url);
+    upsertMetaTag('name', 'twitter:image', image);
+    upsertMetaTag('name', 'twitter:image:alt', post.title);
+
+    return () => {
+      resetSeo();
+    };
+  }, [post]);
 
   if (isLoading) {
     return (

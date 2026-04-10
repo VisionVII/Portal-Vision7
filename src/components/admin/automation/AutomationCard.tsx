@@ -144,7 +144,7 @@ export function AutomationCard({
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-violet-500 hover:text-violet-400" onClick={onClone}>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-primary-500 hover:text-primary-400" onClick={onClone}>
               <Copy className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
