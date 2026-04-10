@@ -9,6 +9,40 @@ export interface Category {
   created_at: string;
 }
 
+type SupabaseErrorLike = {
+  message?: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error !== null) {
+    const { message, details, hint, code } = error as SupabaseErrorLike;
+    const composedMessage = [message, details, hint]
+      .filter((value): value is string => Boolean(value && value.trim()))
+      .join(' — ');
+
+    if (composedMessage) {
+      return composedMessage;
+    }
+
+    if (code) {
+      return `Erro Supabase (${code})`;
+    }
+  }
+
+  if (typeof error === 'string' && error.trim()) {
+    return error;
+  }
+
+  return fallback;
+};
+
 export const useCategories = () => {
   return useQuery({
     queryKey: ['categories'],
@@ -18,7 +52,9 @@ export const useCategories = () => {
         .select('id, name, slug, color, created_at')
         .order('name', { ascending: true });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível carregar as categorias.'));
+      }
 
       return (data as Category[]) ?? [];
     },
@@ -39,7 +75,9 @@ export const useCategoryBySlug = (slug: string) => {
         .eq('slug', slug)
         .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível carregar a categoria.'));
+      }
       return data as Category | null;
     },
     enabled: !!slug,
@@ -63,7 +101,9 @@ export const useCreateCategory = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível criar a categoria.'));
+      }
       return result as Category;
     },
     onSuccess: () => {
@@ -82,7 +122,9 @@ export const useDeleteCategory = () => {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível eliminar a categoria.'));
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });

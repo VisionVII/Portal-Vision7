@@ -416,24 +416,24 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   const renderMessageCard = (card: AssistantMessageCard) => {
     if (card.kind === 'weather') {
       return (
-        <div key={card.id} className="overflow-hidden rounded-2xl border border-primary-200/60 bg-gradient-to-br from-primary-50 via-background to-secondary-50 p-4 text-foreground shadow-[0_16px_34px_rgba(14,116,217,0.12)] dark:border-sky-200/20 dark:bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.22),transparent_36%),linear-gradient(135deg,rgba(8,47,73,0.96),rgba(15,23,42,0.96))] dark:text-white dark:shadow-[0_18px_42px_rgba(8,47,73,0.3)]">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-700/80 dark:text-white/60">{card.badge}</p> : null}
-              <h4 className="mt-1 text-base font-semibold text-foreground dark:text-white">{card.title}</h4>
-              <p className="mt-1 text-sm text-muted-foreground dark:text-white/72">{card.description}</p>
+        <div key={card.id} className="min-w-0 overflow-hidden rounded-2xl border border-primary-200/60 bg-gradient-to-br from-primary-50 via-background to-secondary-50 p-4 text-foreground shadow-[0_16px_34px_rgba(14,116,217,0.12)] dark:border-sky-200/20 dark:bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.22),transparent_36%),linear-gradient(135deg,rgba(8,47,73,0.96),rgba(15,23,42,0.96))] dark:text-white dark:shadow-[0_18px_42px_rgba(8,47,73,0.3)]">
+          <div className="flex items-start justify-between gap-3 min-w-0">
+            <div className="min-w-0 flex-1">
+              {card.badge ? <p className="break-words text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-700/80 dark:text-white/60">{card.badge}</p> : null}
+              <h4 className="mt-1 break-words text-base font-semibold text-foreground dark:text-white">{card.title}</h4>
+              <p className="mt-1 break-words text-sm text-muted-foreground dark:text-white/72">{card.description}</p>
             </div>
-            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${skyInfo.temperatureBg}`}>
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${skyInfo.temperatureBg}`}>
               <CloudSun className={`h-5 w-5 ${skyInfo.temperatureColor}`} />
             </div>
           </div>
 
           {card.stats?.length ? (
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
               {card.stats.map((stat) => (
-                <div key={`${card.id}-${stat.label}`} className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5 dark:border-white/10 dark:bg-white/6">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground dark:text-white/52">{stat.label}</p>
-                  <p className="mt-1 text-sm font-semibold text-foreground dark:text-white">{stat.value}</p>
+                <div key={`${card.id}-${stat.label}`} className="min-w-0 rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5 dark:border-white/10 dark:bg-white/6">
+                  <p className="break-words text-[10px] uppercase tracking-[0.18em] text-muted-foreground dark:text-white/52">{stat.label}</p>
+                  <p className="mt-1 break-words text-sm font-semibold text-foreground dark:text-white">{stat.value}</p>
                 </div>
               ))}
             </div>
@@ -444,19 +444,19 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
     if (card.kind === 'consent') {
       return (
-        <div key={card.id} className="rounded-2xl border border-primary-200/70 bg-gradient-to-br from-primary-50 via-background to-secondary-50 p-4 shadow-[0_14px_30px_rgba(14,116,217,0.14)] dark:border-primary-300/25 dark:bg-gradient-to-br dark:from-primary-800/20 dark:to-slate-950 dark:shadow-[0_14px_34px_rgba(2,132,199,0.2)]">
-          <div className="flex items-start gap-3">
+        <div key={card.id} className="min-w-0 rounded-2xl border border-primary-200/70 bg-gradient-to-br from-primary-50 via-background to-secondary-50 p-4 shadow-[0_14px_30px_rgba(14,116,217,0.14)] dark:border-primary-300/25 dark:bg-gradient-to-br dark:from-primary-800/20 dark:to-slate-950 dark:shadow-[0_14px_34px_rgba(2,132,199,0.2)]">
+          <div className="flex items-start gap-3 min-w-0">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300">
               <Lock className="h-5 w-5" />
             </div>
-            <div className="min-w-0">
-              {card.badge ? <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-700/80 dark:text-primary-200/80">{card.badge}</p> : null}
-              <h4 className="mt-1 text-base font-semibold text-foreground dark:text-white">{card.title}</h4>
-              <p className="mt-1 text-sm text-muted-foreground dark:text-slate-200">{card.description}</p>
+            <div className="min-w-0 flex-1">
+              {card.badge ? <p className="break-words text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-700/80 dark:text-primary-200/80">{card.badge}</p> : null}
+              <h4 className="mt-1 break-words text-base font-semibold text-foreground dark:text-white">{card.title}</h4>
+              <p className="mt-1 break-words text-sm text-muted-foreground dark:text-slate-200">{card.description}</p>
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-col gap-2 min-[420px]:flex-row min-[420px]:flex-wrap">
             {renderCardAction(card.action)}
             {renderCardAction(card.secondaryAction, true)}
           </div>
@@ -465,7 +465,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     }
 
     return (
-      <div key={card.id} className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-colors hover:border-primary-300/40">
+      <div key={card.id} className="min-w-0 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-colors hover:border-primary-300/40">
         <div className={`relative ${card.imageUrl ? 'h-32' : 'h-28 bg-gradient-to-br from-primary-600 via-primary-700 to-slate-950'}`}>
           {card.imageUrl ? (
             <img src={card.imageUrl} alt={card.title} className="h-full w-full object-cover object-center" />
@@ -482,10 +482,10 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
           ) : null}
         </div>
 
-        <div className="space-y-3 p-3.5">
-          <div>
-            <h4 className="text-sm font-semibold text-foreground line-clamp-2">{card.title}</h4>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-3">{card.description}</p>
+        <div className="min-w-0 space-y-3 p-3.5">
+          <div className="min-w-0">
+            <h4 className="line-clamp-2 break-words text-sm font-semibold text-foreground">{card.title}</h4>
+            <p className="mt-1 line-clamp-3 break-words text-xs leading-relaxed text-muted-foreground">{card.description}</p>
           </div>
 
           {card.meta?.length ? (
@@ -513,10 +513,10 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
-          className={`shrink-0 text-white shadow-lg shadow-primary-500/20 hover:bg-primary-700 ${
+          className={`shrink-0 text-white shadow-lg shadow-[#027ae3]/25 hover:bg-[#0269c2] ${
             compact
-              ? 'h-9 w-9 rounded-lg border border-white/15 bg-primary-600/95 p-0'
-              : 'rounded-full bg-primary-600 px-3.5 py-2 text-sm'
+              ? 'h-9 w-9 rounded-lg border border-white/15 bg-[#027ae3]/95 p-0'
+              : 'rounded-full bg-[#027ae3] px-3.5 py-2 text-sm'
           }`}
         >
           <Bot className={`${compact ? '' : 'mr-2 '}${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
@@ -526,10 +526,10 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
       <SheetContent
         side="right"
-        className="flex w-[95vw] flex-col gap-0 p-0 sm:max-w-md [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-white/15 [&>button]:p-1.5 [&>button]:text-white [&>button]:opacity-100 [&>button:hover]:bg-white/25 [&>button:hover]:text-white"
+        className="flex w-[96vw] flex-col gap-0 p-0 sm:max-w-lg lg:max-w-xl [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-white/15 [&>button]:p-1.5 [&>button]:text-white [&>button]:opacity-100 [&>button:hover]:bg-white/25 [&>button:hover]:text-white"
       >
         {/* Chat header */}
-        <div className="shrink-0 border-b border-border bg-gradient-to-r from-primary-600 to-primary-700 px-5 py-4 dark:from-primary-800 dark:to-primary-900">
+        <div className="shrink-0 border-b border-border bg-gradient-to-r from-[#027ae3] to-[#035aa6] px-5 py-4 dark:from-[#027ae3] dark:to-[#013b73]">
           <div className="flex items-center min-h-[36px] pr-12">
             <BrandLogo compact showTagline={false} className="[&_img]:h-8 [&_img]:max-w-[130px] sm:[&_img]:h-9 sm:[&_img]:max-w-[145px]" />
           </div>
@@ -544,7 +544,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                     <Bot className="h-4 w-4 text-primary-600 dark:text-primary-400" />
                   </div>
                 )}
-                <div className={`max-w-[92%] space-y-2 sm:max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                <div className={`min-w-0 space-y-2 ${msg.cards && msg.cards.length > 0 ? 'max-w-full sm:max-w-[94%]' : 'max-w-[92%] sm:max-w-[85%]'} ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'rounded-br-md bg-primary-600 text-white'
@@ -571,7 +571,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                   )}
 
                   {msg.cards && msg.cards.length > 0 ? (
-                    <div className={`grid gap-2.5 ${msg.cards.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+                    <div className={`grid min-w-0 gap-2.5 ${msg.cards.length > 1 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                       {msg.cards.map((card) => renderMessageCard(card))}
                     </div>
                   ) : null}

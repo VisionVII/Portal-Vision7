@@ -22,6 +22,17 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/post/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|SkypeUriPreview|Googlebot|bingbot).*"
+        }
+      ],
+      "destination": "/api/post-preview?slug=$1"
+    },
     { "source": "/n8n", "destination": "https://n8n-vision7.onrender.com/n8n" },
     { "source": "/n8n/(.*)", "destination": "https://n8n-vision7.onrender.com/n8n/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
