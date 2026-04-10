@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS public.posts (
   excerpt TEXT NOT NULL,
   content TEXT NOT NULL,
   image_url TEXT,
+  banner_url TEXT,
   category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
   author_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   author_name TEXT NOT NULL DEFAULT 'Redação Vision',
@@ -171,13 +172,65 @@ EXECUTE FUNCTION public.update_updated_at_column();
 DROP POLICY IF EXISTS "Published posts are viewable by everyone" ON public.posts;
 CREATE POLICY "Published posts are viewable by everyone"
 ON public.posts FOR SELECT
-USING (status = 'published' OR public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin'));
+USING (
+  status = 'published'
+  OR public.has_role(auth.uid(), 'admin')
+  OR public.has_role(auth.uid(), 'super_admin')
+  OR public.has_role(auth.uid(), 'editor')
+  OR public.has_role(auth.uid(), 'moderador')
+  OR (
+    public.has_role(auth.uid(), 'redator')
+    AND author_id = auth.uid()
+  )
+);
 
 DROP POLICY IF EXISTS "Admins can manage posts" ON public.posts;
-CREATE POLICY "Admins can manage posts"
-ON public.posts FOR ALL
-USING (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin'))
-WITH CHECK (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin'));
+DROP POLICY IF EXISTS "Admins can create posts" ON public.posts;
+DROP POLICY IF EXISTS "Admins can update posts" ON public.posts;
+DROP POLICY IF EXISTS "Admins can delete posts" ON public.posts;
+
+CREATE POLICY "Admins can create posts"
+ON public.posts FOR INSERT
+WITH CHECK (
+  public.has_role(auth.uid(), 'admin')
+  OR public.has_role(auth.uid(), 'super_admin')
+  OR public.has_role(auth.uid(), 'editor')
+  OR (
+    public.has_role(auth.uid(), 'redator')
+    AND COALESCE(status, 'draft') = 'draft'
+    AND author_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Admins can update posts"
+ON public.posts FOR UPDATE
+USING (
+  public.has_role(auth.uid(), 'admin')
+  OR public.has_role(auth.uid(), 'super_admin')
+  OR public.has_role(auth.uid(), 'editor')
+  OR (
+    public.has_role(auth.uid(), 'redator')
+    AND author_id = auth.uid()
+  )
+)
+WITH CHECK (
+  public.has_role(auth.uid(), 'admin')
+  OR public.has_role(auth.uid(), 'super_admin')
+  OR public.has_role(auth.uid(), 'editor')
+  OR (
+    public.has_role(auth.uid(), 'redator')
+    AND author_id = auth.uid()
+    AND COALESCE(status, 'draft') = 'draft'
+  )
+);
+
+CREATE POLICY "Admins can delete posts"
+ON public.posts FOR DELETE
+USING (
+  public.has_role(auth.uid(), 'admin')
+  OR public.has_role(auth.uid(), 'super_admin')
+  OR public.has_role(auth.uid(), 'editor')
+);
 
 INSERT INTO public.posts (title, slug, excerpt, content, image_url, category_id, author_name, status, featured, read_time, tags, published_at)
 VALUES
