@@ -30,6 +30,40 @@ interface PostFormProps {
 
 const DEFAULT_EDITORIAL_TEMPLATE_ID: EditorialPostTemplateId = 'noticia-padrao';
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error !== null) {
+    const maybeError = error as {
+      message?: string;
+      details?: string;
+      hint?: string;
+      error_description?: string;
+    };
+
+    const composedMessage = [
+      maybeError.message,
+      maybeError.details,
+      maybeError.hint,
+      maybeError.error_description,
+    ]
+      .filter((value): value is string => Boolean(value && value.trim()))
+      .join(' — ');
+
+    if (composedMessage) {
+      return composedMessage;
+    }
+  }
+
+  if (typeof error === 'string' && error.trim()) {
+    return error;
+  }
+
+  return fallback;
+};
+
 const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   const [formData, setFormData] = useState({
     title: post?.title || '',
@@ -63,7 +97,9 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   const updatePost = useUpdatePost();
   const createCategory = useCreateCategory();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const canPublish = hasRole('super_admin') || hasRole('admin') || hasRole('editor');
+  const canSaveDraft = canPublish || hasRole('redator');
 
   useEffect(() => {
     const templateKey = post?.id ?? '__new__';
@@ -159,8 +195,8 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       setImagePreview(publicUrl);
       toast({ title: "Sucesso", description: "Imagem carregada com sucesso!" });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast({ title: "Erro", description: message || "Erro ao carregar imagem.", variant: "destructive" });
+      const message = getErrorMessage(error, 'Erro ao carregar imagem.');
+      toast({ title: 'Erro', description: message, variant: 'destructive' });
     } finally {
       setIsUploading(false);
     }
@@ -205,8 +241,8 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       setBannerPreview(publicUrl);
       toast({ title: 'Sucesso', description: 'Banner carregado!' });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast({ title: 'Erro', description: message || 'Erro ao carregar banner.', variant: 'destructive' });
+      const message = getErrorMessage(error, 'Erro ao carregar banner.');
+      toast({ title: 'Erro', description: message, variant: 'destructive' });
     } finally {
       setIsBannerUploading(false);
     }
@@ -255,6 +291,24 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       return;
     }
 
+    if (publish && !canPublish) {
+      toast({
+        title: 'Permissão insuficiente',
+        description: 'O seu perfil pode trabalhar em rascunhos, mas apenas editores ou administradores podem publicar posts.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!publish && !canSaveDraft) {
+      toast({
+        title: 'Permissão insuficiente',
+        description: 'O seu perfil não tem permissão para guardar posts neste momento.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const uniqueSlug = await ensureUniqueSlug(generateSlug(formData.title), post?.id);
 
     const postData: CreatePostData = {
@@ -289,11 +343,11 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       }
       onClose();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = getErrorMessage(error, 'Ocorreu um erro ao guardar o post.');
       toast({
-        title: "Erro",
-        description: message || "Ocorreu um erro ao guardar o post.",
-        variant: "destructive",
+        title: 'Erro',
+        description: message,
+        variant: 'destructive',
       });
     }
   };
@@ -627,14 +681,16 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
               type="button"
               onClick={(e) => handleSubmit(e, true)}
               className="bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600"
-              disabled={createPost.isPending || updatePost.isPending}
+              disabled={createPost.isPending || updatePost.isPending || !canPublish}
+              title={canPublish ? 'Publicar post' : 'Apenas editores e administradores podem publicar'}
             >
               {createPost.isPending || updatePost.isPending ? 'A guardar...' : 'Publicar Post'}
             </Button>
             <Button 
               type="submit" 
               variant="outline"
-              disabled={createPost.isPending || updatePost.isPending}
+              disabled={createPost.isPending || updatePost.isPending || !canSaveDraft}
+              title={canSaveDraft ? 'Guardar rascunho' : 'O seu perfil não pode criar rascunhos'}
             >
               Guardar como Rascunho
             </Button>

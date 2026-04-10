@@ -99,6 +99,40 @@ const FULL_POST_SELECT = `
   ${POST_CATEGORY_SELECT}
 `;
 
+type SupabaseErrorLike = {
+  message?: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error !== null) {
+    const { message, details, hint, code } = error as SupabaseErrorLike;
+    const composedMessage = [message, details, hint]
+      .filter((value): value is string => Boolean(value && value.trim()))
+      .join(' — ');
+
+    if (composedMessage) {
+      return composedMessage;
+    }
+
+    if (code) {
+      return `Erro Supabase (${code})`;
+    }
+  }
+
+  if (typeof error === 'string' && error.trim()) {
+    return error;
+  }
+
+  return fallback;
+};
+
 const normalizePublicPost = (post: Partial<Post>): Post => ({
   id: post.id || '',
   title: post.title || '',
@@ -137,7 +171,9 @@ export const usePosts = (adminView = false) => {
 
       const { data, error } = await query;
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível carregar os posts.'));
+      }
 
       return adminView
         ? ((data as Post[]) ?? [])
@@ -163,7 +199,9 @@ export const usePostsByCategory = (categorySlug: string) => {
         .eq('status', 'published')
         .order('created_at', { ascending: false });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível carregar os posts da categoria.'));
+      }
 
       return (data as Partial<Post>[] | null)?.map((post) => normalizePublicPost(post)) ?? [];
     },
@@ -185,7 +223,9 @@ export const usePost = (slug: string) => {
         .eq('slug', slug)
         .maybeSingle();
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível carregar o post.'));
+      }
 
       return (data as Post | null) ?? null;
     },
@@ -208,7 +248,9 @@ export const usePostById = (id: string) => {
         .eq('id', id)
         .maybeSingle();
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível carregar o post.'));
+      }
 
       return (data as Post | null) ?? null;
     },
@@ -235,7 +277,9 @@ export const useCreatePost = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível criar o post.'));
+      }
       return data;
     },
     onSuccess: () => {
@@ -260,7 +304,9 @@ export const useUpdatePost = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível atualizar o post.'));
+      }
       return data;
     },
     onSuccess: () => {
@@ -280,7 +326,9 @@ export const useDeletePost = () => {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível remover o post.'));
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] });
@@ -314,7 +362,9 @@ export const usePostStats = () => {
         .from('posts')
         .select('id, status, views, created_at');
 
-      if (allError) throw allError;
+      if (allError) {
+        throw new Error(getErrorMessage(allError, 'Não foi possível carregar as estatísticas dos posts.'));
+      }
 
       const total = allPosts?.length || 0;
       const drafts = allPosts?.filter(p => p.status === 'draft').length || 0;

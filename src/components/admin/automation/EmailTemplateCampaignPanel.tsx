@@ -20,7 +20,7 @@ interface RunItem {
 }
 
 const SEND_INTERVAL_MS = 60_000;
-const DEFAULT_RECIPIENTS = 'visionvidevgrid,hvvctor@gmail.com';
+const DEFAULT_RECIPIENTS = 'visionvidevgrid@proton.me,hvvctor@gmail.com';
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
