@@ -165,15 +165,15 @@ const AdminCmsCustomizer = () => {
         throw uploadError;
       }
 
-      const { data } = supabase.storage
+      const { data: { publicUrl } } = supabase.storage
         .from(HOME_BANNER_STORAGE_BUCKET)
         .getPublicUrl(uploadPath);
 
       setConfig((prev) => ({
         ...prev,
         ...(variant === 'desktop'
-          ? { bannerUrl: data.publicUrl }
-          : { mobileBannerUrl: data.publicUrl }),
+          ? { bannerUrl: publicUrl }
+          : { mobileBannerUrl: publicUrl }),
       }));
 
       toast({
@@ -235,11 +235,11 @@ const AdminCmsCustomizer = () => {
         throw uploadError;
       }
 
-      const { data } = supabase.storage
+      const { data: { publicUrl } } = supabase.storage
         .from(SECTION_PAGE_BANNER_STORAGE_BUCKET)
         .getPublicUrl(uploadPath);
 
-      updateSectionPageBanner(sectionId, variant === 'desktop' ? { bannerUrl: data.publicUrl } : { mobileBannerUrl: data.publicUrl });
+      updateSectionPageBanner(sectionId, variant === 'desktop' ? { bannerUrl: publicUrl } : { mobileBannerUrl: publicUrl });
       toast({
         title: 'Banner carregado',
         description: `A versão ${variant === 'desktop' ? 'desktop' : 'mobile'} foi preparada para ${sectionPageBanners[sectionId].label}.`,

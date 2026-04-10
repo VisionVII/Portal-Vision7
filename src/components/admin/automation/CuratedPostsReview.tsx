@@ -78,7 +78,7 @@ export function CuratedPostsReview() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <Sparkles className="w-5 h-5 text-violet-500" />
+          <Sparkles className="w-5 h-5 text-primary-500" />
           <h3 className="text-base font-semibold text-foreground">Artigos Curados pela IA</h3>
           <Badge variant="outline" className="text-xs px-2 py-0.5 border-border text-muted-foreground">
             {posts?.length ?? 0}
@@ -202,7 +202,7 @@ export function CuratedPostsReview() {
                     Confiança: {Number(previewPost.confidence_score).toFixed(0)}%
                   </Badge>
                   {previewPost.theme && (
-                    <Badge variant="outline" className="text-xs border-violet-500/40 text-violet-600 dark:text-violet-400">
+                    <Badge variant="outline" className="text-xs border-primary-500/40 text-primary-600 dark:text-primary-400">
                       {previewPost.theme}
                     </Badge>
                   )}

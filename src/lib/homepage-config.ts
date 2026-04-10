@@ -39,7 +39,8 @@ export const HOME_BANNER_STORAGE_PREFIX = 'site/banners';
 export const ALLOWED_HOME_BANNER_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
 export const MAX_HOME_BANNER_SIZE_BYTES = 5 * 1024 * 1024;
 
-const defaultBannerImage = '/Verde Neon Exploração Blog Banner.png';
+const defaultBannerImage = 'https://stpusdeqwbckvfsitsld.supabase.co/storage/v1/object/public/post-images/site/banners/homepage-desktop-1775787060047-versao-no-vova-logo-vision-estilo-premium-defaul.png';
+const defaultMobileBannerImage = 'https://stpusdeqwbckvfsitsld.supabase.co/storage/v1/object/public/post-images/site/banners/homepage-mobile-1775786975760-gemini-2-5-flash-image-agora-retire-o-fundom-pre.jpg';
 const defaultBannerDescription = 'Acesse insights estratégicos sobre tecnologia, inteligência artificial, inovação e negócios digitais. Informação clara e relevante para decisões rápidas em um mundo em constante evolução.';
 
 export const defaultHomePageBanners: HomePageBanner[] = [
@@ -48,7 +49,7 @@ export const defaultHomePageBanners: HomePageBanner[] = [
     title: 'Exploração inteligente para quem decide rápido',
     description: defaultBannerDescription,
     imageUrl: defaultBannerImage,
-    mobileImageUrl: defaultBannerImage,
+    mobileImageUrl: defaultMobileBannerImage,
     ctaLabel: 'Explorar Notícias',
     ctaHref: '#noticias',
     enabled: true,
@@ -65,7 +66,7 @@ export const defaultHomePageConfig: HomePageConfig = {
   secondaryCtaLabel: '',
   tertiaryCtaLabel: '',
   bannerUrl: defaultBannerImage,
-  mobileBannerUrl: defaultBannerImage,
+  mobileBannerUrl: defaultMobileBannerImage,
   rotatingBanners: defaultHomePageBanners,
   sections: [
     { id: 'featured', label: 'Destaque', enabled: true },
@@ -190,7 +191,7 @@ export const createEmptyBanner = (seed = Date.now()): HomePageBanner => ({
   title: 'Novo banner Vision7',
   description: 'Descreva a mensagem central desta campanha, anúncio ou destaque editorial.',
   imageUrl: defaultBannerImage,
-  mobileImageUrl: defaultBannerImage,
+  mobileImageUrl: defaultMobileBannerImage,
   ctaLabel: 'Saiba mais',
   ctaHref: '#noticias',
   enabled: true,

@@ -475,8 +475,8 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                   { label: 'Publicados', value: publishedPosts.length, color: 'text-emerald-600 dark:text-emerald-400' },
                   { label: 'Rascunhos', value: draftPosts.length, color: 'text-amber-500' },
                   { label: 'Newsletter', value: newsletterStats?.active || 0, color: 'text-blue-500' },
-                  { label: 'Cursos', value: courses.length, color: 'text-violet-500' },
-                  { label: 'Audiocasts', value: audiocasts.length, color: 'text-pink-500' },
+                  { label: 'Cursos', value: courses.length, color: 'text-primary-500' },
+                  { label: 'Audiocasts', value: audiocasts.length, color: 'text-sky-500' },
                   { label: 'Categorias', value: categories?.length || 0, color: 'text-foreground/70' },
                 ].map((s) => (
                   <div key={s.label} className="rounded-lg bg-muted/30 p-3">
