@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.registration_invites (
   invited_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   invited_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   used_at TIMESTAMP WITH TIME ZONE,
-  token TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(32), 'hex'),
+  token TEXT NOT NULL UNIQUE DEFAULT encode(extensions.gen_random_bytes(32), 'hex'),
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now() + INTERVAL '7 days',
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'used', 'expired')),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()

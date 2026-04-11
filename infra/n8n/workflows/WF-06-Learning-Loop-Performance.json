@@ -1,0 +1,159 @@
+{
+  "name": "WF-06 Learning Loop Performance Feedback",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "schedule_trigger",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fetch published posts from last 7 days to analyze performance\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst headers = { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' };\n\nconst since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();\n\n// Get published posts\nlet posts;\ntry {\n  posts = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SUPABASE_URL + '/rest/v1/posts?select=id,title,slug,category,created_at,seo_score,primary_keyword&status=eq.published&created_at=gte.' + since7d + '&order=created_at.desc',\n    headers: headers, json: true\n  });\n} catch (e) { posts = []; }\nif (!Array.isArray(posts)) posts = [];\n\n// Get existing performance snapshots for today\nconst today = new Date().toISOString().split('T')[0];\nlet existingSnapshots;\ntry {\n  existingSnapshots = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SUPABASE_URL + '/rest/v1/post_performance?select=post_id&snapshot_date=eq.' + today,\n    headers: headers, json: true\n  });\n} catch (e) { existingSnapshots = []; }\nif (!Array.isArray(existingSnapshots)) existingSnapshots = [];\nconst alreadySnapped = new Set(existingSnapshots.map(s => s.post_id));\n\n// Get distribution data\nlet distributions;\ntry {\n  const postIds = posts.map(p => p.id);\n  if (postIds.length > 0) {\n    distributions = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/post_distributions?select=post_id,channel,status,engagement&post_id=in.(' + postIds.join(',') + ')',\n      headers: headers, json: true\n    });\n  } else { distributions = []; }\n} catch (e) { distributions = []; }\nif (!Array.isArray(distributions)) distributions = [];\n\n// Get sitemap indexing status\nlet sitemapEntries;\ntry {\n  const slugs = posts.map(p => p.slug).filter(Boolean);\n  if (slugs.length > 0) {\n    sitemapEntries = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/sitemap_entries?select=post_id,indexed,indexed_at,submitted_to_gsc',\n      headers: headers, json: true\n    });\n  } else { sitemapEntries = []; }\n} catch (e) { sitemapEntries = []; }\nif (!Array.isArray(sitemapEntries)) sitemapEntries = [];\nconst sitemapByPost = {};\nfor (const se of sitemapEntries) { if (se.post_id) sitemapByPost[se.post_id] = se; }\n\n// Get curated post data (for editorial_score, tone_profile)\nlet curatedLookup = {};\ntry {\n  const curatedResp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SUPABASE_URL + '/rest/v1/curated_posts?select=id,editorial_score,tone_profile,model_info,primary_keyword,topic&created_at=gte.' + since7d,\n    headers: headers, json: true\n  });\n  if (Array.isArray(curatedResp)) {\n    for (const cp of curatedResp) { curatedLookup[cp.id] = cp; }\n  }\n} catch (e) { /* ok */ }\n\n// Build distribution map\nconst distByPost = {};\nfor (const d of distributions) {\n  if (!distByPost[d.post_id]) distByPost[d.post_id] = [];\n  distByPost[d.post_id].push(d);\n}\n\nconst output = [];\nfor (const post of posts) {\n  if (alreadySnapped.has(post.id)) continue;\n  \n  const dists = distByPost[post.id] || [];\n  const socialShares = dists.filter(d => d.status === 'sent').length;\n  const socialClicks = dists.reduce((sum, d) => sum + ((d.engagement || {}).clicks || 0), 0);\n  const sitemap = sitemapByPost[post.id] || {};\n  const indexedAt = sitemap.indexed_at ? new Date(sitemap.indexed_at) : null;\n  const createdAt = new Date(post.created_at);\n  const timeToIndex = indexedAt ? ((indexedAt - createdAt) / (1000 * 60 * 60)) : null;\n  \n  // Calculate performance score composite\n  let perfScore = 0;\n  perfScore += sitemap.indexed ? 20 : 0;  // indexed = base 20\n  perfScore += socialShares > 0 ? 15 : 0;  // has social distribution\n  perfScore += (post.seo_score || 0) > 50 ? 15 : 0;  // good SEO\n  perfScore += timeToIndex !== null && timeToIndex < 48 ? 20 : 0;  // fast indexing\n  perfScore += socialClicks > 0 ? 15 : 0;  // has engagement\n  perfScore += dists.filter(d => d.status === 'failed').length === 0 ? 15 : 0;  // no failures\n  perfScore = Math.min(perfScore, 100);\n  \n  output.push({\n    json: {\n      post_id: post.id,\n      topic: post.category || null,\n      primary_keyword: post.primary_keyword || null,\n      editorial_score: null,  // will be filled from curated\n      tone_profile: null,\n      model_info: {},\n      google_indexed: sitemap.indexed || false,\n      indexed_at: sitemap.indexed_at || null,\n      time_to_index_hours: timeToIndex,\n      social_shares: socialShares,\n      social_clicks: socialClicks,\n      performance_score: perfScore,\n      snapshot_date: today\n    }\n  });\n}\n\nif (output.length === 0) {\n  return [{ json: { skip: true, message: 'No new performance data to snapshot' } }];\n}\n\nreturn output;"
+      },
+      "id": "gather_metrics",
+      "name": "Gather Performance Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1160,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.skip }}",
+              "value2": true,
+              "operation": "notEqual"
+            }
+          ]
+        }
+      },
+      "id": "has_data",
+      "name": "Has Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/post_performance' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=ignore-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { post_id: $json.post_id, topic: $json.topic, primary_keyword: $json.primary_keyword, editorial_score: $json.editorial_score, tone_profile: $json.tone_profile, model_info: $json.model_info, google_indexed: $json.google_indexed, indexed_at: $json.indexed_at, time_to_index_hours: $json.time_to_index_hours, social_shares: $json.social_shares, social_clicks: $json.social_clicks, performance_score: $json.performance_score, snapshot_date: $json.snapshot_date } }}"
+      },
+      "id": "save_performance",
+      "name": "Save Performance Snapshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -680,
+        100
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Weekly learning report — analyze patterns in performance data\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst headers = { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' };\n\n// Only run full report on Sundays (or if forced)\nconst dow = new Date().getDay();\nif (dow !== 0) {\n  return [{ json: { report_skipped: true, reason: 'Not Sunday (day=' + dow + ')' } }];\n}\n\nconst since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();\nlet allPerf;\ntry {\n  allPerf = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SUPABASE_URL + '/rest/v1/post_performance?select=*&created_at=gte.' + since30d + '&order=performance_score.desc',\n    headers: headers, json: true\n  });\n} catch (e) { allPerf = []; }\nif (!Array.isArray(allPerf)) allPerf = [];\n\n// Analyze by topic\nconst byTopic = {};\nfor (const p of allPerf) {\n  const topic = p.topic || 'geral';\n  if (!byTopic[topic]) byTopic[topic] = { total: 0, totalScore: 0, indexed: 0, totalIndexTime: 0, indexedCount: 0 };\n  byTopic[topic].total++;\n  byTopic[topic].totalScore += (p.performance_score || 0);\n  if (p.google_indexed) byTopic[topic].indexed++;\n  if (p.time_to_index_hours) { byTopic[topic].totalIndexTime += p.time_to_index_hours; byTopic[topic].indexedCount++; }\n}\n\nconst topicInsights = Object.entries(byTopic).map(([topic, data]) => ({\n  topic: topic,\n  avg_performance: Math.round(data.totalScore / data.total),\n  index_rate: Math.round(data.indexed / data.total * 100),\n  avg_index_hours: data.indexedCount > 0 ? Math.round(data.totalIndexTime / data.indexedCount) : null,\n  post_count: data.total\n})).sort((a, b) => b.avg_performance - a.avg_performance);\n\n// Top performing keywords\nconst byKeyword = {};\nfor (const p of allPerf) {\n  if (!p.primary_keyword) continue;\n  if (!byKeyword[p.primary_keyword]) byKeyword[p.primary_keyword] = { total: 0, totalScore: 0 };\n  byKeyword[p.primary_keyword].total++;\n  byKeyword[p.primary_keyword].totalScore += (p.performance_score || 0);\n}\nconst topKeywords = Object.entries(byKeyword).map(([kw, data]) => ({\n  keyword: kw, avg_score: Math.round(data.totalScore / data.total), count: data.total\n})).sort((a, b) => b.avg_score - a.avg_score).slice(0, 10);\n\n// Summary\nconst totalPosts = allPerf.length;\nconst avgScore = totalPosts > 0 ? Math.round(allPerf.reduce((s, p) => s + (p.performance_score || 0), 0) / totalPosts) : 0;\nconst indexedCount = allPerf.filter(p => p.google_indexed).length;\nconst indexRate = totalPosts > 0 ? Math.round(indexedCount / totalPosts * 100) : 0;\n\nconst report = {\n  period: '30 days',\n  generated_at: new Date().toISOString(),\n  total_posts_analyzed: totalPosts,\n  avg_performance_score: avgScore,\n  overall_index_rate: indexRate + '%',\n  best_topics: topicInsights.slice(0, 3),\n  worst_topics: topicInsights.slice(-2),\n  top_keywords: topKeywords,\n  recommendations: []\n};\n\n// Generate actionable recommendations\nif (indexRate < 50) report.recommendations.push('Taxa de indexacao baixa (' + indexRate + '%). Aumentar pings ao Google e verificar sitemap.');\nif (avgScore < 40) report.recommendations.push('Performance media baixa. Focar em keywords com melhor historico: ' + (topKeywords[0]?.keyword || 'N/A'));\nif (topicInsights.length > 0 && topicInsights[0].avg_performance > 60) report.recommendations.push('Topico \"' + topicInsights[0].topic + '\" tem melhor performance. Considerar mais conteudo nesta area.');\nif (topicInsights.length > 1 && topicInsights[topicInsights.length - 1].avg_performance < 30) report.recommendations.push('Topico \"' + topicInsights[topicInsights.length - 1].topic + '\" com performance fraca. Revisar estrategia ou reduzir volume.');\n\n// Save learning report as alert\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SUPABASE_URL + '/rest/v1/pipeline_alerts',\n    headers: headers,\n    body: {\n      alert_type: 'weekly_learning_report',\n      severity: 'info',\n      title: 'Relatorio Semanal de Performance',\n      detail: 'Posts: ' + totalPosts + ' | Score medio: ' + avgScore + ' | Indexacao: ' + indexRate + '%',\n      metadata: report,\n      resolved: true,\n      resolved_at: new Date().toISOString()\n    },\n    json: true\n  });\n} catch (e) { /* ok */ }\n\n// Send report email\ntry {\n  const emailHtml = '<h2>Relatorio Semanal Vision7</h2>' +\n    '<p><strong>Periodo:</strong> Ultimos 30 dias</p>' +\n    '<p><strong>Posts analisados:</strong> ' + totalPosts + '</p>' +\n    '<p><strong>Score medio:</strong> ' + avgScore + '/100</p>' +\n    '<p><strong>Taxa de indexacao:</strong> ' + indexRate + '%</p>' +\n    '<h3>Melhores Topicos</h3><ul>' + topicInsights.slice(0, 3).map(t => '<li>' + t.topic + ': ' + t.avg_performance + ' pts (' + t.post_count + ' posts)</li>').join('') + '</ul>' +\n    '<h3>Top Keywords</h3><ul>' + topKeywords.slice(0, 5).map(k => '<li>' + k.keyword + ': ' + k.avg_score + ' pts</li>').join('') + '</ul>' +\n    '<h3>Recomendacoes</h3><ul>' + report.recommendations.map(r => '<li>' + r + '</li>').join('') + '</ul>';\n  \n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SUPABASE_URL + '/functions/v1/send-email',\n    headers: { ...headers, 'Authorization': 'Bearer ' + SUPABASE_KEY },\n    body: {\n      to: $env.ADMIN_EMAIL || 'admin@vision7.pt',\n      subject: '[Vision7] Relatorio Semanal — Score ' + avgScore + ' | Indexacao ' + indexRate + '%',\n      html: emailHtml\n    },\n    json: true\n  });\n} catch (e) { /* email send failed */ }\n\nreturn [{ json: report }];"
+      },
+      "id": "weekly_report",
+      "name": "Weekly Learning Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -440,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Gather Performance Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gather Performance Metrics": {
+      "main": [
+        [
+          {
+            "node": "Has Data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Data?": {
+      "main": [
+        [
+          {
+            "node": "Save Performance Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Save Performance Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Weekly Learning Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
