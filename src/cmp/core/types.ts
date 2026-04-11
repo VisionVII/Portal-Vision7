@@ -54,6 +54,12 @@ export interface CategoryInfo {
   label: string;
   description: string;
   required: boolean;
+  /** LGPD/GDPR legal basis */
+  legalBasis: 'legitimate-interest' | 'consent' | 'contract' | 'legal-obligation';
+  /** Data retention period description */
+  retention: string;
+  /** Vendors/services using this category */
+  vendors?: string[];
 }
 
 export type ConsentEventType =

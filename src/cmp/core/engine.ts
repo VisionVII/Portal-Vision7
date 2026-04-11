@@ -27,10 +27,42 @@ import { readConsent, writeConsent, clearConsent, type StoredConsent } from './s
 const DEFAULT_POLICY_VERSION = '1.0';
 
 const DEFAULT_CATEGORIES: CategoryInfo[] = [
-  { id: 'necessary', label: 'Essenciais', description: 'Necessários para o funcionamento básico do site.', required: true },
-  { id: 'analytics', label: 'Análise', description: 'Ajudam a compreender como utiliza o site.', required: false },
-  { id: 'marketing', label: 'Marketing', description: 'Permitem personalizar publicidade e conteúdo.', required: false },
-  { id: 'personalization', label: 'Personalização', description: 'Adaptam a experiência ao seu perfil e localização.', required: false },
+  {
+    id: 'necessary',
+    label: 'Essenciais',
+    description: 'Necessários para o funcionamento básico do site, incluindo sessão, segurança e preferências de interface. Não podem ser desativados.',
+    required: true,
+    legalBasis: 'legitimate-interest',
+    retention: 'Duração da sessão ou até 12 meses',
+    vendors: ['Supabase Auth', 'Vercel'],
+  },
+  {
+    id: 'analytics',
+    label: 'Análise e estatísticas',
+    description: 'Permitem compreender como utiliza o site (páginas visitadas, tempo de permanência). Os dados são anonimizados e utilizados apenas para melhorar a experiência.',
+    required: false,
+    legalBasis: 'consent',
+    retention: 'Até 26 meses',
+    vendors: ['Analytics interno Vision7'],
+  },
+  {
+    id: 'marketing',
+    label: 'Marketing e publicidade',
+    description: 'Utilizados para apresentar conteúdos e anúncios relevantes com base nos seus interesses. Podem ser partilhados com parceiros publicitários.',
+    required: false,
+    legalBasis: 'consent',
+    retention: 'Até 13 meses',
+    vendors: [],
+  },
+  {
+    id: 'personalization',
+    label: 'Personalização e localização',
+    description: 'Adaptam a experiência ao seu perfil: localização aproximada, temperatura e hora local. Os dados de geolocalização são armazenados apenas no seu dispositivo.',
+    required: false,
+    legalBasis: 'consent',
+    retention: 'Armazenamento local no dispositivo',
+    vendors: ['Open-Meteo (clima)', 'BigDataCloud (geolocalização)'],
+  },
 ];
 
 const DEFAULT_CONSENT: ConsentState = {

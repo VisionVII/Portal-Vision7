@@ -52,6 +52,7 @@ const Footer = () => {
               <li><Link to="/audiocasts" className="transition-colors hover:text-foreground dark:hover:text-white">Audiocasts</Link></li>
               <li><Link to="/admin/dashboard" className="transition-colors hover:text-foreground dark:hover:text-white">Dashboard</Link></li>
               <li><Link to="/politica-privacidade" className="transition-colors hover:text-foreground dark:hover:text-white">Política de Privacidade</Link></li>
+              <li><button onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-preferences'))} className="transition-colors hover:text-foreground dark:hover:text-white">Gerir Cookies</button></li>
             </ul>
           </div>
 
