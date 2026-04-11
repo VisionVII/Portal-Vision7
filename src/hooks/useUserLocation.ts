@@ -13,6 +13,12 @@ interface StoredConsent {
   personalization?: boolean;
 }
 
+const GEO_RELEVANT_KEYS = new Set(['cookie-consent-v2', 'geo-consent', 'user-geo']);
+const SYNC_THROTTLE_MS = 5 * 60 * 1000; // 5 minutes between API calls
+const CLOCK_INTERVAL_MS = 60 * 1000; // update clock every 60s (minutes precision)
+
+let lastSyncTimestamp = 0;
+
 export const useUserLocation = () => {
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [location, setLocation] = useState<UserLocation>({
@@ -22,7 +28,6 @@ export const useUserLocation = () => {
     localTime: new Date().toLocaleTimeString('pt-PT', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
       hour12: false,
     }),
     temperatureC: null,
@@ -30,24 +35,28 @@ export const useUserLocation = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const syncAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const updateTime = () => {
       const now = new Date();
-      setLocation((prev) => ({
-        ...prev,
-        localTime: now.toLocaleTimeString('pt-PT', {
+      setLocation((prev) => {
+        const newTime = now.toLocaleTimeString('pt-PT', {
           hour: '2-digit',
           minute: '2-digit',
-          second: '2-digit',
           hour12: false,
-        }),
-      }));
+        });
+        if (prev.localTime === newTime) return prev;
+        return { ...prev, localTime: newTime };
+      });
     };
 
-    const syncLocation = async () => {
+    const syncLocation = async (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastSyncTimestamp < SYNC_THROTTLE_MS) return;
+
       const consentRaw = localStorage.getItem('cookie-consent-v2');
       const geoConsent = localStorage.getItem('geo-consent');
 
@@ -55,8 +64,8 @@ export const useUserLocation = () => {
       if (consentRaw) {
         try {
           consent = JSON.parse(consentRaw) as StoredConsent;
-        } catch (error) {
-          console.warn('Falha ao ler o consentimento de localização.', error);
+        } catch {
+          // ignore
         }
       }
 
@@ -84,16 +93,24 @@ export const useUserLocation = () => {
         return;
       }
 
+      // Abort any in-flight request
+      syncAbortRef.current?.abort();
+      const controller = new AbortController();
+      syncAbortRef.current = controller;
+
       try {
         setIsLoading(true);
+        lastSyncTimestamp = now;
         const { latitude, longitude } = JSON.parse(storedGeo) as { latitude: number; longitude: number };
 
         const [weatherResponse, geoResponse] = await Promise.all([
           fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&timezone=auto`
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&timezone=auto`,
+            { signal: controller.signal }
           ),
           fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt`
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt`,
+            { signal: controller.signal }
           ),
         ]);
 
@@ -117,6 +134,7 @@ export const useUserLocation = () => {
           hasConsent: true,
         }));
       } catch (error) {
+        if ((error as Error).name === 'AbortError') return;
         console.warn('Não foi possível atualizar região e temperatura.', error);
         setLocation((prev) => ({
           ...prev,
@@ -131,27 +149,33 @@ export const useUserLocation = () => {
     };
 
     const handleLocationRefresh = () => {
-      void syncLocation();
+      void syncLocation(true);
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key !== null && !GEO_RELEVANT_KEYS.has(e.key)) return;
+      void syncLocation(true);
     };
 
     updateTime();
-    handleLocationRefresh();
-    updateIntervalRef.current = setInterval(updateTime, 1000);
+    void syncLocation();
+    updateIntervalRef.current = setInterval(updateTime, CLOCK_INTERVAL_MS);
 
     window.addEventListener('geolocation-update', handleLocationRefresh);
     window.addEventListener('cookie-preferences-updated', handleLocationRefresh);
     window.addEventListener('cookie-preferences-reset', handleLocationRefresh);
-    window.addEventListener('storage', handleLocationRefresh);
+    window.addEventListener('storage', handleStorageChange as EventListener);
 
     return () => {
       if (updateIntervalRef.current) {
         clearInterval(updateIntervalRef.current);
       }
+      syncAbortRef.current?.abort();
 
       window.removeEventListener('geolocation-update', handleLocationRefresh);
       window.removeEventListener('cookie-preferences-updated', handleLocationRefresh);
       window.removeEventListener('cookie-preferences-reset', handleLocationRefresh);
-      window.removeEventListener('storage', handleLocationRefresh);
+      window.removeEventListener('storage', handleStorageChange as EventListener);
     };
   }, [browserTimezone]);
 

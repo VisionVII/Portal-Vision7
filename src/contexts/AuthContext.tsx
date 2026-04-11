@@ -109,14 +109,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Fallback: if query failed or returned empty, check if this is the primary admin email
+    // NOTE: removed insecure super_admin grant by email match — roles must come from DB only
     if ((data === null || data.length === 0) && opts?.email && PRIMARY_ADMIN_EMAIL && opts.email.toLowerCase() === PRIMARY_ADMIN_EMAIL.toLowerCase()) {
-      console.warn('[Auth] Roles query returned empty/failed for primary admin — granting super_admin fallback');
-      return {
-        roles: ['super_admin'] as AppRole[],
-        isAdmin: true,
-        canAccessDashboard: true,
-        queryFailed: data === null,
-      };
+      console.warn('[Auth] Roles query returned empty/failed for primary admin — use bootstrap_first_admin() to assign role');
     }
 
     if (data === null) {

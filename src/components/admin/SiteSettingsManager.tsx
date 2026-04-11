@@ -24,6 +24,11 @@ const SiteSettingsManager = () => {
       return;
     }
 
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Erro', description: 'A imagem não pode ultrapassar 5 MB.', variant: 'destructive' });
+      return;
+    }
+
     setUploading(true);
     try {
       const ext = file.name.split('.').pop();

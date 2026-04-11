@@ -31,14 +31,14 @@ const AdminStatsCards = () => {
     <div className="space-y-4">
       {/* ── HERO KPI: dominant metric ── */}
       <Card className="relative overflow-hidden rounded-[28px] border border-border/20 bg-gradient-to-br from-slate-50 via-white to-slate-50 shadow-[0_8px_32px_rgba(15,23,42,0.08)] dark:border-border/10 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950">
-        <CardContent className="p-6 sm:p-7">
-          <div className="flex min-h-[210px] flex-col justify-between gap-6">
+        <CardContent className="p-5 sm:p-7">
+          <div className="flex min-h-[160px] flex-col justify-between gap-4 sm:min-h-[210px] sm:gap-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                   Performance este mês
                 </p>
-                <p className="mt-3 text-5xl font-extrabold tracking-tight text-foreground sm:text-6xl">
+                <p className="mt-2 text-4xl font-extrabold tracking-tight text-foreground sm:mt-3 sm:text-6xl">
                   {thisMonth}
                 </p>
                 <p className="mt-1 text-sm font-medium text-muted-foreground">
@@ -69,11 +69,11 @@ const AdminStatsCards = () => {
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Meta editorial
               </p>
-              <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
-                <span>Objetivo mensal (total/30)</span>
+              <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground sm:gap-3">
+                <span className="truncate">Objetivo mensal</span>
                 <span className="font-semibold text-foreground">{Math.min(thisMonth, monthlyTarget)}/{monthlyTarget} publicações</span>
               </div>
               <div className="h-2.5 rounded-full bg-muted/50 dark:bg-muted/30">
