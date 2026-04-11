@@ -52,62 +52,9 @@ export interface UpdateAudiocastData extends Partial<CreateAudiocastData> {
   id: string;
 }
 
-const PODCAST_CATEGORY_SELECT = `
-  categories (
-    id,
-    name,
-    slug,
-    color
-  )
-`;
+const PUBLIC_AUDIOCAST_SELECT = `id, title, slug, description, audio_url, cover_url, duration, status, published_at, category_id, views, downloads, created_at, categories(id, name, slug, color)`;
 
-const PODCAST_POST_SELECT = `
-  posts (
-    id,
-    title,
-    slug
-  )
-`;
-
-const PUBLIC_AUDIOCAST_SELECT = `
-  id,
-  title,
-  slug,
-  description,
-  audio_url,
-  cover_url,
-  duration,
-  status,
-  published_at,
-  category_id,
-  views,
-  downloads,
-  created_at,
-  ${PODCAST_CATEGORY_SELECT}
-`;
-
-const FULL_AUDIOCAST_SELECT = `
-  id,
-  title,
-  slug,
-  description,
-  audio_url,
-  cover_url,
-  duration,
-  transcript,
-  status,
-  published_at,
-  author_id,
-  category_id,
-  post_id,
-  tags,
-  views,
-  downloads,
-  created_at,
-  updated_at,
-  ${PODCAST_CATEGORY_SELECT},
-  ${PODCAST_POST_SELECT}
-`;
+const FULL_AUDIOCAST_SELECT = `id, title, slug, description, audio_url, cover_url, duration, transcript, status, published_at, author_id, category_id, post_id, tags, views, downloads, created_at, updated_at, categories(id, name, slug, color), posts(id, title, slug)`;
 
 const normalizePublicAudiocast = (podcast: Partial<Audiocast>): Audiocast => ({
   id: podcast.id || '',
@@ -140,7 +87,7 @@ export const useAudiocasts = (adminView = false) => {
       let query = supabase
         .from('podcasts')
         .select(adminView ? FULL_AUDIOCAST_SELECT : PUBLIC_AUDIOCAST_SELECT)
-        .order('created_at', { ascending: false });
+        .order(adminView ? 'created_at' : 'published_at', { ascending: false, nullsFirst: false });
 
       if (!adminView) {
         query = query.eq('status', 'published');
@@ -155,7 +102,7 @@ export const useAudiocasts = (adminView = false) => {
         return [] as Audiocast[];
       }
       return adminView
-        ? ((data as Audiocast[]) ?? [])
+        ? ((data as unknown as Audiocast[]) ?? [])
         : ((data as Partial<Audiocast>[] | null)?.map((podcast) => normalizePublicAudiocast(podcast)) ?? []);
     },
     retry: 2,
@@ -172,12 +119,10 @@ export const useAudiocastsByCategory = (categorySlug: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('podcasts')
-        .select(`
-          ${PUBLIC_AUDIOCAST_SELECT.replace('categories (', 'categories!inner (')}
-        `)
+        .select('id, title, slug, description, audio_url, cover_url, duration, status, published_at, category_id, views, downloads, created_at, categories!inner(id, name, slug, color)')
         .eq('categories.slug', categorySlug)
         .eq('status', 'published')
-        .order('created_at', { ascending: false });
+        .order('published_at', { ascending: false, nullsFirst: false });
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
@@ -256,12 +201,10 @@ export const useAudiocastsByPost = (postId: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('podcasts')
-        .select(`
-          ${PUBLIC_AUDIOCAST_SELECT}
-        `)
+        .select(PUBLIC_AUDIOCAST_SELECT)
         .eq('post_id', postId)
         .eq('status', 'published')
-        .order('created_at', { ascending: false });
+        .order('published_at', { ascending: false, nullsFirst: false });
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
@@ -285,17 +228,20 @@ export const useCreateAudiocast = () => {
 
   return useMutation({
     mutationFn: async (audiocastData: CreateAudiocastData) => {
-      const { data, error } = await supabase
-        .from('podcasts')
-        .insert([{
-          ...audiocastData,
-          published_at: audiocastData.status === 'published' ? new Date().toISOString() : null,
-        }])
-        .select()
-        .single();
+      const payload = {
+        ...audiocastData,
+        published_at: audiocastData.status === 'published' ? new Date().toISOString() : null,
+      };
 
-      if (error) throw error;
-      return data;
+      const { error } = await supabase
+        .from('podcasts')
+        .insert([payload]);
+
+      if (error) {
+        throw new Error(error.message || 'Falha ao criar audiocast.');
+      }
+
+      return payload;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['audiocasts'] });
@@ -309,18 +255,26 @@ export const useUpdateAudiocast = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...audiocastData }: UpdateAudiocastData) => {
-      const { data, error } = await supabase
-        .from('podcasts')
-        .update({
-          ...audiocastData,
-          published_at: audiocastData.status === 'published' ? new Date().toISOString() : undefined,
-        })
-        .eq('id', id)
-        .select()
-        .single();
+      const payload = {
+        ...audiocastData,
+        published_at:
+          audiocastData.status === 'published'
+            ? new Date().toISOString()
+            : audiocastData.status
+              ? null
+              : undefined,
+      };
 
-      if (error) throw error;
-      return data;
+      const { error } = await supabase
+        .from('podcasts')
+        .update(payload)
+        .eq('id', id);
+
+      if (error) {
+        throw new Error(error.message || 'Falha ao atualizar audiocast.');
+      }
+
+      return { id, ...payload };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['audiocasts'] });
@@ -360,7 +314,10 @@ export const useTrackAudiocastPlay = () => {
         content_id: audiocastId,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.warn('[useTrackAudiocastPlay] tracking skipped during migration:', error.message || error);
+        return;
+      }
     },
   });
 };
@@ -373,7 +330,10 @@ export const useTrackAudiocastDownload = () => {
         podcast_id: audiocastId,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.warn('[useTrackAudiocastDownload] tracking skipped during migration:', error.message || error);
+        return;
+      }
     },
   });
 };

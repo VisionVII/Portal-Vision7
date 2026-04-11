@@ -16,10 +16,10 @@
 
 ```bash
 # 1. Criar nova migration
-touch supabase/migrations/20260323_remove_auto_admin.sql
+touch supabase/migrations/20260323084000_remove_auto_admin.sql
 ```
 
-**Arquivo:** `supabase/migrations/20260323_remove_auto_admin.sql`
+**Arquivo:** `supabase/migrations/20260323084000_remove_auto_admin.sql`
 ```sql
 -- Remove auto-admin trigger (CRÍTICA)
 DROP TRIGGER IF EXISTS on_auth_user_created_assign_admin ON auth.users;
@@ -272,7 +272,7 @@ useEffect(() => {
 
 ### 6. CRIAR AUDIT LOGS TABLE (1 hora)
 
-**Arquivo:** `supabase/migrations/20260323_audit_logs.sql`
+**Arquivo:** `supabase/migrations/20260323082000_audit_logs.sql`
 
 ```sql
 -- Audit logs for tracking user actions
@@ -370,7 +370,7 @@ supabase migration up
 
 ### 7. EXPANDIR TIPOS DE ROLES
 
-**Arquivo:** `supabase/migrations/20260323_expand_roles.sql`
+**Arquivo:** `supabase/migrations/20260323083000_expand_roles.sql`
 
 ```sql
 -- Alterar enum de roles

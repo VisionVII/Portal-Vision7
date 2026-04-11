@@ -122,7 +122,7 @@ Acesso read-only a analytics e audit logs.
 
 ## 📁 Files de Migration
 
-### 1. `20260323_expand_roles.sql`
+### 1. `20260323083000_expand_roles.sql`
 
 **Objetivo:** Expandir o sistema de roles com novos tipos.
 
@@ -140,7 +140,7 @@ idx_permissions_matrix_role
 
 ---
 
-### 2. `20260323_permissions_features.sql`
+### 2. `20260323090000_permissions_features.sql`
 
 **Objetivo:** Adicionar features avançadas de permissions.
 
@@ -167,7 +167,7 @@ idx_role_hierarchy_child
 
 ---
 
-### 3. `20260323_user_role_assignments.sql`
+### 3. `20260323085000_user_role_assignments.sql`
 
 **Objetivo:** Gestão completa de atribuições de roles.
 
@@ -202,7 +202,7 @@ idx_role_bulk_assignments_created_by
 
 ---
 
-### 4. `20260323_permissions_validation.sql`
+### 4. `20260323091000_permissions_validation.sql`
 
 **Objetivo:** Validação, monitoramento e integridade de dados.
 

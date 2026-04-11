@@ -85,6 +85,7 @@ ADD CONSTRAINT valid_permissions_structure
 CHECK (public.validate_permission_structure(permissions));
 
 -- Create trigger for permissions_matrix updates
+DROP TRIGGER IF EXISTS permissions_matrix_updated_at ON public.permissions_matrix;
 CREATE TRIGGER permissions_matrix_updated_at
   BEFORE UPDATE ON public.permissions_matrix
   FOR EACH ROW
@@ -92,6 +93,7 @@ CREATE TRIGGER permissions_matrix_updated_at
 
 -- Step 3: Add constraints and triggers to role_hierarchy
 
+DROP TRIGGER IF EXISTS role_hierarchy_validate_no_cycles ON public.role_hierarchy;
 CREATE TRIGGER role_hierarchy_validate_no_cycles
   BEFORE INSERT OR UPDATE ON public.role_hierarchy
   FOR EACH ROW
@@ -99,6 +101,7 @@ CREATE TRIGGER role_hierarchy_validate_no_cycles
 
 -- Step 4: Add constraints and triggers to permission_overrides
 
+DROP TRIGGER IF EXISTS permission_overrides_validate_expiration ON public.permission_overrides;
 CREATE TRIGGER permission_overrides_validate_expiration
   BEFORE INSERT OR UPDATE ON public.permission_overrides
   FOR EACH ROW

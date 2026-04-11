@@ -35,7 +35,7 @@ const PUBLIC_COURSE_SELECT = `
   level,
   duration,
   category_id,
-  instructor,
+  thumbnail_url,
   published_at,
   created_at,
   status,
@@ -50,11 +50,10 @@ const FULL_COURSE_SELECT = `
   level,
   duration,
   category_id,
-  instructor,
+  thumbnail_url,
   published_at,
   created_at,
   status,
-  tags,
   ${COURSE_CATEGORY_SELECT}
 `;
 
@@ -131,12 +130,20 @@ export const useCreateCourse = () => {
 
   return useMutation({
     mutationFn: async (courseData: CreateCourseData) => {
+      const payload = {
+        title: courseData.title,
+        slug: courseData.slug,
+        description: courseData.description,
+        level: courseData.level,
+        duration: courseData.duration,
+        status: courseData.status,
+        category_id: courseData.category_id ?? null,
+        published_at: courseData.status === 'published' ? new Date().toISOString() : null,
+      };
+
       const { data, error } = await supabase
         .from('courses')
-        .insert([{
-          ...courseData,
-          published_at: courseData.status === 'published' ? new Date().toISOString() : null,
-        }])
+        .insert([payload])
         .select()
         .single();
 
@@ -154,12 +161,20 @@ export const useUpdateCourse = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...courseData }: UpdateCourseData) => {
+      const payload = {
+        title: courseData.title,
+        slug: courseData.slug,
+        description: courseData.description,
+        level: courseData.level,
+        duration: courseData.duration,
+        status: courseData.status,
+        category_id: courseData.category_id ?? undefined,
+        published_at: courseData.status === 'published' ? new Date().toISOString() : undefined,
+      };
+
       const { data, error } = await supabase
         .from('courses')
-        .update({
-          ...courseData,
-          published_at: courseData.status === 'published' ? new Date().toISOString() : undefined,
-        })
+        .update(payload)
         .eq('id', id)
         .select()
         .single();

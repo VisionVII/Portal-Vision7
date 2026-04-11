@@ -1,9 +1,9 @@
 {
   "module": "Supabase & Database",
-  "version": "1.3.0",
+  "version": "1.3.5",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-08",
+  "last_updated": "2026-04-11",
   "objective": "Camada de infraestrutura de dados: PostgreSQL via Supabase com schema completo, RLS policies, RPC functions, Storage buckets, migrações versionadas e client SDK configurado.",
   "functional_requirements": [
     {
@@ -53,6 +53,18 @@
       "description": "Client SDK configurado com env vars para URL e anon key",
       "priority": "Crítica",
       "status": "Finalizado"
+    },
+    {
+      "id": "FR-009",
+      "description": "Migração entre contas/projetos Supabase suportada via bootstrap + migrations versionadas + troca controlada de envs, sem depender de Organization Transfer pago",
+      "priority": "Crítica",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-010",
+      "description": "Objetos runtime críticos (Edge Function persistence, analytics e RPCs de tracking) foram reconciliados no novo projeto com migrations idempotentes e validação real em runtime antes do cutover final",
+      "priority": "Crítica",
+      "status": "Finalizado"
     }
   ],
   "non_functional_requirements": [
@@ -78,6 +90,12 @@
       "id": "NFR-004",
       "description": "Backup e point-in-time recovery via Supabase managed",
       "category": "Escalabilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-005",
+      "description": "Front-end deve evitar URLs hardcoded de um project ref específico para não quebrar durante migração de conta",
+      "category": "Portabilidade",
       "status": "Finalizado"
     }
   ],
@@ -119,12 +137,12 @@
       "supabase/migrations/20260316094654_3224bdbe-379b-4734-b305-0d8b553d2e43.sql",
       "supabase/migrations/20260323081953_c76cd187-0f62-485d-994d-2e07856b1bc4.sql",
       "supabase/migrations/20260323120000_add_podcast_system.sql",
-      "supabase/migrations/20260323_audit_logs.sql",
-      "supabase/migrations/20260323_expand_roles.sql",
-      "supabase/migrations/20260323_permissions_features.sql",
-      "supabase/migrations/20260323_permissions_validation.sql",
-      "supabase/migrations/20260323_remove_auto_admin.sql",
-      "supabase/migrations/20260323_user_role_assignments.sql",
+      "supabase/migrations/20260323082000_audit_logs.sql",
+      "supabase/migrations/20260323083000_expand_roles.sql",
+      "supabase/migrations/20260323084000_remove_auto_admin.sql",
+      "supabase/migrations/20260323085000_user_role_assignments.sql",
+      "supabase/migrations/20260323090000_permissions_features.sql",
+      "supabase/migrations/20260323091000_permissions_validation.sql",
       "supabase/migrations/20260324090000_add_courses_table.sql",
       "supabase/migrations/20260405100000_add_security_codes.sql",
       "supabase/migrations/20260405200000_add_automations_table.sql",
@@ -132,7 +150,8 @@
       "supabase/migrations/20260406190000_add_partner_access_requests.sql",
       "supabase/migrations/20260407000000_add_invite_type_security_codes.sql",
       "supabase/migrations/20260408021000_add_news_pipeline_tables.sql",
-      "supabase/migrations/20260409000000_automation_engine_v2.sql"
+      "supabase/migrations/20260409000000_automation_engine_v2.sql",
+      "supabase/migrations/20260410223000_restore_runtime_support_objects.sql"
     ]
   },
   "qa_tests": [
@@ -164,6 +183,12 @@
       "id": "QA-005",
       "type": "integration",
       "description": "Testar que todas as migrações aplicam em sequência sem conflitos",
+      "status": "Finalizado"
+    },
+    {
+      "id": "QA-006",
+      "type": "integration",
+      "description": "Revisar drift residual entre schema remoto e migrations versionadas antes do cutover final",
       "status": "Pendente"
     }
   ],
@@ -239,6 +264,30 @@
       "version": "1.3.0",
       "author": "Vision7 Team",
       "description": "Adicionadas tabelas Automation Engine v2 (automations_v2, automation_executions, automation_templates, automation_audit_log) e pipeline de conteúdo (news_staging, news_clusters, curated_posts, posting_queue, editorial_feedback). 2 novas migrações."
+    },
+    {
+      "date": "2026-04-10",
+      "version": "1.3.4",
+      "author": "Vision7 Team",
+      "description": "Durante a migração cross-account, foi confirmada deriva residual em objetos runtime (`partner_access_requests`, `increment_views`, `track_podcast_download` e tabelas auxiliares). A migration `20260410223000_restore_runtime_support_objects.sql` foi preparada, a reconciliação foi aplicada diretamente no projeto novo e os fluxos foram revalidados com `request-team-access` = `200`/`stored:true` e RPCs = `204`."
+    },
+    {
+      "date": "2026-04-11",
+      "version": "1.3.5",
+      "author": "Vision7 Team",
+      "description": "Fecho do cutover: frontend consolidado para `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`, helper temporário de reconciliação removido do repositório/projeto, secret de manutenção removido e documentação final do cutover atualizada."
+    },
+    {
+      "date": "2026-04-10",
+      "version": "1.3.1",
+      "author": "Vision7 Team",
+      "description": "Documentado o runbook de migração controlada para nova conta Supabase e removidos fallbacks hardcoded de Storage dependentes do projeto antigo."
+    },
+    {
+      "date": "2026-04-10",
+      "version": "1.3.2",
+      "author": "Vision7 Team",
+      "description": "Passo 2 validado no novo projeto com `supabase db push --include-all`; migrations de 23/03 normalizadas com timestamps únicos e replay em shadow DB verificado."
     }
   ]
 }

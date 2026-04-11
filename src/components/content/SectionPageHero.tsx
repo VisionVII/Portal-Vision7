@@ -58,7 +58,6 @@ const SectionPageHero: React.FC<SectionPageHeroProps> = ({
             className="absolute inset-0 h-full w-full object-cover object-center"
             loading="eager"
             decoding="async"
-            fetchPriority="high"
           />
         </picture>
       ) : (

@@ -171,8 +171,8 @@
     ],
     "migrations": [
       "supabase/migrations/20260202183547_6d80e859-6e5c-4280-be42-4f0fb8d43b54.sql",
-      "supabase/migrations/20260323_expand_roles.sql",
-      "supabase/migrations/20260323_permissions_features.sql"
+      "supabase/migrations/20260323083000_expand_roles.sql",
+      "supabase/migrations/20260323090000_permissions_features.sql"
     ]
   },
   "qa_tests": [

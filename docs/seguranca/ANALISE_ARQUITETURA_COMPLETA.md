@@ -66,7 +66,7 @@ CREATE TYPE public.app_role AS ENUM ('admin', 'moderator', 'user');
 ```typescript
 export const supabase = createClient<Database>(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
   {
     auth: {
       storage: localStorage,           // ⚠️ Não é secure (XSS exposto)

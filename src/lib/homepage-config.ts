@@ -39,8 +39,9 @@ export const HOME_BANNER_STORAGE_PREFIX = 'site/banners';
 export const ALLOWED_HOME_BANNER_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
 export const MAX_HOME_BANNER_SIZE_BYTES = 5 * 1024 * 1024;
 
-const defaultBannerImage = 'https://stpusdeqwbckvfsitsld.supabase.co/storage/v1/object/public/post-images/site/banners/homepage-desktop-1775787060047-versao-no-vova-logo-vision-estilo-premium-defaul.png';
-const defaultMobileBannerImage = 'https://stpusdeqwbckvfsitsld.supabase.co/storage/v1/object/public/post-images/site/banners/homepage-mobile-1775786975760-gemini-2-5-flash-image-agora-retire-o-fundom-pre.jpg';
+// Mantém fallbacks locais para os banners e evita dependência do project ref antigo durante migrações do Supabase.
+const defaultBannerImage = '/vision-logo-premium-default.png';
+const defaultMobileBannerImage = '/vision-logo-premium-default.png';
 const defaultBannerDescription = 'Acesse insights estratégicos sobre tecnologia, inteligência artificial, inovação e negócios digitais. Informação clara e relevante para decisões rápidas em um mundo em constante evolução.';
 
 export const defaultHomePageBanners: HomePageBanner[] = [

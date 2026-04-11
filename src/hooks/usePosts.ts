@@ -348,7 +348,10 @@ export const useTrackPostView = () => {
         content_id: postId,
       });
 
-      if (error) throw new Error(error.message || 'Não foi possível registar a visualização do post.');
+      if (error) {
+        console.warn('[useTrackPostView] tracking skipped during migration:', error.message || error);
+        return;
+      }
     },
   });
 };
