@@ -16,7 +16,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ ($env.SUPABASE_URL || "https://stpusdeqwbckvfsitsld.supabase.co") + "/rest/v1/news_staging" }}",
+        "url": "={{ ($env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/news_staging' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -52,7 +52,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ ($env.SUPABASE_URL || "https://stpusdeqwbckvfsitsld.supabase.co") + "/rest/v1/news_clusters" }}",
+        "url": "={{ ($env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/news_clusters' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -91,7 +91,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ ($env.SUPABASE_URL || "https://stpusdeqwbckvfsitsld.supabase.co") + "/rest/v1/news_staging" }}",
+        "url": "={{ ($env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/news_staging' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
