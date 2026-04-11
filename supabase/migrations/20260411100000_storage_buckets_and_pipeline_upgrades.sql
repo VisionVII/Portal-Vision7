@@ -392,13 +392,8 @@ EXCEPTION WHEN OTHERS THEN
   NULL;
 END $$;
 
--- Add reviewer permissions
-INSERT INTO public.role_permissions (role, resource, actions)
-VALUES
-  ('reviewer', 'posts', '["read", "update"]'),
-  ('reviewer', 'comments', '["read", "moderate"]'),
-  ('reviewer', 'dashboard', '["view_reviewer"]')
-ON CONFLICT DO NOTHING;
+-- Add reviewer permissions (must be in separate transaction from ADD VALUE)
+-- Will be applied in a follow-up migration after 'reviewer' enum is committed
 
 -- ═══════════════════════════════════════════════════
 -- 10. DONE
