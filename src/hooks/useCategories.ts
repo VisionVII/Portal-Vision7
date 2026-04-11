@@ -43,7 +43,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-export const useCategories = () => {
+export const useCategories = (enabled = true) => {
   return useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -62,6 +62,7 @@ export const useCategories = () => {
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled,
   });
 };
 

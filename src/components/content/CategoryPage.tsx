@@ -13,6 +13,8 @@ import { getSectionPageBanner, parseSectionPageBanners, SECTION_PAGE_BANNERS_KEY
 import SectionPageHero from './SectionPageHero';
 import { cn } from '@/lib/utils';
 
+const dateFormatter = new Intl.DateTimeFormat('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' });
+
 interface CategoryPageProps {
   slug: string;
   title: string;
@@ -111,7 +113,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
                         category={post.categories?.name || title}
                         categoryColor={post.categories?.color || defaultCategoryColor}
                         author={post.author_name}
-                        date={new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        date={dateFormatter.format(new Date(post.published_at || post.created_at))}
                         readTime={post.read_time}
                         slug={post.slug}
                       />

@@ -88,7 +88,7 @@ const fallbackCourses: Course[] = initialCourses.map((course) => ({
     : null,
 }));
 
-export const useCourses = (adminView = false) => {
+export const useCourses = (adminView: boolean | undefined = false, enabled = true) => {
   return useQuery({
     queryKey: ['courses', adminView],
     queryFn: async () => {
@@ -122,6 +122,7 @@ export const useCourses = (adminView = false) => {
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled,
   });
 };
 
