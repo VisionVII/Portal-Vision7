@@ -89,6 +89,7 @@ const AudiocastsView: React.FC = () => {
   const [search, setSearch] = useState('');
   const [form, setForm] = useState<AudiocastForm>(EMPTY_FORM);
   const [uploading, setUploading] = useState(false);
+  const isSubmitting = uploading || createMutation.isPending || updateMutation.isPending;
 
   // Filter
   const filtered = useMemo(() => {
@@ -262,6 +263,29 @@ const AudiocastsView: React.FC = () => {
     [deleteMutation, toast],
   );
 
+  const handleQuickPublish = useCallback(
+    async (ac: Audiocast) => {
+      try {
+        await updateMutation.mutateAsync({ id: ac.id, status: 'published' });
+        toast({
+          title: 'Audiocast publicado',
+          description: 'Agora ele ficará visível na página pública de audiocasts.',
+        });
+      } catch (err) {
+        toast({ title: 'Erro ao publicar', description: (err as Error).message, variant: 'destructive' });
+      }
+    },
+    [toast, updateMutation],
+  );
+
+  const submitLabel = editingId
+    ? form.status === 'published'
+      ? 'Guardar e publicar'
+      : 'Guardar como rascunho'
+    : form.status === 'published'
+      ? 'Publicar audiocast'
+      : 'Salvar rascunho';
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
@@ -369,7 +393,7 @@ const AudiocastsView: React.FC = () => {
 
                 {/* Status */}
                 <div className="space-y-1.5">
-                  <Label>Estado</Label>
+                  <Label>Estado de publicação</Label>
                   <Select
                     value={form.status}
                     onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}
@@ -382,6 +406,9 @@ const AudiocastsView: React.FC = () => {
                       <SelectItem value="published">Publicado</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Só audiocasts com estado <strong>Publicado</strong> aparecem na página pública e na home.
+                  </p>
                 </div>
 
                 {/* Tags */}
@@ -461,13 +488,13 @@ const AudiocastsView: React.FC = () => {
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={uploading} className="gap-2">
-                  {uploading ? (
+                <Button type="submit" disabled={isSubmitting} className="gap-2">
+                  {isSubmitting ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   ) : (
                     <Upload className="h-4 w-4" />
                   )}
-                  {editingId ? 'Guardar alterações' : 'Publicar Audiocast'}
+                  {submitLabel}
                 </Button>
               </div>
             </form>
@@ -545,6 +572,11 @@ const AudiocastsView: React.FC = () => {
                         })}
                       </span>
                     </div>
+                    {ac.status !== 'published' && (
+                      <p className="mt-1 text-[11px] text-amber-500">
+                        Este audiocast está em rascunho e não aparece na área pública.
+                      </p>
+                    )}
                     {ac.tags && ac.tags.length > 0 && (
                       <div className="mt-1.5 flex flex-wrap gap-1">
                         {ac.tags.map((t: string) => (
@@ -560,6 +592,19 @@ const AudiocastsView: React.FC = () => {
                   </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
+                    {ac.status !== 'published' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => handleQuickPublish(ac)}
+                        disabled={updateMutation.isPending}
+                        title="Publicar audiocast"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Publicar
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => openEdit(ac)} title="Editar">
                       <Pencil className="h-4 w-4" />
                     </Button>

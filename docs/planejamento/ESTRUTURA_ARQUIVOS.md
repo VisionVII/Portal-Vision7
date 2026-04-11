@@ -121,14 +121,14 @@ src/
 
 supabase/
 ├── migrations/
-│   ├── 20260323_remove_auto_admin.sql  ✨ NOVO
-│   ├── 20260323_registration_invites.sql ✨ NOVO (inside above)
-│   ├── 20260323_expand_roles.sql       ✨ NOVO
-│   ├── 20260323_permissions_matrix.sql ✨ NOVO
-│   ├── 20260323_audit_logs.sql         ✨ NOVO
-│   ├── 20260323_2fa_support.sql        ✨ NOVO
-│   ├── 20260324_rate_limits.sql        ✨ NOVO
-│   └── 20260325_session_mgmt.sql       ✨ NOVO
+│   ├── 20260323082000_audit_logs.sql              ✨ NOVO
+│   ├── 20260323083000_expand_roles.sql           ✨ NOVO
+│   ├── 20260323084000_remove_auto_admin.sql      ✨ NOVO
+│   ├── 20260323085000_user_role_assignments.sql  ✨ NOVO
+│   ├── 20260323090000_permissions_features.sql   ✨ NOVO
+│   ├── 20260323091000_permissions_validation.sql ✨ NOVO
+│   ├── 20260324_rate_limits.sql                  ✨ PLANEJADO/HISTÓRICO
+│   └── 20260325_session_mgmt.sql                 ✨ PLANEJADO/HISTÓRICO
 │
 └── functions/
     ├── rate-limit/index.py             ✨ NOVO (Edge function)
@@ -193,10 +193,12 @@ supabase/
 ### SEMANA 1 (Críticas) - 18 arquivos
 
 **Criar:**
-- supabase/migrations/20260323_remove_auto_admin.sql
-- supabase/migrations/20260323_expand_roles.sql
-- supabase/migrations/20260323_permissions_matrix.sql
-- supabase/migrations/20260323_audit_logs.sql
+- supabase/migrations/20260323082000_audit_logs.sql
+- supabase/migrations/20260323083000_expand_roles.sql
+- supabase/migrations/20260323084000_remove_auto_admin.sql
+- supabase/migrations/20260323085000_user_role_assignments.sql
+- supabase/migrations/20260323090000_permissions_features.sql
+- supabase/migrations/20260323091000_permissions_validation.sql
 - src/contexts/PermissionContext.tsx
 - src/lib/permissions.ts
 
