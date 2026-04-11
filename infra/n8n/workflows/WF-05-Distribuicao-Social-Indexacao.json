@@ -1,0 +1,173 @@
+{
+  "name": "WF-05 Distribuicao Social e Indexacao",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule_trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fetch recently published posts that haven't been distributed yet\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst headers = { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' };\n\n// Get posts published in last 48h\nconst since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();\nlet posts;\ntry {\n  posts = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SUPABASE_URL + '/rest/v1/posts?select=id,title,slug,excerpt,category,image_url,created_at,seo_score,primary_keyword,meta_description&status=eq.published&created_at=gte.' + since + '&order=created_at.desc&limit=10',\n    headers: headers, json: true\n  });\n} catch (e) { posts = []; }\n\nif (!Array.isArray(posts)) posts = [];\n\n// Get already distributed post IDs\nlet distributed;\ntry {\n  const postIds = posts.map(p => p.id);\n  if (postIds.length > 0) {\n    distributed = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/post_distributions?select=post_id,channel&post_id=in.(' + postIds.join(',') + ')',\n      headers: headers, json: true\n    });\n  } else { distributed = []; }\n} catch (e) { distributed = []; }\nif (!Array.isArray(distributed)) distributed = [];\n\nconst distributedSet = new Set(distributed.map(d => d.post_id + ':' + d.channel));\n\nconst SITE_URL = $env.SITE_URL || 'https://vision7.pt';\nconst channels = ['sitemap', 'twitter', 'linkedin'];\n\nconst output = [];\nfor (const post of posts) {\n  for (const channel of channels) {\n    const key = post.id + ':' + channel;\n    if (!distributedSet.has(key)) {\n      output.push({\n        json: {\n          post_id: post.id,\n          title: post.title,\n          slug: post.slug,\n          excerpt: post.excerpt || '',\n          image_url: post.image_url || '',\n          category: post.category || 'geral',\n          primary_keyword: post.primary_keyword || '',\n          meta_description: post.meta_description || post.excerpt || '',\n          post_url: SITE_URL + '/post/' + post.slug,\n          channel: channel,\n          created_at: post.created_at\n        }\n      });\n    }\n  }\n}\n\nif (output.length === 0) {\n  return [{ json: { skip: true, message: 'No new posts to distribute' } }];\n}\n\nreturn output;"
+      },
+      "id": "fetch_undistributed",
+      "name": "Fetch Undistributed Posts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1160,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.skip }}",
+              "value2": true,
+              "operation": "notEqual"
+            }
+          ]
+        }
+      },
+      "id": "filter_active",
+      "name": "Has Posts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route by channel\nconst item = $json;\nconst channel = item.channel;\n\n// All items pass through — downstream nodes filter by channel\nreturn [{ json: { ...item } }];"
+      },
+      "id": "route_channel",
+      "name": "Route by Channel",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -680,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sitemap + Google Indexing API ping\nconst post = $json;\nif (post.channel !== 'sitemap') return [];\n\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst SITE_URL = $env.SITE_URL || 'https://vision7.pt';\nconst headers = { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' };\n\n// 1. Upsert sitemap entry\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SUPABASE_URL + '/rest/v1/sitemap_entries',\n    headers: { ...headers, 'Prefer': 'resolution=merge-duplicates' },\n    body: {\n      post_id: post.post_id,\n      url: post.post_url,\n      last_modified: new Date().toISOString(),\n      changefreq: 'daily',\n      priority: 0.8\n    },\n    json: true\n  });\n} catch (e) { /* may already exist */ }\n\n// 2. Ping Google with updated sitemap URL\nlet googlePingResult = null;\ntry {\n  const sitemapUrl = SITE_URL + '/sitemap.xml';\n  googlePingResult = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://www.google.com/ping?sitemap=' + encodeURIComponent(sitemapUrl),\n    returnFullResponse: true\n  });\n} catch (e) { googlePingResult = { error: e.message }; }\n\n// 3. Record distribution\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SUPABASE_URL + '/rest/v1/post_distributions',\n    headers: headers,\n    body: {\n      post_id: post.post_id,\n      channel: 'sitemap',\n      status: 'sent',\n      sent_at: new Date().toISOString(),\n      external_url: post.post_url,\n      engagement: { google_pinged: true }\n    },\n    json: true\n  });\n} catch (e) { /* ok */ }\n\nreturn [{ json: { success: true, channel: 'sitemap', post_id: post.post_id, google_ping: googlePingResult ? 'ok' : 'failed' } }];"
+      },
+      "id": "sitemap_index",
+      "name": "Sitemap + Google Ping",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -440,
+        -50
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Twitter/X distribution (requires TWITTER_BEARER_TOKEN env)\nconst post = $json;\nif (post.channel !== 'twitter') return [];\n\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst headers = { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' };\nconst twitterToken = $env.TWITTER_BEARER_TOKEN || '';\n\nlet result = { status: 'pending', external_id: null, error: null };\n\nif (twitterToken) {\n  try {\n    // Compose tweet: title + excerpt + url + hashtag\n    const hashtag = post.primary_keyword ? ' #' + post.primary_keyword.replace(/\\s+/g, '') : '';\n    const tweetText = post.title + '\\n\\n' + (post.excerpt || '').substring(0, 120) + '...\\n\\n' + post.post_url + hashtag + ' #Vision7 #Tech';\n    \n    const resp = await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.twitter.com/2/tweets',\n      headers: { 'Authorization': 'Bearer ' + twitterToken, 'Content-Type': 'application/json' },\n      body: { text: tweetText.substring(0, 280) },\n      json: true\n    });\n    result = { status: 'sent', external_id: resp.data?.id || null, error: null };\n  } catch (e) {\n    result = { status: 'failed', external_id: null, error: e.message };\n  }\n} else {\n  result = { status: 'pending', external_id: null, error: 'TWITTER_BEARER_TOKEN not configured' };\n}\n\n// Record distribution\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SUPABASE_URL + '/rest/v1/post_distributions',\n    headers: headers,\n    body: {\n      post_id: post.post_id,\n      channel: 'twitter',\n      status: result.status,\n      sent_at: result.status === 'sent' ? new Date().toISOString() : null,\n      external_id: result.external_id,\n      error_detail: result.error\n    },\n    json: true\n  });\n} catch (e) { /* ok */ }\n\nreturn [{ json: { success: result.status === 'sent', channel: 'twitter', post_id: post.post_id, tweet_id: result.external_id, error: result.error } }];"
+      },
+      "id": "twitter_post",
+      "name": "Post to Twitter/X",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -440,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// LinkedIn distribution (requires LINKEDIN_ACCESS_TOKEN env)\nconst post = $json;\nif (post.channel !== 'linkedin') return [];\n\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst headers = { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' };\nconst linkedinToken = $env.LINKEDIN_ACCESS_TOKEN || '';\nconst linkedinAuthorId = $env.LINKEDIN_AUTHOR_ID || '';\n\nlet result = { status: 'pending', external_id: null, error: null };\n\nif (linkedinToken && linkedinAuthorId) {\n  try {\n    const shareText = post.title + '\\n\\n' + (post.excerpt || '').substring(0, 200) + '\\n\\nLer mais: ' + post.post_url + '\\n\\n#Vision7 #Tecnologia';\n    \n    const resp = await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.linkedin.com/v2/ugcPosts',\n      headers: { 'Authorization': 'Bearer ' + linkedinToken, 'Content-Type': 'application/json', 'X-Restli-Protocol-Version': '2.0.0' },\n      body: {\n        author: 'urn:li:person:' + linkedinAuthorId,\n        lifecycleState: 'PUBLISHED',\n        specificContent: {\n          'com.linkedin.ugc.ShareContent': {\n            shareCommentary: { text: shareText.substring(0, 700) },\n            shareMediaCategory: 'ARTICLE',\n            media: [{\n              status: 'READY',\n              originalUrl: post.post_url,\n              title: { text: post.title },\n              description: { text: post.meta_description || post.excerpt || '' }\n            }]\n          }\n        },\n        visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' }\n      },\n      json: true\n    });\n    result = { status: 'sent', external_id: resp.id || null, error: null };\n  } catch (e) {\n    result = { status: 'failed', external_id: null, error: e.message };\n  }\n} else {\n  result = { status: 'pending', external_id: null, error: 'LINKEDIN_ACCESS_TOKEN or LINKEDIN_AUTHOR_ID not configured' };\n}\n\n// Record distribution\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SUPABASE_URL + '/rest/v1/post_distributions',\n    headers: headers,\n    body: {\n      post_id: post.post_id,\n      channel: 'linkedin',\n      status: result.status,\n      sent_at: result.status === 'sent' ? new Date().toISOString() : null,\n      external_id: result.external_id,\n      error_detail: result.error\n    },\n    json: true\n  });\n} catch (e) { /* ok */ }\n\nreturn [{ json: { success: result.status === 'sent', channel: 'linkedin', post_id: post.post_id, error: result.error } }];"
+      },
+      "id": "linkedin_post",
+      "name": "Post to LinkedIn",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -440,
+        350
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Undistributed Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Undistributed Posts": {
+      "main": [
+        [
+          {
+            "node": "Has Posts?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Posts?": {
+      "main": [
+        [
+          {
+            "node": "Route by Channel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Route by Channel": {
+      "main": [
+        [
+          {
+            "node": "Sitemap + Google Ping",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to Twitter/X",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

@@ -1,5 +1,5 @@
 {
-  "name": "WF-01 Coleta MultiPesquisa Noticias",
+  "name": "WF-01 Coleta MultiPesquisa Noticias v2",
   "nodes": [
     {
       "parameters": {
@@ -17,20 +17,20 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -1200,
+        -1400,
         200
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Dynamic feed builder — reads editorial themes from pipeline_search_config\n// Falls back to legacy tags or defaults if schema is not updated yet\n\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://stpusdeqwbckvfsitsld.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\n\nconst DEFAULT_TAGS = [\n  { tag: 'inteligência artificial', topic: 'ia' },\n  { tag: 'cibersegurança', topic: 'ciberseguranca' },\n  { tag: 'automação empresarial', topic: 'automacao' },\n];\n\nfunction buildGoogleNewsUrl(query) {\n  return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=pt-PT&gl=PT&ceid=PT:pt`;\n}\n\nfunction tagToTopic(tag) {\n  return tag\n    .toLowerCase()\n    .normalize('NFD')\n    .replace(/[̀-ͯ]/g, '')\n    .replace(/[^a-z0-9]+/g, '_')\n    .replace(/^_|_$/g, '');\n}\n\nfunction isMissingEditorialColumns(message) {\n  return /(default_post_tags|theme_rules)/i.test(String(message || ''))\n    && /(does not exist|schema cache|Could not find)/i.test(String(message || ''));\n}\n\nasync function loadPipelineConfig() {\n  try {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${SUPABASE_URL}/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags,theme_rules`,\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Content-Type': 'application/json',\n      },\n    });\n    const configs = Array.isArray(resp) ? resp : [];\n    return configs[0] || null;\n  } catch (e) {\n    if (!isMissingEditorialColumns(e?.message)) throw e;\n\n    const legacyResp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${SUPABASE_URL}/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags`,\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Content-Type': 'application/json',\n      },\n    });\n    const legacyConfigs = Array.isArray(legacyResp) ? legacyResp : [];\n    return legacyConfigs[0] || null;\n  }\n}\n\nlet tags = DEFAULT_TAGS;\n\ntry {\n  const activeConfig = await loadPipelineConfig();\n  const themeRules = Array.isArray(activeConfig?.theme_rules) ? activeConfig.theme_rules : [];\n\n  if (themeRules.length > 0) {\n    const themedTags = themeRules.flatMap((rule) => {\n      const searchTerms = Array.isArray(rule?.searchTerms) ? rule.searchTerms : Array.isArray(rule?.search_terms) ? rule.search_terms : [];\n      const slug = String(rule?.slug || '').trim();\n      return searchTerms\n        .map((term) => String(term || '').trim())\n        .filter(Boolean)\n        .map((term) => ({\n          tag: term,\n          topic: slug || tagToTopic(term),\n        }));\n    });\n\n    if (themedTags.length > 0) {\n      tags = themedTags;\n    }\n  } else if (Array.isArray(activeConfig?.tags) && activeConfig.tags.length > 0) {\n    tags = activeConfig.tags.map((t) => ({\n      tag: t,\n      topic: tagToTopic(t),\n    }));\n  }\n} catch (e) {\n  // Fallback to defaults silently\n}\n\nreturn tags.map((t) => ({\n  json: {\n    url: buildGoogleNewsUrl(t.tag),\n    topic: t.topic,\n  }\n}));"
+        "jsCode": "// Dynamic feed builder — reads editorial themes from pipeline_search_config\n// v2: includes topic volume tracking for trend scoring\n\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\n\nconst DEFAULT_TAGS = [\n  { tag: 'inteligência artificial', topic: 'ia' },\n  { tag: 'cibersegurança', topic: 'ciberseguranca' },\n  { tag: 'automação empresarial', topic: 'automacao' },\n];\n\nfunction buildGoogleNewsUrl(query) {\n  return 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=pt-PT&gl=PT&ceid=PT:pt';\n}\n\nfunction tagToTopic(tag) {\n  return tag.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');\n}\n\nfunction isMissingEditorialColumns(message) {\n  return /(default_post_tags|theme_rules)/i.test(String(message || '')) && /(does not exist|schema cache|Could not find)/i.test(String(message || ''));\n}\n\nasync function loadPipelineConfig() {\n  try {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags,theme_rules',\n      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },\n    });\n    const configs = Array.isArray(resp) ? resp : [];\n    return configs[0] || null;\n  } catch (e) {\n    if (!isMissingEditorialColumns(e?.message)) throw e;\n    const legacyResp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags',\n      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },\n    });\n    const legacyConfigs = Array.isArray(legacyResp) ? legacyResp : [];\n    return legacyConfigs[0] || null;\n  }\n}\n\n// Load recent staging counts per topic (last 24h) to detect velocity\nasync function loadRecentVolume() {\n  try {\n    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/news_staging?select=topic,id&collected_at=gte.' + since,\n      headers: { 'apikey': SUPABASE_KEY },\n    });\n    const rows = Array.isArray(resp) ? resp : [];\n    const counts = {};\n    for (const r of rows) {\n      const t = r.topic || 'geral';\n      counts[t] = (counts[t] || 0) + 1;\n    }\n    return counts;\n  } catch (e) {\n    return {};\n  }\n}\n\nlet tags = DEFAULT_TAGS;\n\ntry {\n  const activeConfig = await loadPipelineConfig();\n  const themeRules = Array.isArray(activeConfig?.theme_rules) ? activeConfig.theme_rules : [];\n\n  if (themeRules.length > 0) {\n    const themedTags = themeRules.flatMap((rule) => {\n      const searchTerms = Array.isArray(rule?.searchTerms) ? rule.searchTerms : Array.isArray(rule?.search_terms) ? rule.search_terms : [];\n      const slug = String(rule?.slug || '').trim();\n      return searchTerms.map((term) => String(term || '').trim()).filter(Boolean).map((term) => ({ tag: term, topic: slug || tagToTopic(term) }));\n    });\n    if (themedTags.length > 0) tags = themedTags;\n  } else if (Array.isArray(activeConfig?.tags) && activeConfig.tags.length > 0) {\n    tags = activeConfig.tags.map((t) => ({ tag: t, topic: tagToTopic(t) }));\n  }\n} catch (e) { /* fallback to defaults */ }\n\nconst volumeByTopic = await loadRecentVolume.call(this);\n\nreturn tags.map((t) => ({\n  json: {\n    url: buildGoogleNewsUrl(t.tag),\n    topic: t.topic,\n    search_tag: t.tag,\n    recent_volume: volumeByTopic[t.topic] || 0\n  }\n}));"
       },
       "id": "build_feeds",
       "name": "Build Feed List",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -960,
+        -1160,
         200
       ]
     },
@@ -44,28 +44,28 @@
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.1,
       "position": [
-        -720,
+        -920,
         200
       ],
       "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "function fnv1aHash(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = Math.imul(h, 0x01000193);\n  }\n  h = h >>> 0;\n  let hex = h.toString(16).padStart(8, '0');\n  let h2 = 0x811c9dc5;\n  for (let i = str.length - 1; i >= 0; i--) {\n    h2 ^= str.charCodeAt(i);\n    h2 = Math.imul(h2, 0x01000193);\n  }\n  h2 = h2 >>> 0;\n  hex += h2.toString(16).padStart(8, '0');\n  let h3 = 0x811c9dc5;\n  for (let i = 0; i < str.length; i += 2) {\n    h3 ^= str.charCodeAt(i);\n    h3 = Math.imul(h3, 0x01000193);\n  }\n  h3 = h3 >>> 0;\n  hex += h3.toString(16).padStart(8, '0');\n  let h4 = 0x811c9dc5;\n  for (let i = 1; i < str.length; i += 2) {\n    h4 ^= str.charCodeAt(i);\n    h4 = Math.imul(h4, 0x01000193);\n  }\n  h4 = h4 >>> 0;\n  hex += h4.toString(16).padStart(8, '0');\n  return hex;\n}\n\nconst feedItem = $('Build Feed List').item.json;\nconst output = [];\n\nfor (const item of items) {\n  try {\n    const title = String(item.json.title || '').trim();\n    const link = String(item.json.link || '').trim();\n    if (!title || !link) continue;\n    const fingerprint = fnv1aHash(title.toLowerCase().replace(/[^a-z0-9]/g, ''));\n    output.push({\n      json: {\n        title: title,\n        summary: String(item.json.contentSnippet || item.json.content || '').substring(0, 500),\n        canonical_url: link,\n        source_name: String(item.json.creator || item.json.source || 'Google News'),\n        topic: feedItem.topic || 'geral',\n        published_at: item.json.isoDate || item.json.pubDate || new Date().toISOString(),\n        source_url: feedItem.url,\n        duplicate_fingerprint: fingerprint,\n        processed: false,\n        content: null,\n        metadata: { feed_url: feedItem.url }\n      }\n    });\n  } catch (e) {\n    // skip\n  }\n}\n\nreturn output;"
+        "jsCode": "function fnv1aHash(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = Math.imul(h, 0x01000193);\n  }\n  h = h >>> 0;\n  let hex = h.toString(16).padStart(8, '0');\n  let h2 = 0x811c9dc5;\n  for (let i = str.length - 1; i >= 0; i--) {\n    h2 ^= str.charCodeAt(i);\n    h2 = Math.imul(h2, 0x01000193);\n  }\n  h2 = h2 >>> 0;\n  hex += h2.toString(16).padStart(8, '0');\n  let h3 = 0x811c9dc5;\n  for (let i = 0; i < str.length; i += 2) {\n    h3 ^= str.charCodeAt(i);\n    h3 = Math.imul(h3, 0x01000193);\n  }\n  h3 = h3 >>> 0;\n  hex += h3.toString(16).padStart(8, '0');\n  let h4 = 0x811c9dc5;\n  for (let i = 1; i < str.length; i += 2) {\n    h4 ^= str.charCodeAt(i);\n    h4 = Math.imul(h4, 0x01000193);\n  }\n  h4 = h4 >>> 0;\n  hex += h4.toString(16).padStart(8, '0');\n  return hex;\n}\n\n// Estimate trend score based on recency and volume signals\nfunction calculateTrendScore(item, feedMeta) {\n  let score = 50; // baseline\n\n  // Recency bonus: articles < 2h get +30, < 6h get +20, < 12h get +10\n  const pubDate = new Date(item.json.isoDate || item.json.pubDate || Date.now());\n  const hoursAgo = (Date.now() - pubDate.getTime()) / (1000 * 60 * 60);\n  if (hoursAgo < 2) score += 30;\n  else if (hoursAgo < 6) score += 20;\n  else if (hoursAgo < 12) score += 10;\n\n  // Topic volume bonus: more articles on same topic = trending\n  const vol = feedMeta.recent_volume || 0;\n  if (vol > 20) score += 15;\n  else if (vol > 10) score += 10;\n  else if (vol > 5) score += 5;\n\n  // Title signals: breaking news indicators\n  const title = String(item.json.title || '').toLowerCase();\n  const hotWords = ['urgente', 'breaking', 'exclusivo', 'alerta', 'novo', 'lança', 'anuncia', 'revela'];\n  if (hotWords.some(w => title.includes(w))) score += 10;\n\n  return Math.min(score, 100);\n}\n\nconst feedItem = $('Build Feed List').item.json;\nconst output = [];\n\nfor (const item of items) {\n  try {\n    const title = String(item.json.title || '').trim();\n    const link = String(item.json.link || '').trim();\n    if (!title || !link) continue;\n    const fingerprint = fnv1aHash(title.toLowerCase().replace(/[^a-z0-9]/g, ''));\n    const trendScore = calculateTrendScore(item, feedItem);\n\n    output.push({\n      json: {\n        title: title,\n        summary: String(item.json.contentSnippet || item.json.content || '').substring(0, 500),\n        canonical_url: link,\n        source_name: String(item.json.creator || item.json.source || 'Google News'),\n        topic: feedItem.topic || 'geral',\n        published_at: item.json.isoDate || item.json.pubDate || new Date().toISOString(),\n        source_url: feedItem.url,\n        duplicate_fingerprint: fingerprint,\n        processed: false,\n        content: null,\n        trend_score: trendScore,\n        search_volume: feedItem.recent_volume || 0,\n        trend_velocity: 0,\n        metadata: {\n          feed_url: feedItem.url,\n          search_tag: feedItem.search_tag,\n          trend_score: trendScore\n        }\n      }\n    });\n  } catch (e) { /* skip */ }\n}\n\n// Sort by trend score descending - prioritize trending content\noutput.sort((a, b) => (b.json.trend_score || 0) - (a.json.trend_score || 0));\n\nreturn output;"
       },
       "id": "normalize",
-      "name": "Normalize Records",
+      "name": "Normalize + Score Trends",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -480,
+        -680,
         200
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ ($env.SUPABASE_URL || $env.SUPABASE_URL || 'https://stpusdeqwbckvfsitsld.supabase.co') + '/rest/v1/news_staging' }}",
+        "url": "={{ ($env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/news_staging' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -79,20 +79,20 @@
             },
             {
               "name": "Prefer",
-              "value": "resolution=ignore-duplicates,return=minimal"
+              "value": "resolution=ignore-duplicates"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  title: $json.title,\n  summary: $json.summary,\n  canonical_url: $json.canonical_url,\n  source_name: $json.source_name,\n  source_url: $json.source_url,\n  topic: $json.topic,\n  published_at: $json.published_at,\n  duplicate_fingerprint: $json.duplicate_fingerprint,\n  processed: false,\n  content: null,\n  metadata: $json.metadata\n} }}"
+        "jsonBody": "={{ { title: $json.title, summary: $json.summary, canonical_url: $json.canonical_url, source_name: $json.source_name, source_url: $json.source_url, topic: $json.topic, published_at: $json.published_at, duplicate_fingerprint: $json.duplicate_fingerprint, processed: false, content: $json.content, trend_score: $json.trend_score, search_volume: $json.search_volume, trend_velocity: $json.trend_velocity, metadata: $json.metadata } }}"
       },
       "id": "insert_staging",
       "name": "Insert Staging",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -240,
+        -440,
         200
       ],
       "continueOnFail": true
@@ -125,14 +125,14 @@
       "main": [
         [
           {
-            "node": "Normalize Records",
+            "node": "Normalize + Score Trends",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Normalize Records": {
+    "Normalize + Score Trends": {
       "main": [
         [
           {
