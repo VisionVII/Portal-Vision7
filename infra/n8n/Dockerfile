@@ -14,5 +14,4 @@ EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
   CMD wget -qO- http://localhost:${N8N_PORT}/healthz || exit 1
 
-# Arrancar n8n na porta e host corretos para Render
-CMD ["n8n", "start"]
+# Não definir CMD — a imagem oficial n8nio/n8n já tem ENTRYPOINT correto
