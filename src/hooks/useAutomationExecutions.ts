@@ -80,8 +80,8 @@ export function useAutomationExecutions(filters: ExecutionFilters = {}) {
         total: count ?? 0,
       };
     },
-    staleTime: 10_000,
-    refetchInterval: 15_000,
+    staleTime: 60_000,
+    refetchInterval: 120_000,
     retry: 1,
   });
 

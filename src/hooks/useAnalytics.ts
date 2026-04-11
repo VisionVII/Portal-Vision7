@@ -50,9 +50,10 @@ export const useAnalytics = (eventType?: string, days = 30) => {
 
       let query = supabase
         .from('analytics_events')
-        .select('*')
+        .select('id, event_type, event_data, user_id, session_id, created_at')
         .gte('created_at', startDate.toISOString())
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1000);
 
       if (eventType) {
         query = query.eq('event_type', eventType);
