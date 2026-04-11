@@ -14,6 +14,19 @@ CREATE TABLE IF NOT EXISTS public.cmp_domains (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Auto-update updated_at on cmp_domains
+CREATE OR REPLACE FUNCTION public.cmp_domains_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_cmp_domains_updated_at
+  BEFORE UPDATE ON public.cmp_domains
+  FOR EACH ROW EXECUTE FUNCTION public.cmp_domains_updated_at();
+
 -- Seed current domain
 INSERT INTO public.cmp_domains (domain, display_name)
 VALUES ('vision7.pt', 'Vision VII Portal')
@@ -44,7 +57,8 @@ ON CONFLICT (domain_id, version) DO NOTHING;
 CREATE TABLE IF NOT EXISTS public.cmp_consent_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL DEFAULT 'anon',
-  domain TEXT NOT NULL DEFAULT 'vision7.pt',
+  domain TEXT NOT NULL DEFAULT 'vision7.pt'
+    REFERENCES public.cmp_domains(domain) ON DELETE CASCADE,
   consent JSONB NOT NULL,
   policy_version TEXT NOT NULL DEFAULT '1.0',
   method TEXT NOT NULL DEFAULT 'banner' CHECK (method IN ('banner', 'preferences', 'api')),
@@ -68,8 +82,12 @@ CREATE TABLE IF NOT EXISTS public.cmp_vendor_registry (
   category TEXT NOT NULL CHECK (category IN ('necessary', 'analytics', 'marketing', 'personalization')),
   script_pattern TEXT,
   is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (domain_id, vendor_name, category)
 );
+
+CREATE INDEX IF NOT EXISTS idx_cmp_vendor_domain
+  ON public.cmp_vendor_registry (domain_id);
 
 -- ── RLS Policies ────────────────────────────────────────────────────────────
 
@@ -117,3 +135,28 @@ CREATE POLICY cmp_vendor_select ON public.cmp_vendor_registry
 CREATE POLICY cmp_vendor_admin ON public.cmp_vendor_registry
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin'));
+
+-- ── GRANTs (CRÍTICO: sem isto as RLS policies são inúteis) ──────────────────
+
+-- anon: leitura de config + inserção de consentimento
+GRANT SELECT ON public.cmp_domains TO anon;
+GRANT SELECT ON public.cmp_policy_versions TO anon;
+GRANT SELECT ON public.cmp_vendor_registry TO anon;
+GRANT INSERT ON public.cmp_consent_records TO anon;
+
+-- authenticated: leitura de config + inserção de consentimento + admin SELECT
+GRANT SELECT, INSERT ON public.cmp_consent_records TO authenticated;
+GRANT SELECT ON public.cmp_domains TO authenticated;
+GRANT SELECT ON public.cmp_policy_versions TO authenticated;
+GRANT SELECT ON public.cmp_vendor_registry TO authenticated;
+
+-- authenticated admins: gestão completa (RLS controla acesso real)
+GRANT INSERT, UPDATE, DELETE ON public.cmp_domains TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.cmp_policy_versions TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.cmp_vendor_registry TO authenticated;
+
+-- service_role: acesso total
+GRANT ALL ON public.cmp_domains TO service_role;
+GRANT ALL ON public.cmp_policy_versions TO service_role;
+GRANT ALL ON public.cmp_consent_records TO service_role;
+GRANT ALL ON public.cmp_vendor_registry TO service_role;
