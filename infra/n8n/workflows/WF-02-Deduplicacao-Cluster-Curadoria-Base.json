@@ -1,17 +1,25 @@
 {
-  "name": "WF-02 Deduplicacao Cluster Curadoria Base",
+  "name": "WF-02 Deduplicacao Cluster Curadoria v2",
   "nodes": [
     {
       "parameters": {
         "rule": {
-          "interval": [{ "field": "minutes", "minutesInterval": 20 }]
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 20
+            }
+          ]
         }
       },
       "id": "schedule_trigger",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [-960, 180]
+      "position": [
+        -960,
+        180
+      ]
     },
     {
       "parameters": {
@@ -20,16 +28,31 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
           ]
         },
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
-            { "name": "select", "value": "id,title,summary,canonical_url,source_name,topic,published_at,duplicate_fingerprint,metadata" },
-            { "name": "processed", "value": "eq.false" },
-            { "name": "order", "value": "collected_at.desc" },
-            { "name": "limit", "value": "200" }
+            {
+              "name": "select",
+              "value": "id,title,summary,canonical_url,source_name,topic,published_at,duplicate_fingerprint,metadata,trend_score,search_volume"
+            },
+            {
+              "name": "processed",
+              "value": "eq.false"
+            },
+            {
+              "name": "order",
+              "value": "trend_score.desc.nullslast,collected_at.desc"
+            },
+            {
+              "name": "limit",
+              "value": "200"
+            }
           ]
         }
       },
@@ -37,17 +60,23 @@
       "name": "Fetch Unprocessed Staging",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-720, 180]
+      "position": [
+        -720,
+        180
+      ]
     },
     {
       "parameters": {
-        "jsCode": "function topicOf(row) {\n  return String(row.topic || 'geral').toLowerCase();\n}\n\nfunction confidence(cluster) {\n  const base = 55;\n  const addBySources = Math.min(cluster.items.length * 8, 30);\n  return Math.min(base + addBySources, 95);\n}\n\nlet rows;\nif (Array.isArray(items[0]?.json)) {\n  rows = items[0].json;\n} else {\n  rows = items.map(i => i.json);\n}\nif (!rows || rows.length === 0) {\n  return [];\n}\n\nconst clusters = new Map();\nfor (const row of rows) {\n  const fp = row.duplicate_fingerprint || row.id;\n  if (!clusters.has(fp)) {\n    clusters.set(fp, {\n      fingerprint: fp,\n      topic: topicOf(row),\n      primary_staging_id: row.id,\n      source_count: 0,\n      confidence_score: 0,\n      entities: [],\n      staging_ids: [],\n      items: []\n    });\n  }\n  const cluster = clusters.get(fp);\n  cluster.staging_ids.push(row.id);\n  cluster.source_count += 1;\n  cluster.items.push(row);\n}\n\nconst output = [];\nfor (const cluster of clusters.values()) {\n  cluster.confidence_score = confidence(cluster);\n  cluster.entities = [];\n  delete cluster.items;\n  output.push({ json: cluster });\n}\n\nreturn output;"
+        "jsCode": "function topicOf(row) {\n  return String(row.topic || 'geral').toLowerCase();\n}\n\nfunction confidence(cluster) {\n  const base = 55;\n  const addBySources = Math.min(cluster.items.length * 8, 30);\n  return Math.min(base + addBySources, 95);\n}\n\n// v2: Aggregate trend score from all cluster members\nfunction aggregateTrendScore(cluster) {\n  const scores = cluster.items.map(r => Number(r.trend_score) || 0);\n  if (scores.length === 0) return 0;\n  // Use max trend score + bonus for multiple high-trending sources\n  const maxScore = Math.max(...scores);\n  const highTrendCount = scores.filter(s => s >= 70).length;\n  return Math.min(maxScore + (highTrendCount * 3), 100);\n}\n\n// v2: Calculate priority rank based on trend + confidence + volume\nfunction calculatePriority(cluster) {\n  const trend = cluster.trend_score || 0;\n  const conf = cluster.confidence_score || 0;\n  const vol = cluster.search_volume || 0;\n  // Weighted composite: trend 40%, confidence 40%, volume 20%\n  return Math.round((trend * 0.4) + (conf * 0.4) + Math.min(vol, 100) * 0.2);\n}\n\nlet rows;\nif (Array.isArray(items[0]?.json)) {\n  rows = items[0].json;\n} else {\n  rows = items.map(i => i.json);\n}\nif (!rows || rows.length === 0) return [];\n\nconst clusters = new Map();\nfor (const row of rows) {\n  const fp = row.duplicate_fingerprint || row.id;\n  if (!clusters.has(fp)) {\n    clusters.set(fp, {\n      fingerprint: fp,\n      topic: topicOf(row),\n      primary_staging_id: row.id,\n      source_count: 0,\n      confidence_score: 0,\n      trend_score: 0,\n      search_volume: 0,\n      priority_rank: 0,\n      entities: [],\n      staging_ids: [],\n      items: []\n    });\n  }\n  const cluster = clusters.get(fp);\n  cluster.staging_ids.push(row.id);\n  cluster.source_count += 1;\n  cluster.items.push(row);\n  // Track max search volume\n  const sv = Number(row.search_volume) || 0;\n  if (sv > cluster.search_volume) cluster.search_volume = sv;\n}\n\nconst output = [];\nfor (const cluster of clusters.values()) {\n  cluster.confidence_score = confidence(cluster);\n  cluster.trend_score = aggregateTrendScore(cluster);\n  cluster.priority_rank = calculatePriority(cluster);\n  cluster.entities = [];\n  delete cluster.items;\n  output.push({ json: cluster });\n}\n\n// Sort by priority descending\noutput.sort((a, b) => (b.json.priority_rank || 0) - (a.json.priority_rank || 0));\n\nreturn output;"
       },
       "id": "clusterize",
-      "name": "Clusterize Duplicates",
+      "name": "Clusterize + Priority Rank",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-480, 180]
+      "position": [
+        -480,
+        180
+      ]
     },
     {
       "parameters": {
@@ -56,37 +85,55 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "resolution=merge-duplicates" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
           ]
         },
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
-            { "name": "on_conflict", "value": "fingerprint" }
+            {
+              "name": "on_conflict",
+              "value": "fingerprint"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  fingerprint: $json.fingerprint,\n  topic: $json.topic,\n  primary_staging_id: $json.primary_staging_id,\n  source_count: $json.source_count,\n  confidence_score: $json.confidence_score,\n  entities: $json.entities\n} }}"
+        "jsonBody": "={{ { fingerprint: $json.fingerprint, topic: $json.topic, primary_staging_id: $json.primary_staging_id, source_count: $json.source_count, confidence_score: $json.confidence_score, trend_score: $json.trend_score, search_volume: $json.search_volume, priority_rank: $json.priority_rank, entities: $json.entities } }}"
       },
       "id": "upsert_cluster",
       "name": "Upsert Cluster",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-220, 180],
+      "position": [
+        -220,
+        180
+      ],
       "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const clusterData = $('Clusterize Duplicates').item.json;\nconst ids = Array.isArray(clusterData.staging_ids) ? clusterData.staging_ids : [];\nconst out = [];\nfor (const id of ids) {\n  out.push({\n    json: {\n      id: id,\n      duplicate_fingerprint: clusterData.fingerprint\n    }\n  });\n}\nreturn out;"
+        "jsCode": "const clusterData = $('Clusterize + Priority Rank').item.json;\nconst ids = Array.isArray(clusterData.staging_ids) ? clusterData.staging_ids : [];\nconst out = [];\nfor (const id of ids) {\n  out.push({ json: { id: id, duplicate_fingerprint: clusterData.fingerprint } });\n}\nreturn out;"
       },
       "id": "expand_ids",
       "name": "Expand Staging IDs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [20, 180]
+      "position": [
+        20,
+        180
+      ]
     },
     {
       "parameters": {
@@ -95,14 +142,23 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
-            { "name": "id", "value": "=eq.{{ $json.id }}" }
+            {
+              "name": "id",
+              "value": "=eq.{{ $json.id }}"
+            }
           ]
         },
         "sendBody": true,
@@ -113,28 +169,67 @@
       "name": "Mark Processed",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [260, 180],
+      "position": [
+        260,
+        180
+      ],
       "continueOnFail": true
     }
   ],
   "connections": {
     "Schedule Trigger": {
-      "main": [[{ "node": "Fetch Unprocessed Staging", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Fetch Unprocessed Staging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Fetch Unprocessed Staging": {
-      "main": [[{ "node": "Clusterize Duplicates", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Clusterize + Priority Rank",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Clusterize Duplicates": {
-      "main": [[
-        { "node": "Upsert Cluster", "type": "main", "index": 0 },
-        { "node": "Expand Staging IDs", "type": "main", "index": 0 }
-      ]]
+    "Clusterize + Priority Rank": {
+      "main": [
+        [
+          {
+            "node": "Upsert Cluster",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Expand Staging IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Expand Staging IDs": {
-      "main": [[{ "node": "Mark Processed", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Mark Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "pinData": {}
 }
