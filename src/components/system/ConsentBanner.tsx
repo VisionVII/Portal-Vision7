@@ -102,10 +102,12 @@ const ConsentBanner: React.FC = () => {
             <div className="px-3.5 pb-2 pt-3 sm:px-5 sm:pt-4">
               <div className="mb-2 flex items-center gap-2 pr-6">
                 <Shield className="h-4 w-4 flex-shrink-0 text-primary-600 dark:text-primary-300" />
-                <h3 className="text-sm font-bold text-foreground sm:text-base">Privacidade</h3>
+                <h3 className="text-sm font-bold text-foreground sm:text-base">A sua privacidade</h3>
               </div>
               <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                Utilizamos cookies essenciais e, com o seu consentimento, ativamos análise, marketing e personalização.{' '}
+                Utilizamos cookies essenciais para o funcionamento do site e, com o seu consentimento expresso, cookies de análise, marketing e personalização.
+                Pode aceitar todos, recusar os opcionais ou personalizar as suas escolhas. Em conformidade com o{' '}
+                <strong>RGPD</strong> (UE) e a <strong>LGPD</strong> (Brasil).{' '}
                 <a
                   href="/politica-privacidade"
                   className="font-medium text-primary-600 hover:underline dark:text-primary-400"

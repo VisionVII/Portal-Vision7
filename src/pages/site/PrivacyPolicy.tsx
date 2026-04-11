@@ -177,6 +177,13 @@ const PrivacyPolicy = () => {
                 <p className="text-sm text-muted-foreground mt-4">
                   Todos os cookies, exceto os essenciais, requerem o seu consentimento explícito.
                 </p>
+
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-preferences'))}
+                  className="mt-2 inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Gerir as minhas preferências de cookies
+                </button>
               </CardContent>
             </Card>
 

@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, MapPin, Shield, Zap } from 'lucide-react';
+import { Lock, MapPin, Shield, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCMP } from '@/cmp/useCMP';
@@ -27,11 +27,19 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   personalization: <MapPin className="h-4 w-4 flex-shrink-0 text-primary-600 dark:text-primary-400" />,
 };
 
+const LEGAL_BASIS_LABELS: Record<string, string> = {
+  'legitimate-interest': 'Interesse legítimo',
+  'consent': 'Consentimento',
+  'contract': 'Execução de contrato',
+  'legal-obligation': 'Obrigação legal',
+};
+
 const ConsentPreferences: React.FC<ConsentPreferencesProps> = ({ isOpen, onClose }) => {
   const { consent, categories, update, reset } = useCMP();
 
   // Local draft state so changes aren't applied until "Guardar"
   const [draft, setDraft] = useState<ConsentState>({ ...consent });
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   // Sync draft when modal opens or external consent changes
   useEffect(() => {
@@ -128,50 +136,83 @@ const ConsentPreferences: React.FC<ConsentPreferencesProps> = ({ isOpen, onClose
             </Button>
           </div>
 
-          {/* Category toggles */}
+          {/* Category toggles with LGPD/GDPR legal info */}
           {categories.map((cat) => (
             <div
               key={cat.id}
-              className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 ${
+              className={`overflow-hidden rounded-xl border ${
                 cat.required
                   ? 'border-emerald-200/70 bg-emerald-50/60 dark:border-emerald-900/30 dark:bg-emerald-950/10'
                   : 'border-border bg-card/80'
               }`}
             >
-              <div className="flex items-center gap-2">
-                {CATEGORY_ICONS[cat.id]}
-                <div>
-                  <span className="text-sm font-medium text-foreground">{cat.label}</span>
-                  <p className="text-[11px] text-muted-foreground">{cat.description}</p>
+              <div className="flex items-center justify-between gap-2 px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  {CATEGORY_ICONS[cat.id]}
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-foreground">{cat.label}</span>
+                    <p className="text-[11px] leading-tight text-muted-foreground">{cat.description}</p>
+                  </div>
+                </div>
+                <div className="flex flex-shrink-0 items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
+                    className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label={`Detalhes de ${cat.label}`}
+                  >
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-150 ${expandedCategory === cat.id ? 'rotate-180' : ''}`} />
+                  </button>
+                  {cat.required ? (
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
+                      Ativo
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-pressed={draft[cat.id]}
+                      aria-label={`${cat.label}: ${draft[cat.id] ? 'ativado' : 'desativado'}`}
+                      onClick={() => handleToggle(cat.id)}
+                      className={`relative inline-flex h-6 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-150 ${
+                        draft[cat.id] ? 'bg-primary-600' : 'bg-slate-300 dark:bg-slate-700'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-150 ${
+                          draft[cat.id] ? 'translate-x-[18px]' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                  )}
                 </div>
               </div>
-              {cat.required ? (
-                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
-                  Ativo
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  role="switch"
-                  aria-pressed={draft[cat.id]}
-                  aria-label={`${cat.label}: ${draft[cat.id] ? 'ativado' : 'desativado'}`}
-                  onClick={() => handleToggle(cat.id)}
-                  className={`relative inline-flex h-6 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-150 ${
-                    draft[cat.id] ? 'bg-primary-600' : 'bg-slate-300 dark:bg-slate-700'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-150 ${
-                      draft[cat.id] ? 'translate-x-[18px]' : 'translate-x-0.5'
-                    }`}
-                  />
-                </button>
+              {/* Expanded legal details (LGPD/GDPR compliance) */}
+              {expandedCategory === cat.id && (
+                <div className="border-t border-border/50 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    <div>
+                      <span className="font-medium text-foreground/70">Base legal:</span>{' '}
+                      {LEGAL_BASIS_LABELS[cat.legalBasis] ?? cat.legalBasis}
+                    </div>
+                    <div>
+                      <span className="font-medium text-foreground/70">Retenção:</span>{' '}
+                      {cat.retention}
+                    </div>
+                    {cat.vendors && cat.vendors.length > 0 && (
+                      <div className="col-span-2">
+                        <span className="font-medium text-foreground/70">Serviços:</span>{' '}
+                        {cat.vendors.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           ))}
 
           <p className="px-1 text-[11px] text-muted-foreground">
-            As preferências ficam guardadas localmente e podem ser alteradas a qualquer momento.{' '}
+            Nos termos do <strong>RGPD</strong> (Regulamento UE 2016/679) e da <strong>LGPD</strong> (Lei 13.709/2018), tem direito a aceder, retificar, eliminar e portar os seus dados, bem como a revogar o consentimento a qualquer momento.{' '}
             <a href="/politica-privacidade" className="font-medium text-primary-600 hover:underline dark:text-primary-400">
               Política de privacidade
             </a>

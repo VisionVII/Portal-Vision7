@@ -51,9 +51,11 @@ export function readConsent(): StoredConsent | null {
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        // Migrate from old format (flat consent fields)
+        // Migrate from old format (flat consent fields) — write-through to persist new format
         if ('essential' in parsed && !('consent' in parsed)) {
-          return migrateV1(parsed);
+          const migrated = migrateV1(parsed);
+          writeConsent(migrated);
+          return migrated;
         }
         if (parsed.consent && parsed.version) {
           return parsed as StoredConsent;

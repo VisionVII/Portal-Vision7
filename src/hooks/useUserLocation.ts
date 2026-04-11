@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { isAllowed } from '@/cmp';
 
 export interface UserLocation {
   country: string | null;
@@ -7,10 +8,6 @@ export interface UserLocation {
   localTime: string;
   temperatureC: number | null;
   hasConsent: boolean;
-}
-
-interface StoredConsent {
-  personalization?: boolean;
 }
 
 const GEO_RELEVANT_KEYS = new Set(['cookie-consent-v2', 'geo-consent', 'user-geo']);
@@ -57,19 +54,10 @@ export const useUserLocation = () => {
       const now = Date.now();
       if (!force && now - lastSyncTimestamp < SYNC_THROTTLE_MS) return;
 
-      const consentRaw = localStorage.getItem('cookie-consent-v2');
       const geoConsent = localStorage.getItem('geo-consent');
 
-      let consent: StoredConsent | null = null;
-      if (consentRaw) {
-        try {
-          consent = JSON.parse(consentRaw) as StoredConsent;
-        } catch {
-          // ignore
-        }
-      }
-
-      const hasConsent = Boolean(consent?.personalization) && geoConsent === 'accepted';
+      // Use CMP engine to check personalization consent (handles both old/new format)
+      const hasConsent = isAllowed('personalization') && geoConsent === 'accepted';
 
       if (!hasConsent) {
         setLocation((prev) => ({
