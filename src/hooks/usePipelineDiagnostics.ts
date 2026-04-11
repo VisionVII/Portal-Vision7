@@ -207,7 +207,7 @@ export function usePipelineDiagnostics() {
         lastCuratedAt: (lastCuratedRes.data?.[0] as { created_at?: string } | undefined)?.created_at ?? null,
       };
     },
-    staleTime: 15_000,
-    refetchInterval: 30_000,
+    staleTime: 120_000,
+    refetchInterval: 300_000,
   });
 }

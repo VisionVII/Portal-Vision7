@@ -295,6 +295,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         accessToken: data.session.access_token,
         email: data.user.email,
       });
+
+      // If no roles found, try bootstrapping the first admin (only succeeds when no admin exists)
+      if (access.roles.length === 0 && !access.queryFailed) {
+        try {
+          console.debug('[Auth] No roles found — calling bootstrap_first_admin()');
+          const { data: bootstrapped } = await supabase.rpc('bootstrap_first_admin');
+          if (bootstrapped) {
+            console.debug('[Auth] bootstrap_first_admin() returned true — re-fetching roles');
+            access = await getUserAccessProfile(data.user.id, {
+              accessToken: data.session.access_token,
+              email: data.user.email,
+            });
+          }
+        } catch (bootstrapErr) {
+          console.warn('[Auth] bootstrap_first_admin() failed:', bootstrapErr);
+        }
+      }
+
       setSession(data.session);
       setUser(data.user);
       applyAccess(data.user.id, access);
