@@ -39,7 +39,7 @@ export const useRegistrationInvites = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('registration_invites')
-        .select('id, email, role, status, invited_by, invited_at, used_at, expires_at, created_at')
+        .select('id, email, role, token, status, invited_by, invited_at, used_at, expires_at, created_at')
         .order('created_at', { ascending: false })
         .limit(200);
 
