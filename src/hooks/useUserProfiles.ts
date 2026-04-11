@@ -38,7 +38,7 @@ export const useUserProfile = (userId?: string) => {
 
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select('id, full_name, bio, avatar_url, website, twitter_handle, linkedin_url, role, is_public, created_at, updated_at')
         .eq('id', targetUserId)
         .maybeSingle();
 
@@ -56,9 +56,10 @@ export const usePublicProfiles = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select('id, full_name, bio, avatar_url, website, twitter_handle, linkedin_url, role, is_public, created_at, updated_at')
         .eq('is_public', true)
-        .order('full_name', { ascending: true });
+        .order('full_name', { ascending: true })
+        .limit(100);
 
       if (error) throw error;
       return data as UserProfile[];

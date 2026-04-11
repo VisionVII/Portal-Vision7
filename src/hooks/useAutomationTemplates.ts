@@ -38,8 +38,9 @@ export function useAutomationTemplates(category?: AutomationCategory) {
     queryFn: async (): Promise<AutomationTemplate[]> => {
       let query = supabase
         .from('automation_templates')
-        .select('*')
-        .order('popularity', { ascending: false });
+        .select('id, name, description, category, icon, config_preset, workflow_json, is_system, popularity, created_at')
+        .order('popularity', { ascending: false })
+        .limit(100);
 
       if (category) query = query.eq('category', category);
 

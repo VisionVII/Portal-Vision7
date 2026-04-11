@@ -161,8 +161,9 @@ export function usePipelineConfig() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('pipeline_search_config')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('id, label, tags, language, region, default_post_tags, theme_rules, is_active, created_by, created_at, updated_at')
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) {
         if (/does not exist|PGRST/i.test(error.message)) {

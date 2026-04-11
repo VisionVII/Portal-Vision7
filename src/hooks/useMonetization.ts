@@ -17,8 +17,9 @@ export const useMonetizationSettings = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('monetization_settings')
-        .select('*')
-        .order('setting_key', { ascending: true });
+        .select('id, setting_key, setting_value, description, updated_at')
+        .order('setting_key', { ascending: true })
+        .limit(100);
 
       if (error) throw error;
       return data as MonetizationSetting[];
@@ -33,7 +34,7 @@ export const useMonetizationSetting = (key: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('monetization_settings')
-        .select('*')
+        .select('id, setting_key, setting_value, description, updated_at')
         .eq('setting_key', key)
         .maybeSingle();
 
