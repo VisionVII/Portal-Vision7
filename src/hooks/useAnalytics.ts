@@ -78,7 +78,8 @@ export const useAnalyticsSummary = (days = 30) => {
       const { data, error } = await supabase
         .from('analytics_events')
         .select('event_type, created_at')
-        .gte('created_at', startDate.toISOString());
+        .gte('created_at', startDate.toISOString())
+        .limit(10000);
 
       if (error) throw error;
 

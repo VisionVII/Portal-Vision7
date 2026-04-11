@@ -163,7 +163,8 @@ export const usePosts = (adminView = false) => {
       let query = supabase
         .from('posts')
         .select(adminView ? FULL_POST_SELECT : PUBLIC_POST_SELECT)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(adminView ? 500 : 50);
 
       if (!adminView) {
         query = query.eq('status', 'published');
@@ -197,7 +198,8 @@ export const usePostsByCategory = (categorySlug: string) => {
         `)
         .eq('categories.slug', categorySlug)
         .eq('status', 'published')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) {
         throw new Error(getErrorMessage(error, 'Não foi possível carregar os posts da categoria.'));
