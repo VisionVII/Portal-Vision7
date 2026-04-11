@@ -46,7 +46,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
           </div>
 
           {primaryRole && (
-            <Badge variant="secondary" className="hidden text-[10px] sm:inline-flex">
+            <Badge variant="secondary" className="text-[10px]">
               {primaryRole.replace('_', ' ')}
             </Badge>
           )}

@@ -52,12 +52,36 @@ async function decryptValue(secret: string, payload: string): Promise<string> {
 }
 
 /* ── CORS ── */
+const ALLOWED_ORIGINS_ENV = Deno.env.get('ALLOWED_ORIGINS')
+  ?? Deno.env.get('PUBLIC_SITE_URL')
+  ?? Deno.env.get('SITE_URL')
+  ?? '';
+
+const ALLOWED_ORIGINS = ALLOWED_ORIGINS_ENV
+  .split(',')
+  .map((v) => v.trim())
+  .filter(Boolean);
+
+const DEV_ORIGINS = new Set([
+  'http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080',
+  'https://localhost:3000', 'https://localhost:5173', 'https://localhost:8080',
+]);
+
+function isOriginAllowed(origin: string | null): boolean {
+  if (!origin) return true; // server-to-server (n8n)
+  if (DEV_ORIGINS.has(origin)) return true;
+  if (ALLOWED_ORIGINS.length === 0) return true;
+  return ALLOWED_ORIGINS.includes(origin);
+}
+
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin') ?? '';
+  const safeOrigin = origin && isOriginAllowed(origin) ? origin : (ALLOWED_ORIGINS[0] || '');
   return {
-    'Access-Control-Allow-Origin': origin || '*',
+    'Access-Control-Allow-Origin': safeOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
   };
 }
 

@@ -2,6 +2,10 @@
 // @ts-nocheck — Deno runtime; not compiled by the project tsconfig
 // deno-lint-ignore-file
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
 const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'Vision VII <noreply@vision-portal.pt>';
 const ALLOWED_ORIGIN_ENV = Deno.env.get('ALLOWED_EMAIL_ORIGINS')
@@ -52,6 +56,44 @@ interface EmailRequest {
   template?: string;
 }
 
+function sanitizeHeaderValue(value: string): string {
+  return value.replace(/[\r\n]/g, '').trim();
+}
+
+/* ── Auth check ── */
+async function isAuthorized(req: Request): Promise<boolean> {
+  const authHeader = sanitizeHeaderValue(req.headers.get('Authorization') ?? '');
+  const apiKeyHeader = sanitizeHeaderValue(req.headers.get('apikey') ?? '');
+  const token = sanitizeHeaderValue(authHeader.replace(/^Bearer\s+/i, ''));
+  const expected = sanitizeHeaderValue(SUPABASE_SERVICE_ROLE_KEY);
+
+  // Service role key = full access (n8n, server-to-server)
+  if (expected && (token === expected || authHeader === expected || apiKeyHeader === expected)) {
+    return true;
+  }
+
+  // Otherwise check JWT for admin/editor role
+  if (!token || !SUPABASE_URL) return false;
+  try {
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const { data: { user } } = await adminClient.auth.getUser(token);
+    if (!user) return false;
+
+    const { data: roles } = await adminClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .in('role', ['super_admin', 'admin', 'editor']);
+
+    return (roles?.length ?? 0) > 0;
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get('origin');
   const corsHeaders = buildCorsHeaders(origin);
@@ -72,6 +114,14 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
+  // Auth: require service_role key or authenticated admin/editor JWT
+  if (!(await isAuthorized(req))) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 

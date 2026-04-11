@@ -239,9 +239,9 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
         {/* Post cards grid */}
         {postsLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="aspect-[4/5] w-full rounded-xl" />
+              <Skeleton key={i} className="aspect-[3/4] w-full rounded-xl sm:aspect-[4/5]" />
             ))}
           </div>
         ) : filteredPosts.length === 0 ? (
@@ -257,7 +257,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {filteredPosts.map((post) => {
               const isExpanded = expandedPost === post.id;
               const imgSrc = post.image_url || post.banner_url;
@@ -269,7 +269,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                   onClick={() => setExpandedPost(isExpanded ? null : post.id)}
                 >
                   {/* Image area */}
-                  <div className="relative aspect-[4/5] w-full overflow-hidden bg-gradient-to-br from-muted/50 to-muted/20">
+                  <div className="relative aspect-[3/4] w-full overflow-hidden bg-gradient-to-br from-muted/50 to-muted/20 sm:aspect-[4/5]">
                     {imgSrc ? (
                       <img
                         src={imgSrc}
@@ -296,7 +296,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                           {post.categories.name}
                         </span>
                       )}
-                      <h4 className="line-clamp-2 text-sm font-bold leading-snug text-white">
+                      <h4 className="line-clamp-2 text-xs font-bold leading-snug text-white sm:text-sm">
                         {post.title}
                       </h4>
                       <div className="mt-1.5 flex items-center gap-2 text-[11px] text-white/60">
