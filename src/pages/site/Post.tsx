@@ -4,7 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AdSpace from '@/components/content/AdSpace';
 import RelatedPosts from '@/components/content/RelatedPosts';
-import { usePost, usePosts, useTrackPostView } from '@/hooks/usePosts';
+import { usePost, useRelatedPosts, useTrackPostView } from '@/hooks/usePosts';
 import { Calendar, User, ArrowLeft, Share2, Check, Clock, Tag } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { sanitizeRichContent } from '@/lib/richContent';
@@ -69,7 +69,7 @@ const resetSeo = () => {
 const Post = () => {
   const { slug } = useParams();
   const { data: post, isLoading } = usePost(slug || '');
-  const { data: allPosts } = usePosts();
+  const { data: relatedPosts = [] } = useRelatedPosts(post?.category_id, post?.id);
   const trackPostView = useTrackPostView();
   const trackedPostIdRef = useRef<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -156,10 +156,6 @@ const Post = () => {
       </div>
     );
   }
-
-  const relatedPosts = allPosts?.filter(
-    p => p.categories?.id === post.category_id && p.id !== post.id
-  ).slice(0, 3) || [];
 
   const categoryPath = post.categories?.slug ? `/${post.categories.slug}` : '/';
   const categoryLabel = post.categories?.name ?? 'Notícias';

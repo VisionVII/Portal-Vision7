@@ -27,6 +27,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ posts }) => {
                 <img
                   src={post.image_url}
                   alt={post.title}
+                  loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
@@ -50,4 +51,4 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ posts }) => {
   );
 };
 
-export default RelatedPosts;
+export default React.memo(RelatedPosts);

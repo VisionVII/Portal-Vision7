@@ -72,9 +72,10 @@ const openCookiePreferences = () => {
 };
 
 const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonProps) => {
-  const { data: posts = [] } = usePosts();
-  const { data: courses = [] } = useCourses();
-  const { data: categories = [] } = useCategories();
+  const [isOpen, setIsOpen] = useState(false);
+  const { data: posts = [] } = usePosts(false, isOpen);
+  const { data: courses = [] } = useCourses(false, isOpen);
+  const { data: categories = [] } = useCategories(isOpen);
   const {
     country,
     region,
@@ -87,7 +88,6 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   const skyInfo = useSkyInfo(temperatureC, localTime);
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeProvider, setActiveProvider] = useState<'groq-edge' | 'hf-edge' | 'local-preview'>(
     portalAssistantConfig.provider === 'groq-edge' ? 'groq-edge' : portalAssistantConfig.provider === 'hf-edge' ? 'hf-edge' : 'local-preview'

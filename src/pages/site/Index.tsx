@@ -38,6 +38,11 @@ const parseCourseMeta = (rawValue?: string | null): Record<string, CourseMeta> =
   }
 };
 
+const dateFormatOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+const dateFormatter = new Intl.DateTimeFormat('pt-PT', dateFormatOptions);
+const formatPostDate = (dateStr: string | null, fallback: string) =>
+  dateFormatter.format(new Date(dateStr || fallback));
+
 const Index = () => {
   const { data: posts = [], isLoading, isError, refetch } = usePosts();
   const { data: categories } = useCategories();
@@ -53,17 +58,21 @@ const Index = () => {
     [siteSettings]
   );
 
-  const featuredPost = posts.find((post) => post.featured);
-  const regularPosts = posts.filter((post) => !post.featured && post.status === 'published');
-  const latestPosts = posts.filter((post) => post.status === 'published').slice(0, 4);
-  const popularPosts = [...posts]
-    .filter((post) => post.status === 'published')
-    .sort((a, b) => {
-      const byViews = (b.views || 0) - (a.views || 0);
-      if (byViews !== 0) return byViews;
-      return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
-    })
-    .slice(0, 5);
+  const featuredPost = useMemo(() => posts.find((post) => post.featured), [posts]);
+  const regularPosts = useMemo(() => posts.filter((post) => !post.featured && post.status === 'published'), [posts]);
+  const latestPosts = useMemo(() => posts.filter((post) => post.status === 'published').slice(0, 4), [posts]);
+  const popularPosts = useMemo(
+    () =>
+      [...posts]
+        .filter((post) => post.status === 'published')
+        .sort((a, b) => {
+          const byViews = (b.views || 0) - (a.views || 0);
+          if (byViews !== 0) return byViews;
+          return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
+        })
+        .slice(0, 5),
+    [posts],
+  );
 
   const { paginatedItems: paginatedRegularPosts, currentPage, totalPages, goToPage } = usePagination(regularPosts, { pageSize: 6 });
 
@@ -90,11 +99,31 @@ const Index = () => {
       return;
     }
 
-    const intervalId = window.setInterval(() => {
-      setActiveBannerIndex((prev) => (prev + 1) % activeBanners.length);
-    }, 5200);
+    let intervalId: number | undefined;
 
-    return () => window.clearInterval(intervalId);
+    const start = () => {
+      if (intervalId == null) {
+        intervalId = window.setInterval(() => {
+          setActiveBannerIndex((prev) => (prev + 1) % activeBanners.length);
+        }, 5200);
+      }
+    };
+
+    const stop = () => {
+      if (intervalId != null) {
+        window.clearInterval(intervalId);
+        intervalId = undefined;
+      }
+    };
+
+    const onVisibility = () => (document.hidden ? stop() : start());
+    document.addEventListener('visibilitychange', onVisibility);
+    start();
+
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [activeBanners.length]);
 
   const renderSection = (section: HomePageConfig['sections'][number]) => {
@@ -138,7 +167,7 @@ const Index = () => {
               category={featuredPost.categories?.name || 'Geral'}
               categoryColor={featuredPost.categories?.color || 'bg-muted'}
               author={featuredPost.author_name}
-              date={new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
+              date={formatPostDate(featuredPost.published_at, featuredPost.created_at)}
               readTime={featuredPost.read_time}
               slug={featuredPost.slug}
               featured
@@ -174,7 +203,7 @@ const Index = () => {
                     category={post.categories?.name || 'Geral'}
                     categoryColor={post.categories?.color || 'bg-muted'}
                     author={post.author_name}
-                    date={new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    date={formatPostDate(post.published_at, post.created_at)}
                     readTime={post.read_time}
                     slug={post.slug}
                   />
@@ -291,7 +320,7 @@ const Index = () => {
                           <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                             <span>{post.author_name}</span>
                             <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-                            <span>{new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            <span>{formatPostDate(post.published_at, post.created_at)}</span>
                             <span className="font-medium text-primary">{post.read_time}</span>
                           </div>
                         </div>
@@ -404,7 +433,7 @@ const Index = () => {
                           {post.title}
                         </h4>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          {new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })} • {post.views || 0} views
+                          {formatPostDate(post.published_at, post.created_at)} • {post.views || 0} views
                         </p>
                       </div>
                     </Link>

@@ -156,7 +156,7 @@ const normalizePublicPost = (post: Partial<Post>): Post => ({
 });
 
 // Fetch all posts (published for public, all for admin)
-export const usePosts = (adminView = false) => {
+export const usePosts = (adminView = false, enabled = true) => {
   return useQuery({
     queryKey: ['posts', adminView],
     queryFn: async () => {
@@ -183,6 +183,7 @@ export const usePosts = (adminView = false) => {
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     staleTime: 60_000,
+    enabled,
   });
 };
 
@@ -234,6 +235,32 @@ export const usePost = (slug: string) => {
     enabled: !!slug,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+};
+
+// Fetch related posts by category (lightweight — only 3 posts, no content field)
+export const useRelatedPosts = (categoryId: string | null | undefined, excludePostId: string | null | undefined) => {
+  return useQuery({
+    queryKey: ['posts', 'related', categoryId, excludePostId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(PUBLIC_POST_SELECT)
+        .eq('status', 'published')
+        .eq('category_id', categoryId!)
+        .neq('id', excludePostId!)
+        .order('published_at', { ascending: false })
+        .limit(3);
+
+      if (error) {
+        throw new Error(getErrorMessage(error, 'Não foi possível carregar posts relacionados.'));
+      }
+
+      return (data as Partial<Post>[] | null)?.map((post) => normalizePublicPost(post)) ?? [];
+    },
+    enabled: !!categoryId && !!excludePostId,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
