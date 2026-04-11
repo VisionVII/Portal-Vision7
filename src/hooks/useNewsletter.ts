@@ -33,8 +33,9 @@ export const useNewsletterSubscribers = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('newsletter_subscribers')
-        .select('*')
-        .order('subscribed_at', { ascending: false });
+        .select('id, email, is_active, subscribed_at')
+        .order('subscribed_at', { ascending: false })
+        .limit(500);
       
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {

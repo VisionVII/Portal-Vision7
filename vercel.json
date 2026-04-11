@@ -33,8 +33,8 @@
       ],
       "destination": "/api/post-preview?slug=$1"
     },
-    { "source": "/n8n", "destination": "https://n8n-vision7.onrender.com/n8n" },
-    { "source": "/n8n/(.*)", "destination": "https://n8n-vision7.onrender.com/n8n/$1" },
+    { "source": "/n8n", "destination": "https://portal-vision7.onrender.com/n8n" },
+    { "source": "/n8n/(.*)", "destination": "https://portal-vision7.onrender.com/n8n/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
