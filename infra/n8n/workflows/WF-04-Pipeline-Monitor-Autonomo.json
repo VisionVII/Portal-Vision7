@@ -1,0 +1,132 @@
+{
+  "name": "WF-04 Pipeline Monitor Autonomo",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 2
+            }
+          ]
+        }
+      },
+      "id": "schedule_trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pipeline Monitor v1 — checks health of the entire content pipeline\n// Generates alerts for: stalled pipeline, low volume, unpublished clusters, high error rate\n\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst headers = { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' };\n\nasync function query(table, params) {\n  const qs = Object.entries(params).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');\n  try {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/' + table + '?' + qs,\n      headers: headers,\n      json: true\n    });\n    return Array.isArray(resp) ? resp : [];\n  } catch (e) { return []; }\n}\n\nconst now = new Date();\nconst h6ago = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();\nconst h24ago = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();\nconst h48ago = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();\n\n// 1. Check staging volume (last 6h)\nconst recentStaging = await query.call(this, 'news_staging', {\n  select: 'id', 'collected_at': 'gte.' + h6ago\n});\n\n// 2. Check unprocessed staging (stale items)\nconst unprocessed = await query.call(this, 'news_staging', {\n  select: 'id,collected_at', processed: 'eq.false', 'collected_at': 'lte.' + h6ago, limit: '50'\n});\n\n// 3. Check clusters without published posts (last 48h)\nconst recentClusters = await query.call(this, 'news_clusters', {\n  select: 'id,fingerprint,topic,confidence_score', 'created_at': 'gte.' + h48ago, 'confidence_score': 'gte.60'\n});\nconst curatedPosts = await query.call(this, 'curated_posts', {\n  select: 'cluster_id,status', 'created_at': 'gte.' + h48ago\n});\nconst publishedClusterIds = new Set(curatedPosts.filter(p => ['ready','published','human-reviewed'].includes(p.status)).map(p => p.cluster_id));\nconst unpublishedClusters = recentClusters.filter(c => !publishedClusterIds.has(c.id));\n\n// 4. Check error rate in recent automations\nconst recentExecutions = await query.call(this, 'automation_executions', {\n  select: 'status', 'started_at': 'gte.' + h24ago\n});\nconst errorExecs = recentExecutions.filter(e => e.status === 'error' || e.status === 'failed');\nconst errorRate = recentExecutions.length > 0 ? (errorExecs.length / recentExecutions.length * 100) : 0;\n\n// 5. Check curated posts pending review for too long (> 24h)\nconst stalePending = await query.call(this, 'curated_posts', {\n  select: 'id,title,status,created_at', status: 'in.(pending-review,auto-draft)', 'created_at': 'lte.' + h24ago, limit: '20'\n});\n\n// Generate alerts\nconst alerts = [];\n\n// Pipeline stalled: no new staging in 6h\nif (recentStaging.length === 0) {\n  alerts.push({\n    alert_type: 'pipeline_stalled',\n    severity: 'critical',\n    title: 'Pipeline de coleta parado',\n    detail: 'Nenhum item coletado nas ultimas 6 horas. Verificar WF-01 e feeds RSS.',\n    metadata: { hours_since_last: 6, check_time: now.toISOString() }\n  });\n}\n\n// Low volume: < 5 items in 6h\nif (recentStaging.length > 0 && recentStaging.length < 5) {\n  alerts.push({\n    alert_type: 'low_volume',\n    severity: 'warning',\n    title: 'Volume baixo de coleta',\n    detail: 'Apenas ' + recentStaging.length + ' itens coletados nas ultimas 6h. Normal e > 10.',\n    metadata: { count_6h: recentStaging.length }\n  });\n}\n\n// Stale unprocessed items\nif (unprocessed.length > 10) {\n  alerts.push({\n    alert_type: 'pipeline_stalled',\n    severity: 'warning',\n    title: 'Itens acumulados sem processar',\n    detail: unprocessed.length + ' itens no staging ha mais de 6h sem processamento. Verificar WF-02.',\n    metadata: { unprocessed_count: unprocessed.length }\n  });\n}\n\n// Unpublished high-confidence clusters\nif (unpublishedClusters.length > 3) {\n  alerts.push({\n    alert_type: 'unpublished_clusters',\n    severity: 'warning',\n    title: 'Clusters sem publicacao',\n    detail: unpublishedClusters.length + ' clusters com confianca >= 60 sem post curado nas ultimas 48h.',\n    metadata: { cluster_count: unpublishedClusters.length, topics: unpublishedClusters.map(c => c.topic).filter(Boolean) }\n  });\n}\n\n// High error rate\nif (errorRate > 30 && recentExecutions.length >= 3) {\n  alerts.push({\n    alert_type: 'high_error_rate',\n    severity: 'critical',\n    title: 'Taxa de erro alta nas automacoes',\n    detail: Math.round(errorRate) + '% de erro (' + errorExecs.length + '/' + recentExecutions.length + ') nas ultimas 24h.',\n    metadata: { error_rate: Math.round(errorRate), total: recentExecutions.length, errors: errorExecs.length }\n  });\n}\n\n// Stale pending reviews\nif (stalePending.length > 0) {\n  alerts.push({\n    alert_type: 'stale_reviews',\n    severity: 'info',\n    title: 'Posts aguardando revisao ha mais de 24h',\n    detail: stalePending.length + ' posts em pending-review ou auto-draft ha mais de 24h.',\n    metadata: { count: stalePending.length, titles: stalePending.slice(0, 5).map(p => p.title) }\n  });\n}\n\n// Build summary\nconst summary = {\n  check_time: now.toISOString(),\n  staging_6h: recentStaging.length,\n  unprocessed_stale: unprocessed.length,\n  clusters_48h: recentClusters.length,\n  unpublished_clusters: unpublishedClusters.length,\n  error_rate_24h: Math.round(errorRate),\n  pending_reviews: stalePending.length,\n  alerts_generated: alerts.length,\n  health_status: alerts.some(a => a.severity === 'critical') ? 'critical' : alerts.some(a => a.severity === 'warning') ? 'degraded' : 'healthy'\n};\n\nreturn [{ json: { summary: summary, alerts: alerts } }];"
+      },
+      "id": "health_check",
+      "name": "Pipeline Health Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.alerts.length }}",
+              "value2": 0,
+              "operation": "larger"
+            }
+          ]
+        }
+      },
+      "id": "has_alerts",
+      "name": "Has Alerts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst headers = { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' };\n\n// Save alerts to pipeline_alerts table\nfor (const alert of data.alerts) {\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: SUPABASE_URL + '/rest/v1/pipeline_alerts',\n      headers: headers,\n      body: alert,\n      json: true\n    });\n  } catch (e) { /* continue on fail */ }\n}\n\n// Send notification email for critical alerts\nconst criticalAlerts = data.alerts.filter(a => a.severity === 'critical');\nif (criticalAlerts.length > 0) {\n  const alertText = criticalAlerts.map(a => '⚠️ ' + a.title + '\\n' + a.detail).join('\\n\\n');\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: SUPABASE_URL + '/functions/v1/send-email',\n      headers: { ...headers, 'Authorization': 'Bearer ' + SUPABASE_KEY },\n      body: {\n        to: $env.ADMIN_EMAIL || 'admin@vision7.pt',\n        subject: '[Vision7] ALERTA Pipeline: ' + data.summary.health_status.toUpperCase(),\n        html: '<h2>Alertas do Pipeline Vision7</h2><p>Status: <strong>' + data.summary.health_status + '</strong></p><pre>' + alertText + '</pre><hr><p>Verificacao automatica em ' + data.summary.check_time + '</p>'\n      },\n      json: true\n    });\n  } catch (e) { /* email send failed, alert is still saved in DB */ }\n}\n\nreturn [{ json: { saved_alerts: data.alerts.length, critical_notified: criticalAlerts.length, summary: data.summary } }];"
+      },
+      "id": "save_alerts",
+      "name": "Save Alerts + Notify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Update health summary in automations_v2 config or log\nconst data = $json;\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\n\n// Log the healthy state\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SUPABASE_URL + '/rest/v1/pipeline_alerts',\n    headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },\n    body: {\n      alert_type: 'health_check_ok',\n      severity: 'info',\n      title: 'Pipeline saudavel',\n      detail: 'Verificacao completa sem alertas. Staging 6h: ' + data.summary.staging_6h + ', Clusters 48h: ' + data.summary.clusters_48h,\n      metadata: data.summary,\n      resolved: true,\n      resolved_at: new Date().toISOString()\n    },\n    json: true\n  });\n} catch (e) { /* ok */ }\n\nreturn [{ json: { status: 'healthy', summary: data.summary } }];"
+      },
+      "id": "log_healthy",
+      "name": "Log Healthy State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Pipeline Health Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pipeline Health Check": {
+      "main": [
+        [
+          {
+            "node": "Has Alerts?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Alerts?": {
+      "main": [
+        [
+          {
+            "node": "Save Alerts + Notify",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Healthy State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
