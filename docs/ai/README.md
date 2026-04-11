@@ -50,11 +50,12 @@ Estes agentes e skills são projetados para funcionar com o Model Context Protoc
 
 ## Conexão com Banco de Dados
 
-O projeto está conectado ao Supabase com as seguintes configurações:
+O projeto está em **migração controlada de conta/projeto Supabase**.
 
-- **Project ID**: oepqqpnqsweabmnwjvve
-- **URL**: <https://oepqqpnqsweabmnwjvve.supabase.co>
-- **Chaves configuradas** no arquivo `.env`
+- **Fonte de verdade do schema**: `supabase/migrations/` + `supabase/bootstrap_new_project.sql`
+- **Project ref ativo no repositório**: verificar `supabase/config.toml` (no momento, `stpusdeqwbckvfsitsld`)
+- **URL e chaves**: sempre via variáveis de ambiente (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
+- **Regra operacional**: evitar fixar project IDs/URLs antigas em docs, skills ou fallbacks de frontend quando a intenção for operar entre contas/projetos
 
 ## Áreas de Foco
 

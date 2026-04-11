@@ -72,7 +72,7 @@ BACKEND (Supabase/PostgreSQL)
 INFRAESTRUTURA
 ├── .env variables
 │   ├── ✅ VITE_SUPABASE_URL (public OK)
-│   ├── ✅ VITE_SUPABASE_PUBLISHABLE_KEY (public OK)
+│   ├── ✅ VITE_SUPABASE_ANON_KEY (public OK)
 │   └── 🔴 Sem .env.example para documentação
 │
 ├── CORS
@@ -248,7 +248,7 @@ const cleanHTML = DOMPurify.sanitize(post.content, {
 ```typescript
 export const supabase = createClient<Database>(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
   {
     auth: {
       storage: localStorage,  // ❌ Acessível via console.log

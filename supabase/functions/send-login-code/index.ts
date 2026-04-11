@@ -67,6 +67,8 @@ function isOriginAllowed(origin: string): boolean {
   if (ALLOWED_ORIGINS.has(origin)) return true;
   // Accept any Vercel preview/production URL
   if (/^https:\/\/[\w-]+\.vercel\.app$/.test(origin)) return true;
+  // Accept GitHub Codespaces / github.dev preview URLs
+  if (/^https:\/\/[\w-]+\.github\.dev$/.test(origin)) return true;
   return false;
 }
 

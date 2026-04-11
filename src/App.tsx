@@ -78,7 +78,7 @@ const AnimatedRoutes = () => {
         {/* ── Legacy redirects ── */}
         <Route path="/podcasts" element={<Navigate to="/audiocasts" replace />} />
         <Route path="/podcast/:id" element={<Navigate to="/audiocasts" replace />} />
-        <Route path="/validar/entrada/tipodeuser" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/validar/entrada/tipodeuser" element={<Navigate to="/acesso/equipa" replace />} />
         <Route path="/acesso/admin/controlado" element={<Navigate to="/admin/login" replace />} />
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin/register" element={<Navigate to="/admin/login" replace />} />

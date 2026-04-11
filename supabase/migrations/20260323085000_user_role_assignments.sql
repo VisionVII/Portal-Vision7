@@ -30,10 +30,12 @@ CREATE TABLE IF NOT EXISTS public.role_assignment_templates (
 -- Enable RLS
 ALTER TABLE public.role_assignment_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can read templates" ON public.role_assignment_templates;
 CREATE POLICY "Anyone can read templates"
   ON public.role_assignment_templates FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Only super_admin can manage templates" ON public.role_assignment_templates;
 CREATE POLICY "Only super_admin can manage templates"
   ON public.role_assignment_templates FOR INSERT
   TO authenticated
@@ -65,6 +67,7 @@ CREATE TABLE IF NOT EXISTS public.role_assignment_history (
 -- Enable RLS
 ALTER TABLE public.role_assignment_history ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins can read role history" ON public.role_assignment_history;
 CREATE POLICY "Admins can read role history"
   ON public.role_assignment_history FOR SELECT
   TO authenticated
@@ -93,6 +96,7 @@ CREATE TABLE IF NOT EXISTS public.role_bulk_assignments (
 -- Enable RLS
 ALTER TABLE public.role_bulk_assignments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins can read bulk assignments" ON public.role_bulk_assignments;
 CREATE POLICY "Admins can read bulk assignments"
   ON public.role_bulk_assignments FOR SELECT
   TO authenticated

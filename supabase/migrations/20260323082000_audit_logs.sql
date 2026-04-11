@@ -24,7 +24,14 @@ DROP POLICY IF EXISTS "Only admins can view audit logs" ON public.audit_logs;
 CREATE POLICY "Only admins can view audit logs"
   ON public.audit_logs FOR SELECT
   TO authenticated
-  USING (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin'));
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.user_roles ur
+      WHERE ur.user_id = auth.uid()
+        AND ur.role::text IN ('admin', 'super_admin')
+    )
+  );
 
 DROP POLICY IF EXISTS "System can insert audit logs" ON public.audit_logs;
 CREATE POLICY "System can insert audit logs"
@@ -153,4 +160,4 @@ CREATE TRIGGER audit_user_role_changes
   FOR EACH ROW EXECUTE FUNCTION public.audit_user_role_changes_fn();
 
 -- NOTE: The trigger for registration_invites is created in migration 3
--- (20260323_remove_auto_admin.sql) after that table is created.
+-- (20260323084000_remove_auto_admin.sql) after that table is created.

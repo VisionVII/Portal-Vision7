@@ -17,6 +17,8 @@
 - `scripts/` e `examples/` — utilitários e exemplos de apoio.
 
 > **🔑 Referência principal de automações:** `sdd/modules/automation-engine.json` (Automation Engine v2)
+>
+> **🟦 Migração Supabase em andamento:** use `docs/planejamento/SETUP_SUPABASE_NOVO_PROJETO.md` como runbook oficial de aplicar → validar → avançar.
 
 ---
 
