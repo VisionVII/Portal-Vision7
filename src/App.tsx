@@ -12,7 +12,8 @@ import DynamicFavicon from "@/components/system/DynamicFavicon";
 import ErrorBoundary from "@/components/system/ErrorBoundary";
 import ScrollToTop from "@/components/system/ScrollToTop";
 import ThemeProvider from "@/components/system/ThemeProvider";
-import CookieBanner from "@/components/system/CookieBanner";
+import ConsentBanner from "@/components/system/ConsentBanner";
+import { initConsentAPI } from "@/cmp/api";
 import ProtectedRoute from "@/components/system/ProtectedRoute";
 import PageTransition from "@/components/system/PageTransition";
 import NetworkStatusNotifier from "@/components/system/NetworkStatusNotifier";
@@ -34,6 +35,9 @@ const AdminAutomationLab = lazy(() => import("@/pages/admin/AdminAutomationLab")
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
 const UserLogin = lazy(() => import("@/pages/admin/UserLogin"));
 
+// Initialize CMP API layer (fire-and-forget consent logging)
+initConsentAPI();
+
 const PublicPrivacyControls = () => {
   const location = useLocation();
 
@@ -41,7 +45,7 @@ const PublicPrivacyControls = () => {
     return null;
   }
 
-  return <CookieBanner />;
+  return <ConsentBanner />;
 };
 
 const RouteFallback = () => (
