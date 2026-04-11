@@ -10,7 +10,7 @@ DROP TRIGGER IF EXISTS on_auth_user_created_assign_admin ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user_admin_role();
 
 -- Step 2: Create registration_invites table for approval flow
-CREATE TABLE public.registration_invites (
+CREATE TABLE IF NOT EXISTS public.registration_invites (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT NOT NULL UNIQUE,
   role public.app_role NOT NULL DEFAULT 'redator',
@@ -27,20 +27,24 @@ CREATE TABLE public.registration_invites (
 ALTER TABLE public.registration_invites ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "Only super-admin can create invites" ON public.registration_invites;
 CREATE POLICY "Only super-admin can create invites"
   ON public.registration_invites FOR INSERT
   TO authenticated
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "Admins can view invites" ON public.registration_invites;
 CREATE POLICY "Admins can view invites"
   ON public.registration_invites FOR SELECT
   TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "Users can view their own invite" ON public.registration_invites;
 CREATE POLICY "Users can view their own invite"
   ON public.registration_invites FOR SELECT
   USING (email = auth.jwt()->>'email' OR public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "Admins can update invites" ON public.registration_invites;
 CREATE POLICY "Admins can update invites"
   ON public.registration_invites FOR UPDATE
   TO authenticated
@@ -95,6 +99,7 @@ END;
 $$;
 
 -- Step 4: Create trigger to validate invite on signup
+DROP TRIGGER IF EXISTS on_auth_user_created_from_invite ON auth.users;
 CREATE TRIGGER on_auth_user_created_from_invite
   AFTER INSERT ON auth.users
   FOR EACH ROW

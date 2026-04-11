@@ -35,6 +35,7 @@ function isOriginAllowed(origin: string): boolean {
   if (!origin) return false;
   if (ALLOWED_ORIGINS.has(origin)) return true;
   if (/^https:\/\/[\w-]+\.vercel\.app$/.test(origin)) return true;
+  if (/^https:\/\/[\w-]+\.github\.dev$/.test(origin)) return true;
   return false;
 }
 

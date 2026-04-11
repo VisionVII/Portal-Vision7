@@ -17,10 +17,12 @@ CREATE TABLE IF NOT EXISTS public.role_hierarchy (
 -- Enable RLS
 ALTER TABLE public.role_hierarchy ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can read role hierarchy" ON public.role_hierarchy;
 CREATE POLICY "Anyone can read role hierarchy"
   ON public.role_hierarchy FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Only super_admin can write role hierarchy" ON public.role_hierarchy;
 CREATE POLICY "Only super_admin can write role hierarchy"
   ON public.role_hierarchy FOR INSERT
   TO authenticated
@@ -43,16 +45,19 @@ CREATE TABLE IF NOT EXISTS public.permission_overrides (
 -- Enable RLS
 ALTER TABLE public.permission_overrides ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can read their own overrides" ON public.permission_overrides;
 CREATE POLICY "Users can read their own overrides"
   ON public.permission_overrides FOR SELECT
   TO authenticated
   USING (user_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin'));
 
+DROP POLICY IF EXISTS "Only super_admin can manage overrides" ON public.permission_overrides;
 CREATE POLICY "Only super_admin can manage overrides"
   ON public.permission_overrides FOR INSERT
   TO authenticated
   WITH CHECK (public.has_role(auth.uid(), 'super_admin'));
 
+DROP POLICY IF EXISTS "Only super_admin can update overrides" ON public.permission_overrides;
 CREATE POLICY "Only super_admin can update overrides"
   ON public.permission_overrides FOR UPDATE
   TO authenticated
@@ -72,6 +77,7 @@ CREATE TABLE IF NOT EXISTS public.role_assignments_audit (
 -- Enable RLS
 ALTER TABLE public.role_assignments_audit ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins can read assignments audit" ON public.role_assignments_audit;
 CREATE POLICY "Admins can read assignments audit"
   ON public.role_assignments_audit FOR SELECT
   TO authenticated
@@ -90,10 +96,12 @@ CREATE TABLE IF NOT EXISTS public.permission_groups (
 -- Enable RLS
 ALTER TABLE public.permission_groups ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can read permission groups" ON public.permission_groups;
 CREATE POLICY "Anyone can read permission groups"
   ON public.permission_groups FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Only super_admin can manage permission groups" ON public.permission_groups;
 CREATE POLICY "Only super_admin can manage permission groups"
   ON public.permission_groups FOR INSERT
   TO authenticated

@@ -2,7 +2,7 @@
   "$schema": "./templates/module_schema.json",
   "project": "Vision7 Portal",
   "version": "1.0.0",
-  "last_updated": "2026-06-06",
+  "last_updated": "2026-04-10",
   "description": "Índice central SDD do projeto Vision7 — mapa de todos os módulos, dependências e status.",
   "modules": [
     {
@@ -183,7 +183,7 @@
       "id": "supabase-database",
       "name": "Supabase & Database",
       "spec_file": "sdd/modules/supabase-database.json",
-      "version": "1.0.1",
+      "version": "1.3.5",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [],

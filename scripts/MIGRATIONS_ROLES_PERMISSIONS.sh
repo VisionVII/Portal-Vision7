@@ -9,7 +9,7 @@ echo ""
 
 echo "📋 Arquivos de Migration Criados:"
 echo ""
-ls -1 supabase/migrations/20260323_*.sql | while read file; do
+ls -1 supabase/migrations/20260323*.sql | while read file; do
   size=$(du -h "$file" | cut -f1)
   lines=$(wc -l < "$file")
   echo "  ✓ $(basename $file) ($size, $lines linhas)"
@@ -21,7 +21,7 @@ echo "RESUMO DE CADA MIGRATION"
 echo "=================================================="
 echo ""
 
-echo "1️⃣  20260323_expand_roles.sql (4.6 KB)"
+echo "1️⃣  20260323083000_expand_roles.sql (4.6 KB)"
 echo "   - Expand app_role enum com: super_admin, editor, redator, moderador, analyst"
 echo "   - Create permissions_matrix table com JSONB permissions"
 echo "   - RLS policies para read/write access"
@@ -30,7 +30,7 @@ echo "   - Funções: has_permission(), get_user_permissions()"
 echo "   - Indexes para performance"
 echo ""
 
-echo "2️⃣  20260323_permissions_features.sql (8.3 KB)"
+echo "2️⃣  20260323090000_permissions_features.sql (8.3 KB)"
 echo "   - Create role_hierarchy table (permission inheritance)"
 echo "   - Create permission_overrides table (per-user exceptions)"
 echo "   - Create role_assignments_audit table"
@@ -40,7 +40,7 @@ echo "   - Funções: get_effective_permissions(), assign_role_with_audit(), rev
 echo "   - Múltiplos indexes para otimização"
 echo ""
 
-echo "3️⃣  20260323_user_role_assignments.sql (9.0 KB)"
+echo "3️⃣  20260323085000_user_role_assignments.sql (9.0 KB)"
 echo "   - Enhance user_roles table com: assigned_by, assigned_at, expires_at, is_active, reason"
 echo "   - Create role_assignment_templates table"
 echo "   - Create role_assignment_history table"
@@ -49,7 +49,7 @@ echo "   - Funções: get_user_active_roles(), has_any_role(), has_all_roles()"
 echo "   - Funções: deactivate_expired_roles(), assign_roles_to_users()"
 echo ""
 
-echo "4️⃣  20260323_permissions_validation.sql (8.5 KB)"
+echo "4️⃣  20260323091000_permissions_validation.sql (8.5 KB)"
 echo "   - Validation functions: validate_permission_structure(), validate_no_role_cycles()"
 echo "   - Triggers para validação em tempo real"
 echo "   - Views: role_consistency_report, permission_data_quality"
@@ -105,7 +105,7 @@ echo "PRÓXIMOS PASSOS"
 echo "=================================================="
 echo ""
 echo "1. Execute as migrations com Supabase CLI:"
-echo "   $ supabase migration up"
+echo "   $ supabase db push --include-all"
 echo ""
 echo "2. Teste as funções de permissions:"
 echo "   SELECT public.has_permission(user_id, 'posts', 'create');"
