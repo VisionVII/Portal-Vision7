@@ -36,6 +36,9 @@ type PromoteCuratedPostResult = {
   tags?: string[];
 };
 
+/* ── Column list for curated posts (excludes heavy body fields on list view) ── */
+const CURATED_LIST_SELECT = 'id, cluster_id, title, subtitle, slug, excerpt, language, editorial_score, confidence_score, status, tone_profile, model_info, moderation, metrics, created_by, created_at, updated_at';
+
 /* ── Fetch curated posts ── */
 export function useCuratedPosts(statusFilter?: string) {
   return useQuery({
@@ -43,8 +46,9 @@ export function useCuratedPosts(statusFilter?: string) {
     queryFn: async () => {
       let query = supabase
         .from('curated_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select(CURATED_LIST_SELECT)
+        .order('created_at', { ascending: false })
+        .limit(200);
 
       if (statusFilter) {
         query = query.eq('status', statusFilter);
@@ -54,7 +58,7 @@ export function useCuratedPosts(statusFilter?: string) {
       if (error) throw new Error(error.message);
       return (data ?? []) as CuratedPost[];
     },
-    staleTime: 30_000,
+    staleTime: 60_000,
   });
 }
 
@@ -186,12 +190,13 @@ export function useAutoPromoteCurated() {
 
   return useMutation({
     mutationFn: async () => {
-      // Fetch all ready curated posts
+      // Fetch ready curated posts (only needed fields for promotion)
       const { data, error } = await supabase
         .from('curated_posts')
-        .select('*')
+        .select('id, title, slug, editorial_score, status')
         .eq('status', 'ready')
-        .order('editorial_score', { ascending: false });
+        .order('editorial_score', { ascending: false })
+        .limit(50);
 
       if (error) throw new Error(error.message);
 
@@ -271,9 +276,10 @@ export function useAutoPromotePolling() {
     try {
       const { data, error } = await supabase
         .from('curated_posts')
-        .select('*')
+        .select('id, title, slug, editorial_score, status')
         .eq('status', 'ready')
-        .order('editorial_score', { ascending: false });
+        .order('editorial_score', { ascending: false })
+        .limit(50);
 
       if (error) {
         console.warn('[AutoPromote] Query error:', error.message);

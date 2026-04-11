@@ -39,8 +39,9 @@ export const useRegistrationInvites = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('registration_invites')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('id, email, role, status, invited_by, invited_at, used_at, expires_at, created_at')
+        .order('created_at', { ascending: false })
+        .limit(200);
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
@@ -63,8 +64,9 @@ export const useRoleAssignments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('id, user_id, role, assigned_by, assigned_at, expires_at, is_active, reason, created_at')
+        .order('created_at', { ascending: false })
+        .limit(200);
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
