@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
+import { isAllowed } from '@/cmp';
 
 export interface AnalyticsEvent {
   id: string;
@@ -21,10 +22,13 @@ export interface AnalyticsEventData {
   referrer?: string;
 }
 
-// Track analytics event
+// Track analytics event (respects CMP consent)
 export const useTrackEvent = () => {
   return useMutation({
     mutationFn: async (eventData: AnalyticsEventData) => {
+      // Only track if analytics consent is granted
+      if (!isAllowed('analytics')) return;
+
       const eventPayload = {
         ...eventData,
         event_data: eventData.event_data ?? null,
