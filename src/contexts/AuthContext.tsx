@@ -10,7 +10,7 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 export type AppRole = Enums<'app_role'>;
 
 const DASHBOARD_ROLES: AppRole[] = ['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst'];
-const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const SESSION_IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000; // 8 horas — permite monitorização nocturna sem logout
 const PRIMARY_ADMIN_EMAIL = import.meta.env.VITE_ADMIN_PRIMARY_EMAIL ?? '';
 
 const isAbortError = (err: unknown): boolean =>
