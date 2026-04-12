@@ -97,7 +97,11 @@ export default async function handler(req: { query?: Record<string, string | str
 
         if (post?.title) {
           title = `${post.title} | Vision7`;
-          description = post.excerpt?.trim() || DEFAULT_DESCRIPTION;
+          const rawExcerpt = post.excerpt?.trim() || DEFAULT_DESCRIPTION;
+          // Social platforms (WhatsApp, LinkedIn, iMessage) ignore og:description > ~155 chars
+          description = rawExcerpt.length > 155
+            ? rawExcerpt.slice(0, rawExcerpt.lastIndexOf(' ', 152)) + '…'
+            : rawExcerpt;
           const rawImage = post.banner_url || post.image_url;
           if (rawImage) {
             image = toAbsoluteUrl(rawImage);
