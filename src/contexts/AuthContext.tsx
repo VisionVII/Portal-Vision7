@@ -10,7 +10,7 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 export type AppRole = Enums<'app_role'>;
 
 const DASHBOARD_ROLES: AppRole[] = ['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst'];
-const SESSION_IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000; // 8 horas — permite monitorização nocturna sem logout
+// No idle timeout — session stays open until manual logout (supports overnight automation monitoring)
 const PRIMARY_ADMIN_EMAIL = import.meta.env.VITE_ADMIN_PRIMARY_EMAIL ?? '';
 
 const isAbortError = (err: unknown): boolean =>
@@ -344,32 +344,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearAccess();
   }, [clearAccess]);
 
-  // ── Session idle timeout (30 min) ─────────────────────────────────────────
-
-  useEffect(() => {
-    if (!session) return;
-
-    let timeout: number;
-    let lastActivity = Date.now();
-
-    const resetTimer = () => {
-      const now = Date.now();
-      // Throttle: only reset the timer at most every 10 seconds
-      if (now - lastActivity < 10_000) return;
-      lastActivity = now;
-      window.clearTimeout(timeout);
-      timeout = window.setTimeout(() => { void signOut(); }, SESSION_IDLE_TIMEOUT_MS);
-    };
-
-    const events: Array<keyof WindowEventMap> = ['mousedown', 'keydown', 'touchstart', 'click'];
-    events.forEach((e) => window.addEventListener(e, resetTimer, { passive: true }));
-    resetTimer();
-
-    return () => {
-      window.clearTimeout(timeout);
-      events.forEach((e) => window.removeEventListener(e, resetTimer));
-    };
-  }, [session, signOut]);
+  // ── Session idle timeout (disabled — session stays open until manual logout) ─────────────────────────────────────────
+  // No automatic idle logout. The Supabase JWT refreshes automatically in the background.
 
   // ── Render ────────────────────────────────────────────────────────────────
 
