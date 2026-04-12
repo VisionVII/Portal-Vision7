@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 import { AudioPlayerContext, AudioPlayerContextType, AudioTrack } from '@/contexts/audio-player';
 
@@ -25,7 +25,18 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
     const audio = audioRef.current;
 
-    const onTimeUpdate = () => setState(s => ({ ...s, currentTime: audio.currentTime }));
+    // Throttled time update via RAF — fires at most once per second instead of 4x/s
+    let lastReported = 0;
+    const onTimeUpdate = () => {
+      const now = audio.currentTime;
+      if (Math.abs(now - lastReported) >= 1) {
+        lastReported = now;
+        setState(s => {
+          if (Math.abs(s.currentTime - now) < 1) return s;
+          return { ...s, currentTime: now };
+        });
+      }
+    };
     const onLoadedMetadata = () => setState(s => ({ ...s, duration: audio.duration, isLoading: false }));
     const onEnded = () => setState(s => ({ ...s, isPlaying: false, currentTime: 0 }));
     const onWaiting = () => setState(s => ({ ...s, isLoading: true }));
@@ -151,7 +162,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }));
   }, []);
 
-  const value: AudioPlayerContextType = {
+  const value: AudioPlayerContextType = useMemo(() => ({
     ...state,
     play,
     pause,
@@ -166,7 +177,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     minimize,
     maximize,
     close,
-  };
+  }), [state, play, pause, resume, toggle, seek, setVolumeAction, toggleMute, skipForward, skipBackward, setPlaybackRate, minimize, maximize, close]);
 
   return (
     <AudioPlayerContext.Provider value={value}>

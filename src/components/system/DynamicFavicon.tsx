@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
-const DEFAULT_FAVICON = '/vision-logo-premium-default.png';
+const DEFAULT_FAVICON = '/favicon-64.png';
 
 const DynamicFavicon = () => {
   const { data: settings } = useSiteSettings();
