@@ -2,14 +2,14 @@
   "$schema": "./templates/module_schema.json",
   "project": "Vision7 Portal",
   "version": "1.0.0",
-  "last_updated": "2026-04-10",
+  "last_updated": "2026-04-12",
   "description": "Índice central SDD do projeto Vision7 — mapa de todos os módulos, dependências e status.",
   "modules": [
     {
       "id": "news-aggregator",
       "name": "Agregador de Notícias",
       "spec_file": "sdd/modules/news-aggregator.json",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [
@@ -54,7 +54,7 @@
       "id": "frontend-ui",
       "name": "Frontend & UI",
       "spec_file": "sdd/modules/frontend-ui.json",
-      "version": "1.1.2",
+      "version": "1.3.0",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [
@@ -97,8 +97,8 @@
       "id": "automation-engine",
       "name": "Automation Engine v2",
       "spec_file": "sdd/modules/automation-engine.json",
-      "version": "2.0.0",
-      "status": "Em desenvolvimento",
+      "version": "2.1.0",
+      "status": "Em produção parcial",
       "owner": "Vision7 Core Team",
       "depends_on": [
         "supabase-database",
@@ -161,7 +161,7 @@
       "id": "auth-security",
       "name": "Auth & Segurança",
       "spec_file": "sdd/modules/auth-security.json",
-      "version": "1.2.1",
+      "version": "1.3.0",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [

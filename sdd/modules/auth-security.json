@@ -1,9 +1,9 @@
 {
   "module": "Auth & Segurança",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-07",
+  "last_updated": "2026-04-12",
   "objective": "Sistema de autenticação e autorização robusto com OTP, RBAC extensível, fluxos distintos para admin e equipa, proteção contra abuso, inteligência de sessão e observabilidade de segurança.",
   "functional_requirements": [
     {
@@ -88,7 +88,7 @@
     },
     {
       "id": "NFR-011",
-      "description": "Timeout de sessão por inatividade (30 minutos)",
+      "description": "Timeout de sessão por inatividade (30 minutos). Idle timer otimizado: throttle 10s entre resets, eventos reduzidos de 6 para 4 (sem mousemove/scroll), AuthContext value memoizado com useMemo",
       "category": "Segurança",
       "status": "Finalizado"
     }

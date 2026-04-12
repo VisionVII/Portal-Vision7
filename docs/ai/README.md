@@ -1,31 +1,35 @@
-# Arquitetura do Projeto Vision
+# Arquitetura AI do Portal Vision7
 
-Esta pasta contém a arquitetura de agentes IA e skills especializadas para o desenvolvimento e manutenção do Vision, um portal digital focado em tecnologias web, automação e informações relevantes.
+> Atualizado: 12 de Abril de 2026
+
+Esta pasta contém a arquitetura de agentes IA e skills especializadas para o desenvolvimento e manutenção do Vision7, um portal digital focado em tecnologias web, automação e informações relevantes.
 
 ## Estrutura
 
-### Agentes IA
+### Agentes IA (decisores especializados)
 
-- `agente-seguranca.agent.md` - Agente especializado em segurança da infraestrutura
-- `agente-ux-ui.agent.md` - Agente especializado em design e experiência do usuário
-- `assistente-portal.agent.md` - Agente dedicado ao botão Vision7 AI e à navegação contextual do portal
-- `agente-automacoes.agent.md` - Agente especializado em projetar e implementar automações multi-categoria
+| Agente | Arquivo | Foco |
+|--------|---------|------|
+| Segurança | `agente-seguranca.agent.md` | Auditorias, RLS, vulnerabilidades, OWASP |
+| UX/UI | `agente-ux-ui.agent.md` | Design system, responsividade, a11y |
+| Assistente Portal | `assistente-portal.agent.md` | Navegação, busca editorial, guardrails |
+| Automações | `agente-automacoes.agent.md` | Pipeline n8n, multi-categoria, templates |
 
-### Skills
+### Skills (guias de implementação)
 
-- `seguranca-portal.skill.md` - Skill para implementação de segurança
-- `ux-ui-portal.skill.md` - Skill para design system e UX/UI
-- `gestao-conteudo.skill.md` - Skill para gerenciamento editorial
-- `otimizacao-performance.skill.md` - Skill para otimização de performance
-- `assistente-portal.skill.md` - Skill fechada para busca de notícias, ferramentas e apoio contextual no Vision7
-- `curadoria-inteligente.skill.md` - Skill para curadoria contextual, jornadas editoriais e descoberta guiada no portal
-- `automacoes-portal.skill.md` - Skill para motor de automações escalável (conteúdo, email, auditoria, processos, integrações)
+| Skill | Arquivo | Foco |
+|-------|---------|------|
+| Segurança | `seguranca-portal.skill.md` | Anti-spam, XSS/CSRF, headers, RLS |
+| UX/UI | `ux-ui-portal.skill.md` | shadcn/ui, Tailwind, dark mode, a11y |
+| Gestão Conteúdo | `gestao-conteudo.skill.md` | CRUD posts, SEO, TipTap editor |
+| Performance | `otimizacao-performance.skill.md` | Bundle split, lazy-load, cache, fonts |
+| Assistente Portal | `assistente-portal.skill.md` | Busca editorial, rotas, guardrails |
+| Curadoria | `curadoria-inteligente.skill.md` | Pipeline AI, editorial score, RSS |
+| Automações | `automacoes-portal.skill.md` | Motor multi-categoria, n8n, templates |
 
 ## Como Usar
 
 ### Ativando Agentes
-
-Para usar um agente específico no GitHub Copilot:
 
 1. Mencione o agente no contexto da conversa
 2. Use os comandos específicos documentados em cada arquivo
@@ -33,66 +37,63 @@ Para usar um agente específico no GitHub Copilot:
 
 ### Ativando Skills
 
-Skills são especializações que podem ser ativadas para tarefas específicas:
-
 1. Leia o SKILL.md relevante antes de começar
 2. Aplique as melhores práticas documentadas
-3. Use os exemplos de uso como referência
-
-## Integração com MCP
-
-Estes agentes e skills são projetados para funcionar com o Model Context Protocol (MCP) do GitHub Copilot, permitindo:
-
-- Pesquisa automatizada em documentações oficiais
-- Implementação guiada de melhores práticas
-- Validação de segurança e performance
-- Sugestões contextuais baseadas no projeto
+3. Use os exemplos como referência
 
 ## Conexão com Banco de Dados
 
-O projeto está em **migração controlada de conta/projeto Supabase**.
+- **Supabase Project**: `xhpfxvoonpclonjyfimt` (West EU Ireland)
+- **Schema**: `supabase/migrations/` + `supabase/bootstrap_new_project.sql`
+- **URL e chaves**: sempre via variáveis de ambiente (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`)
+- **Regra**: nunca fixar project IDs/URLs em docs ou fallbacks de frontend
 
-- **Fonte de verdade do schema**: `supabase/migrations/` + `supabase/bootstrap_new_project.sql`
-- **Project ref ativo no repositório**: verificar `supabase/config.toml` (no momento, `stpusdeqwbckvfsitsld`)
-- **URL e chaves**: sempre via variáveis de ambiente (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
-- **Regra operacional**: evitar fixar project IDs/URLs antigas em docs, skills ou fallbacks de frontend quando a intenção for operar entre contas/projetos
+## Pipeline de Conteúdo AI (Ativo ✅)
+
+```
+WF-01 Coleta RSS (30min) → news_staging (300+ artigos)
+WF-02 Dedup/Cluster (20min) → news_clusters (199 clusters)
+WF-03 Curadoria AI Groq (60min) → curated_posts (score 86-100)
+WF-04 Pipeline Monitor
+WF-05 Social Distribution
+WF-06 Learning Loop
+```
+
+- n8n: `https://portal-vision7.onrender.com` (Render, community edition)
+- AI Model: Groq `llama-3.1-8b-instant`
+- Todos os 6 workflows ativos em produção
 
 ## Áreas de Foco
 
 ### Segurança
-
-- Infraestrutura de segurança web
-- Proteção contra spam, bots e ataques
-- Prevenção de vulnerabilidades SQL e front-end
+- OTP auth, RLS deny-by-default, DOMPurify, rate limiting
+- Pendente: MFA, security headers, CSRF completo
 
 ### UX/UI
-
-- Design system consistente com shadcn/ui
-- Responsividade mobile-first
-- Acessibilidade e performance
-
-### Gerenciamento de Conteúdo
-
-- Sistema editorial completo
-- Gestão de mídia otimizada
-- SEO e analytics
-
-### Jornadas de Acesso
-
-- Admin entra apenas por `/acesso/admin/controlado`
-- Equipa e parceiros validam entrada em `/validar/entrada/tipodeuser`
-- Pedido público de acesso/parceria começa em `/acesso/convidado`
-- Convites devem respeitar hierarquia, papel, escopo e revisão manual antes da liberação
+- shadcn/ui + Tailwind, dark/light mode, mobile-first
+- Fonts: Manrope (preload) + Fraunces + Space Grotesk (defer)
+- Animações: CSS transitions (público), framer-motion (admin lazy)
 
 ### Performance
+- Bundle: ~140KB gzip first-load, admin chunks lazy
+- Lazy: MiniPlayer, email templates, DOMPurify, admin routes
+- Cache: staleTime 5min, gcTime 10min, refetchOnReconnect:false
 
-- Otimização de carregamento
-- Estratégias de caching
-- Monitoramento contínuo
+### Jornadas de Acesso
+- Admin: `/acesso/admin/controlado`
+- Equipa/Parceiros: `/validar/entrada/tipodeuser`
+- Público: `/acesso/convidado`
 
 ## Módulo de Portal AI
 
-O front-end do botão Vision7 AI está preparado em `src/modules/portal-ai/` com configuração, guardrails, service local e ponto de expansão para futura API externa.
+O front-end do botão Vision7 AI está preparado em `src/modules/portal-ai/` com config, guardrails, service local e ponto de expansão para futura API de modelo externo.
+
+## SDDs Relacionados
+
+- `sdd/modules/agents-skills-ai.json` (v0.8.0)
+- `sdd/modules/frontend-ui.json` (v1.3.0)
+- `sdd/modules/auth-security.json` (v1.3.0)
+- `sdd/modules/automation-engine.json` (v2.1.0)
 
 ## Desenvolvimento
 
