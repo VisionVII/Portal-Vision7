@@ -103,14 +103,7 @@ export default async function handler(req: { query?: Record<string, string | str
             ? rawExcerpt.slice(0, rawExcerpt.lastIndexOf(' ', 152)) + '…'
             : rawExcerpt;
           const rawImage = post.banner_url || post.image_url;
-          if (rawImage) {
-            image = toAbsoluteUrl(rawImage);
-          } else {
-            // Generate branded OG image dynamically when no photo is set
-            const ogTitle = encodeURIComponent(post.title.slice(0, 80));
-            const ogSubtitle = encodeURIComponent((post.excerpt || '').slice(0, 120));
-            image = `${SITE_URL}/api/og-image?title=${ogTitle}&subtitle=${ogSubtitle}`;
-          }
+          image = rawImage ? toAbsoluteUrl(rawImage) : DEFAULT_IMAGE;
         }
       }
     } catch {
