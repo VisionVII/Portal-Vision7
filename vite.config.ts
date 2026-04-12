@@ -30,6 +30,8 @@ export default defineConfig(({ mode }) => ({
     react(),
   ],
   build: {
+    target: 'es2020',
+    cssCodeSplit: true,
     rollupOptions: {
       output: {
         manualChunks(id) {

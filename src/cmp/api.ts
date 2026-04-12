@@ -20,10 +20,21 @@ async function logConsent(
 ): Promise<void> {
   try {
     const userId = (await supabase.auth.getSession()).data.session?.user?.id ?? 'anon';
+    const hostname = window.location.hostname.replace(/^www\./, '');
+
+    // Check domain exists before insert to avoid FK violation (409)
+    const { data: domain } = await supabase
+      .from('cmp_domains')
+      .select('domain')
+      .eq('domain', hostname)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (!domain) return;
 
     await supabase.from('cmp_consent_records').insert({
       user_id: userId,
-      domain: window.location.hostname,
+      domain: hostname,
       consent,
       policy_version: version,
       method,

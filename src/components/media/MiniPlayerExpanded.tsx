@@ -175,6 +175,8 @@ const MiniPlayerExpanded: React.FC = () => {
                         src={track.cover_url} 
                         alt={track.title} 
                         className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-700 via-primary-600 to-secondary-600">
@@ -339,7 +341,7 @@ const MiniPlayerExpanded: React.FC = () => {
             className="relative shrink-0 overflow-hidden rounded-lg transition-transform hover:scale-105"
           >
             {track.cover_url ? (
-              <img src={track.cover_url} alt={track.title} className="h-11 w-11 object-cover sm:h-12 sm:w-12" />
+              <img src={track.cover_url} alt={track.title} className="h-11 w-11 object-cover sm:h-12 sm:w-12" loading="lazy" />
             ) : (
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-primary-700 to-secondary-600 sm:h-12 sm:w-12">
                 <Headphones className="h-5 w-5 text-white" />
