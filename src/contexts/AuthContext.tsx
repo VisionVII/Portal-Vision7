@@ -350,13 +350,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!session) return;
 
     let timeout: number;
+    let lastActivity = Date.now();
 
     const resetTimer = () => {
+      const now = Date.now();
+      // Throttle: only reset the timer at most every 10 seconds
+      if (now - lastActivity < 10_000) return;
+      lastActivity = now;
       window.clearTimeout(timeout);
       timeout = window.setTimeout(() => { void signOut(); }, SESSION_IDLE_TIMEOUT_MS);
     };
 
-    const events: Array<keyof WindowEventMap> = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    const events: Array<keyof WindowEventMap> = ['mousedown', 'keydown', 'touchstart', 'click'];
     events.forEach((e) => window.addEventListener(e, resetTimer, { passive: true }));
     resetTimer();
 
@@ -368,15 +373,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  const contextValue = useMemo<AuthContextType>(() => ({
+    user, session, roles, primaryRole,
+    isAdmin, isSuperAdmin, canAccessDashboard,
+    isLoading, isAccessReady,
+    hasRole, signIn, signOut,
+  }), [user, session, roles, primaryRole, isAdmin, isSuperAdmin, canAccessDashboard, isLoading, isAccessReady, hasRole, signIn, signOut]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user, session, roles, primaryRole,
-        isAdmin, isSuperAdmin, canAccessDashboard,
-        isLoading, isAccessReady,
-        hasRole, signIn, signOut,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

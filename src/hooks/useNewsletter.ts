@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { sendNewsletterWelcome } from '@/services/email';
 
 export const useSubscribeNewsletter = () => {
   return useMutation({
@@ -17,6 +16,8 @@ export const useSubscribeNewsletter = () => {
         throw error;
       }
 
+      // Dynamic import: keeps email templates out of the main bundle
+      const { sendNewsletterWelcome } = await import('@/services/email');
       const { error: welcomeError } = await sendNewsletterWelcome(normalizedEmail);
 
       return {

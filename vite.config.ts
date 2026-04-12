@@ -70,10 +70,13 @@ export default defineConfig(({ mode }) => ({
 
           if (
             id.includes("@tiptap") ||
-            id.includes("prosemirror") ||
-            id.includes("dompurify")
+            id.includes("prosemirror")
           ) {
             return "vendor-editor";
+          }
+
+          if (id.includes("dompurify")) {
+            return "vendor-sanitize";
           }
 
           if (
@@ -88,6 +91,18 @@ export default defineConfig(({ mode }) => ({
 
           if (id.includes("recharts") || id.includes("embla-carousel")) {
             return "vendor-data-viz";
+          }
+
+          if (id.includes("framer-motion") || id.includes("motion")) {
+            return "vendor-motion";
+          }
+
+          if (
+            id.includes("react-hook-form") ||
+            id.includes("@hookform") ||
+            id.includes("/zod/")
+          ) {
+            return "vendor-forms";
           }
 
           if (id.includes("date-fns")) {

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   Play, 
@@ -100,21 +99,14 @@ const MiniPlayerV2: React.FC = () => {
       {/* ═══════════════════════════════════════════════════════
           EXPANDED PLAYER OVERLAY
           ═══════════════════════════════════════════════════════ */}
-      <AnimatePresence>
+      <>
         {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-gradient-to-b from-slate-950 via-slate-900 to-black"
+          <div
+            className="fixed inset-0 z-[60] bg-gradient-to-b from-slate-950 via-slate-900 to-black animate-in fade-in duration-200"
             onClick={() => setIsExpanded(false)}
           >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="flex h-full flex-col overflow-hidden"
+            <div
+              className="flex h-full flex-col overflow-hidden animate-in slide-in-from-bottom duration-300"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -296,20 +288,17 @@ const MiniPlayerV2: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </>
 
       {/* ═══════════════════════════════════════════════════════
           MINIMIZED BAR (hidden when expanded)
           ═══════════════════════════════════════════════════════ */}
       {!isExpanded && (
-      <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        exit={{ y: 100 }}
-        className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-card/95 shadow-2xl backdrop-blur-xl"
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-card/95 shadow-2xl backdrop-blur-xl animate-in slide-in-from-bottom duration-300"
       >
         {/* Progress bar */}
         <div className="h-0.5 w-full bg-border/30">
@@ -399,7 +388,7 @@ const MiniPlayerV2: React.FC = () => {
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
       )}
     </>
   );

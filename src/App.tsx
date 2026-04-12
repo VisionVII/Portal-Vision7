@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
-import MiniPlayer from "@/components/media/MiniPlayerV2";
+const MiniPlayer = lazy(() => import("@/components/media/MiniPlayerV2"));
 import DynamicFavicon from "@/components/system/DynamicFavicon";
 import ErrorBoundary from "@/components/system/ErrorBoundary";
 import ScrollToTop from "@/components/system/ScrollToTop";
@@ -56,10 +56,8 @@ const RouteFallback = () => (
 );
 
 const AnimatedRoutes = () => {
-  const location = useLocation();
-  
   return (
-    <Routes location={location} key={location.pathname}>
+    <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/tecnologia" element={<Tecnologia />} />
       <Route path="/desporto" element={<Desporto />} />
@@ -115,8 +113,9 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      staleTime: 60 * 1000,
-      gcTime: 5 * 60 * 1000,
+      refetchOnReconnect: false,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       retry: (failureCount, error) => {
         if (error instanceof DOMException && error.name === 'AbortError') return false;
         if (failureCount >= 3) return false;
@@ -144,7 +143,9 @@ const App = () => (
               <Suspense fallback={<RouteFallback />}>
                 <AnimatedRoutes />
               </Suspense>
-              <MiniPlayer />
+              <Suspense fallback={null}>
+                <MiniPlayer />
+              </Suspense>
               <PublicPrivacyControls />
             </BrowserRouter>
           </ErrorBoundary>
