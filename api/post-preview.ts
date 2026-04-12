@@ -3,7 +3,7 @@ const SUPABASE_URL = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL 
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
 const DEFAULT_TITLE = 'Vision7 - Portal Tecnologico';
 const DEFAULT_DESCRIPTION = 'Vision7 reúne notícias, análises e conteúdos premium sobre tecnologia, negócios, cultura, saúde e tendências globais.';
-const DEFAULT_IMAGE = `${SITE_URL}/vision-logo-premium-default.png`;
+const DEFAULT_IMAGE = `${SITE_URL}/vision-logo-premium-default.webp`;
 
 type PreviewPost = {
   title?: string;
@@ -43,8 +43,8 @@ const renderHtml = ({ title, description, url, image }: { title: string; descrip
     <meta property="og:locale" content="pt_PT" />
     <meta property="og:image" content="${escapeHtml(image)}" />
     <meta property="og:image:secure_url" content="${escapeHtml(image)}" />
-    <meta property="og:image:width" content="1536" />
-    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="${escapeHtml(title)}" />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -98,7 +98,15 @@ export default async function handler(req: { query?: Record<string, string | str
         if (post?.title) {
           title = `${post.title} | Vision7`;
           description = post.excerpt?.trim() || DEFAULT_DESCRIPTION;
-          image = toAbsoluteUrl(post.banner_url || post.image_url || DEFAULT_IMAGE);
+          const rawImage = post.banner_url || post.image_url;
+          if (rawImage) {
+            image = toAbsoluteUrl(rawImage);
+          } else {
+            // Generate branded OG image dynamically when no photo is set
+            const ogTitle = encodeURIComponent(post.title.slice(0, 80));
+            const ogSubtitle = encodeURIComponent((post.excerpt || '').slice(0, 120));
+            image = `${SITE_URL}/api/og-image?title=${ogTitle}&subtitle=${ogSubtitle}`;
+          }
         }
       }
     } catch {
@@ -108,5 +116,6 @@ export default async function handler(req: { query?: Record<string, string | str
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
+  res.setHeader('Vary', 'User-Agent');
   res.status(200).send(renderHtml({ title, description, url: canonicalUrl, image }));
 }

@@ -29,7 +29,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|SkypeUriPreview|Googlebot|bingbot).*"
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|SkypeUriPreview|Googlebot|bingbot|Instagram|Iframely|pinterest|vkShare|W3C_Validator|Applebot|Embedly|Quora|redditbot|Snapchat).*"
         }
       ],
       "destination": "/api/post-preview?slug=$1"
