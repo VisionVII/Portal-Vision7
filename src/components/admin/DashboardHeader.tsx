@@ -14,7 +14,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
   const { user, primaryRole, roles, signOut } = useAuth();
   const navigate = useNavigate();
   const { data: siteSettings } = useSiteSettings();
-  const logoUrl = siteSettings?.logo_url || '/vision-logo.svg';
+  const logoUrl = siteSettings?.logo_url || '/vision-logo-premium-default.webp';
 
   const handleSignOut = async () => {
     await signOut();
