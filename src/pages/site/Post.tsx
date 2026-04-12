@@ -5,7 +5,7 @@ import Footer from '@/components/layout/Footer';
 import AdSpace from '@/components/content/AdSpace';
 import RelatedPosts from '@/components/content/RelatedPosts';
 import { usePost, useRelatedPosts, useTrackPostView } from '@/hooks/usePosts';
-import { Calendar, User, ArrowLeft, Share2, Check, Clock, Tag } from 'lucide-react';
+import { Calendar, User, ArrowLeft, Share2, Check, Clock, Tag, MessageCircle, Send, Link2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { sanitizeRichContent } from '@/lib/richContent';
 
@@ -73,6 +73,28 @@ const Post = () => {
   const trackPostView = useTrackPostView();
   const trackedPostIdRef = useRef<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
+
+  const postUrl = `${SITE_URL}/post/${slug ?? ''}`;
+
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(postUrl);
+    setCopied(true);
+    setShareOpen(false);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Close share dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShareOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -160,21 +182,6 @@ const Post = () => {
   const categoryPath = post.categories?.slug ? `/${post.categories.slug}` : '/';
   const categoryLabel = post.categories?.name ?? 'Notícias';
   const heroImage = post.banner_url || post.image_url;
-
-  const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: post.title, text: post.excerpt, url });
-        return;
-      } catch {
-        // fallback to clipboard
-      }
-    }
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const formattedDate = new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', {
     day: 'numeric',
@@ -273,14 +280,58 @@ const Post = () => {
           {/* Share bar */}
           <div className="mx-auto mb-6 flex max-w-4xl items-center justify-between">
             <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">{post.excerpt}</p>
-            <button
-              onClick={() => void handleShare()}
-              className="ml-4 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-              title="Partilhar artigo"
-            >
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Share2 className="h-3.5 w-3.5" />}
-              {copied ? 'Copiado!' : 'Partilhar'}
-            </button>
+            {/* Share dropdown — uses direct platform links so WhatsApp/Telegram
+                render the full OG card (image + description) without extra text */}
+            <div ref={shareRef} className="relative ml-4 shrink-0">
+              <button
+                onClick={() => setShareOpen((o) => !o)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                title="Partilhar artigo"
+                aria-haspopup="true"
+                aria-expanded={shareOpen}
+              >
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Share2 className="h-3.5 w-3.5" />}
+                {copied ? 'Copiado!' : 'Partilhar'}
+              </button>
+
+              {shareOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-48 origin-top-right rounded-xl border border-border bg-card shadow-xl">
+                  <div className="p-1">
+                    {/* WhatsApp — wa.me sends ONLY the URL, WhatsApp generates the card preview */}
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(postUrl)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setShareOpen(false)}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                    >
+                      <MessageCircle className="h-4 w-4 text-[#25D366]" />
+                      WhatsApp
+                    </a>
+                    {/* Telegram */}
+                    <a
+                      href={`https://t.me/share/url?url=${encodeURIComponent(postUrl)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setShareOpen(false)}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                    >
+                      <Send className="h-4 w-4 text-[#2AABEE]" />
+                      Telegram
+                    </a>
+                    <div className="my-1 h-px bg-border" />
+                    {/* Copy link */}
+                    <button
+                      onClick={() => void handleCopyLink()}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                    >
+                      <Link2 className="h-4 w-4 text-muted-foreground" />
+                      Copiar link
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Article image (if no banner but has image) */}
