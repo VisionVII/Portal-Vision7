@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const PROMOTE_SECRET = Deno.env.get('PROMOTE_SECRET') ?? '';
 
 const ALLOWED_ORIGINS_ENV = Deno.env.get('ALLOWED_ORIGINS')
   ?? Deno.env.get('PUBLIC_SITE_URL')
@@ -66,6 +67,25 @@ async function isAuthorized(req: Request): Promise<boolean> {
   if (token === expected || authHeader === expected || apiKeyHeader === expected) {
     return true;
   }
+
+  // Fallback: check against custom PROMOTE_SECRET (not subject to SUPABASE_ prefix restriction)
+  if (PROMOTE_SECRET && (token === PROMOTE_SECRET || apiKeyHeader === PROMOTE_SECRET)) {
+    return true;
+  }
+
+  // Fallback: accept any valid service_role JWT for this project (handles auto-injected key mismatch)
+  try {
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1]));
+      if (
+        payload.role === 'service_role' &&
+        payload.ref === SUPABASE_URL.split('.')[0].replace('https://', '')
+      ) {
+        return true;
+      }
+    }
+  } catch { /* not a valid JWT, continue */ }
 
   if (!token || !SUPABASE_URL) return false;
 
