@@ -9,7 +9,8 @@ interface BrandLogoProps {
   className?: string;
 }
 
-const DEFAULT_LOGO = '/vision-logo-premium-default.png';
+const DEFAULT_LOGO = '/vision-logo-premium-default.webp';
+const DEFAULT_LOGO_FALLBACK = '/vision-logo-premium-default.png';
 
 const getBrandName = (siteName?: string | null) => {
   const value = siteName?.trim();
@@ -29,20 +30,27 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
 }) => {
   const brandName = getBrandName(siteName);
   const activeLogo = logoUrl?.trim() ? logoUrl : DEFAULT_LOGO;
+  const fallbackLogo = logoUrl?.trim() ? logoUrl : DEFAULT_LOGO_FALLBACK;
 
   return (
     <div className={cn('flex flex-col', showTagline && !compact ? 'gap-1' : 'gap-0', className)}>
       <div className="flex items-center gap-3 overflow-visible">
-        <img
-          src={activeLogo}
-          alt={`${brandName} premium logo`}
-          className={cn(
-            'w-auto object-contain drop-shadow-[0_4px_14px_rgba(34,211,238,0.18)]',
-            compact
-              ? 'h-10 max-w-[140px] sm:h-12 sm:max-w-[160px]'
-              : 'h-11 max-w-[152px] sm:h-12 sm:max-w-[172px] lg:h-14 lg:max-w-[210px]'
-          )}
-        />
+        <picture>
+          <source srcSet={activeLogo} type="image/webp" />
+          <img
+            src={fallbackLogo}
+            alt={`${brandName} premium logo`}
+            width={400}
+            height={267}
+            fetchPriority="high"
+            className={cn(
+              'w-auto object-contain drop-shadow-[0_4px_14px_rgba(34,211,238,0.18)]',
+              compact
+                ? 'h-10 max-w-[140px] sm:h-12 sm:max-w-[160px]'
+                : 'h-11 max-w-[152px] sm:h-12 sm:max-w-[172px] lg:h-14 lg:max-w-[210px]'
+            )}
+          />
+        </picture>
         <span className="sr-only">{brandName}</span>
       </div>
 
