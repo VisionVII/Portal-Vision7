@@ -1,9 +1,9 @@
 {
   "module": "Automation Engine v2",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "owner": "Vision7 Core Team",
-  "status": "Em desenvolvimento",
-  "last_updated": "2026-06-06",
+  "status": "Em produção parcial",
+  "last_updated": "2026-04-12",
   "objective": "Motor de automações escalável para portal enterprise: suporta múltiplas categorias (conteúdo, email, auditoria, notificações, integrações externas), com pipeline visual, histórico de execuções filtrado, templates reutilizáveis e arquitetura modular preparada para centenas de automações.",
   "supersedes": "automation-n8n.json (v1.1.0) — mantido como referência legacy",
 
@@ -233,9 +233,9 @@
     },
     {
       "id": "FR-014",
-      "description": "Integração com pipeline editorial existente (news_staging → curated_posts → posting_queue)",
+      "description": "Integração com pipeline editorial existente (news_staging → news_clusters → curated_posts). 6 workflows n8n ativos em produção: WF-01 Coleta (30min), WF-02 Dedup (20min), WF-03 Curadoria AI Groq (60min), WF-04 Monitor, WF-05 Social, WF-06 Learning Loop",
       "priority": "Crítica",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado"
     },
     {
       "id": "FR-015",
@@ -619,6 +619,12 @@
       "version": "2.0.0",
       "author": "Vision7 Team",
       "description": "Reescrita completa: motor multi-categoria, execuções com steps, templates, audit log, dashboard modular com tabs"
+    },
+    {
+      "date": "2026-04-12",
+      "version": "2.1.0",
+      "author": "Vision7 Team",
+      "description": "Pipeline n8n end-to-end em produção: 6 workflows ativos (WF-01 a WF-06). Bugs corrigidos: WF-02 .item→.all(), id==eq., WF-03 GROQ_API_KEY+Authorization header. Dashboard refatorado para 3 tabs (Pipeline IA | Automações | Ferramentas). Integração com Groq llama-3.1-8b-instant para curadoria AI."
     }
   ]
 }

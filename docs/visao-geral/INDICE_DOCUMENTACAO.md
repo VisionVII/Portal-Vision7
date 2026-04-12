@@ -1,7 +1,7 @@
 # 📚 ÍNDICE DE DOCUMENTAÇÃO - PROJETO DASHBOARD
 
-**Data:** 23 de Março de 2026 (atualizado 08 de Abril de 2026)  
-**Total de Documentos:** 9 arquivos base + SDD modules + AI agents/skills  
+**Data:** 23 de Março de 2026 (atualizado 12 de Abril de 2026)  
+**Total de Documentos:** 9 arquivos base + 12 SDD modules + 11 AI agents/skills  
 **Status:** ✅ Ativo
 
 ---
@@ -12,13 +12,16 @@
 - `docs/planejamento/` — execução, cronograma e mapa de arquivos.
 - `docs/seguranca/` — análise técnica, findings e plano de ação.
 - `docs/referencia/` — snippets reutilizáveis e referência de permissões.
-- `docs/ai/` — agentes e skills especializados do projeto.
-- `sdd/modules/` — **SDD specs** (fonte de verdade técnica por módulo).
+- `docs/ai/` — 4 agentes e 7 skills especializados do projeto.
+- `sdd/modules/` — **12 SDD specs** (fonte de verdade técnica por módulo).
 - `scripts/` e `examples/` — utilitários e exemplos de apoio.
+- `docs/planejamento/BACKLOG_PENDENCIAS.md` — **lista mestre de pendências** (sempre atualizada).
 
-> **🔑 Referência principal de automações:** `sdd/modules/automation-engine.json` (Automation Engine v2)
+> **🔑 Referência principal de automações:** `sdd/modules/automation-engine.json` (v2.1.0 — pipeline n8n ativo em produção)
 >
-> **🟦 Migração Supabase em andamento:** use `docs/planejamento/SETUP_SUPABASE_NOVO_PROJETO.md` como runbook oficial de aplicar → validar → avançar.
+> **🟢 Pipeline AI ativo:** 6 workflows n8n em produção (WF-01 a WF-06), curadoria via Groq llama-3.1-8b-instant
+>
+> **📊 Performance otimizada:** First-load ~140KB gzip, bundle split em 6 chunks, lazy loading completo
 
 ---
 

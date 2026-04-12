@@ -1,9 +1,9 @@
 {
   "module": "Frontend & UI",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-06-06",
+  "last_updated": "2026-04-12",
   "objective": "Interface pública do portal Vision7 com design responsivo, tema dark/light, navegação por categorias e jornadas específicas para pedidos de acesso, convites e validação hierárquica de entrada.",
   "functional_requirements": [
     {
@@ -82,9 +82,9 @@
   "non_functional_requirements": [
     {
       "id": "NFR-001",
-      "description": "Primeira carga sob 3s em 3G, Lighthouse Performance > 80",
+      "description": "Primeira carga sob 3s em 3G, Lighthouse Performance > 80. Bundle otimizado: code-splitting, lazy MiniPlayer, fonts deferred, DNS prefetch Supabase",
       "category": "Performance",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado"
     },
     {
       "id": "NFR-002",
@@ -112,7 +112,7 @@
     }
   ],
   "flows": {
-    "data_flow": "Supabase → TanStack Query → Page Components → UI Components → DOM (+ DOMPurify para HTML)",
+    "data_flow": "Supabase → TanStack Query (staleTime 5min, gcTime 10min) → Page Components → UI Components → DOM (+ DOMPurify lazy-loaded para HTML)",
     "user_flow": "Homepage → Navegar Categorias → Ler Post → Newsletter Signup | /acesso/convidado → solicitar acesso | /validar/entrada/tipodeuser → validar entrada da equipa"
   },
   "diagrams": {
@@ -134,7 +134,8 @@
       "@vercel/analytics",
       "tailwindcss",
       "lucide-react",
-      "dompurify",
+      "dompurify (lazy-loaded, chunk separado)",
+      "framer-motion (lazy-loaded, chunk separado, apenas em admin)",
       "class-variance-authority",
       "clsx",
       "tailwind-merge"
@@ -318,6 +319,12 @@
       "version": "1.2.0",
       "author": "Vision7 Team",
       "description": "Vercel Analytics integrado em main.tsx. ThemeToggle simplificado (bordas e backgrounds removidos). Bordas de categorias no Header removidas (ring-1, shadow-sm). Gradiente de login AuthShell atualizado com Ocean Blue (primary-600). DOM nesting errors corrigidos. Dead code removido (AutomationDashboard V1, KPIBar, CategoryTabs, DashboardSection)."
+    },
+    {
+      "date": "2026-04-12",
+      "version": "1.3.0",
+      "author": "Vision7 Team",
+      "description": "Auditoria completa de performance: MiniPlayer lazy-loaded, framer-motion em chunk separado, DOMPurify isolado, route key removido (parava remount), AuthContext memoizado + idle throttle 10s, fonts secundárias deferred, DNS prefetch Supabase, email templates dynamic import, dead code removido (PageTransition.tsx, MiniPlayerExpanded.tsx, App.css). Imagens pesadas removidas (-9.5MB). Bundle first-load -52KB gzip."
     }
   ]
 }

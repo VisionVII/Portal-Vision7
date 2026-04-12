@@ -1,5 +1,23 @@
 # Vision7 — Spec-Driven Development (SDD)
 
+> Atualizado: 12 de Abril de 2026
+
+## Status dos Módulos
+
+| Módulo | Versão | Status |
+|--------|--------|--------|
+| Supabase & Database | 1.3.5 | ✅ Finalizado |
+| Auth & Segurança | 1.3.0 | ✅ Finalizado |
+| Agregador de Notícias | 1.1.0 | ✅ Finalizado |
+| Tags & Taxonomia | 1.0.1 | ✅ Finalizado |
+| CMS | 1.2.0 | ✅ Finalizado |
+| Frontend & UI | 1.3.0 | ✅ Finalizado |
+| Automation Engine v2 | 2.1.0 | 🟡 Produção parcial |
+| Analytics | 0.5.0 | 🟡 Em desenvolvimento |
+| Agents & Skills AI | 0.8.0 | 🟡 Em desenvolvimento |
+| CI/CD & DevOps | 0.3.0 | 🟡 Em desenvolvimento |
+| Automação n8n (Legacy) | 1.1.0 | ⛔ Depreciado |
+
 ## Estrutura
 
 ```

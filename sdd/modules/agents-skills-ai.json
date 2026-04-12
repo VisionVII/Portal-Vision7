@@ -1,9 +1,9 @@
 {
   "module": "Agents & Skills AI",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "owner": "Vision7 Core Team",
   "status": "Em desenvolvimento",
-  "last_updated": "2026-04-08",
+  "last_updated": "2026-04-12",
   "objective": "Agentes e skills de IA para assistência no desenvolvimento, segurança, UX/UI, curadoria de conteúdo, planejamento de acessos hierárquicos e otimização de performance do portal Vision7.",
   "functional_requirements": [
     {
@@ -141,6 +141,12 @@
       "version": "0.7.0",
       "author": "Vision7 Team",
       "description": "Adicionados agente-automacoes.agent.md e automacoes-portal.skill.md para o novo Automation Engine v2"
+    },
+    {
+      "date": "2026-04-12",
+      "version": "0.8.0",
+      "author": "Vision7 Team",
+      "description": "Atualização completa de todos os agentes e skills com estado atual: pipeline n8n ativo (6 WFs), performance otimizada (bundle split, lazy-load, fonts, cache), segurança atualizada (AuthContext memoizado, idle throttle). README reescrito com tabelas e status. Skill de performance com mapa detalhado de chunks."
     }
   ]
 }

@@ -1,10 +1,10 @@
 {
   "module": "Agregador de Notícias",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-05",
-  "objective": "Sistema de agregação, criação e gestão de posts/notícias com suporte a categorias, tags, drafts/publicações, e conteúdo fallback offline. Integra com n8n para ingestão automática de feeds RSS.",
+  "last_updated": "2026-04-12",
+  "objective": "Sistema de agregação, criação e gestão de posts/notícias com suporte a categorias, tags, drafts/publicações, e conteúdo fallback offline. Pipeline n8n completo: WF-01 (coleta RSS) → WF-02 (dedup/cluster) → WF-03 (curadoria AI via Groq) ativos em produção.",
   "functional_requirements": [
     {
       "id": "FR-001",
@@ -38,9 +38,9 @@
     },
     {
       "id": "FR-006",
-      "description": "Integração com n8n para ingestão automática de RSS feeds com keywords e prompts AI",
+      "description": "Pipeline n8n com 6 workflows ativos: WF-01 Coleta RSS (30min), WF-02 Dedup/Cluster (20min), WF-03 Curadoria AI Groq (60min), WF-04 Monitor, WF-05 Social, WF-06 Learning Loop",
       "priority": "Alta",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado"
     },
     {
       "id": "FR-007",
