@@ -57,6 +57,12 @@ SUPABASE_SERVICE_ROLE_KEY=SEU_SERVICE_ROLE_JWT
 GROQ_API_KEY=SEU_GROQ_API_KEY
 HF_API_TOKEN=SEU_HUGGINGFACE_TOKEN
 
+# ── Email (Resend) — notificações pós-execução dos workflows ─────────────────
+# Usado no WF-03 para enviar resumo de execução por email após cada pipeline
+# Obter em: https://resend.com/api-keys → Create API Key
+# O remetente (noreply@vision-portal.pt) deve estar verificado em resend.com/domains
+RESEND_API_KEY=SEU_RESEND_API_KEY
+
 # ── IMPORTANTE: n8n v1+ bloqueia $env por padrão ─────────────────────────────
 # N8N_BLOCK_ENV_ACCESS_IN_NODE=true é o DEFAULT em n8n 2.x
 # Para usar $env.* em workflows, adicionar explicitamente:
