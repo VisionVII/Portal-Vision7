@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Newspaper, Layers, Sparkles, Play, RefreshCw, CheckCircle2, Square,
   Clock, Loader2, ChevronRight, Tag, X, Settings2, Zap,
@@ -84,7 +84,20 @@ interface LogEntry {
 }
 
 function matchWorkflow(workflows: N8nWorkflow[], nameMatch: string): N8nWorkflow | undefined {
-  return workflows.find((w) => w.name?.includes(nameMatch));
+  const matches = workflows.filter((w) => w.name?.includes(nameMatch));
+  if (matches.length <= 1) return matches[0];
+
+  // Prefer active workflows, then the most recently updated one.
+  return [...matches].sort((a, b) => {
+    const activeDelta = Number(b.active === true) - Number(a.active === true);
+    if (activeDelta !== 0) return activeDelta;
+
+    const tsA = Date.parse(String(a.updatedAt ?? a.createdAt ?? 0));
+    const tsB = Date.parse(String(b.updatedAt ?? b.createdAt ?? 0));
+    const safeA = Number.isFinite(tsA) ? tsA : 0;
+    const safeB = Number.isFinite(tsB) ? tsB : 0;
+    return safeB - safeA;
+  })[0];
 }
 
 function formatTime(d: Date): string {
@@ -104,6 +117,15 @@ function formatRelativeTime(iso: string | undefined): string {
 
 function parseListInput(value: string): string[] {
   return sanitizeStringList(value.split(/[\n,;]+/));
+}
+
+function getExecutionTimestamp(exec: N8nExecution): number {
+  const raw = exec.startedAt ?? exec.stoppedAt;
+  const parsed = raw ? Date.parse(raw) : Number.NaN;
+  if (Number.isFinite(parsed)) return parsed;
+
+  const numericId = Number(exec.id);
+  return Number.isFinite(numericId) ? numericId : 0;
 }
 
 const LOG_TYPE_STYLES: Record<string, string> = {
@@ -209,7 +231,7 @@ export function NewsPipelineCard() {
 
   const fetchRecentExecutions = useCallback(async () => {
     try {
-      const execs = await getExecutions(10);
+      const execs = await getExecutions(50);
       setRecentExecutions(execs);
     } catch {
       // silent
@@ -258,6 +280,28 @@ export function NewsPipelineCard() {
   const someActive = pipelineWorkflows.some((x) => x.wf?.active === true);
   const pipelineFound = pipelineWorkflows.length > 0;
   const editorialSchemaLegacy = schemaMode === 'legacy' || diagnostics?.configSchemaMode === 'legacy';
+
+  const latestExecutionByWorkflowId = useMemo(() => {
+    const map = new Map<string, N8nExecution>();
+
+    for (const exec of recentExecutions) {
+      const workflowId = exec.workflowId;
+      if (workflowId === undefined || workflowId === null) continue;
+
+      const key = String(workflowId);
+      const existing = map.get(key);
+      if (!existing || getExecutionTimestamp(exec) > getExecutionTimestamp(existing)) {
+        map.set(key, exec);
+      }
+    }
+
+    return map;
+  }, [recentExecutions]);
+
+  const latestUniqueExecutions = useMemo(() => {
+    return [...latestExecutionByWorkflowId.values()]
+      .sort((a, b) => getExecutionTimestamp(b) - getExecutionTimestamp(a));
+  }, [latestExecutionByWorkflowId]);
 
   // Check if any recent execution is still running
   const hasRunningExecution = recentExecutions.some((e) => e.status === 'running');
@@ -923,10 +967,12 @@ export function NewsPipelineCard() {
 
               const isActive = wf.active === true;
               const isRunning = currentStep === step.key;
-              const isCompleted = completedSteps.has(step.key);
-              const isFailed = failedSteps.has(step.key);
               const StepIcon = step.icon;
-              const wfExec = recentExecutions.find((e) => String(e.workflowId) === String(wf.id));
+              const wfExec = latestExecutionByWorkflowId.get(String(wf.id));
+              const hasExecutionSuccess = wfExec?.status === 'success';
+              const hasExecutionError = wfExec?.status === 'error';
+              const isFailed = failedSteps.has(step.key) || (!isRunning && hasExecutionError);
+              const isCompleted = hasExecutionSuccess || (completedSteps.has(step.key) && !hasExecutionError);
 
               return (
                 <div key={step.key} className="relative group">
@@ -1122,11 +1168,11 @@ export function NewsPipelineCard() {
         )}
 
         {/* ── Recent n8n Executions ── */}
-        {recentExecutions.length > 0 && !showLog && (
+        {latestUniqueExecutions.length > 0 && !showLog && (
           <div className="flex items-center gap-2 flex-wrap">
             <Eye className="w-3 h-3 text-muted-foreground" />
             <span className="text-[10px] text-muted-foreground">Recentes:</span>
-            {recentExecutions.slice(0, 5).map((exec) => {
+            {latestUniqueExecutions.slice(0, 5).map((exec) => {
               const wfName = workflows.find((w) => String(w.id) === String(exec.workflowId))?.name;
               const statusLabel = exec.status === 'success' ? 'OK' : exec.status === 'error' ? 'Erro' : exec.status === 'running' ? 'A correr' : exec.status;
               return (

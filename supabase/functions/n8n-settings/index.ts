@@ -55,6 +55,41 @@ function jsonResponse(data: unknown, status: number, cors: Record<string, string
   });
 }
 
+function looksLikeTemplateLiteral(value: string) {
+  return /\{\{|\$env|=\{|^=/.test(value);
+}
+
+function validateCredentialFormat(keyName: string, value: string) {
+  const normalizedKeyName = keyName.trim().toUpperCase();
+  const normalizedValue = value.trim();
+
+  if (!normalizedValue) {
+    throw new Error('A chave não pode estar vazia.');
+  }
+
+  if (looksLikeTemplateLiteral(normalizedValue)) {
+    throw new Error('A chave parece conter uma expression/template do n8n. Guarde o valor bruto, sem =, {{ }} ou $env.');
+  }
+
+  if (normalizedKeyName === 'SUPABASE_SERVICE_ROLE_KEY') {
+    if (normalizedValue.startsWith('eyJ') || normalizedValue.split('.').length === 3) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY inválida para o pipeline. Use a secret key sb_secret..., não a JWT legada service_role.');
+    }
+
+    if (!normalizedValue.startsWith('sb_secret')) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY inválida para o pipeline. O valor deve começar com sb_secret.');
+    }
+  }
+
+  if (normalizedKeyName === 'GROQ_API_KEY' && !normalizedValue.startsWith('gsk_')) {
+    throw new Error('GROQ_API_KEY inválida. O valor esperado começa com gsk_.');
+  }
+
+  if (normalizedKeyName === 'HF_API_TOKEN' && !normalizedValue.startsWith('hf_')) {
+    throw new Error('HF_API_TOKEN inválido. O valor esperado começa com hf_.');
+  }
+}
+
 function utf8ToBytes(text: string): Uint8Array {
   return new TextEncoder().encode(text);
 }
@@ -309,6 +344,13 @@ Deno.serve(async (req: Request) => {
 
       if (!value || !expiresAt) {
         return jsonResponse({ error: 'value and expiresAt are required' }, 400, cors);
+      }
+
+      try {
+        validateCredentialFormat(keyName, value);
+      } catch (validationError) {
+        const message = validationError instanceof Error ? validationError.message : 'Formato de chave inválido';
+        return jsonResponse({ error: message }, 400, cors);
       }
 
       if (![7, 30, 60, 90].includes(remindDaysBefore)) {

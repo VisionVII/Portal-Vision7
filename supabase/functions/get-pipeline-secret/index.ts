@@ -96,6 +96,17 @@ function sanitizeHeaderValue(value: string): string {
   return value.replace(/[\r\n]/g, '').trim();
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return payload && typeof payload === 'object' ? payload as Record<string, unknown> : null;
+  } catch {
+    return null;
+  }
+}
+
 function buildUnauthorizedDiagnostic(authHeader: string, apiKeyHeader: string) {
   const normalizedAuthHeader = sanitizeHeaderValue(authHeader);
   const normalizedApiKeyHeader = sanitizeHeaderValue(apiKeyHeader);
@@ -136,6 +147,19 @@ async function isAuthorized(req: Request): Promise<boolean> {
     apiKeyHeader === expected
   ) {
     return true;
+  }
+
+  // Backward compatibility: accept legacy service_role JWT keys for this project.
+  const legacyCandidate = token || apiKeyHeader;
+  if (legacyCandidate) {
+    const payload = decodeJwtPayload(legacyCandidate);
+    const expectedRef = SUPABASE_URL
+      .replace(/^https?:\/\//, '')
+      .split('.')[0];
+
+    if (payload?.role === 'service_role' && payload?.ref === expectedRef) {
+      return true;
+    }
   }
 
   // Otherwise check JWT for admin role
