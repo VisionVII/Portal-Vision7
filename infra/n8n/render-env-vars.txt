@@ -57,6 +57,13 @@ SUPABASE_SERVICE_ROLE_KEY=SEU_SERVICE_ROLE_JWT
 GROQ_API_KEY=SEU_GROQ_API_KEY
 HF_API_TOKEN=SEU_HUGGINGFACE_TOKEN
 
+# ── IMPORTANTE: n8n v1+ bloqueia $env por padrão ─────────────────────────────
+# N8N_BLOCK_ENV_ACCESS_IN_NODE=true é o DEFAULT em n8n 2.x
+# Para usar $env.* em workflows, adicionar explicitamente:
+N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+# Sem este setting, os workflows WF-01/02/03 falham com "access to env vars denied"
+# Alternativa: hardcode os valores diretamente nos nodes do n8n (workaround atual)
+
 # ── API para o Edge Function proxy ───────────────────────────────────────────
 N8N_API_ENABLED=true
 N8N_API_KEY=MESMA_KEY_DOS_SUPABASE_SECRETS
