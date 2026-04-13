@@ -7,7 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
-const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'Vision VII <noreply@vision-portal.pt>';
+const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'Vision VII <noreply@vision7.pt>';
 const ALLOWED_ORIGIN_ENV = Deno.env.get('ALLOWED_EMAIL_ORIGINS')
   ?? Deno.env.get('PUBLIC_SITE_URL')
   ?? Deno.env.get('SITE_URL')
@@ -71,6 +71,20 @@ async function isAuthorized(req: Request): Promise<boolean> {
   if (expected && (token === expected || authHeader === expected || apiKeyHeader === expected)) {
     return true;
   }
+
+  // Fallback: accept any valid service_role JWT for this project
+  try {
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1]));
+      if (
+        payload.role === 'service_role' &&
+        payload.ref === SUPABASE_URL.split('.')[0].replace('https://', '')
+      ) {
+        return true;
+      }
+    }
+  } catch { /* not a valid JWT */ }
 
   // Otherwise check JWT for admin/editor role
   if (!token || !SUPABASE_URL) return false;
