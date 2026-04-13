@@ -76,7 +76,7 @@ function Section({
 }) {
   const [open, setOpen] = useState(defaultExpanded);
   return (
-    <section className="space-y-4 border-l-2 border-primary/20 pl-4 sm:pl-6">
+    <section className="rounded-2xl border border-border/50 bg-card/70 p-4 shadow-sm backdrop-blur-sm sm:p-5">
       <div
         className={`flex items-center justify-between gap-3 ${collapsible ? 'cursor-pointer transition-opacity hover:opacity-80' : ''}`}
         onClick={collapsible ? () => setOpen((v) => !v) : undefined}
@@ -95,7 +95,7 @@ function Section({
           )}
         </div>
       </div>
-      {open && <div className="border-t border-border/30 pt-4">{children}</div>}
+      {open && <div className="mt-4 border-t border-border/40 pt-4">{children}</div>}
     </section>
   );
 }
@@ -235,12 +235,12 @@ export function AutomationDashboardV2({
   const handleCancel = () => { setShowForm(false); setEditingAutomation(null); setSelectedTemplate(null); };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-3xl border border-border/40 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.08),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.08),transparent_25%)] p-4 sm:p-6">
       {/* ═══ Header ═══ */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-card/80 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Automação</h1>
-          <p className="text-sm text-muted-foreground">Pipeline editorial IA e orquestração n8n</p>
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Centro de Automação</h1>
+          <p className="text-sm text-muted-foreground">Pipeline editorial por IA, fluxos n8n e monitoramento operacional</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
@@ -260,26 +260,26 @@ export function AutomationDashboardV2({
       </div>
 
       {/* ═══ KPI Strip ═══ */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: 'Workflows', value: `${activeWorkflows}/${workflows.length}`, accent: 'text-primary' },
-          { label: 'Automações', value: `${activeAutomations} ativas`, accent: 'text-blue-500' },
+          { label: 'Automações', value: `${activeAutomations}/${totalAutomations} ativas`, accent: 'text-blue-500' },
           { label: 'Exec. 24h', value: totalExecutions, accent: 'text-amber-500' },
           { label: 'Sucesso', value: `${successRate}%`, accent: 'text-green-500' },
         ].map((kpi) => (
-          <div key={kpi.label} className="rounded-lg border bg-card p-3">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{kpi.label}</p>
-            <p className={`text-lg font-bold ${kpi.accent}`}>{kpi.value}</p>
+          <div key={kpi.label} className="rounded-2xl border border-border/50 bg-card/85 p-4">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{kpi.label}</p>
+            <p className={`mt-2 text-2xl font-bold leading-none ${kpi.accent}`}>{kpi.value}</p>
           </div>
         ))}
       </div>
 
       {/* ═══ Navigation ═══ */}
       <Tabs value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
-        <TabsList className="h-9 bg-muted/50">
-          <TabsTrigger value="pipeline" className="gap-1.5 text-xs"><Zap className="h-3.5 w-3.5" />Pipeline IA</TabsTrigger>
-          <TabsTrigger value="automations" className="gap-1.5 text-xs"><Workflow className="h-3.5 w-3.5" />Automações</TabsTrigger>
-          <TabsTrigger value="tools" className="gap-1.5 text-xs"><Wrench className="h-3.5 w-3.5" />Ferramentas</TabsTrigger>
+        <TabsList className="h-auto gap-1 rounded-2xl border border-border/50 bg-muted/40 p-1.5">
+          <TabsTrigger value="pipeline" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Zap className="h-3.5 w-3.5" />Pipeline IA</TabsTrigger>
+          <TabsTrigger value="automations" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Workflow className="h-3.5 w-3.5" />Automações</TabsTrigger>
+          <TabsTrigger value="tools" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Wrench className="h-3.5 w-3.5" />Ferramentas</TabsTrigger>
         </TabsList>
       </Tabs>
 

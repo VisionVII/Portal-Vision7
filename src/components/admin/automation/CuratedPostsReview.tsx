@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   CheckCircle2, XCircle, Eye, ArrowUpRight, Sparkles, Filter,
   ChevronDown, Star, Code, FileText,
@@ -182,74 +182,80 @@ export function CuratedPostsReview() {
 
       {/* Preview dialog */}
       <Dialog open={!!previewPost} onOpenChange={(open) => !open && setPreviewPost(null)}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
+        <DialogContent className="max-w-6xl max-h-[88vh] overflow-hidden rounded-2xl p-0">
           {previewPost && (
             <>
-              <DialogHeader className="border-b border-border pb-4">
-                <DialogTitle className="text-xl font-bold text-foreground pr-8">{previewPost.title}</DialogTitle>
+              <DialogHeader className="border-b border-border/70 bg-muted/30 px-6 py-5">
+                <DialogTitle className="pr-8 text-xl font-bold text-foreground">{previewPost.title}</DialogTitle>
                 {previewPost.subtitle && (
-                  <DialogDescription className="text-base text-muted-foreground mt-1">{previewPost.subtitle}</DialogDescription>
+                  <DialogDescription className="mt-1 text-base text-muted-foreground">{previewPost.subtitle}</DialogDescription>
                 )}
-                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <Badge
                     variant="outline"
-                    className={`text-xs ${STATUS_BADGE[previewPost.status]?.className ?? ''}`}
+                    className={`justify-center text-xs ${STATUS_BADGE[previewPost.status]?.className ?? ''}`}
                   >
                     {STATUS_BADGE[previewPost.status]?.label ?? previewPost.status}
                   </Badge>
-                  <ScoreBadge score={Number(previewPost.editorial_score)} />
-                  <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+                  <Badge variant="outline" className="justify-center border-border text-xs text-muted-foreground">
+                    Score <ScoreBadge score={Number(previewPost.editorial_score)} />
+                  </Badge>
+                  <Badge variant="outline" className="justify-center border-border text-xs text-muted-foreground">
                     Confiança: {Number(previewPost.confidence_score).toFixed(0)}%
                   </Badge>
-                  {previewPost.theme && (
-                    <Badge variant="outline" className="text-xs border-primary-500/40 text-primary-600 dark:text-primary-400">
-                      {previewPost.theme}
-                    </Badge>
-                  )}
+                  <Badge variant="outline" className="justify-center border-border text-xs text-muted-foreground">
+                    Criado: {formatDate(previewPost.created_at)}
+                  </Badge>
                 </div>
               </DialogHeader>
 
-              <Tabs defaultValue="preview" className="flex-1 overflow-hidden flex flex-col">
-                <TabsList className="w-full justify-start rounded-none h-auto p-1">
-                  <TabsTrigger value="preview" className="gap-2">
+              <Tabs defaultValue="preview" className="flex flex-1 flex-col overflow-hidden">
+                <TabsList className="h-auto w-full justify-start gap-2 rounded-none border-b border-border/60 bg-background px-6 py-3">
+                  <TabsTrigger value="preview" className="gap-2 rounded-lg px-3 py-1.5">
                     <FileText className="w-4 h-4" />
-                    Preview Formatado
+                    Estrutura do Post
                   </TabsTrigger>
-                  <TabsTrigger value="source" className="gap-2">
+                  <TabsTrigger value="source" className="gap-2 rounded-lg px-3 py-1.5">
                     <Code className="w-4 h-4" />
                     Código Fonte
                   </TabsTrigger>
                 </TabsList>
 
-                <div className="flex-1 overflow-y-auto px-6 py-5">
+                <div className="flex-1 overflow-y-auto bg-muted/10 px-6 py-5">
                   <TabsContent value="preview" className="mt-0">
                     {previewPost.body_html ? (
-                      <RichContentPreview 
+                      <RichContentPreview
                         html={previewPost.body_html} 
                         variant="full"
                       />
                     ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground text-sm">Sem conteúdo HTML formatado</p>
+                      <div className="rounded-xl border border-border/60 bg-background p-6">
+                        <p className="text-sm font-medium text-foreground">Sem conteúdo HTML formatado</p>
+                        <p className="mt-1 text-sm text-muted-foreground">A estrutura renderizada ainda não foi gerada. Use o conteúdo markdown abaixo como referência editorial.</p>
+                        {previewPost.body_markdown && (
+                          <pre className="mt-4 max-h-[44vh] overflow-auto whitespace-pre-wrap rounded-lg border border-border/50 bg-muted/40 p-4 font-mono text-sm text-foreground/85">
+                            {previewPost.body_markdown}
+                          </pre>
+                        )}
                       </div>
                     )}
                   </TabsContent>
 
                   <TabsContent value="source" className="mt-0">
                     {previewPost.body_markdown ? (
-                      <pre className="whitespace-pre-wrap text-sm text-foreground/80 bg-muted/50 rounded-lg p-4 border border-border/50 font-mono">
+                      <pre className="max-h-[58vh] overflow-auto whitespace-pre-wrap rounded-xl border border-border/60 bg-background p-4 font-mono text-sm leading-relaxed text-foreground/85">
                         {previewPost.body_markdown}
                       </pre>
                     ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground text-sm">Sem código fonte markdown disponível</p>
+                      <div className="rounded-xl border border-border/60 bg-background p-6 text-center">
+                        <p className="text-sm text-muted-foreground">Sem código fonte markdown disponível</p>
                       </div>
                     )}
                   </TabsContent>
                 </div>
               </Tabs>
 
-              <DialogFooter className="border-t border-border pt-4">
+              <DialogFooter className="border-t border-border/70 bg-background px-6 py-4">
                 {previewPost.status === 'ready' && (
                   <div className="flex gap-2 w-full sm:w-auto">
                     <Button
