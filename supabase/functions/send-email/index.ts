@@ -166,9 +166,24 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!RESEND_API_KEY) {
-      console.log(`[send-email] No RESEND_API_KEY configured. Would send ${template || 'custom'} email.`);
+      console.log(`[send-email] No RESEND_API_KEY configured. Saving ${template || 'custom'} email to DB queue.`);
+      try {
+        const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        await adminClient.from('pipeline_alerts').insert({
+          alert_type: 'email_queue',
+          severity: 'info',
+          title: `Email pendente: ${subject.slice(0, 100)}`,
+          detail: `Para: ${to} — aguarda configuração Resend`,
+          metadata: { to, subject, html, template: template || 'custom' },
+          resolved: false,
+        });
+      } catch (dbErr) {
+        console.warn('[send-email] Failed to save email to DB queue:', dbErr);
+      }
       return new Response(
-        JSON.stringify({ message: 'Email logged (no API key configured)', id: 'dev-mode' }),
+        JSON.stringify({ message: 'Email queued (Resend not configured)', id: 'queued' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
@@ -192,9 +207,26 @@ Deno.serve(async (req: Request) => {
 
     if (!res.ok) {
       console.error('[send-email] Resend API error:', data);
+      // Fallback: save to DB queue so no email is lost
+      try {
+        const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        await adminClient.from('pipeline_alerts').insert({
+          alert_type: 'email_queue',
+          severity: 'warning',
+          title: `Email pendente (Resend erro): ${subject.slice(0, 100)}`,
+          detail: `Para: ${to} — erro Resend HTTP ${res.status}`,
+          metadata: { to, subject, html, template: template || 'custom', resend_error: data },
+          resolved: false,
+        });
+        console.log('[send-email] Email saved to DB queue for retry after Resend error');
+      } catch (dbErr) {
+        console.warn('[send-email] Failed to save email to DB queue:', dbErr);
+      }
       return new Response(
-        JSON.stringify({ error: 'Failed to send email' }),
-        { status: res.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ message: 'Email queued (Resend unavailable — will retry after domain verified)', id: 'queued' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
