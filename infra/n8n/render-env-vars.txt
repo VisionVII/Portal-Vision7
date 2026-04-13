@@ -47,6 +47,16 @@ DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED=false
 # Gerar: openssl rand -hex 16
 N8N_ENCRYPTION_KEY=GERAR_COM_OPENSSL_RAND_HEX_16
 
+# ── Credenciais Supabase (usadas nos workflows via $env.*) ───────────────────
+# OBRIGATÓRIO: adicionar no Render Dashboard para WF-01/02/03 funcionarem
+SUPABASE_URL=https://SEU-PROJECT-ID.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=SEU_SERVICE_ROLE_JWT
+
+# ── Credenciais IA (usadas no WF-03 via $env.*) ───────────────────────────────
+# OBRIGATÓRIO: adicionar no Render Dashboard
+GROQ_API_KEY=SEU_GROQ_API_KEY
+HF_API_TOKEN=SEU_HUGGINGFACE_TOKEN
+
 # ── API para o Edge Function proxy ───────────────────────────────────────────
 N8N_API_ENABLED=true
 N8N_API_KEY=MESMA_KEY_DOS_SUPABASE_SECRETS
