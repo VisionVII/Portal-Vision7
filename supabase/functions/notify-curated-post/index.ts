@@ -7,7 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
-const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'Vision VII <noreply@vision-portal.pt>';
+const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'Vision VII <noreply@vision7.pt>';
 const PUBLIC_SITE_URL = (Deno.env.get('PUBLIC_SITE_URL') ?? Deno.env.get('SITE_URL') ?? 'https://vision-portal.pt').replace(/\/+$/, '');
 const MANUAL_NOTIFICATION_EMAILS = (Deno.env.get('CURATED_NOTIFICATION_EMAILS') ?? Deno.env.get('PRIMARY_ADMIN_EMAIL') ?? '')
   .split(/[;,]/)
@@ -139,6 +139,20 @@ async function isAuthorized(req: Request): Promise<boolean> {
   if (token === expected || authHeader === expected || apiKeyHeader === expected) {
     return true;
   }
+
+  // Fallback: accept any valid service_role JWT for this project
+  try {
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1]));
+      if (
+        payload.role === 'service_role' &&
+        payload.ref === SUPABASE_URL.split('.')[0].replace('https://', '')
+      ) {
+        return true;
+      }
+    }
+  } catch { /* not a valid JWT */ }
 
   if (!token || !SUPABASE_URL) return false;
 
