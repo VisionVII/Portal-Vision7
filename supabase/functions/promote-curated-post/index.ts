@@ -221,6 +221,21 @@ function normalizeTitle(value: string): string {
   return value.trim().toLowerCase();
 }
 
+/**
+ * Post-process HTML from WF-03: ensures external links get proper security
+ * attributes (target="_blank" rel="noopener noreferrer nofollow").
+ * Internal links (relative paths, /slug) are left untouched.
+ */
+function enhancePostLinks(html: string): string {
+  if (!html) return html;
+  return html.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+    const hrefMatch = attrs.match(/href="(https?:\/\/[^"]+)"/i);
+    if (!hrefMatch) return match;
+    if (/\btarget=/i.test(attrs)) return match;
+    return `<a${attrs} target="_blank" rel="noopener noreferrer nofollow">`;
+  });
+}
+
 function titleWords(value: string): string[] {
   return normalizeTitle(value)
     .split(/\s+/)
@@ -416,13 +431,16 @@ Deno.serve(async (req) => {
     const slug = `${slugBase}-${Date.now().toString(36)}`;
     const readTime = `${Math.max(1, Math.ceil((curated.body_markdown?.length ?? 0) / 1200))} min`;
 
+    const rawContent = curated.body_html || curated.body_markdown || '';
+    const enhancedContent = enhancePostLinks(rawContent);
+
     const { data: createdPost, error: createPostError } = await adminClient
       .from('posts')
       .insert({
         title: curated.title,
         slug,
         excerpt: curated.excerpt || curated.subtitle || '',
-        content: curated.body_html || curated.body_markdown,
+        content: enhancedContent,
         status: 'draft',
         featured: false,
         tags: postTags,
