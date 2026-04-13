@@ -319,6 +319,35 @@
         840,
         100
       ]
+    },
+    {
+      "id": "notify_email_resend",
+      "name": "Notificar Email Resumo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.RESEND_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Vision VII <noreply@vision-portal.pt>\",\n  \"to\": [\"visionvidevgrid@proton.me\"],\n  \"subject\": \"[WF-03] Execução concluída — {{ $now.format('dd/MM/yyyy HH:mm') }}\",\n  \"html\": \"<h2>✅ WF-03 Pipeline IA — Resumo da Execução</h2><p><strong>Data/hora:</strong> {{ $now.format('dd/MM/yyyy HH:mm') }} (UTC)</p><p><strong>Posts processados:</strong> {{ $input.all().length }}</p><ul>{{ $input.all().map(item => '<li><strong>' + (item.json.titulo || item.json.title || 'sem título') + '</strong> — score: ' + (item.json.seo_score || item.json.audit_score || 'n/a') + '</li>').join('') }}</ul><hr><p style=\\\"color:#888;font-size:12px\\\">Portal Vision VII • Workflow automático</p>\"\n}"
+      }
     }
   ],
   "connections": {
@@ -436,6 +465,17 @@
           }
         ],
         []
+      ]
+    },
+    "Save + Notify + Promote": {
+      "main": [
+        [
+          {
+            "node": "Notificar Email Resumo",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
