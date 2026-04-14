@@ -143,7 +143,7 @@ const normalizePublicPost = (post: Partial<Post>): Post => ({
   banner_url: post.banner_url || null,
   category_id: post.category_id || null,
   author_id: null,
-  author_name: post.author_name || 'Redação Vision7',
+  author_name: post.author_name || 'Equipa Vision7',
   status: post.status || 'published',
   featured: Boolean(post.featured),
   read_time: post.read_time || '3 min',

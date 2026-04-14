@@ -301,12 +301,14 @@ const Index = () => {
                   <Link to={`/post/${post.slug}`} key={post.id}>
                     <div className="group overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all duration-200 hover:border-primary/20 hover:shadow-md sm:p-5">
                       <div className="flex gap-3 sm:gap-4">
-                        <img
-                          src={post.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=200&q=80'}
-                          alt={post.title}
-                          className="h-16 w-16 flex-shrink-0 rounded-lg object-cover transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24 sm:rounded-xl"
-                          loading="lazy"
-                        />
+                        {post.image_url && (
+                          <img
+                            src={post.image_url}
+                            alt={post.title}
+                            className="h-16 w-16 flex-shrink-0 rounded-lg object-cover transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24 sm:rounded-xl"
+                            loading="lazy"
+                          />
+                        )}
                         <div className="min-w-0 flex-1">
                           <span className={`category-badge ${post.categories?.color || 'bg-muted'} mb-1.5 text-[10px]`}>
                             {post.categories?.name || 'Geral'}

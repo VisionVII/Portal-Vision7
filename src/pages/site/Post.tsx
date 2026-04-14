@@ -13,7 +13,7 @@ const SITE_URL = 'https://www.vision7.pt';
 const DEFAULT_SEO = {
   title: 'Vision7 - Portal Tecnologico',
   description: 'Vision7 reúne notícias, análises e conteúdos premium sobre tecnologia, negócios, cultura, saúde e tendências globais.',
-  image: `${SITE_URL}/vision-logo-premium-default.webp`,
+  image: '',
   url: `${SITE_URL}/`,
 };
 

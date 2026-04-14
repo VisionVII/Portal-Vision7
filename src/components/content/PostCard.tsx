@@ -34,12 +34,7 @@ const PostCard: React.FC<PostCardProps> = ({
   const linkPath = slug ? `/post/${slug}` : `/post/${id}`;
   const safeExcerpt = excerpt?.trim() || 'Leia a análise completa desta matéria no Vision7.';
 
-  const imageUrl = image.startsWith('http') 
-    ? image 
-    : image 
-      ? `https://images.unsplash.com/${image}?auto=format&fit=crop&w=800&q=80`
-      : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80';
-
+  const imageUrl = image.startsWith('http') ? image : null;
   const bannerUrl = banner || null;
   const heroImage = bannerUrl || imageUrl;
 
@@ -47,12 +42,16 @@ const PostCard: React.FC<PostCardProps> = ({
     return (
       <article className="blog-card group relative overflow-hidden rounded-2xl border border-border/60 shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10">
         <div className="relative min-h-[320px] sm:min-h-[360px] lg:min-h-[400px]">
-          <img
-            src={heroImage}
-            alt={title}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
-          />
+          {heroImage ? (
+            <img
+              src={heroImage}
+              alt={title}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              loading="lazy"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/10" />
 
           <div className="absolute inset-0 flex flex-col justify-between p-5 sm:p-7">
@@ -101,7 +100,7 @@ const PostCard: React.FC<PostCardProps> = ({
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-transparent" />
           </>
-        ) : (
+        ) : imageUrl ? (
           <>
             <img
               src={imageUrl}
@@ -111,6 +110,8 @@ const PostCard: React.FC<PostCardProps> = ({
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
           </>
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-slate-800 to-slate-900" />
         )}
         <div className="absolute left-2.5 top-2.5 sm:left-3 sm:top-3">
           <span className={`category-badge ${categoryColor} !px-2 !py-0.5 !text-[10px]`}>{category}</span>

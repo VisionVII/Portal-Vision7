@@ -14,7 +14,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
   const { user, primaryRole, roles, signOut } = useAuth();
   const navigate = useNavigate();
   const { data: siteSettings } = useSiteSettings();
-  const logoUrl = siteSettings?.logo_url || '/vision-logo-premium-default.webp';
+  const logoUrl = siteSettings?.logo_url || null;
 
   const handleSignOut = async () => {
     await signOut();
@@ -31,7 +31,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <img src={logoUrl} alt="Logo" width={400} height={267} className="h-11 w-auto object-contain sm:h-14" />
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" width={400} height={267} className="h-11 w-auto object-contain sm:h-14" />
+          ) : (
+            <span className="font-headline text-xl font-bold tracking-tight text-white sm:text-2xl">Vision7</span>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

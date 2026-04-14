@@ -65,7 +65,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     category_id: post?.category_id || '',
     image_url: post?.image_url || '',
     banner_url: post?.banner_url || '',
-    author_name: post?.author_name || 'Redação',
+    author_name: post?.author_name || 'Equipa Vision7',
     tags: post?.tags?.join(', ') || '',
     read_time: post?.read_time || '5 min',
     featured: post?.featured || false,
