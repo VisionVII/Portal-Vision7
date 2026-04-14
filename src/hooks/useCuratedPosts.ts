@@ -127,9 +127,12 @@ async function notifyAdminPostReady(curatedPostId: string) {
   }
 }
 
-async function promoteCuratedPost(curatedPostId: string): Promise<PromoteCuratedPostResult> {
+async function promoteCuratedPost(curatedPostId: string, categoryIds?: string[]): Promise<PromoteCuratedPostResult> {
+  const body: Record<string, unknown> = { curatedPostId };
+  if (categoryIds?.length) body.categoryIds = categoryIds;
+
   const { data, error } = await supabase.functions.invoke('promote-curated-post', {
-    body: { curatedPostId },
+    body,
   });
 
   if (error) {
@@ -149,10 +152,10 @@ export function usePromoteCuratedPost() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (curated: CuratedPost) => {
-      return promoteCuratedPost(curated.id);
+    mutationFn: async ({ curated, categoryIds }: { curated: CuratedPost; categoryIds?: string[] }) => {
+      return promoteCuratedPost(curated.id, categoryIds);
     },
-    onSuccess: (result, curated) => {
+    onSuccess: (result, { curated }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
 
@@ -386,4 +389,57 @@ export function useAutoPromotePolling() {
     stop,
     checkNow: checkAndPromote,
   };
+}
+
+/* ── Update curated post status ── */
+export function useUpdateCuratedStatus() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase
+        .from('curated_posts')
+        .update({ status })
+        .eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast({ title: 'Status atualizado' });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    },
+  });
+}
+
+/* ── Update curated post content (title, body_markdown, body_html, excerpt) ── */
+export function useUpdateCuratedPost() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      fields,
+    }: {
+      id: string;
+      fields: Partial<Pick<CuratedPost, 'title' | 'subtitle' | 'excerpt' | 'body_markdown' | 'body_html'>>;
+    }) => {
+      const { error } = await supabase
+        .from('curated_posts')
+        .update(fields)
+        .eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, 'detail', vars.id] });
+      toast({ title: 'Artigo atualizado' });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' });
+    },
+  });
 }

@@ -99,8 +99,8 @@ const N8N_ADMIN_ROLES = new Set(['super_admin', 'admin']);
 // Roles that can at least read n8n data
 const N8N_READ_ROLES = new Set(['super_admin', 'admin', 'editor']);
 
-// ─── Request body size limit (16 KB) ────────────────────────────────────────
-const MAX_BODY_SIZE = 16 * 1024;
+// ─── Request body size limit (64 KB — supports workflow import payloads) ─────
+const MAX_BODY_SIZE = 64 * 1024;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function jsonResponse(data: unknown, status: number, cors: Record<string, string>) {
@@ -317,7 +317,12 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const { path, method = 'GET', body, query } = parsed;
+    const { path, method = 'GET', body, bodyBase64, query } = parsed;
+
+    // Decode base64-encoded body (bypasses WAF for large workflow payloads)
+    const effectiveBody = bodyBase64
+      ? JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(bodyBase64), (c) => c.charCodeAt(0))))
+      : body;
 
     if (!path || typeof path !== 'string') {
       return jsonResponse({ error: 'Missing or invalid path' }, 400, cors);
@@ -362,7 +367,7 @@ Deno.serve(async (req: Request) => {
         'Content-Type': 'application/json',
         'X-N8N-API-KEY': effectiveN8nApiKey,
       },
-      ...(body ? { body: JSON.stringify(body) } : {}),
+      ...(effectiveBody ? { body: JSON.stringify(effectiveBody) } : {}),
       signal: AbortSignal.timeout(60_000),
     });
 
@@ -391,19 +396,35 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[n8n-proxy] Error:', message);
-    
-    // Timeout errors during cold-start - return 200 OK to avoid browser spam
-    if (message.includes('abort') || message.includes('timeout')) {
+
+    // Timeout / abort → cold-start wrapper
+    if (/abort|timeout/i.test(message)) {
       return jsonResponse(
         {
           error: 'n8n timeout (cold start em progresso)',
+          httpStatus: 503,
           detail: message,
         },
         200,
         cors,
       );
     }
-    
-    return jsonResponse({ error: 'Proxy error', message }, 500, cors);
+
+    // Network-level errors (DNS, connection refused, fetch failures) are
+    // infrastructure problems, not client errors.  Wrap in 200 OK like we
+    // do for 503 cold-starts so the browser Network tab stays clean.
+    if (/fetch|network|dns|econnrefused|enotfound|socket|connect/i.test(message)) {
+      return jsonResponse(
+        {
+          error: `n8n unreachable: ${message}`,
+          httpStatus: 502,
+          detail: message,
+        },
+        200,
+        cors,
+      );
+    }
+
+    return jsonResponse({ error: `Proxy error: ${message}`, httpStatus: 500 }, 500, cors);
   }
 });

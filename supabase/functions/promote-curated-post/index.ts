@@ -222,6 +222,100 @@ function normalizeTitle(value: string): string {
 }
 
 /**
+ * Convert markdown to HTML. Handles headings, bold, italic, links, images,
+ * unordered/ordered lists, blockquotes, horizontal rules, code blocks, and paragraphs.
+ */
+function markdownToHtml(md: string): string {
+  if (!md) return '';
+  let html = md;
+
+  // Fenced code blocks (```lang ... ```)
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, _lang, code) =>
+    `<pre><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;').trimEnd()}</code></pre>`);
+
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Images (before links so ![alt](src) is not caught as link)
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />');
+
+  // Links
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+  // Headings (## ... )
+  html = html.replace(/^#{6}\s+(.+)$/gm, '<h6>$1</h6>');
+  html = html.replace(/^#{5}\s+(.+)$/gm, '<h5>$1</h5>');
+  html = html.replace(/^#{4}\s+(.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^#{1}\s+(.+)$/gm, '<h1>$1</h1>');
+
+  // Horizontal rule
+  html = html.replace(/^[-*_]{3,}\s*$/gm, '<hr />');
+
+  // Bold & italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Blockquotes
+  html = html.replace(/^>\s+(.+)$/gm, '<blockquote><p>$1</p></blockquote>');
+
+  // Unordered lists (- or * items)
+  html = html.replace(/(^[\t ]*[-*]\s+.+\n?)+/gm, (block) => {
+    const items = block.trim().split('\n')
+      .map((l) => l.replace(/^[\t ]*[-*]\s+/, '').trim())
+      .filter(Boolean)
+      .map((item) => `<li>${item}</li>`)
+      .join('\n');
+    return `<ul>\n${items}\n</ul>`;
+  });
+
+  // Ordered lists (1. items)
+  html = html.replace(/(^\d+\.\s+.+\n?)+/gm, (block) => {
+    const items = block.trim().split('\n')
+      .map((l) => l.replace(/^\d+\.\s+/, '').trim())
+      .filter(Boolean)
+      .map((item) => `<li>${item}</li>`)
+      .join('\n');
+    return `<ol>\n${items}\n</ol>`;
+  });
+
+  // Paragraphs: wrap remaining loose lines
+  const lines = html.split('\n');
+  const result: string[] = [];
+  let buffer: string[] = [];
+
+  const isBlock = (l: string) => /^<(h[1-6]|ul|ol|li|pre|blockquote|hr|img)\b/i.test(l.trim())
+    || /^<\/(ul|ol|pre|blockquote)>/i.test(l.trim());
+
+  for (const line of lines) {
+    if (line.trim() === '') {
+      if (buffer.length) {
+        result.push(`<p>${buffer.join(' ')}</p>`);
+        buffer = [];
+      }
+    } else if (isBlock(line)) {
+      if (buffer.length) {
+        result.push(`<p>${buffer.join(' ')}</p>`);
+        buffer = [];
+      }
+      result.push(line);
+    } else {
+      buffer.push(line.trim());
+    }
+  }
+  if (buffer.length) result.push(`<p>${buffer.join(' ')}</p>`);
+
+  return result.join('\n');
+}
+
+/** Detect if a string is already HTML (contains block-level tags). */
+function isHtml(content: string): boolean {
+  return /<(p|div|h[1-6]|ul|ol|article|section|blockquote)\b/i.test(content);
+}
+
+/**
  * Post-process HTML from WF-03: ensures external links get proper security
  * attributes (target="_blank" rel="noopener noreferrer nofollow").
  * Internal links (relative paths, /slug) are left untouched.
@@ -372,6 +466,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     curatedPostId = String(body?.curatedPostId ?? '').trim();
+    const categoryIds: string[] = Array.isArray(body?.categoryIds) ? body.categoryIds.filter((id: unknown) => typeof id === 'string' && id.length > 0) : [];
 
     if (!curatedPostId) {
       return jsonResponse({ error: 'curatedPostId is required' }, 400, cors);
@@ -432,7 +527,9 @@ Deno.serve(async (req) => {
     const readTime = `${Math.max(1, Math.ceil((curated.body_markdown?.length ?? 0) / 1200))} min`;
 
     const rawContent = curated.body_html || curated.body_markdown || '';
-    const enhancedContent = enhancePostLinks(rawContent);
+    // Convert markdown to HTML if content is not already HTML
+    const htmlContent = isHtml(rawContent) ? rawContent : markdownToHtml(rawContent);
+    const enhancedContent = enhancePostLinks(htmlContent);
 
     const { data: createdPost, error: createPostError } = await adminClient
       .from('posts')
@@ -452,6 +549,22 @@ Deno.serve(async (req) => {
 
     if (createPostError) {
       throw new Error(createPostError.message);
+    }
+
+    // Insert post categories (multi-category support)
+    if (categoryIds.length > 0) {
+      const catRows = categoryIds.map((cid: string) => ({ post_id: createdPost.id, category_id: cid }));
+      const { error: catError } = await adminClient
+        .from('post_categories')
+        .insert(catRows);
+      if (catError) {
+        console.warn('Failed to insert post_categories:', catError.message);
+      }
+      // Also set legacy category_id to the first category
+      await adminClient
+        .from('posts')
+        .update({ category_id: categoryIds[0] })
+        .eq('id', createdPost.id);
     }
 
     const { error: updateCuratedError } = await adminClient
