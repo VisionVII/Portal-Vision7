@@ -209,7 +209,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "={{ 'Bearer ' + ($env.SUPABASE_SERVICE_ROLE_KEY || '') }}"
             }
           ]
         },
@@ -218,7 +218,7 @@
           "parameters": [
             {
               "name": "select",
-              "value": "id,title,slug,category"
+              "value": "id,title,slug,category_id"
             },
             {
               "name": "status",
