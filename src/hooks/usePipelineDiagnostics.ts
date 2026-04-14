@@ -153,7 +153,7 @@ export function usePipelineDiagnostics() {
         ['curated_posts draft', curatedDraftRes.error],
         ['curated_posts published', curatedPublishedRes.error],
         ['curated_posts last created', lastCuratedRes.error],
-      ].filter((entry): entry is [string, { message: string }] => Boolean(entry[1]));
+      ].filter((entry) => Boolean(entry[1])) as [string, { message: string }][];
 
       if (failures.length > 0) {
         throw new Error(

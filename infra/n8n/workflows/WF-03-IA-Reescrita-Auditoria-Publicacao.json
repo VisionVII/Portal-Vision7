@@ -47,12 +47,13 @@
           "parameters": [
             {
               "name": "keyName",
-              "value": "HF_API_TOKEN"
+              "value": "GROQ_API_KEY"
             }
           ]
         },
         "options": {
-          "alwaysOutputData": true
+          "alwaysOutputData": true,
+          "onError": "continueRegularOutput"
         }
       },
       "id": "fetch_hf_token",
@@ -332,14 +333,13 @@
       "parameters": {
         "method": "POST",
         "url": "https://api.resend.com/emails",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.RESEND_API_KEY }}"
+              "value": "={{ 'Bearer ' + $env.RESEND_API_KEY }}"
             }
           ]
         },
