@@ -39,6 +39,9 @@ type PromoteCuratedPostResult = {
 /* ── Column list for curated posts (excludes heavy body fields on list view) ── */
 const CURATED_LIST_SELECT = 'id, cluster_id, title, subtitle, slug, excerpt, language, editorial_score, confidence_score, status, tone_profile, model_info, moderation, metrics, created_by, created_at, updated_at';
 
+/* ── Full select including body fields (for detail/preview) ── */
+const CURATED_DETAIL_SELECT = CURATED_LIST_SELECT + ', body_html, body_markdown, seo_score, readability_score, originality_score, primary_keyword, secondary_keywords, search_intent, meta_description, internal_links';
+
 /* ── Fetch curated posts ── */
 export function useCuratedPosts(statusFilter?: string) {
   return useQuery({
@@ -59,6 +62,26 @@ export function useCuratedPosts(statusFilter?: string) {
       return (data ?? []) as CuratedPost[];
     },
     staleTime: 60_000,
+  });
+}
+
+/* ── Fetch single curated post detail (includes body fields) ── */
+export function useCuratedPostDetail(id: string | null) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, 'detail', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from('curated_posts')
+        .select(CURATED_DETAIL_SELECT)
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw new Error(error.message);
+      return data as CuratedPost | null;
+    },
+    enabled: !!id,
+    staleTime: 120_000,
   });
 }
 
