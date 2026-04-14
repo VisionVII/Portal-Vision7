@@ -90,15 +90,12 @@ const normalizeSections = (sections?: HomeSection[]): HomeSection[] => {
   }));
 };
 
+const isUploadUrl = (url?: string | null): url is string =>
+  typeof url === 'string' && /^https?:\/\//i.test(url);
+
 const normalizeBanners = (parsed: Partial<HomePageConfig>): HomePageBanner[] => {
-  const fallbackImageUrl =
-    typeof parsed.bannerUrl === 'string' && parsed.bannerUrl.trim()
-      ? parsed.bannerUrl.trim()
-      : defaultHomePageConfig.bannerUrl;
-  const fallbackMobileImageUrl =
-    typeof parsed.mobileBannerUrl === 'string' && parsed.mobileBannerUrl.trim()
-      ? parsed.mobileBannerUrl.trim()
-      : fallbackImageUrl;
+  const fallbackImageUrl = isUploadUrl(parsed.bannerUrl) ? parsed.bannerUrl : '';
+  const fallbackMobileImageUrl = isUploadUrl(parsed.mobileBannerUrl) ? parsed.mobileBannerUrl : fallbackImageUrl;
 
   if (!Array.isArray(parsed.rotatingBanners) || !parsed.rotatingBanners.length) {
     return defaultHomePageBanners.map((banner, index) => ({
@@ -116,8 +113,8 @@ const normalizeBanners = (parsed: Partial<HomePageConfig>): HomePageBanner[] => 
       !banner.description || /banners editoriais em tela cheia com contexto/i.test(banner.description)
         ? defaultBannerDescription
         : banner.description,
-    imageUrl: banner.imageUrl || fallbackImageUrl,
-      mobileImageUrl: banner.mobileImageUrl || fallbackMobileImageUrl || banner.imageUrl || fallbackImageUrl,
+    imageUrl: isUploadUrl(banner.imageUrl) ? banner.imageUrl : fallbackImageUrl,
+    mobileImageUrl: isUploadUrl(banner.mobileImageUrl) ? banner.mobileImageUrl : (isUploadUrl(banner.imageUrl) ? banner.imageUrl : fallbackMobileImageUrl),
     ctaLabel: banner.ctaLabel || 'Explorar Notícias',
     ctaHref: banner.ctaHref || '#noticias',
     enabled: banner.enabled !== false,
@@ -154,11 +151,11 @@ export const parseHomePageConfig = (rawValue?: string | null): HomePageConfig =>
           ? defaultHomePageConfig.tertiaryCtaLabel
           : parsed.tertiaryCtaLabel,
       bannerUrl:
-        typeof parsed.bannerUrl === 'string' && parsed.bannerUrl.trim()
+        typeof parsed.bannerUrl === 'string' && /^https?:\/\//i.test(parsed.bannerUrl)
           ? parsed.bannerUrl.trim()
           : defaultHomePageConfig.bannerUrl,
       mobileBannerUrl:
-        typeof parsed.mobileBannerUrl === 'string' && parsed.mobileBannerUrl.trim()
+        typeof parsed.mobileBannerUrl === 'string' && /^https?:\/\//i.test(parsed.mobileBannerUrl)
           ? parsed.mobileBannerUrl.trim()
           : defaultHomePageConfig.mobileBannerUrl,
       rotatingBanners: normalizeBanners(parsed),
