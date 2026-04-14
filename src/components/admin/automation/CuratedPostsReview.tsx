@@ -14,6 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   useCuratedPosts,
+  useCuratedPostDetail,
   usePromoteCuratedPost,
   useRejectCuratedPost,
 } from '@/hooks/useCuratedPosts';
@@ -23,6 +24,8 @@ import { RichContentPreview } from '@/components/admin/RichContentPreview';
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   ready: { label: 'Pronto', className: 'bg-primary/15 text-primary border-primary/30' },
   draft: { label: 'Rascunho', className: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' },
+  'auto-draft': { label: 'Auto-Draft', className: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' },
+  'pending-review': { label: 'Aguardando Revisão', className: 'bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/30' },
   published: { label: 'Promovido', className: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30' },
   rejected: { label: 'Rejeitado', className: 'bg-destructive/15 text-destructive border-destructive/30' },
 };
@@ -48,12 +51,14 @@ function formatDate(iso: string) {
 }
 
 export function CuratedPostsReview() {
-  const [statusFilter, setStatusFilter] = useState<string>('ready');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const { data: posts, isLoading, error } = useCuratedPosts(statusFilter || undefined);
   const promoteMutation = usePromoteCuratedPost();
   const rejectMutation = useRejectCuratedPost();
 
   const [previewPost, setPreviewPost] = useState<CuratedPost | null>(null);
+  const { data: postDetail } = useCuratedPostDetail(previewPost?.id ?? null);
+  const detailPost = postDetail ?? previewPost;
 
   const handlePromote = (post: CuratedPost) => {
     promoteMutation.mutate(post);
@@ -65,7 +70,9 @@ export function CuratedPostsReview() {
 
   const filterOptions = [
     { value: 'ready', label: 'Prontos para revisão' },
+    { value: 'auto-draft', label: 'Auto-Draft' },
     { value: 'draft', label: 'Rascunhos' },
+    { value: 'pending-review', label: 'Aguardando Revisão' },
     { value: 'published', label: 'Promovidos' },
     { value: 'rejected', label: 'Rejeitados' },
     { value: '', label: 'Todos' },
@@ -186,25 +193,25 @@ export function CuratedPostsReview() {
           {previewPost && (
             <>
               <DialogHeader className="border-b border-border/70 bg-muted/30 px-6 py-5">
-                <DialogTitle className="pr-8 text-xl font-bold text-foreground">{previewPost.title}</DialogTitle>
-                {previewPost.subtitle && (
-                  <DialogDescription className="mt-1 text-base text-muted-foreground">{previewPost.subtitle}</DialogDescription>
+                <DialogTitle className="pr-8 text-xl font-bold text-foreground">{detailPost.title}</DialogTitle>
+                {detailPost.subtitle && (
+                  <DialogDescription className="mt-1 text-base text-muted-foreground">{detailPost.subtitle}</DialogDescription>
                 )}
                 <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <Badge
                     variant="outline"
-                    className={`justify-center text-xs ${STATUS_BADGE[previewPost.status]?.className ?? ''}`}
+                    className={`justify-center text-xs ${STATUS_BADGE[detailPost.status]?.className ?? ''}`}
                   >
-                    {STATUS_BADGE[previewPost.status]?.label ?? previewPost.status}
+                    {STATUS_BADGE[detailPost.status]?.label ?? detailPost.status}
                   </Badge>
                   <Badge variant="outline" className="justify-center border-border text-xs text-muted-foreground">
-                    Score <ScoreBadge score={Number(previewPost.editorial_score)} />
+                    Score <ScoreBadge score={Number(detailPost.editorial_score)} />
                   </Badge>
                   <Badge variant="outline" className="justify-center border-border text-xs text-muted-foreground">
-                    Confiança: {Number(previewPost.confidence_score).toFixed(0)}%
+                    Confiança: {Number(detailPost.confidence_score).toFixed(0)}%
                   </Badge>
                   <Badge variant="outline" className="justify-center border-border text-xs text-muted-foreground">
-                    Criado: {formatDate(previewPost.created_at)}
+                    Criado: {formatDate(detailPost.created_at)}
                   </Badge>
                 </div>
               </DialogHeader>
@@ -223,18 +230,18 @@ export function CuratedPostsReview() {
 
                 <div className="flex-1 overflow-y-auto bg-muted/10 px-6 py-5">
                   <TabsContent value="preview" className="mt-0">
-                    {previewPost.body_html ? (
+                    {detailPost.body_html ? (
                       <RichContentPreview
-                        html={previewPost.body_html} 
+                        html={detailPost.body_html} 
                         variant="full"
                       />
                     ) : (
                       <div className="rounded-xl border border-border/60 bg-background p-6">
                         <p className="text-sm font-medium text-foreground">Sem conteúdo HTML formatado</p>
                         <p className="mt-1 text-sm text-muted-foreground">A estrutura renderizada ainda não foi gerada. Use o conteúdo markdown abaixo como referência editorial.</p>
-                        {previewPost.body_markdown && (
+                        {detailPost.body_markdown && (
                           <pre className="mt-4 max-h-[44vh] overflow-auto whitespace-pre-wrap rounded-lg border border-border/50 bg-muted/40 p-4 font-mono text-sm text-foreground/85">
-                            {previewPost.body_markdown}
+                            {detailPost.body_markdown}
                           </pre>
                         )}
                       </div>
@@ -242,9 +249,9 @@ export function CuratedPostsReview() {
                   </TabsContent>
 
                   <TabsContent value="source" className="mt-0">
-                    {previewPost.body_markdown ? (
+                    {detailPost.body_markdown ? (
                       <pre className="max-h-[58vh] overflow-auto whitespace-pre-wrap rounded-xl border border-border/60 bg-background p-4 font-mono text-sm leading-relaxed text-foreground/85">
-                        {previewPost.body_markdown}
+                        {detailPost.body_markdown}
                       </pre>
                     ) : (
                       <div className="rounded-xl border border-border/60 bg-background p-6 text-center">
@@ -256,7 +263,7 @@ export function CuratedPostsReview() {
               </Tabs>
 
               <DialogFooter className="border-t border-border/70 bg-background px-6 py-4">
-                {previewPost.status === 'ready' && (
+                {detailPost.status === 'ready' && (
                   <div className="flex gap-2 w-full sm:w-auto">
                     <Button
                       variant="outline"
@@ -264,7 +271,7 @@ export function CuratedPostsReview() {
                       className="flex-1 sm:flex-none border-destructive/40 text-destructive hover:bg-destructive/10"
                       disabled={rejectMutation.isPending}
                       onClick={() => {
-                        handleReject(previewPost.id);
+                        handleReject(detailPost.id);
                         setPreviewPost(null);
                       }}
                     >
@@ -275,7 +282,7 @@ export function CuratedPostsReview() {
                       className="flex-1 sm:flex-none bg-primary hover:bg-primary/90"
                       disabled={promoteMutation.isPending}
                       onClick={() => {
-                        handlePromote(previewPost);
+                        handlePromote(detailPost);
                         setPreviewPost(null);
                       }}
                     >
