@@ -37,6 +37,8 @@ GRANT ALL ON public.cmp_vendor_registry TO service_role;
 -- ═══════════════════════════════════════════════════════════════
 
 ALTER TABLE public.cmp_consent_records
+  DROP CONSTRAINT IF EXISTS fk_cmp_consent_domain;
+ALTER TABLE public.cmp_consent_records
   ADD CONSTRAINT fk_cmp_consent_domain
   FOREIGN KEY (domain) REFERENCES public.cmp_domains(domain)
   ON DELETE CASCADE;
@@ -45,6 +47,8 @@ ALTER TABLE public.cmp_consent_records
 -- 3. UNIQUE constraint em vendor_registry
 -- ═══════════════════════════════════════════════════════════════
 
+ALTER TABLE public.cmp_vendor_registry
+  DROP CONSTRAINT IF EXISTS uq_cmp_vendor_domain_name_cat;
 ALTER TABLE public.cmp_vendor_registry
   ADD CONSTRAINT uq_cmp_vendor_domain_name_cat
   UNIQUE (domain_id, vendor_name, category);

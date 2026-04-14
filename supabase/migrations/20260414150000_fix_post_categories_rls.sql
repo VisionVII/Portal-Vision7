@@ -2,6 +2,9 @@
 -- to avoid ambiguity with INSERT/UPDATE WITH CHECK
 
 DROP POLICY IF EXISTS "post_categories_admin_write" ON public.post_categories;
+DROP POLICY IF EXISTS "post_categories_admin_insert" ON public.post_categories;
+DROP POLICY IF EXISTS "post_categories_admin_update" ON public.post_categories;
+DROP POLICY IF EXISTS "post_categories_admin_delete" ON public.post_categories;
 
 -- Separate INSERT policy with explicit WITH CHECK
 CREATE POLICY "post_categories_admin_insert"
