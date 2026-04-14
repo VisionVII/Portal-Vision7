@@ -9,8 +9,6 @@ interface BrandLogoProps {
   className?: string;
 }
 
-const DEFAULT_LOGO = '/vision-logo-premium-default.webp';
-
 const getBrandName = (siteName?: string | null) => {
   const value = siteName?.trim();
   if (!value || /porto\s+not[ií]cias|vision\s*7?/i.test(value)) {
@@ -28,25 +26,35 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
   className,
 }) => {
   const brandName = getBrandName(siteName);
-  const activeLogo = logoUrl?.trim() ? logoUrl : DEFAULT_LOGO;
+  const activeLogo = logoUrl?.trim() ? logoUrl : null;
 
   return (
     <div className={cn('flex flex-col', showTagline && !compact ? 'gap-1' : 'gap-0', className)}>
       <div className="flex items-center gap-3 overflow-visible">
-        <img
-          src={activeLogo}
-          alt={`${brandName} premium logo`}
-          width={400}
-          height={267}
-          fetchPriority="high"
-          className={cn(
-            'w-auto object-contain drop-shadow-[0_4px_14px_rgba(34,211,238,0.18)]',
-            compact
-              ? 'h-10 max-w-[140px] sm:h-12 sm:max-w-[160px]'
-              : 'h-11 max-w-[152px] sm:h-12 sm:max-w-[172px] lg:h-14 lg:max-w-[210px]'
-          )}
-        />
-        <span className="sr-only">{brandName}</span>
+        {activeLogo ? (
+          <img
+            src={activeLogo}
+            alt={`${brandName} logo`}
+            width={400}
+            height={267}
+            fetchPriority="high"
+            className={cn(
+              'w-auto object-contain drop-shadow-[0_4px_14px_rgba(34,211,238,0.18)]',
+              compact
+                ? 'h-10 max-w-[140px] sm:h-12 sm:max-w-[160px]'
+                : 'h-11 max-w-[152px] sm:h-12 sm:max-w-[172px] lg:h-14 lg:max-w-[210px]'
+            )}
+          />
+        ) : (
+          <span
+            className={cn(
+              'font-headline font-bold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(34,211,238,0.22)]',
+              compact ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl lg:text-4xl'
+            )}
+          >
+            {brandName}
+          </span>
+        )}
       </div>
 
       {showTagline && (

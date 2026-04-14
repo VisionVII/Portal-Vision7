@@ -39,9 +39,9 @@ export const HOME_BANNER_STORAGE_PREFIX = 'site/banners';
 export const ALLOWED_HOME_BANNER_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
 export const MAX_HOME_BANNER_SIZE_BYTES = 5 * 1024 * 1024;
 
-// Mantém fallbacks locais para os banners e evita dependência do project ref antigo durante migrações do Supabase.
-const defaultBannerImage = '/vision-logo-premium-default.webp';
-const defaultMobileBannerImage = '/vision-logo-premium-default.webp';
+// Sem imagem de fallback embutida — banner só aparece após upload pelo admin.
+const defaultBannerImage = '';
+const defaultMobileBannerImage = '';
 const defaultBannerDescription = 'Acesse insights estratégicos sobre tecnologia, inteligência artificial, inovação e negócios digitais. Informação clara e relevante para decisões rápidas em um mundo em constante evolução.';
 
 export const defaultHomePageBanners: HomePageBanner[] = [
