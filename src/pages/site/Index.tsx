@@ -345,7 +345,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <SectionPageHero
+      {activeBannerDesktopUrl && <SectionPageHero
         title=""
         description=""
         align="left"
@@ -401,7 +401,7 @@ const Index = () => {
             ) : null}
           </div>
         )}
-      />
+      />}
 
       <div className="container mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:py-10">
         <div className="grid grid-cols-1 gap-6 sm:gap-7 lg:grid-cols-12 lg:gap-9" id="noticias">
