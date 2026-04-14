@@ -19,11 +19,13 @@ CREATE INDEX IF NOT EXISTS idx_post_categories_category
 ALTER TABLE public.post_categories ENABLE ROW LEVEL SECURITY;
 
 -- Public read
+DROP POLICY IF EXISTS "post_categories_public_read" ON public.post_categories;
 CREATE POLICY "post_categories_public_read"
   ON public.post_categories FOR SELECT
   USING (true);
 
 -- Admins/editors can manage
+DROP POLICY IF EXISTS "post_categories_admin_write" ON public.post_categories;
 CREATE POLICY "post_categories_admin_write"
   ON public.post_categories FOR ALL
   USING (

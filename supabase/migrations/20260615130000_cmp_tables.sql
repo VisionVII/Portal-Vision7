@@ -23,6 +23,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_cmp_domains_updated_at ON public.cmp_domains;
 CREATE TRIGGER trg_cmp_domains_updated_at
   BEFORE UPDATE ON public.cmp_domains
   FOR EACH ROW EXECUTE FUNCTION public.cmp_domains_updated_at();
@@ -95,6 +96,15 @@ ALTER TABLE public.cmp_consent_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cmp_domains ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cmp_policy_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cmp_vendor_registry ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS cmp_consent_insert_anon ON public.cmp_consent_records;
+DROP POLICY IF EXISTS cmp_consent_select_admin ON public.cmp_consent_records;
+DROP POLICY IF EXISTS cmp_domains_select ON public.cmp_domains;
+DROP POLICY IF EXISTS cmp_domains_admin ON public.cmp_domains;
+DROP POLICY IF EXISTS cmp_policy_select ON public.cmp_policy_versions;
+DROP POLICY IF EXISTS cmp_policy_admin ON public.cmp_policy_versions;
+DROP POLICY IF EXISTS cmp_vendor_select ON public.cmp_vendor_registry;
+DROP POLICY IF EXISTS cmp_vendor_admin ON public.cmp_vendor_registry;
 
 -- Consent records: anyone can INSERT their own (anonymous consent collection)
 CREATE POLICY cmp_consent_insert_anon ON public.cmp_consent_records
