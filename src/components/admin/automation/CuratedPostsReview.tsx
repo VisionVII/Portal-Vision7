@@ -26,6 +26,8 @@ import {
 import type { CuratedPost } from '@/hooks/useCuratedPosts';
 import { useCategories } from '@/hooks/useCategories';
 import { RichContentPreview } from '@/components/admin/RichContentPreview';
+import type { Post } from '@/hooks/usePosts';
+import { supabase } from '@/integrations/supabase/client';
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   ready: { label: 'Pronto', className: 'bg-primary/15 text-primary border-primary/30' },
@@ -56,7 +58,13 @@ function formatDate(iso: string) {
   });
 }
 
-export function CuratedPostsReview() {
+export function CuratedPostsReview({
+  onEditPost,
+  onSwitchToEditorial,
+}: {
+  onEditPost?: (post: Post) => void;
+  onSwitchToEditorial?: () => void;
+}) {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const { data: posts, isLoading, error } = useCuratedPosts(statusFilter || undefined);
   const promoteMutation = usePromoteCuratedPost();
@@ -110,14 +118,26 @@ export function CuratedPostsReview() {
     promoteMutation.mutate(
       { curated: postToPromote, categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined },
       {
-        onSuccess: () => {
+        onSuccess: async (result) => {
           setShowPromoteDialog(false);
           setPostToPromote(null);
           setPreviewPost(null);
+          // If we have the new postId and a handler, fetch the full post and open in editor
+          if (result?.postId && onEditPost) {
+            const { data } = await supabase
+              .from('posts')
+              .select('id, title, slug, excerpt, content, image_url, banner_url, category_id, author_id, author_name, status, featured, read_time, tags, views, published_at, created_at, updated_at')
+              .eq('id', result.postId)
+              .maybeSingle();
+            if (data) {
+              onSwitchToEditorial?.();
+              onEditPost(data as Post);
+            }
+          }
         },
       },
     );
-  }, [postToPromote, selectedCategoryIds, promoteMutation]);
+  }, [postToPromote, selectedCategoryIds, promoteMutation, onEditPost, onSwitchToEditorial]);
 
   const toggleCategory = useCallback((catId: string) => {
     setSelectedCategoryIds((prev) =>
