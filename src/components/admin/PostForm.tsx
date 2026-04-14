@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, X, Image as ImageIcon, Plus } from 'lucide-react';
 import { useCategories, useCreateCategory } from '@/hooks/useCategories';
+import { usePostCategories, useSetPostCategories } from '@/hooks/usePostCategories';
 import RichTextEditor from './RichTextEditor';
 import { useCreatePost, useUpdatePost, CreatePostData, Post } from '@/hooks/usePosts';
 import { useToast } from '@/hooks/use-toast';
@@ -78,6 +80,28 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     featured: post?.featured || false,
     status: post?.status || 'draft',
   });
+
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
+    post?.category_id ? [post.category_id] : [],
+  );
+
+  const { data: existingPostCategories } = usePostCategories(post?.id ?? null);
+  const setPostCategories = useSetPostCategories();
+  const categoriesInitRef = useRef(false);
+
+  // Sync from DB junction table on load (overrides the single category_id default)
+  useEffect(() => {
+    if (existingPostCategories && existingPostCategories.length > 0 && !categoriesInitRef.current) {
+      categoriesInitRef.current = true;
+      setSelectedCategoryIds(existingPostCategories);
+    }
+  }, [existingPostCategories]);
+
+  const toggleCategoryId = useCallback((catId: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(catId) ? prev.filter((c) => c !== catId) : [...prev, catId],
+    );
+  }, []);
 
   const [isUploading, setIsUploading] = useState(false);
   const [isBannerUploading, setIsBannerUploading] = useState(false);
@@ -316,7 +340,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       slug: uniqueSlug,
       excerpt: formData.excerpt,
       content: formData.content,
-      category_id: formData.category_id || undefined,
+      category_id: selectedCategoryIds[0] || undefined,
       image_url: formData.image_url || undefined,
       banner_url: formData.banner_url || undefined,
       author_id: user?.id,
@@ -330,12 +354,18 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     try {
       if (post) {
         await updatePost.mutateAsync({ id: post.id, ...postData });
+        if (selectedCategoryIds.length > 0) {
+          await setPostCategories.mutateAsync({ postId: post.id, categoryIds: selectedCategoryIds });
+        }
         toast({
           title: "Sucesso",
           description: "Post atualizado com sucesso!",
         });
       } else {
-        await createPost.mutateAsync(postData);
+        const created = await createPost.mutateAsync(postData);
+        if (created?.id && selectedCategoryIds.length > 0) {
+          await setPostCategories.mutateAsync({ postId: created.id, categoryIds: selectedCategoryIds });
+        }
         toast({
           title: "Sucesso",
           description: publish ? "Post publicado com sucesso!" : "Rascunho guardado!",
@@ -403,21 +433,30 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <div className="flex gap-2">
-                <select
-                  id="category"
-                  value={formData.category_id}
-                  onChange={(e) => setFormData({...formData, category_id: e.target.value})}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categories?.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-                <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => setShowNewCategory(!showNewCategory)} title="Nova categoria">
-                  <Plus className="h-4 w-4" />
+              <Label>Categorias</Label>
+              <div className="rounded-md border border-input bg-background p-3 space-y-2 max-h-40 overflow-y-auto">
+                {categories?.length ? (
+                  categories.map((cat) => (
+                    <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={selectedCategoryIds.includes(cat.id)}
+                        onCheckedChange={() => toggleCategoryId(cat.id)}
+                      />
+                      <span className="text-sm">{cat.name}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground">Nenhuma categoria disponível</p>
+                )}
+              </div>
+              {selectedCategoryIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedCategoryIds.length} categoria{selectedCategoryIds.length > 1 ? 's' : ''} selecionada{selectedCategoryIds.length > 1 ? 's' : ''}
+                </p>
+              )}
+              <div className="flex gap-2 items-center">
+                <Button type="button" variant="outline" size="sm" className="h-8 gap-1" onClick={() => setShowNewCategory(!showNewCategory)} title="Nova categoria">
+                  <Plus className="h-3.5 w-3.5" /> Nova
                 </Button>
               </div>
               {showNewCategory && (
@@ -438,7 +477,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
                       try {
                         const slug = generateSlug(name);
                         const result = await createCategory.mutateAsync({ name, slug, color: 'bg-blue-600' });
-                        setFormData({ ...formData, category_id: result.id });
+                        setSelectedCategoryIds((prev) => [...prev, result.id]);
                         setNewCategoryName('');
                         setShowNewCategory(false);
                         toast({ title: 'Categoria criada', description: `"${name}" adicionada.` });
