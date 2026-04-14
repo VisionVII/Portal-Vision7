@@ -238,13 +238,13 @@ export function NewsPipelineCard() {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro desconhecido';
-      const is503 = /503/.test(msg);
+      const isInfra = /503|502|unreachable|timeout/i.test(msg);
       
       if (attempt < 3) {
         // Cold start — retry with exponential backoff (40s, 60s)
         const delaySec = attempt === 1 ? 40 : 60;
         if (attempt === 1) {
-          addLogEntry('Sistema', `n8n a arrancar (cold start ${is503 ? '503' : 'timeout'}) — aguarde ${delaySec}s...`, 'warn');
+          addLogEntry('Sistema', `n8n a arrancar (cold start ${isInfra ? '502/503' : 'timeout'}) — aguarde ${delaySec}s...`, 'warn');
         } else {
           addLogEntry('Sistema', `Ainda a arrancar — tentativa ${attempt + 1}/3 em ${delaySec}s...`, 'warn');
         }

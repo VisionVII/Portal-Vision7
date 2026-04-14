@@ -53,7 +53,7 @@ export function useN8nKeepAlive() {
   const isColdStartSignal = (status: string, detail?: string): boolean => {
     if (status === 'unreachable') return true;
     if (!detail) return false;
-    return /timeout|abort|503|cold.?start|not ready|Database is not ready/i.test(detail);
+    return /timeout|abort|503|502|cold.?start|not ready|Database is not ready/i.test(detail);
   };
 
   const ping = useCallback(async (isRetry = false) => {

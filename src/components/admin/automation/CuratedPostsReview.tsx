@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   CheckCircle2, XCircle, Eye, ArrowUpRight, Sparkles, Filter,
-  ChevronDown, Star, Code, FileText,
+  ChevronDown, Star, Code, FileText, Pencil, Save, RotateCcw, Tag,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -17,8 +20,11 @@ import {
   useCuratedPostDetail,
   usePromoteCuratedPost,
   useRejectCuratedPost,
+  useUpdateCuratedStatus,
+  useUpdateCuratedPost,
 } from '@/hooks/useCuratedPosts';
 import type { CuratedPost } from '@/hooks/useCuratedPosts';
+import { useCategories } from '@/hooks/useCategories';
 import { RichContentPreview } from '@/components/admin/RichContentPreview';
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -55,18 +61,81 @@ export function CuratedPostsReview() {
   const { data: posts, isLoading, error } = useCuratedPosts(statusFilter || undefined);
   const promoteMutation = usePromoteCuratedPost();
   const rejectMutation = useRejectCuratedPost();
+  const statusMutation = useUpdateCuratedStatus();
+  const updateMutation = useUpdateCuratedPost();
+  const { data: categories } = useCategories();
 
   const [previewPost, setPreviewPost] = useState<CuratedPost | null>(null);
   const { data: postDetail } = useCuratedPostDetail(previewPost?.id ?? null);
   const detailPost = postDetail ?? previewPost;
 
-  const handlePromote = (post: CuratedPost) => {
-    promoteMutation.mutate(post);
-  };
+  // Edit mode state
+  const [editMode, setEditMode] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editExcerpt, setEditExcerpt] = useState('');
+  const [editBody, setEditBody] = useState('');
+
+  // Category selection state for promote dialog
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [showPromoteDialog, setShowPromoteDialog] = useState(false);
+  const [postToPromote, setPostToPromote] = useState<CuratedPost | null>(null);
+
+  const startEditing = useCallback((post: CuratedPost) => {
+    setEditTitle(post.title ?? '');
+    setEditExcerpt(post.excerpt ?? '');
+    setEditBody(post.body_markdown ?? '');
+    setEditMode(true);
+  }, []);
+
+  const cancelEditing = useCallback(() => {
+    setEditMode(false);
+  }, []);
+
+  const saveEditing = useCallback(() => {
+    if (!detailPost) return;
+    updateMutation.mutate(
+      { id: detailPost.id, fields: { title: editTitle, excerpt: editExcerpt, body_markdown: editBody } },
+      { onSuccess: () => setEditMode(false) },
+    );
+  }, [detailPost, editTitle, editExcerpt, editBody, updateMutation]);
+
+  const openPromoteDialog = useCallback((post: CuratedPost) => {
+    setPostToPromote(post);
+    setSelectedCategoryIds([]);
+    setShowPromoteDialog(true);
+  }, []);
+
+  const confirmPromote = useCallback(() => {
+    if (!postToPromote) return;
+    promoteMutation.mutate(
+      { curated: postToPromote, categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined },
+      {
+        onSuccess: () => {
+          setShowPromoteDialog(false);
+          setPostToPromote(null);
+          setPreviewPost(null);
+        },
+      },
+    );
+  }, [postToPromote, selectedCategoryIds, promoteMutation]);
+
+  const toggleCategory = useCallback((catId: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(catId) ? prev.filter((c) => c !== catId) : [...prev, catId],
+    );
+  }, []);
 
   const handleReject = (id: string) => {
     rejectMutation.mutate(id);
   };
+
+  const handleStatusChange = (id: string, status: string) => {
+    statusMutation.mutate({ id, status });
+  };
+
+  const canPromote = (status: string) => ['ready', 'pending-review', 'draft', 'auto-draft'].includes(status);
+  const canReject = (status: string) => status !== 'rejected' && status !== 'published';
+  const canEdit = (status: string) => status !== 'published';
 
   const filterOptions = [
     { value: 'ready', label: 'Prontos para revisão' },
@@ -79,6 +148,14 @@ export function CuratedPostsReview() {
   ];
 
   const activeFilter = filterOptions.find((f) => f.value === statusFilter);
+
+  const statusActions = (post: CuratedPost) => {
+    const actions: { label: string; status: string }[] = [];
+    if (post.status !== 'ready') actions.push({ label: 'Marcar como Pronto', status: 'ready' });
+    if (post.status !== 'pending-review') actions.push({ label: 'Enviar para Revisão', status: 'pending-review' });
+    if (post.status !== 'draft' && post.status !== 'auto-draft') actions.push({ label: 'Voltar a Rascunho', status: 'draft' });
+    return actions;
+  };
 
   return (
     <div className="space-y-4">
@@ -156,28 +233,48 @@ export function CuratedPostsReview() {
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                    {post.status === 'ready' && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 px-2.5 text-xs text-primary hover:text-primary/80 gap-1.5"
-                          disabled={promoteMutation.isPending}
-                          onClick={() => handlePromote(post)}
-                        >
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                          Promover
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
-                          disabled={rejectMutation.isPending}
-                          onClick={() => handleReject(post.id)}
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-                      </>
+                    {canPromote(post.status) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2.5 text-xs text-primary hover:text-primary/80 gap-1.5"
+                        disabled={promoteMutation.isPending}
+                        onClick={() => openPromoteDialog(post)}
+                      >
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                        Promover
+                      </Button>
+                    )}
+                    {canReject(post.status) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
+                        disabled={rejectMutation.isPending}
+                        onClick={() => handleReject(post.id)}
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {/* Status change dropdown */}
+                    {canEdit(post.status) && statusActions(post).length > 0 && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground">
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {statusActions(post).map((action) => (
+                            <DropdownMenuItem
+                              key={action.status}
+                              onClick={() => handleStatusChange(post.id, action.status)}
+                            >
+                              {action.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                 </div>
@@ -187,14 +284,23 @@ export function CuratedPostsReview() {
         </div>
       )}
 
-      {/* Preview dialog */}
-      <Dialog open={!!previewPost} onOpenChange={(open) => !open && setPreviewPost(null)}>
+      {/* Preview / Edit dialog */}
+      <Dialog open={!!previewPost} onOpenChange={(open) => { if (!open) { setPreviewPost(null); setEditMode(false); } }}>
         <DialogContent className="max-w-6xl max-h-[88vh] overflow-hidden rounded-2xl p-0">
           {previewPost && (
             <>
               <DialogHeader className="border-b border-border/70 bg-muted/30 px-6 py-5">
-                <DialogTitle className="pr-8 text-xl font-bold text-foreground">{detailPost.title}</DialogTitle>
-                {detailPost.subtitle && (
+                {editMode ? (
+                  <Input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="text-xl font-bold"
+                    placeholder="Título do artigo"
+                  />
+                ) : (
+                  <DialogTitle className="pr-8 text-xl font-bold text-foreground">{detailPost.title}</DialogTitle>
+                )}
+                {!editMode && detailPost.subtitle && (
                   <DialogDescription className="mt-1 text-base text-muted-foreground">{detailPost.subtitle}</DialogDescription>
                 )}
                 <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -220,7 +326,7 @@ export function CuratedPostsReview() {
                 <TabsList className="h-auto w-full justify-start gap-2 rounded-none border-b border-border/60 bg-background px-6 py-3">
                   <TabsTrigger value="preview" className="gap-2 rounded-lg px-3 py-1.5">
                     <FileText className="w-4 h-4" />
-                    Estrutura do Post
+                    {editMode ? 'Editar' : 'Estrutura do Post'}
                   </TabsTrigger>
                   <TabsTrigger value="source" className="gap-2 rounded-lg px-3 py-1.5">
                     <Code className="w-4 h-4" />
@@ -230,9 +336,31 @@ export function CuratedPostsReview() {
 
                 <div className="flex-1 overflow-y-auto bg-muted/10 px-6 py-5">
                   <TabsContent value="preview" className="mt-0">
-                    {detailPost.body_html ? (
+                    {editMode ? (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1 block">Excerto</label>
+                          <Textarea
+                            value={editExcerpt}
+                            onChange={(e) => setEditExcerpt(e.target.value)}
+                            rows={2}
+                            placeholder="Excerto / resumo do artigo"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1 block">Conteúdo (Markdown)</label>
+                          <Textarea
+                            value={editBody}
+                            onChange={(e) => setEditBody(e.target.value)}
+                            rows={16}
+                            className="font-mono text-sm"
+                            placeholder="Corpo do artigo em markdown..."
+                          />
+                        </div>
+                      </div>
+                    ) : detailPost.body_html ? (
                       <RichContentPreview
-                        html={detailPost.body_html} 
+                        html={detailPost.body_html}
                         variant="full"
                       />
                     ) : (
@@ -263,12 +391,59 @@ export function CuratedPostsReview() {
               </Tabs>
 
               <DialogFooter className="border-t border-border/70 bg-background px-6 py-4">
-                {detailPost.status === 'ready' && (
-                  <div className="flex gap-2 w-full sm:w-auto">
+                <div className="flex gap-2 w-full flex-wrap sm:flex-nowrap">
+                  {/* Edit toggle */}
+                  {canEdit(detailPost.status) && !editMode && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 sm:flex-none border-destructive/40 text-destructive hover:bg-destructive/10"
+                      className="gap-1.5"
+                      onClick={() => startEditing(detailPost)}
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> Editar
+                    </Button>
+                  )}
+                  {editMode && (
+                    <>
+                      <Button variant="outline" size="sm" className="gap-1.5" onClick={cancelEditing}>
+                        <RotateCcw className="w-3.5 h-3.5" /> Cancelar
+                      </Button>
+                      <Button size="sm" className="gap-1.5" disabled={updateMutation.isPending} onClick={saveEditing}>
+                        <Save className="w-3.5 h-3.5" /> Salvar
+                      </Button>
+                    </>
+                  )}
+                  {/* Status dropdown */}
+                  {!editMode && canEdit(detailPost.status) && statusActions(detailPost).length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-1.5">
+                          Alterar Status <ChevronDown className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        {statusActions(detailPost).map((action) => (
+                          <DropdownMenuItem
+                            key={action.status}
+                            onClick={() => {
+                              handleStatusChange(detailPost.id, action.status);
+                              setPreviewPost(null);
+                            }}
+                          >
+                            {action.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {/* Spacer */}
+                  <div className="flex-1" />
+                  {/* Reject */}
+                  {!editMode && canReject(detailPost.status) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-destructive/40 text-destructive hover:bg-destructive/10"
                       disabled={rejectMutation.isPending}
                       onClick={() => {
                         handleReject(detailPost.id);
@@ -277,22 +452,73 @@ export function CuratedPostsReview() {
                     >
                       <XCircle className="w-3.5 h-3.5 mr-1.5" /> Rejeitar
                     </Button>
+                  )}
+                  {/* Promote */}
+                  {!editMode && canPromote(detailPost.status) && (
                     <Button
                       size="sm"
-                      className="flex-1 sm:flex-none bg-primary hover:bg-primary/90"
+                      className="bg-primary hover:bg-primary/90"
                       disabled={promoteMutation.isPending}
                       onClick={() => {
-                        handlePromote(detailPost);
-                        setPreviewPost(null);
+                        openPromoteDialog(detailPost);
                       }}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Promover para Rascunho
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Promote with categories dialog */}
+      <Dialog open={showPromoteDialog} onOpenChange={(open) => { if (!open) { setShowPromoteDialog(false); setPostToPromote(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Tag className="w-5 h-5" />
+              Promover Artigo
+            </DialogTitle>
+            <DialogDescription>
+              Selecione as categorias para o artigo antes de promovê-lo para rascunho editorial.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm font-medium text-foreground mb-3">Categorias</p>
+            {categories?.length ? (
+              <div className="space-y-2">
+                {categories.map((cat) => (
+                  <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={selectedCategoryIds.includes(cat.id)}
+                      onCheckedChange={() => toggleCategory(cat.id)}
+                    />
+                    <span className="text-sm">{cat.name}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhuma categoria disponível.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setShowPromoteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              className="bg-primary hover:bg-primary/90"
+              disabled={promoteMutation.isPending}
+              onClick={confirmPromote}
+            >
+              <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
+              {selectedCategoryIds.length > 0
+                ? `Promover (${selectedCategoryIds.length} cat.)`
+                : 'Promover sem categoria'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

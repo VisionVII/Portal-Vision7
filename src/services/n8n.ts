@@ -144,16 +144,18 @@ async function callN8nProxy(payload: unknown, options: Pick<N8nRequestOptions, '
   const httpStatus = typeof proxyData?.httpStatus === 'number'
     ? proxyData.httpStatus
     : resp.status;
-  const proxyMessage = typeof proxyData?.error === 'string'
-    ? proxyData.error
-    : typeof proxyData?.message === 'string'
-    ? proxyData.message
-    : '';
+  const proxyErrorStr = typeof proxyData?.error === 'string' ? proxyData.error : '';
+  const proxyMsgStr = typeof proxyData?.message === 'string' ? proxyData.message : '';
+  // Combine error + message when both exist (edge function returns generic
+  // 'Proxy error' in `error` and the useful detail in `message`).
+  const proxyMessage = proxyErrorStr && proxyMsgStr && !proxyErrorStr.includes(proxyMsgStr)
+    ? `${proxyErrorStr} — ${proxyMsgStr}`
+    : proxyErrorStr || proxyMsgStr;
 
-  // Edge function now wraps 503 in 200 OK — check body for actual status
-  if (proxyData?.error && httpStatus === 503) {
-    // Cold-start wrapped in 200 — suppress console spam, just throw for retry
-    throw new Error(withStatusPrefix(httpStatus, proxyMessage || 'n8n Service Unavailable (cold start)'));
+  // Edge function now wraps 502/503 in 200 OK — check body for actual status
+  if (proxyData?.error && (httpStatus === 503 || httpStatus === 502)) {
+    // Cold-start / unreachable wrapped in 200 — suppress console spam, just throw for retry
+    throw new Error(withStatusPrefix(httpStatus, proxyMessage || 'n8n Service Unavailable'));
   }
 
   if (!resp.ok || proxyData?.error) {
@@ -162,7 +164,7 @@ async function callN8nProxy(payload: unknown, options: Pick<N8nRequestOptions, '
       : await extractHttpError(resp);
     // Only log unexpected errors. Some speculative execution attempts deliberately
     // probe multiple n8n endpoints and may return 404/405/422 without meaning failure.
-    if (httpStatus !== 503 && !shouldSuppressProxyWarning(httpStatus, options.suppressHttpWarningsForStatuses)) {
+    if (httpStatus !== 503 && httpStatus !== 502 && !shouldSuppressProxyWarning(httpStatus, options.suppressHttpWarningsForStatuses)) {
       console.warn('[n8n-proxy]', detail);
     }
     throw new Error(detail);
@@ -341,14 +343,17 @@ export const checkN8nHealth = async (): Promise<{
     const data = await callN8nProxy({ path: '/health' });
     const result = data as { status: 'connected' | 'error' | 'unreachable'; detail?: string; httpStatus?: number };
     
-    // Only log non-503 errors (503 cold-start is normal and creates spam)
-    if (result.status !== 'connected' && result.httpStatus !== 503) {
+    // Only log non-infrastructure errors (502/503 cold-start is normal and creates spam)
+    if (result.status !== 'connected' && result.httpStatus !== 503 && result.httpStatus !== 502) {
       console.info('[n8n-health]', result.status, result.httpStatus ?? '', result.detail ?? '');
     }
 
-    // Enhance detail for cold-start HTTP codes
+    // Enhance detail for cold-start / unreachable HTTP codes
     if (result.status === 'error' && result.httpStatus === 503) {
       result.detail = result.detail || 'n8n a arrancar (503 — cold start no Render)';
+    }
+    if (result.status === 'error' && result.httpStatus === 502) {
+      result.detail = result.detail || 'n8n indisponível (502 — erro de rede)';
     }
 
     return result;
@@ -357,9 +362,9 @@ export const checkN8nHealth = async (): Promise<{
     const match = msg.match(/^\[(\d{3})\]/);
     const httpStatus = match ? Number(match[1]) : undefined;
     
-    // Suppress 503 warnings and config errors (cold-start spam)
-    const is503Error = httpStatus === 503 || msg.includes('not configured on server');
-    if (!is503Error) {
+    // Suppress 502/503 warnings and config errors (cold-start / infra spam)
+    const isInfraError = httpStatus === 503 || httpStatus === 502 || msg.includes('not configured on server');
+    if (!isInfraError) {
       console.warn('[n8n-health] exception:', msg);
     }
     
