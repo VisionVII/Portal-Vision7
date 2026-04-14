@@ -45,7 +45,7 @@ const normalizeAssistantHref = (href: string, type: PortalAssistantReplyLink['ty
   const [, rawPath = trimmed, suffix = ''] = trimmed.match(/^([^?#]*)(.*)$/) ?? [];
   const path = rawPath === '/' ? '/' : rawPath.replace(/\/+$/, '');
   const segments = path.split('/').filter(Boolean);
-  const slug = segments.at(-1) ?? '';
+  const slug = segments[segments.length - 1] ?? '';
 
   if (type === 'course') {
     if (path.startsWith('/curso/')) {

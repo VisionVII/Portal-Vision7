@@ -162,7 +162,7 @@ export const usePosts = (adminView = false, enabled = true) => {
     queryFn: async () => {
       let query = supabase
         .from('posts')
-        .select(adminView ? FULL_POST_SELECT : PUBLIC_POST_SELECT)
+        .select((adminView ? FULL_POST_SELECT : PUBLIC_POST_SELECT) as string)
         .order('created_at', { ascending: false })
         .limit(adminView ? 500 : 50);
 
@@ -177,8 +177,8 @@ export const usePosts = (adminView = false, enabled = true) => {
       }
 
       return adminView
-        ? ((data as Post[]) ?? [])
-        : ((data as Partial<Post>[] | null)?.map((post) => normalizePublicPost(post)) ?? []);
+        ? ((data as unknown as Post[]) ?? [])
+        : ((data as unknown as Partial<Post>[] | null)?.map((post) => normalizePublicPost(post)) ?? []);
     },
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
