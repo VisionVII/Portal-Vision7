@@ -14,23 +14,14 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  applyEditorialTemplateToContent,
-  buildEditorialTemplate,
-  detectEditorialTemplate,
-  EDITORIAL_POST_TEMPLATES,
-  estimateReadTimeFromHtml,
-  hasEditorialStructure,
-  mergeSuggestedTags,
   syncEditorialContentMetadata,
-  type EditorialPostTemplateId,
+  estimateReadTimeFromHtml,
 } from '@/lib/editorialPostTemplates';
 
 interface PostFormProps {
   post?: Post | null;
   onClose: () => void;
 }
-
-const DEFAULT_EDITORIAL_TEMPLATE_ID: EditorialPostTemplateId = 'noticia-padrao';
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error && error.message) {
@@ -109,12 +100,8 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   const [bannerPreview, setBannerPreview] = useState<string | null>(post?.banner_url || null);
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [selectedTemplateId, setSelectedTemplateId] = useState<EditorialPostTemplateId>(
-    detectEditorialTemplate(post?.content || '') ?? DEFAULT_EDITORIAL_TEMPLATE_ID,
-  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
-  const initializedTemplateKeyRef = useRef<string | null>(null);
 
   const { data: categories } = useCategories();
   const createPost = useCreatePost();
@@ -124,42 +111,6 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   const { user, hasRole } = useAuth();
   const canPublish = hasRole('super_admin') || hasRole('admin') || hasRole('editor');
   const canSaveDraft = canPublish || hasRole('redator');
-
-  useEffect(() => {
-    const templateKey = post?.id ?? '__new__';
-    if (initializedTemplateKeyRef.current === templateKey) {
-      return;
-    }
-
-    initializedTemplateKeyRef.current = templateKey;
-
-    const resolvedTemplateId = detectEditorialTemplate(formData.content) ?? DEFAULT_EDITORIAL_TEMPLATE_ID;
-    const template = buildEditorialTemplate(resolvedTemplateId, {
-      title: formData.title,
-      authorName: formData.author_name,
-      featuredImageUrl: formData.image_url || formData.banner_url || null,
-    });
-
-    setSelectedTemplateId(resolvedTemplateId);
-
-    if (formData.content.trim() && hasEditorialStructure(formData.content)) {
-      return;
-    }
-
-    const nextContent = applyEditorialTemplateToContent(resolvedTemplateId, formData.content, {
-      title: formData.title,
-      authorName: formData.author_name,
-      featuredImageUrl: formData.image_url || formData.banner_url || null,
-    });
-
-    setFormData((current) => ({
-      ...current,
-      excerpt: current.excerpt.trim() ? current.excerpt : template.suggestedExcerpt,
-      content: nextContent,
-      read_time: estimateReadTimeFromHtml(nextContent),
-      tags: mergeSuggestedTags(current.tags, template.suggestedTags),
-    }));
-  }, [formData.author_name, formData.banner_url, formData.content, formData.excerpt, formData.image_url, formData.title, post?.id]);
 
   useEffect(() => {
     setFormData((current) => {
@@ -382,34 +333,6 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     }
   };
 
-  const applyEditorialTemplate = (templateId: EditorialPostTemplateId) => {
-    const template = buildEditorialTemplate(templateId, {
-      title: formData.title,
-      authorName: formData.author_name,
-      featuredImageUrl: formData.image_url || formData.banner_url || null,
-    });
-    const nextContent = applyEditorialTemplateToContent(templateId, formData.content, {
-      title: formData.title,
-      authorName: formData.author_name,
-      featuredImageUrl: formData.image_url || formData.banner_url || null,
-    });
-
-    setSelectedTemplateId(templateId);
-
-    setFormData((current) => ({
-      ...current,
-      excerpt: current.excerpt.trim() ? current.excerpt : template.suggestedExcerpt,
-      content: nextContent,
-      read_time: estimateReadTimeFromHtml(nextContent),
-      tags: mergeSuggestedTags(current.tags, template.suggestedTags),
-    }));
-
-    toast({
-      title: 'Padrao editorial aplicado',
-      description: `${template.label} reorganizou o texto atual sem apagar o conteudo existente.`,
-    });
-  };
-
   return (
     <Card className="mb-8">
       <CardHeader>
@@ -527,37 +450,6 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
             />
           </div>
 
-          <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
-            <div>
-              <Label className="text-sm">Padroes editoriais</Label>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Todo post abre com um template padrao. Trocar o padrao reorganiza o texto atual sem limpar o que ja foi escrito.
-              </p>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-3">
-              {EDITORIAL_POST_TEMPLATES.map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  onClick={() => applyEditorialTemplate(template.id)}
-                  className={`rounded-lg border p-4 text-left transition-colors hover:border-primary hover:bg-muted ${selectedTemplateId === template.id ? 'border-primary bg-primary/5 shadow-sm' : 'border-border bg-background'}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-foreground">{template.label}</p>
-                    {selectedTemplateId === template.id ? (
-                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                        Ativo
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{template.description}</p>
-                  <p className="mt-3 text-[11px] font-medium text-primary">Reorganizar para este padrao</p>
-                </button>
-              ))}
-            </div>
-          </div>
-          
           <div className="space-y-2">
             <Label>Imagem do Post</Label>
             <div className="space-y-3">

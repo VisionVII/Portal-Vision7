@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Sparkles, FileText, FolderOpen, Trash2 } from 'lucide-react';
+import { Plus, Sparkles, FileText, FolderOpen, Trash2, LayoutList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PostForm from '@/components/admin/PostForm';
 import PostsTable from '@/components/admin/PostsTable';
 import { Post, usePosts } from '@/hooks/usePosts';
@@ -32,29 +33,24 @@ const ContentView: React.FC<ContentViewProps> = ({
   const deleteCategory = useDeleteCategory();
   const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<'editorial' | 'curated'>('editorial');
+  const [activeTab, setActiveTab] = useState<'posts' | 'curated' | 'categories'>('posts');
 
   const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);
   const draftPosts = useMemo(() => posts?.filter((p) => p.status === 'draft') ?? [], [posts]);
   const postsPerCategory = useMemo(() => {
     const countMap = new Map<string, number>();
-
     (posts ?? []).forEach((post) => {
       if (!post.category_id) return;
       countMap.set(post.category_id, (countMap.get(post.category_id) ?? 0) + 1);
     });
-
     return countMap;
   }, [posts]);
 
   const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
-    if (!window.confirm(`Deseja eliminar a categoria "${categoryName}"? Os conteúdos associados ficarão sem categoria.`)) {
-      return;
-    }
-
+    if (!window.confirm(`Deseja eliminar a categoria "${categoryName}"? Os conteúdos associados ficarão sem categoria.`)) return;
     try {
       await deleteCategory.mutateAsync(categoryId);
-      toast({ title: 'Categoria removida', description: `"${categoryName}" foi eliminada com sucesso.` });
+      toast({ title: 'Categoria removida', description: `"${categoryName}" foi eliminada.` });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Não foi possível eliminar a categoria.';
       toast({ title: 'Erro', description: message, variant: 'destructive' });
@@ -63,57 +59,66 @@ const ContentView: React.FC<ContentViewProps> = ({
 
   return (
     <div className="space-y-5">
+      {/* ── Top bar ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button onClick={onNewPost} className="gap-2 rounded-xl shadow-sm">
             <Plus className="h-4 w-4" />
             Novo post
           </Button>
-          {/* ── Tab toggle ── */}
-          <div className="flex items-center bg-slate-800/60 rounded-lg p-0.5 ml-2">
-            <Button
-              size="sm"
-              variant={activeTab === 'editorial' ? 'default' : 'ghost'}
-              className={`h-7 text-xs gap-1.5 ${activeTab === 'editorial' ? '' : 'text-gray-400'}`}
-              onClick={() => setActiveTab('editorial')}
-            >
-              <FileText className="w-3 h-3" />
-              Editorial
-            </Button>
-            <Button
-              size="sm"
-              variant={activeTab === 'curated' ? 'default' : 'ghost'}
-              className={`h-7 text-xs gap-1.5 ${activeTab === 'curated' ? 'bg-cyan-600 hover:bg-cyan-700' : 'text-gray-400'}`}
-              onClick={() => setActiveTab('curated')}
-            >
-              <Sparkles className="w-3 h-3" />
-              Curados IA
-              {curatedStats && curatedStats.ready > 0 && (
-                <Badge className="bg-emerald-500 text-[10px] px-1.5 py-0 ml-1">
-                  {curatedStats.ready}
-                </Badge>
-              )}
-            </Button>
+          <div className="flex gap-2 text-xs text-muted-foreground">
+            <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-600 dark:text-emerald-400">{publishedPosts.length} publicados</span>
+            <span className="rounded-full bg-amber-500/10 px-2.5 py-1 font-medium text-amber-600 dark:text-amber-400">{draftPosts.length} rascunhos</span>
+            {curatedStats && curatedStats.ready > 0 && (
+              <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 font-medium text-cyan-600 dark:text-cyan-400">{curatedStats.ready} curados prontos</span>
+            )}
           </div>
         </div>
-        <div className="flex gap-1.5">
-          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-            {publishedPosts.length} publicados
-          </span>
-          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-            {draftPosts.length} rascunhos
-          </span>
-          {curatedStats && curatedStats.ready > 0 && (
-            <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400">
-              {curatedStats.ready} curados prontos
-            </span>
-          )}
-        </div>
       </div>
-      {showPostForm && <PostForm post={editingPost} onClose={onCloseForm} />}
 
-      {activeTab === 'editorial' ? (
-        <>
+      {/* ── PostForm inline when open ── */}
+      {showPostForm && (
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
+          <PostForm post={editingPost} onClose={onCloseForm} />
+        </div>
+      )}
+
+      {/* ── Tabs: Posts | Curados IA | Categorias ── */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <TabsList className="h-9 gap-1">
+          <TabsTrigger value="posts" className="gap-1.5 text-xs">
+            <LayoutList className="w-3.5 h-3.5" />
+            Posts editoriais
+          </TabsTrigger>
+          <TabsTrigger value="curated" className="gap-1.5 text-xs">
+            <Sparkles className="w-3.5 h-3.5" />
+            Curados pela IA
+            {curatedStats && curatedStats.ready > 0 && (
+              <Badge className="bg-emerald-500 text-[10px] px-1.5 py-0 ml-0.5">{curatedStats.ready}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="gap-1.5 text-xs">
+            <FolderOpen className="w-3.5 h-3.5" />
+            Categorias
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-0.5">{categories.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Posts tab */}
+        <TabsContent value="posts" className="mt-4">
+          <PostsTable posts={posts} isLoading={postsLoading} onEdit={onEdit} />
+        </TabsContent>
+
+        {/* Curated IA tab */}
+        <TabsContent value="curated" className="mt-4">
+          <CuratedPostsReview
+            onEditPost={(post) => { onEdit(post); setActiveTab('posts'); }}
+            onSwitchToEditorial={() => setActiveTab('posts')}
+          />
+        </TabsContent>
+
+        {/* Categories tab */}
+        <TabsContent value="categories" className="mt-4">
           <Card className="border-border/40 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-3">
@@ -123,7 +128,7 @@ const ContentView: React.FC<ContentViewProps> = ({
                     Categorias do portal
                   </CardTitle>
                   <CardDescription>
-                    Remova categorias que já não fazem parte da operação editorial. Os posts existentes ficam sem categoria automaticamente.
+                    Remova categorias que já não fazem parte da operação editorial. Posts existentes ficam sem categoria.
                   </CardDescription>
                 </div>
                 <Badge variant="secondary" className="shrink-0">{categories.length}</Badge>
@@ -136,7 +141,6 @@ const ContentView: React.FC<ContentViewProps> = ({
                 <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                   {categories.map((category) => {
                     const linkedPosts = postsPerCategory.get(category.id) ?? 0;
-
                     return (
                       <div
                         key={category.id}
@@ -166,12 +170,8 @@ const ContentView: React.FC<ContentViewProps> = ({
               )}
             </CardContent>
           </Card>
-
-          <PostsTable posts={posts} isLoading={postsLoading} onEdit={onEdit} />
-        </>
-      ) : (
-        <CuratedPostsReview />
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
