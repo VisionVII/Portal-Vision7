@@ -49,7 +49,7 @@ export interface UpdatePostData extends Partial<CreatePostData> {
 }
 
 const POST_CATEGORY_SELECT = `
-  categories (
+  categories!posts_category_id_fkey (
     id,
     name,
     slug,
@@ -195,7 +195,7 @@ export const usePostsByCategory = (categorySlug: string) => {
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          ${PUBLIC_POST_SELECT.replace('categories (', 'categories!inner (')}
+          ${PUBLIC_POST_SELECT.replace('categories!posts_category_id_fkey (', 'categories!posts_category_id_fkey!inner (')}
         `)
         .eq('categories.slug', categorySlug)
         .eq('status', 'published')
