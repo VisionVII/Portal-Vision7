@@ -42,6 +42,7 @@ interface PipelineStep {
   icon: React.ElementType;
   nameMatch: string;
   delayAfterMs: number;
+  scheduleIntervalMs: number;
 }
 
 const PIPELINE_STEPS: PipelineStep[] = [
@@ -53,6 +54,7 @@ const PIPELINE_STEPS: PipelineStep[] = [
     icon: Newspaper,
     nameMatch: 'WF-01',
     delayAfterMs: 60_000,
+    scheduleIntervalMs: 30 * 60_000, // 30min
   },
   {
     key: 'wf02',
@@ -62,6 +64,7 @@ const PIPELINE_STEPS: PipelineStep[] = [
     icon: Layers,
     nameMatch: 'WF-02',
     delayAfterMs: 30_000,
+    scheduleIntervalMs: 20 * 60_000, // 20min
   },
   {
     key: 'wf03',
@@ -71,6 +74,7 @@ const PIPELINE_STEPS: PipelineStep[] = [
     icon: Sparkles,
     nameMatch: 'WF-03',
     delayAfterMs: 0,
+    scheduleIntervalMs: 60 * 60_000, // 60min
   },
 ];
 
@@ -113,6 +117,29 @@ function formatRelativeTime(iso: string | undefined): string {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h`;
   return `${Math.floor(hours / 24)}d`;
+}
+
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return '0:00';
+  const totalSec = Math.ceil(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function getCountdownMs(lastExecIso: string | undefined, intervalMs: number): number {
+  if (!lastExecIso || !intervalMs) return -1;
+  const nextRun = new Date(lastExecIso).getTime() + intervalMs;
+  return nextRun - Date.now();
+}
+
+/** Tick every second to drive countdown badges */
+function useCountdownTick() {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 }
 
 function parseListInput(value: string): string[] {
@@ -165,6 +192,7 @@ export function NewsPipelineCard() {
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
   const [failedSteps, setFailedSteps] = useState<Set<string>>(new Set());
   const abortRef = useRef(false);
+  useCountdownTick();
   useEffect(() => {
     setKeepAlivePipelineBusy(pipelineRunning);
   }, [pipelineRunning]);
@@ -1051,24 +1079,33 @@ export function NewsPipelineCard() {
                           {isRunning ? (
                             <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Executando...</>
                           ) : isFailed ? (
-                            'Erro'
+                            <><AlertTriangle className="w-3 h-3 mr-1" />Erro</>
                           ) : isCompleted ? (
-                            '✓ Concluído'
+                            <><CheckCircle2 className="w-3 h-3 mr-1" />{wfExec?.status === 'success' ? 'Sucesso' : 'Concluído'}</>
                           ) : isActive ? (
                             'Ativo'
                           ) : (
                             'Inativo'
                           )}
                         </Badge>
-                        {wfExec && (
-                          <Badge variant="outline" className={`text-xs px-2 py-0.5 ${
-                            wfExec.status === 'success' ? 'border-primary/25 text-primary' :
-                            wfExec.status === 'error' ? 'border-red-500/30 text-red-400' :
-                            wfExec.status === 'running' ? 'border-blue-500/30 text-blue-500' : 'border-border text-muted-foreground'
-                          }`}>
-                            {formatRelativeTime(wfExec.startedAt)}
-                          </Badge>
-                        )}
+                        {(() => {
+                          const remaining = getCountdownMs(wfExec?.startedAt, step.scheduleIntervalMs);
+                          if (isRunning) return null;
+                          if (!wfExec || !isActive) return null;
+                          if (remaining > 0) {
+                            return (
+                              <Badge variant="outline" className="text-xs px-2 py-0.5 border-blue-500/25 text-blue-400 font-mono tabular-nums">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {formatCountdown(remaining)}
+                              </Badge>
+                            );
+                          }
+                          return (
+                            <Badge variant="outline" className="text-xs px-2 py-0.5 border-primary/25 text-primary">
+                              iminente
+                            </Badge>
+                          );
+                        })()}
                       </div>
 
                       {/* Workflow Meta */}
