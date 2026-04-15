@@ -233,6 +233,24 @@
         "devops",
         "automation"
       ]
+    },
+    {
+      "id": "portal-assistant",
+      "name": "Portal Assistant",
+      "spec_file": "sdd/modules/portal-assistant.json",
+      "version": "0.1.0",
+      "status": "Em desenvolvimento",
+      "owner": "Vision7 Core Team",
+      "depends_on": [
+        "supabase-database",
+        "auth-security"
+      ],
+      "dependents": [],
+      "priority": "Média",
+      "tags": [
+        "ai",
+        "assistant"
+      ]
     }
   ],
   "dependency_graph": {
