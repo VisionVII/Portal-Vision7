@@ -1,14 +1,17 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Bot,
   ChevronDown,
   ChevronUp,
+  Clock,
   Globe,
   LayoutTemplate,
+  Loader2,
   Plus,
   Sparkles,
+  Trash2,
   TrendingUp,
   Zap,
   Shield,
@@ -21,12 +24,15 @@ import {
   Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminStatsCards from '@/components/admin/AdminStatsCards';
 import { Post, usePosts } from '@/hooks/usePosts';
 import { useCategories } from '@/hooks/useCategories';
 import { usePipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import type { AdminView } from '@/components/admin/dashboard-types';
 
 interface OverviewViewProps {
@@ -65,12 +71,52 @@ function toneClasses(tone: HealthTone) {
   return 'border-border/60 bg-muted/40 text-muted-foreground';
 }
 
+/* ── Countdown helpers ── */
+const STAGE_INTERVALS: Record<string, number> = {
+  Coleta: 30 * 60_000,       // WF-01 — 30 min
+  Cluster: 20 * 60_000,      // WF-02 — 20 min
+  'IA Reescrita': 60 * 60_000, // WF-03 — 60 min
+};
+
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return '0:00';
+  const totalSec = Math.ceil(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function getCountdownMs(lastIso: string | null | undefined, intervalMs: number): number {
+  if (!lastIso || !intervalMs) return -1;
+  const nextRun = new Date(lastIso).getTime() + intervalMs;
+  return nextRun - Date.now();
+}
+
+/* ── Cleanup thresholds ── */
+const CLEANUP_OPTIONS = [
+  { label: '24 h', hours: 24 },
+  { label: '3 dias', hours: 72 },
+  { label: '7 dias', hours: 168 },
+] as const;
+
 const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEdit, allowedViews }) => {
   const { data: posts, isLoading: postsLoading } = usePosts(true);
   const { data: categories = [] } = useCategories();
   const { data: diagnostics, isLoading: diagnosticsLoading } = usePipelineDiagnostics();
   const { executions = [], isLoading: executionsLoading } = useAutomationExecutions({ pageSize: 40 });
   const [showEcosystem, setShowEcosystem] = useState(false);
+  const { toast } = useToast();
+
+  /* ── Countdown tick (1 s) ── */
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  /* ── Cleanup state ── */
+  const [cleanupHours, setCleanupHours] = useState(72);
+  const [cleaning, setCleaning] = useState(false);
 
   const publishedPosts = useMemo(() => posts?.filter((post) => post.status === 'published') ?? [], [posts]);
   const draftPosts = useMemo(() => posts?.filter((post) => post.status === 'draft') ?? [], [posts]);
@@ -112,6 +158,8 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       helper: `${diagnostics?.staging.unprocessed ?? 0} em fila`,
       tone: getHealthTone(diagnostics?.staging.unprocessed ?? 0, 1, 'neutral'),
       icon: Activity,
+      lastTimestamp: diagnostics?.lastStagingAt,
+      intervalMs: STAGE_INTERVALS['Coleta'],
     },
     {
       label: 'Cluster',
@@ -119,6 +167,8 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       helper: `${diagnostics?.clusters.highConfidence ?? 0} confiáveis`,
       tone: clusterTone,
       icon: Layers3,
+      lastTimestamp: diagnostics?.lastClusterAt,
+      intervalMs: STAGE_INTERVALS['Cluster'],
     },
     {
       label: 'IA Reescrita',
@@ -126,6 +176,8 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       helper: `${diagnostics?.curated.ready ?? 0} prontos`,
       tone: iaTone,
       icon: Sparkles,
+      lastTimestamp: diagnostics?.lastCuratedAt,
+      intervalMs: STAGE_INTERVALS['IA Reescrita'],
     },
     {
       label: 'Publicação',
@@ -133,6 +185,8 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       helper: `${publishedPosts.length} publicados`,
       tone: getHealthTone(diagnostics?.curated.published ?? 0, 1, 'neutral'),
       icon: Radio,
+      lastTimestamp: null,
+      intervalMs: 0,
     },
   ] as const;
 
@@ -167,6 +221,74 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
   const handleResumeDraft = () => {
     if (latestDraft) onEdit(latestDraft);
+  };
+
+  /* ── Cleanup pipeline data ── */
+  const handleCleanup = async () => {
+    if (!confirm(`Remover dados processados do pipeline com mais de ${cleanupHours}h?`)) return;
+    setCleaning(true);
+    const cutoff = new Date(Date.now() - cleanupHours * 60 * 60 * 1000).toISOString();
+    try {
+      const { data: stg } = await supabase
+        .from('news_staging')
+        .delete()
+        .eq('processed', true)
+        .lt('collected_at', cutoff)
+        .select('id');
+
+      const { data: staleCurated } = await supabase
+        .from('curated_posts')
+        .select('id, cluster_id')
+        .in('status', ['published', 'rejected'])
+        .lt('created_at', cutoff);
+
+      const curatedIds = staleCurated?.map((r) => r.id) ?? [];
+      let curatedCleaned = 0;
+      if (curatedIds.length > 0) {
+        const { data: cur } = await supabase
+          .from('curated_posts')
+          .delete()
+          .in('id', curatedIds)
+          .select('id');
+        curatedCleaned = cur?.length ?? 0;
+      }
+
+      const candidateClusterIds = [...new Set(
+        (staleCurated ?? []).map((r) => r.cluster_id).filter((id): id is string => Boolean(id)),
+      )];
+      let clustersDeleted = 0;
+      if (candidateClusterIds.length > 0) {
+        const { data: protectedRefs } = await supabase
+          .from('curated_posts')
+          .select('cluster_id')
+          .in('cluster_id', candidateClusterIds)
+          .in('status', ['draft', 'ready']);
+        const protectedIds = new Set(
+          (protectedRefs ?? []).map((r) => r.cluster_id).filter((id): id is string => Boolean(id)),
+        );
+        const toDelete = candidateClusterIds.filter((id) => !protectedIds.has(id));
+        if (toDelete.length > 0) {
+          const { data: cls } = await supabase
+            .from('news_clusters')
+            .delete()
+            .in('id', toDelete)
+            .lt('created_at', cutoff)
+            .select('id');
+          clustersDeleted = cls?.length ?? 0;
+        }
+      }
+
+      const stagingDeleted = stg?.length ?? 0;
+      const total = stagingDeleted + clustersDeleted + curatedCleaned;
+      toast({
+        title: total > 0 ? `${total} registos removidos` : 'Nada para limpar',
+        description: `Staging: ${stagingDeleted} · Clusters: ${clustersDeleted} · Curados: ${curatedCleaned}`,
+      });
+    } catch (err) {
+      toast({ title: 'Erro na limpeza', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
+    } finally {
+      setCleaning(false);
+    }
   };
 
   return (
@@ -255,6 +377,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {pipelineStages.map((stage, index) => {
                 const Icon = stage.icon;
+                const remaining = getCountdownMs(stage.lastTimestamp, stage.intervalMs);
                 return (
                   <div key={stage.label} className="relative rounded-2xl border border-border/40 bg-muted/20 p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
@@ -268,9 +391,22 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                     </div>
                     <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
                       <span>{stage.helper}</span>
-                      <span className={`rounded-full border px-2 py-0.5 font-medium ${toneClasses(stage.tone)}`}>
-                        {stage.tone === 'warning' ? 'Atenção' : stage.count > 0 ? 'OK' : 'Aguardando'}
-                      </span>
+                      {stage.intervalMs > 0 && stage.lastTimestamp ? (
+                        remaining > 0 ? (
+                          <Badge variant="outline" className="border-blue-500/25 text-blue-500 font-mono tabular-nums px-2 py-0.5 text-xs">
+                            <Clock className="mr-1 h-3 w-3" />
+                            {formatCountdown(remaining)}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-primary/25 text-primary px-2 py-0.5 text-xs">
+                            iminente
+                          </Badge>
+                        )
+                      ) : (
+                        <span className={`rounded-full border px-2 py-0.5 font-medium ${toneClasses(stage.tone)}`}>
+                          {stage.tone === 'warning' ? 'Atenção' : stage.count > 0 ? 'OK' : 'Aguardando'}
+                        </span>
+                      )}
                     </div>
                     {index < pipelineStages.length - 1 && (
                       <div className="absolute right-[-0.75rem] top-1/2 hidden -translate-y-1/2 xl:block">
@@ -284,6 +420,50 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
           </CardContent>
         </Card>
       </section>
+
+      {/* ── Cleanup Actions ── */}
+      {pipelineIsActive && (
+        <section className="rounded-2xl border border-border/40 bg-card/80 p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold text-foreground">Limpeza inteligente do pipeline</span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground">
+                Apenas dados processados
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Mais antigos que:</span>
+              <div className="flex gap-1">
+                {CLEANUP_OPTIONS.map((opt) => (
+                  <Button
+                    key={opt.hours}
+                    size="sm"
+                    variant={cleanupHours === opt.hours ? 'default' : 'outline'}
+                    className="h-7 px-2.5 text-xs"
+                    onClick={() => setCleanupHours(opt.hours)}
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-7 px-3 text-xs gap-1.5"
+                disabled={cleaning}
+                onClick={() => void handleCleanup()}
+              >
+                {cleaning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                Limpar
+              </Button>
+            </div>
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Remove staging processado, clusters órfãos e curados já publicados/rejeitados. Dados em rascunho e prontos são preservados.
+          </p>
+        </section>
+      )}
 
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Card className="border-border/40 bg-card/80 shadow-sm">
