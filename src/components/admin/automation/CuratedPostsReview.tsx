@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import {
   CheckCircle2, XCircle, Eye, ArrowUpRight, Sparkles, Filter,
   ChevronDown, Star, Code, FileText, Pencil, Save, RotateCcw, Tag,
+  Search, BarChart3, BookOpen, Fingerprint, Link2, Target,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -306,7 +307,7 @@ export function CuratedPostsReview({
 
       {/* Preview / Edit dialog */}
       <Dialog open={!!previewPost} onOpenChange={(open) => { if (!open) { setPreviewPost(null); setEditMode(false); } }}>
-        <DialogContent className="max-w-6xl max-h-[88vh] overflow-hidden rounded-2xl p-0">
+        <DialogContent className="mx-4 max-w-6xl max-h-[88vh] overflow-hidden rounded-2xl p-0 sm:mx-6">
           {previewPost && (
             <>
               <DialogHeader className="border-b border-border/70 bg-muted/30 px-6 py-5">
@@ -340,6 +341,83 @@ export function CuratedPostsReview({
                     Criado: {formatDate(detailPost.created_at)}
                   </Badge>
                 </div>
+
+                {/* SEO & Quality Metrics */}
+                <div className="mt-3 grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+                  {detailPost.seo_score != null && (
+                    <div className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-muted/20 px-2 py-1.5">
+                      <Search className="w-3 h-3 text-blue-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground leading-none">SEO</p>
+                        <p className="text-xs font-semibold text-foreground">{Number(detailPost.seo_score).toFixed(0)}/100</p>
+                      </div>
+                    </div>
+                  )}
+                  {detailPost.readability_score != null && (
+                    <div className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-muted/20 px-2 py-1.5">
+                      <BookOpen className="w-3 h-3 text-emerald-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground leading-none">Leitura</p>
+                        <p className="text-xs font-semibold text-foreground">{Number(detailPost.readability_score).toFixed(0)}/100</p>
+                      </div>
+                    </div>
+                  )}
+                  {detailPost.originality_score != null && (
+                    <div className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-muted/20 px-2 py-1.5">
+                      <Fingerprint className="w-3 h-3 text-violet-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground leading-none">Original.</p>
+                        <p className="text-xs font-semibold text-foreground">{Number(detailPost.originality_score).toFixed(0)}/100</p>
+                      </div>
+                    </div>
+                  )}
+                  {detailPost.primary_keyword && (
+                    <div className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-muted/20 px-2 py-1.5">
+                      <Target className="w-3 h-3 text-amber-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground leading-none">Keyword</p>
+                        <p className="text-xs font-semibold text-foreground truncate">{detailPost.primary_keyword}</p>
+                      </div>
+                    </div>
+                  )}
+                  {detailPost.search_intent && (
+                    <div className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-muted/20 px-2 py-1.5">
+                      <BarChart3 className="w-3 h-3 text-sky-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground leading-none">Intenção</p>
+                        <p className="text-xs font-semibold text-foreground capitalize">{detailPost.search_intent}</p>
+                      </div>
+                    </div>
+                  )}
+                  {detailPost.internal_links && (detailPost.internal_links as string[]).length > 0 && (
+                    <div className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-muted/20 px-2 py-1.5">
+                      <Link2 className="w-3 h-3 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground leading-none">Links int.</p>
+                        <p className="text-xs font-semibold text-foreground">{(detailPost.internal_links as string[]).length}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Meta description */}
+                {detailPost.meta_description && (
+                  <p className="mt-2 rounded-lg border border-border/40 bg-muted/15 px-3 py-2 text-[11px] text-muted-foreground italic leading-relaxed">
+                    <span className="font-semibold not-italic text-foreground/70">Meta: </span>
+                    {detailPost.meta_description}
+                  </p>
+                )}
+
+                {/* Secondary keywords */}
+                {detailPost.secondary_keywords && (detailPost.secondary_keywords as string[]).length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {(detailPost.secondary_keywords as string[]).map((kw) => (
+                      <Badge key={kw} variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/5">
+                        {kw}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </DialogHeader>
 
               <Tabs defaultValue="preview" className="flex flex-1 flex-col overflow-hidden">
@@ -354,7 +432,7 @@ export function CuratedPostsReview({
                   </TabsTrigger>
                 </TabsList>
 
-                <div className="flex-1 overflow-y-auto bg-muted/10 px-6 py-5">
+                <div className="flex-1 overflow-y-auto bg-muted/10 px-6 py-5" style={{ maxHeight: 'calc(88vh - 280px)' }}>
                   <TabsContent value="preview" className="mt-0">
                     {editMode ? (
                       <div className="space-y-4">
@@ -379,10 +457,12 @@ export function CuratedPostsReview({
                         </div>
                       </div>
                     ) : detailPost.body_html ? (
-                      <RichContentPreview
-                        html={detailPost.body_html}
-                        variant="full"
-                      />
+                      <div className="overflow-y-auto rounded-xl border border-border/60 bg-background p-6">
+                        <RichContentPreview
+                          html={detailPost.body_html}
+                          variant="full"
+                        />
+                      </div>
                     ) : (
                       <div className="rounded-xl border border-border/60 bg-background p-6">
                         <p className="text-sm font-medium text-foreground">Sem conteúdo HTML formatado</p>
@@ -398,7 +478,7 @@ export function CuratedPostsReview({
 
                   <TabsContent value="source" className="mt-0">
                     {detailPost.body_markdown ? (
-                      <pre className="max-h-[58vh] overflow-auto whitespace-pre-wrap rounded-xl border border-border/60 bg-background p-4 font-mono text-sm leading-relaxed text-foreground/85">
+                      <pre className="overflow-auto whitespace-pre-wrap rounded-xl border border-border/60 bg-background p-4 font-mono text-sm leading-relaxed text-foreground/85">
                         {detailPost.body_markdown}
                       </pre>
                     ) : (

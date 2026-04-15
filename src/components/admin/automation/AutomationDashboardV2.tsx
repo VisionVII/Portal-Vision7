@@ -164,7 +164,7 @@ function PipelineRail({
   }>;
 }) {
   return (
-    <div className="grid gap-3 xl:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {stages.map((stage, index) => {
         const Icon = stage.icon;
         const toneClass = stage.tone === 'success'
@@ -212,7 +212,7 @@ function QueueBoard({
   }>;
 }) {
   return (
-    <div className="grid gap-3 xl:grid-cols-3">
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {sections.map((section) => {
         const toneClass = section.tone === 'success'
           ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
@@ -571,7 +571,7 @@ export function AutomationDashboardV2({
       </div>
 
       <Tabs value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
-        <TabsList className="h-auto gap-1 rounded-2xl border border-border/50 bg-muted/40 p-1.5">
+        <TabsList className="h-auto w-full gap-1 overflow-x-auto rounded-2xl border border-border/50 bg-muted/40 p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="pipeline" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Zap className="h-3.5 w-3.5" />Pipeline</TabsTrigger>
           <TabsTrigger value="automations" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Workflow className="h-3.5 w-3.5" />Automações</TabsTrigger>
           <TabsTrigger value="logs" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Clock className="h-3.5 w-3.5" />Logs</TabsTrigger>

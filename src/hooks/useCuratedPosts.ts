@@ -24,6 +24,24 @@ export interface CuratedPost {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  /* SEO fields (detail-only, may be undefined on list queries) */
+  seo_score?: number | null;
+  readability_score?: number | null;
+  originality_score?: number | null;
+  primary_keyword?: string | null;
+  secondary_keywords?: string[] | null;
+  search_intent?: string | null;
+  meta_description?: string | null;
+  internal_links?: string[] | null;
+  /* SEO fields (detail-only, may be undefined on list queries) */
+  seo_score?: number | null;
+  readability_score?: number | null;
+  originality_score?: number | null;
+  primary_keyword?: string | null;
+  secondary_keywords?: string[] | null;
+  search_intent?: string | null;
+  meta_description?: string | null;
+  internal_links?: string[] | null;
 }
 
 const QUERY_KEY = ['curated_posts'] as const;
