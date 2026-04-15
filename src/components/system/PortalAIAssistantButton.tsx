@@ -14,6 +14,7 @@ import { useCourses } from '@/hooks/useCourses';
 import { usePosts } from '@/hooks/usePosts';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useSkyInfo } from '@/hooks/useSkyInfo';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { supabase } from '@/integrations/supabase/client';
 import {
   buildPortalAssistantReply,
@@ -76,6 +77,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   const { data: posts = [] } = usePosts(false, isOpen);
   const { data: courses = [] } = useCourses(false, isOpen);
   const { data: categories = [] } = useCategories(isOpen);
+  const { data: siteSettings } = useSiteSettings();
   const {
     country,
     region,
@@ -531,7 +533,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
         {/* Chat header */}
         <div className="shrink-0 border-b border-border bg-gradient-to-r from-[#027ae3] to-[#035aa6] px-5 py-4 dark:from-[#027ae3] dark:to-[#013b73]">
           <div className="flex items-center min-h-[36px] pr-12">
-            <BrandLogo compact showTagline={false} className="[&_img]:h-8 [&_img]:max-w-[130px] sm:[&_img]:h-9 sm:[&_img]:max-w-[145px]" />
+            <BrandLogo siteName={siteSettings?.site_name} logoUrl={siteSettings?.logo_url} compact showTagline={false} className="[&_img]:h-8 [&_img]:max-w-[130px] sm:[&_img]:h-9 sm:[&_img]:max-w-[145px]" />
           </div>
         </div>
 

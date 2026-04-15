@@ -1,6 +1,7 @@
 import React from 'react';
 import BrandLogo from '@/components/system/BrandLogo';
 import ThemeToggle from '@/components/system/ThemeToggle';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface AuthShellProps {
   title: string;
@@ -11,6 +12,7 @@ interface AuthShellProps {
 }
 
 const AuthShell = ({ title, description, children, footer, note }: AuthShellProps) => {
+  const { data: siteSettings } = useSiteSettings();
   return (
     <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_rgba(2,132,199,0.22),_transparent_50%),radial-gradient(ellipse_at_bottom_right,_rgba(2,132,199,0.08),_transparent_40%),linear-gradient(180deg,_hsl(var(--background)),_hsl(var(--muted)))] dark:bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_28%),linear-gradient(180deg,_hsl(var(--neutral-950)),_hsl(var(--background)))]">
       <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.35)_50%,transparent_100%)] opacity-40 dark:opacity-10" />
@@ -24,7 +26,7 @@ const AuthShell = ({ title, description, children, footer, note }: AuthShellProp
           <div className="rounded-[2rem] border border-border/70 bg-card/95 p-7 shadow-[0_30px_80px_rgba(2,8,23,0.12)] backdrop-blur-xl sm:p-10 dark:shadow-[0_40px_90px_rgba(2,8,23,0.55)]">
             <div className="mb-8 text-center">
               <div className="mb-6 flex justify-center">
-                <BrandLogo showTagline={false} className="items-center" />
+                <BrandLogo siteName={siteSettings?.site_name} logoUrl={siteSettings?.logo_url} showTagline={false} className="items-center" />
               </div>
               <h1 className="mt-3 text-2xl font-headline font-bold tracking-tight text-foreground sm:text-3xl">
                 {title}
