@@ -326,6 +326,35 @@ export function NewsPipelineCard() {
     return map;
   }, [recentExecutions]);
 
+  const latestExecutionByStepKey = useMemo(() => {
+    const map = new Map<string, N8nExecution>();
+
+    for (const step of PIPELINE_STEPS) {
+      const matchingWorkflowIds = workflows
+        .filter((workflow) => workflow.name?.includes(step.nameMatch))
+        .map((workflow) => String(workflow.id));
+
+      if (matchingWorkflowIds.length === 0) continue;
+
+      let latestExecution: N8nExecution | undefined;
+      for (const exec of recentExecutions) {
+        const workflowId = exec.workflowId;
+        if (workflowId === undefined || workflowId === null) continue;
+        if (!matchingWorkflowIds.includes(String(workflowId))) continue;
+
+        if (!latestExecution || getExecutionTimestamp(exec) > getExecutionTimestamp(latestExecution)) {
+          latestExecution = exec;
+        }
+      }
+
+      if (latestExecution) {
+        map.set(step.key, latestExecution);
+      }
+    }
+
+    return map;
+  }, [recentExecutions, workflows]);
+
   const latestUniqueExecutions = useMemo(() => {
     return [...latestExecutionByWorkflowId.values()]
       .sort((a, b) => getExecutionTimestamp(b) - getExecutionTimestamp(a));
@@ -996,9 +1025,12 @@ export function NewsPipelineCard() {
               const isActive = wf.active === true;
               const isRunning = currentStep === step.key;
               const StepIcon = step.icon;
-              const wfExec = latestExecutionByWorkflowId.get(String(wf.id));
-              const hasExecutionSuccess = wfExec?.status === 'success';
-              const hasExecutionError = wfExec?.status === 'error';
+              const wfExec = latestExecutionByStepKey.get(step.key) ?? latestExecutionByWorkflowId.get(String(wf.id));
+              const workflowUpdatedAt = wf.updatedAt ? Date.parse(String(wf.updatedAt)) : 0;
+              const executionAt = wfExec ? getExecutionTimestamp(wfExec) : 0;
+              const isExecutionCurrent = !wfExec || workflowUpdatedAt <= 0 || executionAt >= workflowUpdatedAt;
+              const hasExecutionSuccess = wfExec?.status === 'success' && isExecutionCurrent;
+              const hasExecutionError = wfExec?.status === 'error' && isExecutionCurrent;
               const isFailed = failedSteps.has(step.key) || (!isRunning && hasExecutionError);
               const isCompleted = hasExecutionSuccess || (completedSteps.has(step.key) && !hasExecutionError);
 
@@ -1118,11 +1150,16 @@ export function NewsPipelineCard() {
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground">Última exec.</span>
                             <span className={`font-medium ${
-                              wfExec.status === 'success' ? 'text-primary' :
-                              wfExec.status === 'error' ? 'text-red-400' :
-                              wfExec.status === 'running' ? 'text-blue-500' : 'text-muted-foreground'
+                              hasExecutionSuccess ? 'text-primary' :
+                              hasExecutionError ? 'text-red-400' :
+                              wfExec.status === 'running' ? 'text-blue-500' :
+                              !isExecutionCurrent ? 'text-amber-400' : 'text-muted-foreground'
                             }`}>
-                              {wfExec.status === 'running' ? 'A correr' : wfExec.status}
+                              {wfExec.status === 'running'
+                                ? 'A correr'
+                                : !isExecutionCurrent
+                                  ? 'Aguardando nova execução'
+                                  : wfExec.status}
                             </span>
                           </div>
                         )}
