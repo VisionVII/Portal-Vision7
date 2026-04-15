@@ -291,17 +291,17 @@ export function AutomationDashboardV2({
     refreshingRef.current = true;
     try {
       const health = await checkN8nHealth();
-      if (health.status === 'connected') {
-        try {
-          const raw = await getWorkflows();
-          setWorkflows(deduplicateN8nWorkflows(raw));
+      try {
+        const raw = await getWorkflows();
+        setWorkflows(deduplicateN8nWorkflows(raw));
+        setIsConnected(true);
+      } catch {
+        if (health.status === 'connected') {
           setIsConnected(true);
-        } catch {
-          setIsConnected(true);
+        } else {
+          setIsConnected(false);
+          setWorkflows([]);
         }
-      } else {
-        setIsConnected(false);
-        setWorkflows([]);
       }
     } catch {
       setIsConnected(false);
