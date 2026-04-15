@@ -614,9 +614,9 @@ export function AutomationDashboardV2({
             icon={<Ic icon={Trash2} className="text-red-500 bg-red-500/10" />}
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground">
-                  Apenas dados processados
+                  Staging + Clusters órfãos + Curados pub/rej
                 </Badge>
               </div>
               <div className="flex items-center gap-2">

@@ -461,3 +461,55 @@ export function useUpdateCuratedPost() {
     },
   });
 }
+
+/* ── Delete rejected curated posts ── */
+export function useDeleteRejectedPosts() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase
+        .from('curated_posts')
+        .delete()
+        .eq('status', 'rejected')
+        .select('id');
+      if (error) throw new Error(error.message);
+      return data?.length ?? 0;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['pipeline_diagnostics'] });
+      toast({
+        title: count > 0 ? `${count} rejeitado(s) apagado(s)` : 'Nenhum rejeitado para apagar',
+      });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Erro ao apagar rejeitados', description: err.message, variant: 'destructive' });
+    },
+  });
+}
+
+/* ── Delete a single curated post ── */
+export function useDeleteCuratedPost() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('curated_posts')
+        .delete()
+        .eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['pipeline_diagnostics'] });
+      toast({ title: 'Post apagado' });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Erro ao apagar', description: err.message, variant: 'destructive' });
+    },
+  });
+}
