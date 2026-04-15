@@ -1,5 +1,4 @@
 const DEFAULT_KEEPALIVE_URL = 'https://n8n-vision7.onrender.com/healthz';
-const INVALID_KEEPALIVE_HOSTS = new Set(['portal-vision7.onrender.com', 'www.vision7.pt', 'vision7.pt']);
 
 type ServerlessResponse = {
   setHeader: (name: string, value: string) => void;
@@ -13,9 +12,7 @@ function resolveKeepAliveUrl() {
   const explicit = (process.env.N8N_KEEPALIVE_URL || '').trim();
   if (explicit) {
     try {
-      const parsed = new URL(explicit);
-      if (INVALID_KEEPALIVE_HOSTS.has(parsed.hostname)) return DEFAULT_KEEPALIVE_URL;
-      return parsed.toString().replace(/\/$/, '');
+      return new URL(explicit).toString().replace(/\/$/, '');
     } catch {
       return DEFAULT_KEEPALIVE_URL;
     }
@@ -25,13 +22,11 @@ function resolveKeepAliveUrl() {
   if (baseUrl) {
     try {
       const url = new URL(baseUrl);
-      if (INVALID_KEEPALIVE_HOSTS.has(url.hostname)) return DEFAULT_KEEPALIVE_URL;
-      if (url.pathname === '' || url.pathname === '/') {
-        url.pathname = '/healthz';
-        url.search = '';
-        url.hash = '';
-        return url.toString().replace(/\/$/, '');
-      }
+      const basePath = url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '');
+      url.pathname = `${basePath}/healthz`;
+      url.search = '';
+      url.hash = '';
+      return url.toString().replace(/\/$/, '');
     } catch {
       // Fall through to the default public health endpoint.
     }
