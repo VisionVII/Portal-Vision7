@@ -1,11 +1,14 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   LayoutGrid, Plus, Clock, Zap,
   PlayCircle, Settings2,
   Workflow, RefreshCw, Wrench,
   Layers3, ArrowRight, Activity, Radio, Sparkles,
+  Trash2, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -31,6 +34,7 @@ import { useN8nKeepAlive } from '@/hooks/useN8nKeepAlive';
 import { useCuratedPosts } from '@/hooks/useCuratedPosts';
 import { usePipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 import {
   checkN8nHealth,
@@ -58,6 +62,13 @@ interface AutomationDashboardV2Props {
 }
 
 type DashboardView = 'pipeline' | 'automations' | 'logs' | 'tools';
+
+/* ── Cleanup thresholds ── */
+const CLEANUP_OPTIONS = [
+  { label: '24 h', hours: 24 },
+  { label: '3 dias', hours: 72 },
+  { label: '7 dias', hours: 168 },
+] as const;
 
 /* ─── Collapsible Section ─── */
 function Section({
@@ -242,6 +253,7 @@ export function AutomationDashboardV2({
   showLabButton = true,
 }: AutomationDashboardV2Props) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   /* ── State ── */
   const [activeView, setActiveView] = useState<DashboardView>('pipeline');
@@ -250,6 +262,10 @@ export function AutomationDashboardV2({
   const [editingAutomation, setEditingAutomation] = useState<AutomationV2 | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<AutomationTemplate | null>(null);
   const [executionStatusFilter, setExecutionStatusFilter] = useState<ExecutionStatus | 'all'>('all');
+
+  /* ── Cleanup state ── */
+  const [cleanupHours, setCleanupHours] = useState(72);
+  const [cleaning, setCleaning] = useState(false);
 
   const [isConnected, setIsConnected] = useState(false);
   const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
@@ -436,6 +452,88 @@ export function AutomationDashboardV2({
   const handleUseTemplate = (tpl: AutomationTemplate) => { setSelectedTemplate(tpl); setEditingAutomation(null); setShowForm(true); };
   const handleCancel = () => { setShowForm(false); setEditingAutomation(null); setSelectedTemplate(null); };
 
+  /* ── Cleanup pipeline data ── */
+  const handleCleanup = async () => {
+    if (!confirm(`Remover dados do pipeline com mais de ${cleanupHours}h?\n\nInclui staging antigo (processado e não processado), clusters órfãos e curados publicados/rejeitados.`)) return;
+    setCleaning(true);
+    const cutoff = new Date(Date.now() - cleanupHours * 60 * 60 * 1000).toISOString();
+    try {
+      /* 1 ─ Delete ALL old staging (processed + stale unprocessed) */
+      const { data: stg, error: stgErr } = await supabase
+        .from('news_staging')
+        .delete()
+        .lt('collected_at', cutoff)
+        .select('id');
+      if (stgErr) throw stgErr;
+
+      /* 2 ─ Delete published/rejected curated posts older than cutoff */
+      const { data: staleCurated, error: curFetchErr } = await supabase
+        .from('curated_posts')
+        .select('id, cluster_id')
+        .in('status', ['published', 'rejected'])
+        .lt('created_at', cutoff);
+      if (curFetchErr) throw curFetchErr;
+
+      const curatedIds = staleCurated?.map((r) => r.id) ?? [];
+      let curatedCleaned = 0;
+      if (curatedIds.length > 0) {
+        const { data: cur, error: curDelErr } = await supabase
+          .from('curated_posts')
+          .delete()
+          .in('id', curatedIds)
+          .select('id');
+        if (curDelErr) throw curDelErr;
+        curatedCleaned = cur?.length ?? 0;
+      }
+
+      /* 3 ─ Delete orphan clusters (no active curated_posts referencing them) */
+      const { data: allOldClusters, error: clsFetchErr } = await supabase
+        .from('news_clusters')
+        .select('id')
+        .lt('created_at', cutoff);
+      if (clsFetchErr) throw clsFetchErr;
+
+      const oldClusterIds = (allOldClusters ?? []).map((r) => r.id);
+      let clustersDeleted = 0;
+      if (oldClusterIds.length > 0) {
+        const { data: protectedRefs } = await supabase
+          .from('curated_posts')
+          .select('cluster_id')
+          .in('cluster_id', oldClusterIds)
+          .in('status', ['draft', 'ready', 'pending-review', 'auto-draft']);
+        const protectedIds = new Set(
+          (protectedRefs ?? []).map((r) => r.cluster_id).filter((id): id is string => Boolean(id)),
+        );
+        const toDelete = oldClusterIds.filter((id) => !protectedIds.has(id));
+        if (toDelete.length > 0) {
+          const { data: cls, error: clsErr } = await supabase
+            .from('news_clusters')
+            .delete()
+            .in('id', toDelete)
+            .select('id');
+          if (clsErr) throw clsErr;
+          clustersDeleted = cls?.length ?? 0;
+        }
+      }
+
+      const stagingDeleted = stg?.length ?? 0;
+      const total = stagingDeleted + clustersDeleted + curatedCleaned;
+
+      /* Refresh pipeline data immediately */
+      void queryClient.invalidateQueries({ queryKey: ['pipeline_diagnostics'] });
+      void queryClient.invalidateQueries({ queryKey: ['curated_posts'] });
+
+      toast({
+        title: total > 0 ? `${total} registos removidos` : 'Nada para limpar',
+        description: `Staging: ${stagingDeleted} · Clusters: ${clustersDeleted} · Curados: ${curatedCleaned}`,
+      });
+    } catch (err) {
+      toast({ title: 'Erro na limpeza', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+    } finally {
+      setCleaning(false);
+    }
+  };
+
   return (
     <div className="space-y-6 rounded-3xl border border-border/40 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.08),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.08),transparent_25%)] p-4 sm:p-6">
       <div className="flex flex-col gap-4 rounded-2xl border border-border/50 bg-card/80 p-4 shadow-sm sm:p-5 lg:flex-row lg:items-center lg:justify-between">
@@ -507,6 +605,47 @@ export function AutomationDashboardV2({
             defaultExpanded={false}
           >
             <CuratedPostsReview />
+          </Section>
+
+          {/* ── Cleanup Actions ── */}
+          <Section
+            title="Limpeza inteligente do pipeline"
+            description="Remove staging antigo, clusters órfãos e curados já publicados/rejeitados. Dados em rascunho e prontos são preservados."
+            icon={<Ic icon={Trash2} className="text-red-500 bg-red-500/10" />}
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground">
+                  Apenas dados processados
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Mais antigos que:</span>
+                <div className="flex gap-1">
+                  {CLEANUP_OPTIONS.map((opt) => (
+                    <Button
+                      key={opt.hours}
+                      size="sm"
+                      variant={cleanupHours === opt.hours ? 'default' : 'outline'}
+                      className="h-7 px-2.5 text-xs"
+                      onClick={() => setCleanupHours(opt.hours)}
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-7 px-3 text-xs gap-1.5"
+                  disabled={cleaning}
+                  onClick={() => void handleCleanup()}
+                >
+                  {cleaning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                  Limpar
+                </Button>
+              </div>
+            </div>
           </Section>
         </div>
       )}

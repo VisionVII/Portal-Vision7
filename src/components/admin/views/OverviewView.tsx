@@ -8,10 +8,8 @@ import {
   Clock,
   Globe,
   LayoutTemplate,
-  Loader2,
   Plus,
   Sparkles,
-  Trash2,
   TrendingUp,
   Zap,
   Shield,
@@ -32,7 +30,6 @@ import { useCategories } from '@/hooks/useCategories';
 import { usePipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import type { AdminView } from '@/components/admin/dashboard-types';
 
 interface OverviewViewProps {
@@ -92,13 +89,6 @@ function getCountdownMs(lastIso: string | null | undefined, intervalMs: number):
   return nextRun - Date.now();
 }
 
-/* ── Cleanup thresholds ── */
-const CLEANUP_OPTIONS = [
-  { label: '24 h', hours: 24 },
-  { label: '3 dias', hours: 72 },
-  { label: '7 dias', hours: 168 },
-] as const;
-
 const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEdit, allowedViews }) => {
   const { data: posts, isLoading: postsLoading } = usePosts(true);
   const { data: categories = [] } = useCategories();
@@ -114,9 +104,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
     return () => clearInterval(id);
   }, []);
 
-  /* ── Cleanup state ── */
-  const [cleanupHours, setCleanupHours] = useState(72);
-  const [cleaning, setCleaning] = useState(false);
+
 
   const publishedPosts = useMemo(() => posts?.filter((post) => post.status === 'published') ?? [], [posts]);
   const draftPosts = useMemo(() => posts?.filter((post) => post.status === 'draft') ?? [], [posts]);
@@ -221,74 +209,6 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
   const handleResumeDraft = () => {
     if (latestDraft) onEdit(latestDraft);
-  };
-
-  /* ── Cleanup pipeline data ── */
-  const handleCleanup = async () => {
-    if (!confirm(`Remover dados processados do pipeline com mais de ${cleanupHours}h?`)) return;
-    setCleaning(true);
-    const cutoff = new Date(Date.now() - cleanupHours * 60 * 60 * 1000).toISOString();
-    try {
-      const { data: stg } = await supabase
-        .from('news_staging')
-        .delete()
-        .eq('processed', true)
-        .lt('collected_at', cutoff)
-        .select('id');
-
-      const { data: staleCurated } = await supabase
-        .from('curated_posts')
-        .select('id, cluster_id')
-        .in('status', ['published', 'rejected'])
-        .lt('created_at', cutoff);
-
-      const curatedIds = staleCurated?.map((r) => r.id) ?? [];
-      let curatedCleaned = 0;
-      if (curatedIds.length > 0) {
-        const { data: cur } = await supabase
-          .from('curated_posts')
-          .delete()
-          .in('id', curatedIds)
-          .select('id');
-        curatedCleaned = cur?.length ?? 0;
-      }
-
-      const candidateClusterIds = [...new Set(
-        (staleCurated ?? []).map((r) => r.cluster_id).filter((id): id is string => Boolean(id)),
-      )];
-      let clustersDeleted = 0;
-      if (candidateClusterIds.length > 0) {
-        const { data: protectedRefs } = await supabase
-          .from('curated_posts')
-          .select('cluster_id')
-          .in('cluster_id', candidateClusterIds)
-          .in('status', ['draft', 'ready']);
-        const protectedIds = new Set(
-          (protectedRefs ?? []).map((r) => r.cluster_id).filter((id): id is string => Boolean(id)),
-        );
-        const toDelete = candidateClusterIds.filter((id) => !protectedIds.has(id));
-        if (toDelete.length > 0) {
-          const { data: cls } = await supabase
-            .from('news_clusters')
-            .delete()
-            .in('id', toDelete)
-            .lt('created_at', cutoff)
-            .select('id');
-          clustersDeleted = cls?.length ?? 0;
-        }
-      }
-
-      const stagingDeleted = stg?.length ?? 0;
-      const total = stagingDeleted + clustersDeleted + curatedCleaned;
-      toast({
-        title: total > 0 ? `${total} registos removidos` : 'Nada para limpar',
-        description: `Staging: ${stagingDeleted} · Clusters: ${clustersDeleted} · Curados: ${curatedCleaned}`,
-      });
-    } catch (err) {
-      toast({ title: 'Erro na limpeza', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
-    } finally {
-      setCleaning(false);
-    }
   };
 
   return (
@@ -420,50 +340,6 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
           </CardContent>
         </Card>
       </section>
-
-      {/* ── Cleanup Actions ── */}
-      {pipelineIsActive && (
-        <section className="rounded-2xl border border-border/40 bg-card/80 p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <Trash2 className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-semibold text-foreground">Limpeza inteligente do pipeline</span>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground">
-                Apenas dados processados
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Mais antigos que:</span>
-              <div className="flex gap-1">
-                {CLEANUP_OPTIONS.map((opt) => (
-                  <Button
-                    key={opt.hours}
-                    size="sm"
-                    variant={cleanupHours === opt.hours ? 'default' : 'outline'}
-                    className="h-7 px-2.5 text-xs"
-                    onClick={() => setCleanupHours(opt.hours)}
-                  >
-                    {opt.label}
-                  </Button>
-                ))}
-              </div>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="h-7 px-3 text-xs gap-1.5"
-                disabled={cleaning}
-                onClick={() => void handleCleanup()}
-              >
-                {cleaning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                Limpar
-              </Button>
-            </div>
-          </div>
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            Remove staging processado, clusters órfãos e curados já publicados/rejeitados. Dados em rascunho e prontos são preservados.
-          </p>
-        </section>
-      )}
 
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Card className="border-border/40 bg-card/80 shadow-sm">
