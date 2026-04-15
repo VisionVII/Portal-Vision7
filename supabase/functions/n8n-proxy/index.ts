@@ -17,6 +17,86 @@ function resolveN8nBaseUrl() {
   }
 }
 
+function buildBaseUrlVariants(baseUrl: string): string[] {
+  const normalized = baseUrl.replace(/\/$/, '');
+  const variants = new Set<string>([normalized]);
+
+  try {
+    const parsed = new URL(normalized);
+    const basePath = parsed.pathname === '/' ? '' : parsed.pathname.replace(/\/$/, '');
+    const withN8n = new URL(parsed.toString());
+    withN8n.pathname = basePath.endsWith('/n8n')
+      ? basePath.replace(/\/n8n$/, '') || '/'
+      : `${basePath}/n8n`;
+    withN8n.search = '';
+    withN8n.hash = '';
+    variants.add(withN8n.toString().replace(/\/$/, ''));
+  } catch {
+    // Ignore malformed URLs and keep the normalized base only.
+  }
+
+  return [...variants];
+}
+
+function buildN8nUrl(baseUrl: string, requestPath: string, query?: Record<string, unknown>) {
+  const parsed = new URL(baseUrl);
+  const basePath = parsed.pathname === '/' ? '' : parsed.pathname.replace(/\/$/, '');
+  const normalizedPath = requestPath.startsWith('/') ? requestPath : `/${requestPath}`;
+  parsed.pathname = `${basePath}${normalizedPath}`;
+  parsed.search = '';
+  parsed.hash = '';
+
+  if (query && typeof query === 'object') {
+    for (const [key, value] of Object.entries(query)) {
+      if (value !== undefined && value !== null && value !== '') {
+        parsed.searchParams.set(key, String(value));
+      }
+    }
+  }
+
+  return parsed.toString();
+}
+
+function shouldRetryOnStatus(status: number): boolean {
+  return [404, 405, 501, 502, 503].includes(status);
+}
+
+async function fetchN8nWithFallback(
+  path: string,
+  options: {
+    method: string;
+    headers: Record<string, string>;
+    body?: string;
+    query?: Record<string, unknown>;
+    timeoutMs?: number;
+  },
+) {
+  const baseCandidates = buildBaseUrlVariants(N8N_BASE_URL);
+  let lastError = '';
+
+  for (const baseUrl of baseCandidates) {
+    const url = buildN8nUrl(baseUrl, path, options.query);
+    try {
+      const response = await fetch(url, {
+        method: options.method,
+        headers: options.headers,
+        ...(options.body ? { body: options.body } : {}),
+        signal: AbortSignal.timeout(options.timeoutMs ?? 60_000),
+      });
+
+      if (response.ok || !shouldRetryOnStatus(response.status)) {
+        return response;
+      }
+
+      lastError = `[${response.status}] ${await response.clone().text().catch(() => '')}`.trim();
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : 'Falha de rede ao contactar o n8n';
+    }
+  }
+
+  throw new Error(lastError || 'n8n unreachable');
+}
+
 const N8N_BASE_URL = resolveN8nBaseUrl();
 const N8N_API_KEY = Deno.env.get('N8N_API_KEY') ?? '';
 const N8N_CREDENTIALS_ENCRYPTION_KEY = Deno.env.get('N8N_CREDENTIALS_ENCRYPTION_KEY') ?? '';
@@ -294,10 +374,11 @@ Deno.serve(async (req: Request) => {
     // ── Health check shortcut (path = "/health") ────────────────────────────
     if (parsed.path === '/health') {
       try {
-        const pingRes = await fetch(`${N8N_BASE_URL}/api/v1/workflows?limit=1&excludePinnedData=true`, {
+        const pingRes = await fetchN8nWithFallback('/api/v1/workflows', {
           method: 'GET',
           headers: { 'X-N8N-API-KEY': effectiveN8nApiKey },
-          signal: AbortSignal.timeout(60000),
+          query: { limit: '1', excludePinnedData: 'true' },
+          timeoutMs: 60_000,
         });
 
         let detail = '';
@@ -308,25 +389,19 @@ Deno.serve(async (req: Request) => {
           } catch {
             try {
               detail = (await pingRes.clone().text()).slice(0, 180);
-            } catch {
-              detail = '';
-            }
-          }
-        }
-
-        return jsonResponse(
-          {
+          const requestBody = effectiveBody ? JSON.stringify(effectiveBody) : undefined;
             status: pingRes.ok ? 'connected' : 'error',
             httpStatus: pingRes.status,
             source: 'n8n-api',
-            ...(detail ? { detail } : {}),
+          const n8nResponse = await fetchN8nWithFallback(normalizedPath, {
           },
           200,
           cors,
         );
       } catch (error) {
-        const detail = error instanceof Error ? error.message : 'Falha de rede ao contactar o n8n';
-        return jsonResponse({ status: 'unreachable', source: 'n8n-api', detail }, 200, cors);
+            ...(requestBody ? { body: requestBody } : {}),
+            query,
+            timeoutMs: 60_000,
       }
     }
 
