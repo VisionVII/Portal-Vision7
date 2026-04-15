@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const AdminStatsCards = () => {
   const { data: posts, isLoading: postsLoading } = usePosts(true);
-  const { data: executions, isLoading: executionsLoading } = useAutomationExecutions({ pageSize: 100 });
+  const { executions, isLoading: executionsLoading } = useAutomationExecutions({ pageSize: 100 });
   const { data: diagnostics, isLoading: diagnosticsLoading } = usePipelineDiagnostics();
 
   const isLoading = postsLoading || executionsLoading || diagnosticsLoading;
