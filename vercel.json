@@ -22,12 +22,6 @@
       ]
     }
   ],
-  "crons": [
-    {
-      "path": "/api/n8n-keepalive",
-      "schedule": "*/10 * * * *"
-    }
-  ],
   "rewrites": [
     {
       "source": "/post/(.*)",
