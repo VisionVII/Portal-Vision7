@@ -69,7 +69,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
   const { data: posts, isLoading: postsLoading } = usePosts(true);
   const { data: categories = [] } = useCategories();
   const { data: diagnostics, isLoading: diagnosticsLoading } = usePipelineDiagnostics();
-  const { data: executions = [], isLoading: executionsLoading } = useAutomationExecutions({ pageSize: 40 });
+  const { executions = [], isLoading: executionsLoading } = useAutomationExecutions({ pageSize: 40 });
   const [showEcosystem, setShowEcosystem] = useState(false);
 
   const publishedPosts = useMemo(() => posts?.filter((post) => post.status === 'published') ?? [], [posts]);
