@@ -1,5 +1,4 @@
 {
-  "$schema": "./templates/module_schema.json",
   "project": "Vision7 Portal",
   "version": "1.0.0",
   "last_updated": "2026-04-12",
