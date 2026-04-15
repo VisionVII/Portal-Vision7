@@ -110,7 +110,7 @@ const Header = () => {
       <div className="border-b border-border/30 bg-background">
         <div className="container mx-auto flex min-h-[72px] items-center justify-between gap-3 px-4 py-2.5 sm:min-h-[76px] sm:px-5 sm:py-3">
           <Link to="/" className="flex shrink-0 items-center py-0.5 transition-opacity hover:opacity-80">
-            <BrandLogo siteName={siteSettings?.site_name} showTagline={false} />
+            <BrandLogo siteName={siteSettings?.site_name} logoUrl={siteSettings?.logo_url} showTagline={false} />
           </Link>
 
           <div className="hidden shrink-0 items-center py-0.5 md:flex">
@@ -207,7 +207,7 @@ const Header = () => {
               <SheetContent side="right" className="flex w-[80vw] max-w-sm flex-col border-l border-border bg-background px-4">
                 <SheetHeader className="shrink-0 border-b border-border pb-3 text-left">
                   <SheetTitle className="sr-only">Menu Vision</SheetTitle>
-                  <BrandLogo compact showTagline={false} className="items-start" />
+                  <BrandLogo siteName={siteSettings?.site_name} logoUrl={siteSettings?.logo_url} compact showTagline={false} className="items-start" />
                 </SheetHeader>
 
                 <div className="flex flex-1 flex-col gap-3 overflow-hidden pt-3">
