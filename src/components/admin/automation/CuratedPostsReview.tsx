@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import {
   CheckCircle2, XCircle, Eye, ArrowUpRight, Sparkles, Filter,
   ChevronDown, Star, Code, FileText, Pencil, Save, RotateCcw, Tag,
-  Search, BarChart3, BookOpen, Fingerprint, Link2, Target,
+  Search, BarChart3, BookOpen, Fingerprint, Link2, Target, Trash2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,8 @@ import {
   useRejectCuratedPost,
   useUpdateCuratedStatus,
   useUpdateCuratedPost,
+  useDeleteRejectedPosts,
+  useDeleteCuratedPost,
 } from '@/hooks/useCuratedPosts';
 import type { CuratedPost } from '@/hooks/useCuratedPosts';
 import { useCategories } from '@/hooks/useCategories';
@@ -72,6 +74,8 @@ export function CuratedPostsReview({
   const rejectMutation = useRejectCuratedPost();
   const statusMutation = useUpdateCuratedStatus();
   const updateMutation = useUpdateCuratedPost();
+  const deleteRejectedMutation = useDeleteRejectedPosts();
+  const deleteMutation = useDeleteCuratedPost();
   const { data: categories } = useCategories();
 
   const [previewPost, setPreviewPost] = useState<CuratedPost | null>(null);
@@ -181,7 +185,7 @@ export function CuratedPostsReview({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
           <Sparkles className="w-5 h-5 text-primary-500" />
           <h3 className="text-base font-semibold text-foreground">Artigos Curados pela IA</h3>
@@ -189,22 +193,40 @@ export function CuratedPostsReview({
             {posts?.length ?? 0}
           </Badge>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-3">
-              <Filter className="w-3.5 h-3.5" />
-              {activeFilter?.label}
-              <ChevronDown className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-2">
+          {(statusFilter === 'rejected' || statusFilter === '') && (posts?.some((p) => p.status === 'rejected')) && (
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-8 text-xs gap-1.5 px-3"
+              disabled={deleteRejectedMutation.isPending}
+              onClick={() => {
+                if (confirm('Apagar permanentemente TODOS os posts rejeitados?')) {
+                  deleteRejectedMutation.mutate();
+                }
+              }}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Apagar rejeitados
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {filterOptions.map((opt) => (
-              <DropdownMenuItem key={opt.value} onClick={() => setStatusFilter(opt.value)}>
-                {opt.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-3">
+                <Filter className="w-3.5 h-3.5" />
+                {activeFilter?.label}
+                <ChevronDown className="w-3.5 h-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {filterOptions.map((opt) => (
+                <DropdownMenuItem key={opt.value} onClick={() => setStatusFilter(opt.value)}>
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Posts list */}
@@ -275,6 +297,22 @@ export function CuratedPostsReview({
                         onClick={() => handleReject(post.id)}
                       >
                         <XCircle className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {post.status === 'rejected' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => {
+                          if (confirm('Apagar este post permanentemente?')) {
+                            deleteMutation.mutate(post.id);
+                          }
+                        }}
+                        title="Apagar permanentemente"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
                     {/* Status change dropdown */}
