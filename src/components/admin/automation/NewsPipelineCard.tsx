@@ -70,7 +70,7 @@ const PIPELINE_STEPS: PipelineStep[] = [
     key: 'wf03',
     label: 'IA Reescrita',
     shortLabel: 'IA',
-    description: 'Geração de artigos por IA',
+    description: 'Geração de artigos por IA + notificação email',
     icon: Sparkles,
     nameMatch: 'WF-03',
     delayAfterMs: 0,
