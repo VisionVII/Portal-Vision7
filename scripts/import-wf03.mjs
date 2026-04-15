@@ -28,9 +28,30 @@ const WF_JSON_PATH = resolve(__dirname, '../infra/n8n/workflows/WF-03-IA-Reescri
 const SUPABASE_URL = 'https://xhpfxvoonpclonjyfimt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhocGZ4dm9vbnBjbG9uanlmaW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDE0NTQsImV4cCI6MjA5MTQxNzQ1NH0.N-bUCtsHz9bqcqa5QmoRlrOy7Vhxn0uhxRvRqaL1yPc';
 const EDGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/n8n-proxy`;
-const N8N_DIRECT_URL = 'https://n8n-vision7.onrender.com';
+const N8N_DIRECT_URL = (process.env.N8N_BASE_URL || process.env.N8N_DIRECT_URL || 'https://n8n-vision7.onrender.com').replace(/\/$/, '');
 
 const TARGET_WF_ID = '4ko3mYzK15Ioi7Vo';
+
+function getWorkflowTimestamp(workflow) {
+  const raw = workflow?.updatedAt || workflow?.createdAt || '';
+  const parsed = raw ? Date.parse(raw) : Number.NaN;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function pickPreferredWorkflow(workflows) {
+  const exact = workflows.find((workflow) => workflow.id === TARGET_WF_ID);
+  if (exact) return exact;
+
+  const matches = workflows.filter((workflow) => String(workflow.name ?? '').includes('WF-03'));
+  if (matches.length === 0) return null;
+  if (matches.length === 1) return matches[0];
+
+  return [...matches].sort((a, b) => {
+    const activeDelta = Number(b.active === true) - Number(a.active === true);
+    if (activeDelta !== 0) return activeDelta;
+    return getWorkflowTimestamp(b) - getWorkflowTimestamp(a);
+  })[0];
+}
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 async function login(email, password) {
@@ -133,14 +154,20 @@ async function main() {
   console.log('🔍 Procurando WF-03 no n8n...');
   const wfList = await api.get('/api/v1/workflows?excludePinnedData=true');
   const workflows = Array.isArray(wfList) ? wfList : (wfList?.data ?? []);
-  const existing = workflows.find(
-    (w) => w.id === TARGET_WF_ID || w.name?.includes('WF-03'),
-  );
+  const existing = pickPreferredWorkflow(workflows);
 
   if (!existing) {
     console.error('❌ WF-03 não encontrado no n8n. Workflows disponíveis:');
     workflows.forEach((w) => console.log(`  - ${w.id}: ${w.name}`));
     process.exit(1);
+  }
+
+  const duplicates = workflows.filter((workflow) => String(workflow.name ?? '').includes('WF-03'));
+  if (duplicates.length > 1) {
+    console.log('ℹ️ Múltiplas cópias WF-03 encontradas; usando a preferida:');
+    duplicates.forEach((workflow) => {
+      console.log(`  - ${workflow.id}: ${workflow.name} active=${workflow.active} updatedAt=${workflow.updatedAt ?? '(n/a)'}`);
+    });
   }
 
   console.log(`✓ Encontrado: id=${existing.id} name="${existing.name}" active=${existing.active}`);
