@@ -22,6 +22,14 @@
       ]
     },
     {
+      "id": "fetch_hf_token",
+      "name": "Fetch HF Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1200,
+        200
+      ],
       "parameters": {
         "method": "POST",
         "url": "={{ $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co' }}/functions/v1/get-pipeline-secret",
@@ -56,14 +64,6 @@
           "onError": "continueRegularOutput"
         }
       },
-      "id": "fetch_hf_token",
-      "name": "Fetch HF Token",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -1200,
-        200
-      ],
       "alwaysOutputData": true
     },
     {
@@ -335,18 +335,29 @@
         "url": "https://api.resend.com/emails",
         "authentication": "none",
         "sendHeaders": true,
+        "url": "={{ $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co' }}/functions/v1/send-email",
+        "authentication": "none",
+        "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY || '' }}"
+            },
+            {
               "name": "Authorization",
-              "value": "={{ 'Bearer ' + ($env.RESEND_API_KEY || '') }}"
+              "value": "={{ 'Bearer ' + ($env.SUPABASE_SERVICE_ROLE_KEY || '') }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
             }
           ]
         },
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={\n  \"from\": \"Vision VII <noreply@vision-portal.pt>\",\n  \"to\": [\"visionvidevgrid@proton.me\"],\n  \"subject\": \"[WF-03] Execução concluída — {{ $now.format('dd/MM/yyyy HH:mm') }}\",\n  \"html\": \"<h2>✅ WF-03 Pipeline IA — Resumo da Execução</h2><p><strong>Data/hora:</strong> {{ $now.format('dd/MM/yyyy HH:mm') }} (UTC)</p><p><strong>Posts processados:</strong> {{ $input.all().length }}</p><ul>{{ $input.all().map(item => '<li><strong>' + (item.json.titulo || item.json.title || 'sem título') + '</strong> — score: ' + (item.json.seo_score || item.json.audit_score || 'n/a') + '</li>').join('') }}</ul><hr><p style=\\\"color:#888;font-size:12px\\\">Portal Vision VII • Workflow automático</p>\"\n}",
+        "jsonBody": "={\n  \"to\": \"visionvidevgrid@proton.me\",\n  \"subject\": \"[WF-03] Execução concluída — {{ $now.format('dd/MM/yyyy HH:mm') }}\",\n  \"html\": \"<h2>✅ WF-03 Pipeline IA — Resumo da Execução</h2><p><strong>Data/hora:</strong> {{ $now.format('dd/MM/yyyy HH:mm') }} (UTC)</p><p><strong>Posts processados:</strong> {{ $input.all().length }}</p><ul>{{ $input.all().map(item => '<li><strong>' + (item.json.titulo || item.json.title || 'sem título') + '</strong> — score: ' + (item.json.seo_score || item.json.audit_score || 'n/a') + '</li>').join('') }}</ul><hr><p style=\\\"color:#888;font-size:12px\\\">Portal Vision VII • Workflow automático</p>\",\n  \"template\": \"wf03-summary\"\n}",
         "options": {
           "alwaysOutputData": true,
           "onError": "continueRegularOutput"
