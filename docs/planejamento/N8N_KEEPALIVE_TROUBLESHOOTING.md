@@ -18,6 +18,24 @@
 [KeepAlive] ✓ n8n responded OK
 ```
 
+### 1.1 **Keep-Alive 24/7 em Produção** (`api/n8n-keepalive.ts` + `vercel.json`)
+Para evitar dependência exclusiva da dashboard aberta, o portal agora pode pingar o n8n por cron server-side a cada 10 minutos.
+
+**Como funciona:**
+- Vercel Cron chama `/api/n8n-keepalive`
+- A rota faz `GET` em `N8N_KEEPALIVE_URL`
+- O alvo recomendado é `https://n8n-vision7.onrender.com/healthz`
+
+**Variável necessária no Vercel:**
+```bash
+N8N_KEEPALIVE_URL=https://n8n-vision7.onrender.com/healthz
+```
+
+**Resultado esperado:**
+- O n8n recebe tráfego regular mesmo sem ninguém abrir a dashboard
+- O Render free tier tende a não entrar em sleep por inatividade
+- O toggle do browser continua útil como reforço manual, mas não é mais a única camada
+
 ### 2. **Dashboard Polling** (`src/components/admin/automation/AutomationDashboardV2.tsx`)
 **Antes:** Polling agressivo a cada 30s — causava timeouts em cascata
 **Agora:** **Polling adaptativo:**
@@ -229,10 +247,11 @@ Se retornar `403 Forbidden` → API key inválida ❌
 
 ## 🚀 Próximos Passos (se tudo funcional)
 
-1. **Deixar Keep-Alive ligado 24/7** (persiste via localStorage)
-2. **Monitoring:** Verificar console 1x por dia para garantir que pings funcionam
-3. **Render logs:** Se n8n suspender mesmo com pings → investigar Render Free Tier limits
-4. **Upgrade Render:** Se precisar de uptime garantido, considerar **Render Starter Plan** ($7/mês)
+1. **Manter o cron ativo em Vercel** para ping server-side contínuo.
+2. **Deixar Keep-Alive ligado 24/7** na dashboard quando estiver online, como camada adicional.
+3. **Monitoring:** Verificar console 1x por dia para garantir que pings funcionam.
+4. **Render logs:** Se n8n suspender mesmo com pings → investigar Render Free Tier limits.
+5. **Upgrade Render:** Se precisar de uptime garantido com SLA real, considerar **Render Starter Plan** ($7/mês).
 
 ---
 

@@ -54,7 +54,7 @@ interface ExecutionFilters {
 export function useAutomationExecutions(filters: ExecutionFilters = {}) {
   const { automationId, status, dateFrom, dateTo, page = 1, pageSize = 30 } = filters;
 
-  const queryKey = ['automation_executions', automationId ?? 'all', status ?? 'all', dateFrom, dateTo, page];
+  const queryKey = ['automation_executions', automationId ?? 'all', status ?? 'all', dateFrom, dateTo, page, pageSize];
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey,
