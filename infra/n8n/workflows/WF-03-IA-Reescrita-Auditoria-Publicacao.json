@@ -174,7 +174,7 @@
             },
             {
               "name": "duplicate_fingerprint",
-              "value": "=eq.{{ $json.fingerprint }}"
+              "value": "={{ 'eq.' + $json.fingerprint }}"
             },
             {
               "name": "limit",
