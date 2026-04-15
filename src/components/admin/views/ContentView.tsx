@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Sparkles, FileText, FolderOpen, Trash2, LayoutList } from 'lucide-react';
+import { Plus, Sparkles, FolderOpen, Trash2, LayoutList, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import PostForm from '@/components/admin/PostForm';
 import PostsTable from '@/components/admin/PostsTable';
 import { Post, usePosts } from '@/hooks/usePosts';
@@ -34,6 +35,8 @@ const ContentView: React.FC<ContentViewProps> = ({
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'posts' | 'curated' | 'categories'>('posts');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
 
   const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);
   const draftPosts = useMemo(() => posts?.filter((p) => p.status === 'draft') ?? [], [posts]);
@@ -60,20 +63,44 @@ const ContentView: React.FC<ContentViewProps> = ({
   return (
     <div className="space-y-5">
       {/* ── Top bar ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button onClick={onNewPost} className="gap-2 rounded-xl shadow-sm">
-            <Plus className="h-4 w-4" />
-            Novo post
-          </Button>
-          <div className="flex gap-2 text-xs text-muted-foreground">
-            <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-600 dark:text-emerald-400">{publishedPosts.length} publicados</span>
-            <span className="rounded-full bg-amber-500/10 px-2.5 py-1 font-medium text-amber-600 dark:text-amber-400">{draftPosts.length} rascunhos</span>
-            {curatedStats && curatedStats.ready > 0 && (
-              <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 font-medium text-cyan-600 dark:text-cyan-400">{curatedStats.ready} curados prontos</span>
-            )}
+      <div className="rounded-3xl border border-border/40 bg-card/80 p-4 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Buscar posts por título ou categoria..."
+              className="h-11 rounded-2xl pl-9"
+            />
           </div>
+
+          <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-muted/30 p-1">
+            {(['all', 'published', 'draft'] as const).map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setStatusFilter(status)}
+                className={`rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${statusFilter === status ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/80 hover:text-foreground'}`}
+              >
+                {status === 'all' ? 'Todos' : status === 'published' ? 'Publicados' : 'Rascunhos'}
+              </button>
+            ))}
+          </div>
+
+          <Button onClick={onNewPost} className="h-11 gap-2 rounded-2xl px-4 shadow-sm lg:min-w-[160px]">
+            <Plus className="h-4 w-4" />
+            Novo Post
+          </Button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+        <span className="rounded-full bg-muted px-2.5 py-1 font-medium">{publishedPosts.length} publicados</span>
+        <span className="rounded-full bg-amber-500/10 px-2.5 py-1 font-medium text-amber-600 dark:text-amber-400">{draftPosts.length} rascunhos</span>
+        {curatedStats && curatedStats.ready > 0 && (
+          <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 font-medium text-cyan-600 dark:text-cyan-400">{curatedStats.ready} curados prontos</span>
+        )}
       </div>
 
       {/* ── PostForm inline when open ── */}
@@ -106,7 +133,13 @@ const ContentView: React.FC<ContentViewProps> = ({
 
         {/* Posts tab */}
         <TabsContent value="posts" className="mt-4">
-          <PostsTable posts={posts} isLoading={postsLoading} onEdit={onEdit} />
+          <PostsTable
+            posts={posts}
+            isLoading={postsLoading}
+            onEdit={onEdit}
+            searchQuery={searchQuery}
+            statusFilter={statusFilter}
+          />
         </TabsContent>
 
         {/* Curated IA tab */}

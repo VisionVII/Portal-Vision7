@@ -4,7 +4,23 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-const N8N_BASE_URL = (Deno.env.get('N8N_BASE_URL') ?? '').replace(/\/$/, '');
+const DEFAULT_N8N_BASE_URL = 'https://n8n-vision7.onrender.com';
+const INVALID_N8N_HOSTS = new Set(['portal-vision7.onrender.com', 'www.vision7.pt', 'vision7.pt']);
+
+function resolveN8nBaseUrl() {
+  const configured = (Deno.env.get('N8N_BASE_URL') ?? '').trim();
+  if (!configured) return DEFAULT_N8N_BASE_URL;
+
+  try {
+    const parsed = new URL(configured);
+    if (INVALID_N8N_HOSTS.has(parsed.hostname)) return DEFAULT_N8N_BASE_URL;
+    return parsed.toString().replace(/\/$/, '');
+  } catch {
+    return DEFAULT_N8N_BASE_URL;
+  }
+}
+
+const N8N_BASE_URL = resolveN8nBaseUrl();
 const N8N_API_KEY = Deno.env.get('N8N_API_KEY') ?? '';
 const N8N_CREDENTIALS_ENCRYPTION_KEY = Deno.env.get('N8N_CREDENTIALS_ENCRYPTION_KEY') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
