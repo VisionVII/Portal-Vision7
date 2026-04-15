@@ -416,7 +416,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         </button>
         {showEcosystem && (
           <div className="border-t border-border/30 p-5">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-3 lg:grid-cols-6">
               {[
                 { label: 'Publicados', value: publishedPosts.length, color: 'text-emerald-600 dark:text-emerald-400' },
                 { label: 'Rascunhos', value: draftPosts.length, color: 'text-amber-500' },

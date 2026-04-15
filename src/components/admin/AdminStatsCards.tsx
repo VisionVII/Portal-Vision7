@@ -11,7 +11,7 @@ const AdminStatsCards = () => {
     return (
       <div className="space-y-4">
         <Skeleton className="h-28 w-full rounded-2xl" />
-        <div className="flex gap-3 overflow-hidden">
+        <div className="flex gap-3 overflow-x-auto">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-20 min-w-[140px] flex-1 rounded-xl" />
           ))}

@@ -278,11 +278,11 @@ const Post = () => {
       <article id="post-top" className="container mx-auto px-4 py-6 sm:py-8 lg:py-10">
         <div className="mx-auto max-w-7xl">
           {/* Share bar */}
-          <div className="mx-auto mb-6 flex max-w-4xl items-center justify-between">
+          <div className="mx-auto mb-6 flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">{post.excerpt}</p>
             {/* Share dropdown — uses direct platform links so WhatsApp/Telegram
                 render the full OG card (image + description) without extra text */}
-            <div ref={shareRef} className="relative ml-4 shrink-0">
+            <div ref={shareRef} className="relative shrink-0 sm:ml-4">
               <button
                 onClick={() => setShareOpen((o) => !o)}
                 className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"

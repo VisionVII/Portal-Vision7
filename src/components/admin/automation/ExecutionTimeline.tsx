@@ -117,7 +117,7 @@ export function ExecutionTimeline({
                 className="cursor-pointer"
                 onClick={() => setExpandedId(expandedId === exec.id ? null : exec.id)}
               >
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                   <span className="text-foreground font-medium">
                     {STATUS_LABEL[exec.status] ?? exec.status}
                   </span>
@@ -169,7 +169,7 @@ export function ExecutionTimeline({
                   )}
 
                   {/* Metadata */}
-                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <div className="grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                     {exec.n8nExecutionId && (
                       <span>n8n ID: <span className="font-mono text-foreground/80">{exec.n8nExecutionId}</span></span>
                     )}
