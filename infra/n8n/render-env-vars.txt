@@ -60,7 +60,7 @@ HF_API_TOKEN=SEU_HUGGINGFACE_TOKEN
 # ── Email (Resend) — notificações pós-execução dos workflows ─────────────────
 # Usado no WF-03 para enviar resumo de execução por email após cada pipeline
 # Obter em: https://resend.com/api-keys → Create API Key
-# O remetente (noreply@vision-portal.pt) deve estar verificado em resend.com/domains
+# O remetente (noreply@vision7.pt) deve estar verificado em resend.com/domains
 RESEND_API_KEY=SEU_RESEND_API_KEY
 
 # ── IMPORTANTE: n8n v1+ bloqueia $env por padrão ─────────────────────────────
