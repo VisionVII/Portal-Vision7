@@ -57,20 +57,19 @@ export const useNewsletterStats = () => {
   return useQuery({
     queryKey: ['newsletter-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('newsletter_subscribers')
-        .select('id, is_active');
-      
-      if (error) {
-        if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('useNewsletterStats supabase query error', error);
+      const [totalRes, activeRes] = await Promise.all([
+        supabase.from('newsletter_subscribers').select('id', { count: 'exact', head: true }),
+        supabase.from('newsletter_subscribers').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      ]);
+
+      if (totalRes.error) {
+        if (totalRes.error.code !== 'PGRST116' && !totalRes.error.message?.includes('404')) {
+          console.warn('useNewsletterStats supabase query error', totalRes.error);
         }
         return { total: 0, active: 0 };
       }
-      
-      const total = data?.length || 0;
-      const active = data?.filter(s => s.is_active).length || 0;
-      return { total, active };
+
+      return { total: totalRes.count ?? 0, active: activeRes.count ?? 0 };
     },
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),

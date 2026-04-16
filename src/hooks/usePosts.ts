@@ -99,6 +99,27 @@ const FULL_POST_SELECT = `
   ${POST_CATEGORY_SELECT}
 `;
 
+const ADMIN_LIST_SELECT = `
+  id,
+  title,
+  slug,
+  excerpt,
+  image_url,
+  banner_url,
+  category_id,
+  author_id,
+  author_name,
+  status,
+  featured,
+  read_time,
+  tags,
+  views,
+  published_at,
+  created_at,
+  updated_at,
+  ${POST_CATEGORY_SELECT}
+`;
+
 type SupabaseErrorLike = {
   message?: string;
   details?: string;
@@ -162,9 +183,9 @@ export const usePosts = (adminView = false, enabled = true) => {
     queryFn: async () => {
       let query = supabase
         .from('posts')
-        .select((adminView ? FULL_POST_SELECT : PUBLIC_POST_SELECT) as string)
+        .select((adminView ? ADMIN_LIST_SELECT : PUBLIC_POST_SELECT) as string)
         .order('created_at', { ascending: false })
-        .limit(adminView ? 500 : 50);
+        .limit(adminView ? 100 : 50);
 
       if (!adminView) {
         query = query.eq('status', 'published');

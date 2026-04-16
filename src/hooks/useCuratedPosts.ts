@@ -103,30 +103,39 @@ export function useCuratedPostDetail(id: string | null) {
   });
 }
 
-/* ── Stats ── */
+/* ── Stats (server-side counts to minimise egress) ── */
 export function useCuratedPostsStats() {
   return useQuery({
     queryKey: [...QUERY_KEY, 'stats'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('curated_posts')
-        .select('id, status, editorial_score');
+      const [totalRes, readyRes, draftRes, publishedRes, rejectedRes, scoreRes] = await Promise.all([
+        supabase.from('curated_posts').select('id', { count: 'exact', head: true }),
+        supabase.from('curated_posts').select('id', { count: 'exact', head: true }).eq('status', 'ready'),
+        supabase.from('curated_posts').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
+        supabase.from('curated_posts').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+        supabase.from('curated_posts').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+        supabase.from('curated_posts').select('editorial_score').limit(1000),
+      ]);
 
-      if (error) throw new Error(error.message);
+      const firstError = [totalRes, readyRes, draftRes, publishedRes, rejectedRes, scoreRes]
+        .map((r) => r.error).find(Boolean);
+      if (firstError) throw new Error(firstError.message);
 
-      const posts = (data ?? []) as Pick<CuratedPost, 'id' | 'status' | 'editorial_score'>[];
+      const scores = (scoreRes.data ?? []) as { editorial_score: number }[];
+      const avgScore = scores.length
+        ? +(scores.reduce((s, p) => s + Number(p.editorial_score), 0) / scores.length).toFixed(1)
+        : 0;
+
       return {
-        total: posts.length,
-        ready: posts.filter((p) => p.status === 'ready').length,
-        draft: posts.filter((p) => p.status === 'draft').length,
-        published: posts.filter((p) => p.status === 'published').length,
-        rejected: posts.filter((p) => p.status === 'rejected').length,
-        avgScore: posts.length
-          ? +(posts.reduce((s, p) => s + Number(p.editorial_score), 0) / posts.length).toFixed(1)
-          : 0,
+        total: totalRes.count ?? 0,
+        ready: readyRes.count ?? 0,
+        draft: draftRes.count ?? 0,
+        published: publishedRes.count ?? 0,
+        rejected: rejectedRes.count ?? 0,
+        avgScore,
       };
     },
-    staleTime: 30_000,
+    staleTime: 120_000,
   });
 }
 
@@ -297,7 +306,7 @@ export function useAutoPromoteCurated() {
 
 /* ── Auto-promote polling — runs in background while pipeline is active ── */
 const POLLING_STORAGE_KEY = 'pipeline:autoPromoteActive';
-const POLLING_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+const POLLING_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
 export function useAutoPromotePolling() {
   const queryClient = useQueryClient();
@@ -390,7 +399,7 @@ export function useAutoPromotePolling() {
     setIsActive(true);
     toast({
       title: 'Pipeline ativada',
-      description: 'Verificação automática a cada 2 min nesta sessão aberta. A promoção passa pela Edge Function central do portal.',
+      description: 'Verificação automática a cada 10 min nesta sessão aberta. A promoção passa pela Edge Function central do portal.',
     });
   }, [toast]);
 
