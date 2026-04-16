@@ -33,15 +33,6 @@ export interface CuratedPost {
   search_intent?: string | null;
   meta_description?: string | null;
   internal_links?: string[] | null;
-  /* SEO fields (detail-only, may be undefined on list queries) */
-  seo_score?: number | null;
-  readability_score?: number | null;
-  originality_score?: number | null;
-  primary_keyword?: string | null;
-  secondary_keywords?: string[] | null;
-  search_intent?: string | null;
-  meta_description?: string | null;
-  internal_links?: string[] | null;
 }
 
 const QUERY_KEY = ['curated_posts'] as const;
@@ -96,7 +87,7 @@ export function useCuratedPostDetail(id: string | null) {
         .maybeSingle();
 
       if (error) throw new Error(error.message);
-      return data as CuratedPost | null;
+      return data as unknown as CuratedPost | null;
     },
     enabled: !!id,
     staleTime: 120_000,
