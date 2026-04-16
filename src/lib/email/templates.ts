@@ -4,7 +4,7 @@ const BRAND_NAME = 'Vision VII';
 const BRAND_COLOR = '#0a64c0';
 const BRAND_SECONDARY = '#3b82f6';
 const BRAND_DARK = '#0a64c0';
-const BRAND_URL = typeof window !== 'undefined' ? window.location.origin : 'https://vision-portal.pt';
+const BRAND_URL = typeof window !== 'undefined' ? window.location.origin : 'https://www.vision7.pt';
 
 /* ------------------------------------------------------------------ */
 /*  Shared layout wrapper                                              */
