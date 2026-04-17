@@ -84,7 +84,14 @@ export default defineConfig(({ mode }) => ({
             id.includes("cmdk") ||
             id.includes("vaul") ||
             id.includes("sonner") ||
-            id.includes("input-otp")
+            id.includes("input-otp") ||
+            id.includes("lucide-react") ||
+            id.includes("react-remove-scroll") ||
+            id.includes("react-style-singleton") ||
+            id.includes("use-callback-ref") ||
+            id.includes("use-sidecar") ||
+            id.includes("react-day-picker") ||
+            id.includes("@floating-ui")
           ) {
             return "vendor-ui";
           }
