@@ -16,12 +16,17 @@ export interface AdminNotification {
 
 const QUERY_KEY = ['admin-notifications'];
 
+/** Track whether the table is unreachable so we stop polling */
+let tableUnavailable = false;
+
 export function useAdminNotifications(limit = 20) {
   const { user } = useAuth();
 
   const query = useQuery({
     queryKey: [...QUERY_KEY, user?.id],
     queryFn: async () => {
+      if (tableUnavailable) return [] as AdminNotification[];
+
       const { data, error } = await supabase
         .from('admin_notifications' as never)
         .select('*')
@@ -29,23 +34,25 @@ export function useAdminNotifications(limit = 20) {
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      // Table may not exist yet (migration not applied) — return empty gracefully
+      // Table may not exist yet or RLS denies access — return empty gracefully
       if (error) {
-        if (error.code === '42P01' || error.message?.includes('404') || (error as { status?: number }).status === 404) {
+        const status = (error as { status?: number }).status;
+        if (error.code === '42P01' || status === 404 || status === 403 || error.message?.includes('404')) {
+          tableUnavailable = true;
           return [] as AdminNotification[];
         }
         throw error;
       }
       return (data ?? []) as unknown as AdminNotification[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !tableUnavailable,
     staleTime: 60_000,
-    refetchInterval: 60_000,
+    refetchInterval: tableUnavailable ? false : 60_000,
     retry: (failureCount, error) => {
-      // Don't retry if table doesn't exist
+      // Don't retry if table doesn't exist or access is denied
       const msg = (error as { message?: string })?.message ?? '';
       const status = (error as { status?: number })?.status;
-      if (status === 404 || msg.includes('404') || msg.includes('42P01')) return false;
+      if (status === 404 || status === 403 || msg.includes('404') || msg.includes('42P01')) return false;
       return failureCount < 2;
     },
   });
