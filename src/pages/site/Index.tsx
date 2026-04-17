@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SectionPageHero from '@/components/content/SectionPageHero';
 import PostCard from '@/components/content/PostCard';
 import AdSpace from '@/components/content/AdSpace';
-import NewsletterForm from '@/components/content/NewsletterForm';
+const NewsletterForm = React.lazy(() => import('@/components/content/NewsletterForm'));
 import PostPagination from '@/components/content/PostPagination';
 import { usePosts } from '@/hooks/usePosts';
 import { useCategories } from '@/hooks/useCategories';
@@ -465,7 +465,9 @@ const Index = () => {
               <div id="newsletter" className="rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 p-6 text-white shadow-lg dark:from-primary-700 dark:to-secondary-700">
                 <h3 className="mb-2 text-xl font-bold">{newsletterLabel}</h3>
                 <p className="mb-5 text-sm text-white/90">Receba as principais notícias diretamente no seu email</p>
-                <NewsletterForm variant="sidebar" />
+                <Suspense fallback={<div className="h-10 animate-pulse rounded bg-white/20" />}>
+                  <NewsletterForm variant="sidebar" />
+                </Suspense>
               </div>
             )}
             </div>

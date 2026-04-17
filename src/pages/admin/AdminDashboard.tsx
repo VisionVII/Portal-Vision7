@@ -20,6 +20,7 @@ const AccessView = lazy(() => import('@/components/admin/views/AccessView'));
 const DeveloperView = lazy(() => import('@/components/admin/views/DeveloperView'));
 const SettingsView = lazy(() => import('@/components/admin/views/SettingsView'));
 const MediaGalleryView = lazy(() => import('@/components/admin/views/MediaGalleryView'));
+const AnalyticsView = lazy(() => import('@/components/admin/views/AnalyticsView'));
 
 const ViewSkeleton = () => (
   <div className="space-y-4">
@@ -182,6 +183,7 @@ const AdminDashboard = () => {
               <Panel view="audiocasts"><AudiocastsView /></Panel>
               <Panel view="courses"><CoursesView /></Panel>
               <Panel view="crm"><CrmView /></Panel>
+              <Panel view="analytics"><AnalyticsView /></Panel>
               <Panel view="access"><AccessView /></Panel>
               <Panel view="developer"><DeveloperView /></Panel>
               <Panel view="settings"><SettingsView /></Panel>

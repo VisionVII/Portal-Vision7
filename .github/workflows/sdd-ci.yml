@@ -43,6 +43,15 @@ jobs:
       - name: Production Build
         run: npm run build
 
+      - name: Bundle Size Report
+        run: |
+          echo "### Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          du -sh dist/assets/*.js | sort -rh | head -20 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total:** $(du -sh dist | cut -f1)" >> $GITHUB_STEP_SUMMARY
+
   sdd-validate:
     name: SDD Validation
     runs-on: ubuntu-latest

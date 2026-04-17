@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import NewsletterForm from '@/components/content/NewsletterForm';
+const NewsletterForm = React.lazy(() => import('@/components/content/NewsletterForm'));
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import BrandLogo from '@/components/system/BrandLogo';
 import { useAudioPlayerOptional } from '@/contexts/audio-player';
@@ -62,7 +62,9 @@ const Footer = () => {
             <p className="mb-4 text-sm text-muted-foreground">
               Receba as notícias mais importantes
             </p>
-            <NewsletterForm variant="footer" />
+            <Suspense fallback={<div className="h-10 animate-pulse rounded bg-muted/30" />}>
+              <NewsletterForm variant="footer" />
+            </Suspense>
           </div>
         </div>
 

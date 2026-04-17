@@ -186,6 +186,28 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
     await updateMutation.mutateAsync({ id, status: next });
   };
 
+  /* Bulk set status */
+  const bulkSetStatus = async (ids: string[], status: AutomationStatus) => {
+    const { error: err } = await supabase
+      .from('automations_v2')
+      .update({ status } as Record<string, Json>)
+      .in('id', ids);
+    if (err) throw new Error(err.message);
+    void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    toast({ title: `${ids.length} automações → ${status === 'active' ? 'ativadas' : 'pausadas'}` });
+  };
+
+  /* Bulk delete */
+  const bulkDelete = async (ids: string[]) => {
+    const { error: err } = await supabase
+      .from('automations_v2')
+      .delete()
+      .in('id', ids);
+    if (err) throw new Error(err.message);
+    void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    toast({ title: `${ids.length} automações removidas` });
+  };
+
   return {
     automations: data?.automations ?? [],
     total: data?.total ?? 0,
@@ -195,6 +217,8 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
     updateAutomation: updateMutation.mutateAsync,
     deleteAutomation: deleteMutation.mutateAsync,
     toggleStatus,
+    bulkSetStatus,
+    bulkDelete,
     isSaving: createMutation.isPending || updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };

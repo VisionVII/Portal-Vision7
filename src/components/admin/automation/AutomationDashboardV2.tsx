@@ -5,7 +5,7 @@ import {
   PlayCircle, Settings2,
   Workflow, RefreshCw, Wrench,
   Layers3, ArrowRight, Activity, Radio, Sparkles,
-  Trash2, Loader2,
+  Trash2, Loader2, CheckSquare, Pause, Play, Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ import { AutomationCard } from './AutomationCard';
 import { AutomationForm } from './AutomationForm';
 import { AutomationTemplateGallery } from './AutomationTemplateGallery';
 import { ExecutionTimeline } from './ExecutionTimeline';
+import { AuditLogViewer } from './AuditLogViewer';
 import { NewsPipelineCard } from './NewsPipelineCard';
 import { CuratedPostsReview } from './CuratedPostsReview';
 import { N8nWorkflowsPanel } from './N8nWorkflowsPanel';
@@ -263,6 +264,10 @@ export function AutomationDashboardV2({
   const [selectedTemplate, setSelectedTemplate] = useState<AutomationTemplate | null>(null);
   const [executionStatusFilter, setExecutionStatusFilter] = useState<ExecutionStatus | 'all'>('all');
 
+  /* ── Bulk selection state ── */
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+
   /* ── Cleanup state ── */
   const [cleanupHours, setCleanupHours] = useState(72);
   const [cleaning, setCleaning] = useState(false);
@@ -279,6 +284,8 @@ export function AutomationDashboardV2({
     updateAutomation,
     deleteAutomation,
     toggleStatus,
+    bulkSetStatus,
+    bulkDelete,
     isSaving,
   } = useAutomationsV2(activeCategory !== 'all' ? { category: activeCategory } : { pageSize: 100 });
 
@@ -451,6 +458,39 @@ export function AutomationDashboardV2({
 
   const handleUseTemplate = (tpl: AutomationTemplate) => { setSelectedTemplate(tpl); setEditingAutomation(null); setShowForm(true); };
   const handleCancel = () => { setShowForm(false); setEditingAutomation(null); setSelectedTemplate(null); };
+
+  /* ── Bulk selection helpers ── */
+  const toggleSelect = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === automations.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(automations.map((a) => a.id)));
+    }
+  };
+
+  const handleBulkAction = async (action: 'activate' | 'pause' | 'delete') => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (action === 'delete' && !confirm(`Remover ${ids.length} automações permanentemente?`)) return;
+    setBulkBusy(true);
+    try {
+      if (action === 'delete') await bulkDelete(ids);
+      else await bulkSetStatus(ids, action === 'activate' ? 'active' : 'paused');
+      setSelectedIds(new Set());
+    } catch (err) {
+      toast({ title: 'Erro na operação em massa', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   /* ── Cleanup pipeline data ── */
   const handleCleanup = async () => {
@@ -679,6 +719,16 @@ export function AutomationDashboardV2({
           </Section>
 
           <Section
+            title="Audit Log"
+            description="Histórico de alterações com diff de campos"
+            icon={<Ic icon={Shield} className="text-purple-500 bg-purple-500/10" />}
+            collapsible
+            defaultExpanded={false}
+          >
+            <AuditLogViewer />
+          </Section>
+
+          <Section
             title="Detalhe técnico"
             description="Configuração avançada do pipeline e logs internos"
             icon={<Ic icon={Settings2} className="text-muted-foreground bg-muted" />}
@@ -746,19 +796,46 @@ export function AutomationDashboardV2({
               <Button size="sm" onClick={() => setShowForm(true)}><Plus className="mr-1.5 h-3.5 w-3.5" />Criar Primeira Automação</Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {automations.map((auto) => (
-                <AutomationCard
-                  key={auto.id}
-                  automation={auto}
-                  onToggle={() => void toggleStatus(auto.id, auto.status)}
-                  onEdit={() => handleEdit(auto)}
-                  onDelete={() => void handleDelete(auto.id)}
-                  onExecute={() => void handleExecute(auto)}
-                  onClone={() => handleClone(auto)}
-                />
-              ))}
-            </div>
+            <>
+              {/* Bulk action bar */}
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/40 bg-muted/30 px-3 py-2">
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={toggleSelectAll}>
+                  <CheckSquare className="h-3.5 w-3.5" />
+                  {selectedIds.size === automations.length ? 'Desmarcar tudo' : 'Selecionar tudo'}
+                </Button>
+                {selectedIds.size > 0 && (
+                  <>
+                    <span className="text-xs text-muted-foreground">{selectedIds.size} selecionada{selectedIds.size > 1 ? 's' : ''}</span>
+                    <div className="flex-1" />
+                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1" disabled={bulkBusy} onClick={() => void handleBulkAction('activate')}>
+                      <Play className="h-3 w-3" />Ativar
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1" disabled={bulkBusy} onClick={() => void handleBulkAction('pause')}>
+                      <Pause className="h-3 w-3" />Pausar
+                    </Button>
+                    <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" disabled={bulkBusy} onClick={() => void handleBulkAction('delete')}>
+                      {bulkBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}Remover
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {automations.map((auto) => (
+                  <AutomationCard
+                    key={auto.id}
+                    automation={auto}
+                    selected={selectedIds.has(auto.id)}
+                    onSelect={(checked) => toggleSelect(auto.id, checked)}
+                    onToggle={() => void toggleStatus(auto.id, auto.status)}
+                    onEdit={() => handleEdit(auto)}
+                    onDelete={() => void handleDelete(auto.id)}
+                    onExecute={() => void handleExecute(auto)}
+                    onClone={() => handleClone(auto)}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
