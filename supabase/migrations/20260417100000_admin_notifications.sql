@@ -12,19 +12,21 @@ CREATE TABLE IF NOT EXISTS public.admin_notifications (
 );
 
 -- Index for quick unread counts
-CREATE INDEX idx_admin_notifications_user_unread
+CREATE INDEX IF NOT EXISTS idx_admin_notifications_user_unread
   ON public.admin_notifications (user_id, read, created_at DESC)
   WHERE read = false;
 
 ALTER TABLE public.admin_notifications ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see their own notifications
+DROP POLICY IF EXISTS "Users read own notifications" ON public.admin_notifications;
 CREATE POLICY "Users read own notifications"
   ON public.admin_notifications FOR SELECT
   TO authenticated
   USING (user_id = auth.uid());
 
 -- Users can update (mark read) their own notifications
+DROP POLICY IF EXISTS "Users update own notifications" ON public.admin_notifications;
 CREATE POLICY "Users update own notifications"
   ON public.admin_notifications FOR UPDATE
   TO authenticated
@@ -32,6 +34,7 @@ CREATE POLICY "Users update own notifications"
   WITH CHECK (user_id = auth.uid());
 
 -- Service role / edge functions can insert notifications for any user
+DROP POLICY IF EXISTS "Service role inserts notifications" ON public.admin_notifications;
 CREATE POLICY "Service role inserts notifications"
   ON public.admin_notifications FOR INSERT
   TO authenticated
@@ -41,6 +44,7 @@ CREATE POLICY "Service role inserts notifications"
   );
 
 -- Allow service_role full access (edge functions)
+DROP POLICY IF EXISTS "Service role full access" ON public.admin_notifications;
 CREATE POLICY "Service role full access"
   ON public.admin_notifications FOR ALL
   TO service_role
@@ -48,6 +52,7 @@ CREATE POLICY "Service role full access"
   WITH CHECK (true);
 
 -- Users can delete their own notifications
+DROP POLICY IF EXISTS "Users delete own notifications" ON public.admin_notifications;
 CREATE POLICY "Users delete own notifications"
   ON public.admin_notifications FOR DELETE
   TO authenticated
