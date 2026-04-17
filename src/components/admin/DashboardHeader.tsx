@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell, CheckCheck, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,33 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllRead();
   const [bellOpen, setBellOpen] = useState(false);
+  const prevUnreadRef = useRef<number | null>(null);
+
+  // Play a soft ping when new unread notifications arrive
+  useEffect(() => {
+    const prev = prevUnreadRef.current;
+    prevUnreadRef.current = unreadCount;
+    // Skip on first render (prev is null) — only play on actual increase
+    if (prev === null || unreadCount <= prev) return;
+
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);          // A5
+      osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.12); // E5
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.35);
+      osc.onended = () => ctx.close();
+    } catch {
+      // AudioContext not available (e.g. SSR or browser policy) — silent fail
+    }
+  }, [unreadCount]);
 
   const handleSignOut = async () => {
     await signOut();
