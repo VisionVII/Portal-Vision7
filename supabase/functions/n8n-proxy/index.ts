@@ -4,7 +4,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-const DEFAULT_N8N_BASE_URL = 'https://n8n-vision7.onrender.com';
+const DEFAULT_N8N_BASE_URL = 'https://portal-vision7.onrender.com';
 
 function resolveN8nBaseUrl() {
   const configured = (Deno.env.get('N8N_BASE_URL') ?? '').trim();

@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     proxy: {
       // Main n8n proxy - maps /n8n to Render root (n8n without N8N_PATH)
       "/n8n": {
-        target: "https://n8n-vision7.onrender.com",
+        target: "https://portal-vision7.onrender.com",
         changeOrigin: true,
         secure: true,
         ws: true,

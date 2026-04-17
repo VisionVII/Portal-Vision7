@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-const DEFAULT_N8N_LAB_URL = 'https://n8n-vision7.onrender.com';
+const DEFAULT_N8N_LAB_URL = 'https://portal-vision7.onrender.com';
 
 function resolveN8nLabBaseUrl() {
   const configured = String(import.meta.env.VITE_N8N_BASE_URL || '').trim();
@@ -139,7 +139,7 @@ const AdminAutomationLab: React.FC = () => {
 
             {internalReady === false && (
               <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">
-                A rota interna <strong>/n8n</strong> não está ativa neste ambiente. Configure o proxy/rewrite do host para <strong>/n8n -&gt; n8n-vision7.onrender.com</strong> e o <strong>N8N_PATH=/n8n</strong> no serviço n8n.
+                A rota interna <strong>/n8n</strong> não está ativa neste ambiente. Configure o proxy/rewrite do host para <strong>/n8n -&gt; portal-vision7.onrender.com</strong> e o <strong>N8N_PATH=/n8n</strong> no serviço n8n.
               </div>
             )}
 
