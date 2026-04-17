@@ -23,6 +23,22 @@
     },
     {
       "parameters": {
+        "path": "wf02-cluster",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook_trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "webhookId": "wf02-cluster",
+      "position": [
+        -960,
+        400
+      ]
+    },
+    {
+      "parameters": {
         "method": "GET",
         "url": "={{ ($env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/news_staging' }}",
         "sendHeaders": true,
@@ -190,6 +206,17 @@
   ],
   "connections": {
     "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Unprocessed Staging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
       "main": [
         [
           {
