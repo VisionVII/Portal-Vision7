@@ -67,6 +67,35 @@ function escapeHtml(value: string) {
     .replaceAll("'", '&#39;');
 }
 
+/* ── Rate Limiter (in-memory, per IP) ── */
+const RATE_WINDOW_MS = 300_000; // 5 minutes
+const RATE_MAX = 5; // max 5 requests / 5min / IP
+const rateBuckets = new Map();
+
+function getClientIp(req) {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? req.headers.get('x-real-ip')
+    ?? 'unknown';
+}
+
+function isRateLimited(key) {
+  const now = Date.now();
+  const bucket = rateBuckets.get(key);
+  if (!bucket || now > bucket.resetAt) {
+    rateBuckets.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  bucket.count++;
+  return bucket.count > RATE_MAX;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, b] of rateBuckets) {
+    if (now > b.resetAt) rateBuckets.delete(k);
+  }
+}, 120_000);
+
 const ROLE_LABELS: Record<string, string> = {
   editor: 'Editor',
   redator: 'Redator / Revisor',
@@ -124,6 +153,15 @@ Deno.serve(async (req: Request) => {
 
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Método não permitido.' }, 405, corsHeaders);
+  }
+
+  // Rate limit by IP
+  const clientIp = getClientIp(req);
+  if (isRateLimited(`team-access:${clientIp}`)) {
+    return jsonResponse({ error: 'Demasiados pedidos. Tente novamente mais tarde.' }, 429, {
+      ...corsHeaders,
+      'Retry-After': '300',
+    });
   }
 
   try {

@@ -27,9 +27,12 @@ interface AuthContextType {
   canAccessDashboard: boolean;
   isLoading: boolean;
   isAccessReady: boolean;
+  mfaRequired: boolean;
+  mfaFactorId: string | null;
   hasRole: (role: AppRole) => boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; isAdmin: boolean; canAccessDashboard: boolean; roles: AppRole[] }>;
   signOut: () => Promise<void>;
+  completeMfaChallenge: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +46,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAccessReady, setIsAccessReady] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
 
   // Guard: when signIn() is running, the listener should skip role loading
   const signingInRef = React.useRef(false);
@@ -58,6 +63,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
   const primaryRole = roles[0] ?? null;
   const hasRole = useCallback((role: AppRole) => roles.includes(role), [roles]);
+
+  const completeMfaChallenge = useCallback(() => {
+    setMfaRequired(false);
+    setMfaFactorId(null);
+  }, []);
+
+  /** Check if user has MFA enrolled but hasn't completed the challenge yet */
+  const checkMfaRequired = useCallback(async (userRoles: AppRole[]) => {
+    const isAdminRole = userRoles.some((r) => ['admin', 'super_admin'].includes(r));
+    if (!isAdminRole) {
+      setMfaRequired(false);
+      setMfaFactorId(null);
+      return;
+    }
+    try {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const verified = factors?.totp?.find((f) => f.status === 'verified');
+      if (!verified) {
+        // MFA not enrolled — not required until they set it up
+        setMfaRequired(false);
+        setMfaFactorId(null);
+        return;
+      }
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal?.currentLevel === 'aal1' && aal?.nextLevel === 'aal2') {
+        // Has MFA but hasn't verified this session yet
+        setMfaRequired(true);
+        setMfaFactorId(verified.id);
+      } else {
+        setMfaRequired(false);
+        setMfaFactorId(null);
+      }
+    } catch (err) {
+      console.warn('[Auth] MFA check failed:', err);
+      setMfaRequired(false);
+      setMfaFactorId(null);
+    }
+  }, []);
 
   // ── Load roles from user_roles table (direct fetch to avoid AbortController) ──
 
@@ -153,6 +196,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setRoles([]);
     setIsAdmin(false);
+    setMfaRequired(false);
+    setMfaFactorId(null);
     loadedRolesForRef.current = null;
   }, []);
 
@@ -217,7 +262,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             accessToken: sess.access_token,
             email: sess.user.email,
           });
-          if (isMounted) applyAccess(sess.user.id, access);
+          if (isMounted) {
+            applyAccess(sess.user.id, access);
+            await checkMfaRequired(access.roles);
+          }
         }
       } catch (err) {
         if (!isAbortError(err)) {
@@ -237,7 +285,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       window.clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
-  }, [getUserAccessProfile, applyAccess, clearAccess]);
+  }, [getUserAccessProfile, applyAccess, clearAccess, checkMfaRequired]);
 
   // ── Sign in (email + password) ────────────────────────────────────────────
 
@@ -311,6 +359,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(data.session);
       setUser(data.user);
       applyAccess(data.user.id, access);
+      await checkMfaRequired(access.roles);
     } catch (err) {
       console.error('[Auth] Error after sign-in:', err);
       access = { ...access, queryFailed: true };
@@ -335,7 +384,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     return { error: null, isAdmin: access.isAdmin, canAccessDashboard: access.canAccessDashboard, roles: access.roles };
-  }, [getUserAccessProfile, applyAccess, clearAccess]);
+  }, [getUserAccessProfile, applyAccess, clearAccess, checkMfaRequired]);
 
   // ── Sign out ──────────────────────────────────────────────────────────────
 
@@ -353,8 +402,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user, session, roles, primaryRole,
     isAdmin, isSuperAdmin, canAccessDashboard,
     isLoading, isAccessReady,
-    hasRole, signIn, signOut,
-  }), [user, session, roles, primaryRole, isAdmin, isSuperAdmin, canAccessDashboard, isLoading, isAccessReady, hasRole, signIn, signOut]);
+    mfaRequired, mfaFactorId,
+    hasRole, signIn, signOut, completeMfaChallenge,
+  }), [user, session, roles, primaryRole, isAdmin, isSuperAdmin, canAccessDashboard, isLoading, isAccessReady, mfaRequired, mfaFactorId, hasRole, signIn, signOut, completeMfaChallenge]);
 
   return (
     <AuthContext.Provider value={contextValue}>
