@@ -8,6 +8,7 @@ export type AdminView =
   | 'courses'
   | 'crm'
   | 'access'
+  | 'analytics'
   | 'developer'
   | 'settings';
 
@@ -20,6 +21,7 @@ export const VIEW_ACCESS_RULES: Record<AdminView, string[]> = {
   automations: ['super_admin', 'admin', 'editor'],
   courses: ['super_admin', 'admin', 'editor'],
   crm: ['super_admin', 'admin', 'editor', 'analyst'],
+  analytics: ['super_admin', 'admin', 'analyst'],
   access: ['super_admin', 'admin'],
   developer: ['super_admin', 'admin'],
   settings: ['super_admin', 'admin'],

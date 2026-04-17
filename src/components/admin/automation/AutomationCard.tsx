@@ -4,7 +4,9 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DryRunDialog } from './DryRunDialog';
 import { CATEGORY_META } from '@/types/automation';
 import type { AutomationV2 } from '@/types/automation';
 
@@ -27,6 +29,8 @@ interface AutomationCardProps {
   onDelete: () => void;
   onExecute: () => void;
   onClone: () => void;
+  selected?: boolean;
+  onSelect?: (checked: boolean) => void;
 }
 
 function formatRelative(iso: string | null): string {
@@ -47,6 +51,8 @@ export function AutomationCard({
   onDelete,
   onExecute,
   onClone,
+  selected,
+  onSelect,
 }: AutomationCardProps) {
   const meta = CATEGORY_META[automation.category];
   const CatIcon = ICON_MAP[meta.icon] ?? Cog;
@@ -54,10 +60,18 @@ export function AutomationCard({
   const StatusIcon = statusCfg.icon;
 
   return (
-    <div className="rounded-xl border border-border/40 bg-card p-4 transition-colors hover:border-border/70 group">
+    <div className={`rounded-xl border bg-card p-4 transition-colors hover:border-border/70 group ${selected ? 'border-primary/50 bg-primary/5' : 'border-border/40'}`}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
+          {onSelect && (
+            <Checkbox
+              checked={selected}
+              onCheckedChange={(v) => onSelect(v === true)}
+              className="shrink-0"
+              aria-label={`Selecionar ${automation.name}`}
+            />
+          )}
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/50">
             <CatIcon className="h-4 w-4 text-muted-foreground" />
           </div>
@@ -117,7 +131,7 @@ export function AutomationCard({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1.5 pt-3 border-t border-border/40">
+      <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-border/40">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-primary hover:text-primary/80" onClick={onExecute}>
@@ -149,6 +163,12 @@ export function AutomationCard({
             </Button>
           </TooltipTrigger>
           <TooltipContent>Clonar</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DryRunDialog automation={automation} />
+          </TooltipTrigger>
+          <TooltipContent>Dry-Run</TooltipContent>
         </Tooltip>
         <div className="flex-1" />
         <Tooltip>

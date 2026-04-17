@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { CalendarDays, Clock3, CloudSnow, Flame, MapPin, Menu, Sun, Thermometer, Wind } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,8 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useSkyInfo } from '@/hooks/useSkyInfo';
 import BrandLogo from '@/components/system/BrandLogo';
-import PortalAIAssistantButton from '@/components/system/PortalAIAssistantButton';
-import CalendarPopover from '@/components/system/CalendarPopover';
+const PortalAIAssistantButton = React.lazy(() => import('@/components/system/PortalAIAssistantButton'));
+const CalendarPopover = React.lazy(() => import('@/components/system/CalendarPopover'));
 import ThemeToggle from '@/components/system/ThemeToggle';
 
 const fallbackCategories = [
@@ -114,11 +114,15 @@ const Header = () => {
           </Link>
 
           <div className="hidden shrink-0 items-center py-0.5 md:flex">
-            <PortalAIAssistantButton />
+            <Suspense fallback={null}>
+              <PortalAIAssistantButton />
+            </Suspense>
           </div>
 
           <div className="flex shrink-0 items-center gap-2 py-0.5 md:hidden">
-            <PortalAIAssistantButton compact />
+            <Suspense fallback={null}>
+              <PortalAIAssistantButton compact />
+            </Suspense>
           </div>
         </div>
       </div>
@@ -149,10 +153,12 @@ const Header = () => {
             {/* ─── Context toolbar (desktop) - professional minimal ─── */}
             <div className="hidden shrink-0 items-center gap-2 lg:flex">
               {/* Calendar (opens popup) */}
-              <CalendarPopover
-                localDateLabel={localDateLabel}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition-colors hover:bg-white/15 hover:text-white dark:border-border/50 dark:bg-muted/30 dark:text-foreground/80 dark:hover:border-primary/40 dark:hover:bg-muted/50 dark:hover:text-foreground"
-              />
+              <Suspense fallback={<span className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 dark:border-border/50 dark:bg-muted/30 dark:text-foreground/80">{localDateLabel}</span>}>
+                <CalendarPopover
+                  localDateLabel={localDateLabel}
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition-colors hover:bg-white/15 hover:text-white dark:border-border/50 dark:bg-muted/30 dark:text-foreground/80 dark:hover:border-primary/40 dark:hover:bg-muted/50 dark:hover:text-foreground"
+                />
+              </Suspense>
 
               {/* Clock */}
               <span className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 dark:border-border/50 dark:bg-muted/30 dark:text-foreground/80">
@@ -217,10 +223,12 @@ const Header = () => {
                   <div className="shrink-0 space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3">
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {/* Date — opens calendar */}
-                      <CalendarPopover
-                        localDateLabel={localDateLabel}
-                        className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-2.5 py-2 text-foreground/80 hover:border-primary/40 hover:bg-muted/50"
-                      />
+                      <Suspense fallback={<span className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-2.5 py-2 text-foreground/80">{localDateLabel}</span>}>
+                        <CalendarPopover
+                          localDateLabel={localDateLabel}
+                          className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-2.5 py-2 text-foreground/80 hover:border-primary/40 hover:bg-muted/50"
+                        />
+                      </Suspense>
 
                       {/* Clock */}
                       <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-2.5 py-2">

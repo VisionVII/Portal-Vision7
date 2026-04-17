@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  BarChart3,
   Bot,
   FileText,
   Globe,
@@ -60,6 +61,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     { id: 'automations', label: 'Automações', icon: Bot, hint: 'N8N e workflows' },
     { id: 'courses', label: 'Cursos', icon: GraduationCap, hint: 'Afiliados e parcerias' },
     { id: 'crm', label: 'CRM', icon: Mail, hint: 'Newsletter e leads' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, hint: 'Métricas e tráfego' },
     { id: 'access', label: 'Acessos', icon: Shield, hint: 'Roles e convites' },
     { id: 'developer', label: 'Developer', icon: TerminalSquare, hint: 'Diagnósticos' },
     { id: 'settings', label: 'Settings', icon: Settings, hint: 'Branding' },
@@ -75,7 +77,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     },
     {
       title: 'Marketing',
-      items: navigationItems.filter((i) => ['automations', 'courses', 'crm'].includes(i.id)),
+      items: navigationItems.filter((i) => ['automations', 'courses', 'crm', 'analytics'].includes(i.id)),
     },
     {
       title: 'Sistema',

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Plus } from 'lucide-react';
+import { ArrowLeft, Bell, CheckCheck, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { useAdminNotifications, useMarkNotificationRead, useMarkAllRead } from '@/hooks/useAdminNotifications';
 
 interface DashboardHeaderProps {
   onNewPost: () => void;
@@ -15,6 +17,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
   const navigate = useNavigate();
   const { data: siteSettings } = useSiteSettings();
   const logoUrl = siteSettings?.logo_url || null;
+  const { data: notifications, unreadCount } = useAdminNotifications();
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllRead();
+  const [bellOpen, setBellOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -54,6 +60,72 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
               {primaryRole.replace('_', ' ')}
             </Badge>
           )}
+
+          <Popover open={bellOpen} onOpenChange={setBellOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="relative rounded-lg text-muted-foreground hover:text-foreground">
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-white">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-0" sideOffset={8}>
+              <div className="flex items-center justify-between border-b px-3 py-2">
+                <span className="text-sm font-semibold">Notificações</span>
+                {unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 gap-1 px-2 text-[10px] text-muted-foreground"
+                    onClick={() => markAllRead.mutate()}
+                  >
+                    <CheckCheck className="h-3 w-3" /> Marcar todas lidas
+                  </Button>
+                )}
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {!notifications?.length ? (
+                  <p className="py-8 text-center text-xs text-muted-foreground">Sem notificações</p>
+                ) : (
+                  notifications.map((n) => {
+                    const typeColor =
+                      n.type === 'error' ? 'bg-destructive' :
+                      n.type === 'warning' ? 'bg-amber-500' :
+                      n.type === 'success' ? 'bg-primary' : 'bg-blue-500';
+                    return (
+                      <button
+                        key={n.id}
+                        type="button"
+                        className={`flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-muted/50 ${
+                          !n.read ? 'bg-primary/5' : ''
+                        }`}
+                        onClick={() => {
+                          if (!n.read) markRead.mutate(n.id);
+                          if (n.link) { setBellOpen(false); }
+                        }}
+                      >
+                        <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${typeColor}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-xs ${!n.read ? 'font-semibold text-foreground' : 'text-foreground/80'}`}>
+                            {n.title}
+                          </p>
+                          {n.message && (
+                            <p className="mt-0.5 text-[11px] text-muted-foreground line-clamp-2">{n.message}</p>
+                          )}
+                          <p className="mt-1 text-[10px] text-muted-foreground/60">
+                            {new Date(n.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           <Button onClick={onNewPost} size="sm" className="gap-1.5 rounded-lg">
             <Plus className="h-3.5 w-3.5" />
