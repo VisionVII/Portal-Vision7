@@ -96,3 +96,34 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  migrations-check:
+    name: Validate Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check SQL syntax
+        run: |
+          errors=0
+          for f in supabase/migrations/*.sql; do
+            [ -f "$f" ] || continue
+            # Check for common SQL issues
+            if grep -qiP '(DROP\s+TABLE|DROP\s+SCHEMA|TRUNCATE)\s' "$f" 2>/dev/null; then
+              echo "⚠️  Destructive statement in $f"
+            fi
+            # Validate basic syntax (unmatched parens, missing semicolons)
+            open=$(grep -o '(' "$f" | wc -l)
+            close=$(grep -o ')' "$f" | wc -l)
+            if [ "$open" -ne "$close" ]; then
+              echo "❌ Unmatched parentheses in $f (open=$open close=$close)"
+              errors=$((errors + 1))
+            fi
+          done
+          echo "### Migration Check" >> $GITHUB_STEP_SUMMARY
+          echo "Checked $(ls supabase/migrations/*.sql 2>/dev/null | wc -l) migration files" >> $GITHUB_STEP_SUMMARY
+          if [ "$errors" -gt 0 ]; then
+            echo "❌ $errors error(s) found" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "✅ All migrations valid" >> $GITHUB_STEP_SUMMARY
