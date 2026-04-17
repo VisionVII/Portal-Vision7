@@ -316,6 +316,35 @@ function parseAssistantResponse(rawContent: string) {
   }
 }
 
+/* ── Rate Limiter (in-memory, per IP) ── */
+const RATE_WINDOW_MS = 60_000; // 1 minute
+const RATE_MAX = 10; // max 10 requests / min / IP
+const rateBuckets = new Map();
+
+function getClientIp(req) {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? req.headers.get('x-real-ip')
+    ?? 'unknown';
+}
+
+function isRateLimited(key) {
+  const now = Date.now();
+  const bucket = rateBuckets.get(key);
+  if (!bucket || now > bucket.resetAt) {
+    rateBuckets.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  bucket.count++;
+  return bucket.count > RATE_MAX;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, b] of rateBuckets) {
+    if (now > b.resetAt) rateBuckets.delete(k);
+  }
+}, 120_000);
+
 Deno.serve(async (req: Request) => {
   const cors = getCorsHeaders(req);
 
@@ -325,6 +354,15 @@ Deno.serve(async (req: Request) => {
 
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405, cors);
+  }
+
+  // Rate limit by IP
+  const clientIp = getClientIp(req);
+  if (isRateLimited(`ai-assistant:${clientIp}`)) {
+    return jsonResponse({ error: 'Too many requests. Please try again later.' }, 429, {
+      ...cors,
+      'Retry-After': '60',
+    });
   }
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {

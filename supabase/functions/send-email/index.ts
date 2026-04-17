@@ -108,6 +108,29 @@ async function isAuthorized(req: Request): Promise<boolean> {
   }
 }
 
+/* ── Rate Limiter (in-memory, per auth source) ── */
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 20; // 20 emails/min
+const rateBuckets = new Map();
+
+function isRateLimited(key) {
+  const now = Date.now();
+  const bucket = rateBuckets.get(key);
+  if (!bucket || now > bucket.resetAt) {
+    rateBuckets.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  bucket.count++;
+  return bucket.count > RATE_MAX;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, b] of rateBuckets) {
+    if (now > b.resetAt) rateBuckets.delete(k);
+  }
+}, 120_000);
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get('origin');
   const corsHeaders = buildCorsHeaders(origin);
@@ -136,6 +159,15 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
+  // Rate limit by auth token prefix
+  const authKey = (req.headers.get('authorization') ?? '').slice(0, 40) || 'anon';
+  if (isRateLimited(`email:${authKey}`)) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests' }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } },
     );
   }
 

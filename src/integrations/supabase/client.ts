@@ -9,6 +9,10 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('[supabase/client] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is missing — edge function calls will fail.');
 }
 
+if (SUPABASE_URL && /localhost|127\.0\.0\.1/.test(SUPABASE_URL)) {
+  console.warn('[supabase/client] VITE_SUPABASE_URL points to localhost — this MUST be a production URL before go-live.');
+}
+
 export const SUPABASE_FUNCTIONS_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : '';
 export const SUPABASE_ANON = SUPABASE_ANON_KEY;
 

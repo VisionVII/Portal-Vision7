@@ -7,6 +7,7 @@ import type { AdminView } from '@/components/admin/dashboard-types';
 import { VIEW_ACCESS_RULES } from '@/components/admin/dashboard-types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Post, usePosts } from '@/hooks/usePosts';
+import { MFAChallenge } from '@/components/admin/MFAChallenge';
 
 // Lazy-loaded views
 const OverviewView = lazy(() => import('@/components/admin/views/OverviewView'));
@@ -39,7 +40,7 @@ const AdminDashboard = () => {
     return saved === 'true';
   });
   
-  const { user, isAdmin, canAccessDashboard, roles, isLoading: authLoading, isAccessReady } = useAuth();
+  const { user, isAdmin, canAccessDashboard, roles, isLoading: authLoading, isAccessReady, mfaRequired, mfaFactorId, completeMfaChallenge } = useAuth();
   const { data: posts } = usePosts(true);
   const navigate = useNavigate();
 
@@ -134,6 +135,19 @@ const AdminDashboard = () => {
   }
 
   if (!user || !canAccessDashboard) return null;
+
+  // MFA challenge gate — admin with enrolled MFA must verify before accessing dashboard
+  if (mfaRequired && mfaFactorId) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <MFAChallenge
+          factorId={mfaFactorId}
+          onVerified={completeMfaChallenge}
+          onCancel={() => void 0}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
