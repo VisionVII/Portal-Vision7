@@ -29,12 +29,25 @@ export function useAdminNotifications(limit = 20) {
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      if (error) throw error;
+      // Table may not exist yet (migration not applied) — return empty gracefully
+      if (error) {
+        if (error.code === '42P01' || error.message?.includes('404') || (error as { status?: number }).status === 404) {
+          return [] as AdminNotification[];
+        }
+        throw error;
+      }
       return (data ?? []) as unknown as AdminNotification[];
     },
     enabled: !!user?.id,
     staleTime: 60_000,
     refetchInterval: 60_000,
+    retry: (failureCount, error) => {
+      // Don't retry if table doesn't exist
+      const msg = (error as { message?: string })?.message ?? '';
+      const status = (error as { status?: number })?.status;
+      if (status === 404 || msg.includes('404') || msg.includes('42P01')) return false;
+      return failureCount < 2;
+    },
   });
 
   const unreadCount = query.data?.filter((n) => !n.read).length ?? 0;
