@@ -1,4 +1,4 @@
-const DEFAULT_KEEPALIVE_URL = 'https://n8n-vision7.onrender.com/healthz';
+const DEFAULT_KEEPALIVE_URL = 'https://portal-vision7.onrender.com/healthz';
 
 type ServerlessResponse = {
   setHeader: (name: string, value: string) => void;

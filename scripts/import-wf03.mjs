@@ -28,7 +28,7 @@ const WF_JSON_PATH = resolve(__dirname, '../infra/n8n/workflows/WF-03-IA-Reescri
 const SUPABASE_URL = 'https://xhpfxvoonpclonjyfimt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhocGZ4dm9vbnBjbG9uanlmaW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDE0NTQsImV4cCI6MjA5MTQxNzQ1NH0.N-bUCtsHz9bqcqa5QmoRlrOy7Vhxn0uhxRvRqaL1yPc';
 const EDGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/n8n-proxy`;
-const N8N_DIRECT_URL = (process.env.N8N_BASE_URL || process.env.N8N_DIRECT_URL || 'https://n8n-vision7.onrender.com').replace(/\/$/, '');
+const N8N_DIRECT_URL = (process.env.N8N_BASE_URL || process.env.N8N_DIRECT_URL || 'https://portal-vision7.onrender.com').replace(/\/$/, '');
 
 const TARGET_WF_ID = '4ko3mYzK15Ioi7Vo';
 
