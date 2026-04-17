@@ -16,8 +16,12 @@ export interface AdminNotification {
 
 const QUERY_KEY = ['admin-notifications'];
 
-/** Track whether the table is unreachable so we stop polling */
-let tableUnavailable = false;
+/**
+ * Track consecutive failures so we back off after the table proves unreachable.
+ * Resets on any successful fetch so a deploy-time fix is picked up automatically.
+ */
+let consecutiveFailures = 0;
+const MAX_FAILURES = 2;
 
 export function useAdminNotifications(limit = 20) {
   const { user } = useAuth();
@@ -25,7 +29,7 @@ export function useAdminNotifications(limit = 20) {
   const query = useQuery({
     queryKey: [...QUERY_KEY, user?.id],
     queryFn: async () => {
-      if (tableUnavailable) return [] as AdminNotification[];
+      if (consecutiveFailures >= MAX_FAILURES) return [] as AdminNotification[];
 
       const { data, error } = await supabase
         .from('admin_notifications' as never)
@@ -36,24 +40,26 @@ export function useAdminNotifications(limit = 20) {
 
       // Table may not exist yet or RLS denies access — return empty gracefully
       if (error) {
-        const status = (error as { status?: number }).status;
-        if (error.code === '42P01' || status === 404 || status === 403 || error.message?.includes('404')) {
-          tableUnavailable = true;
+        const code = error.code;
+        const msg = error.message ?? '';
+        if (code === '42P01' || msg.includes('does not exist') || code === 'PGRST204') {
+          consecutiveFailures = MAX_FAILURES; // permanent — table missing
           return [] as AdminNotification[];
         }
+        consecutiveFailures++;
+        if (consecutiveFailures >= MAX_FAILURES) return [] as AdminNotification[];
         throw error;
       }
+
+      consecutiveFailures = 0; // success — reset counter
       return (data ?? []) as unknown as AdminNotification[];
     },
-    enabled: !!user?.id && !tableUnavailable,
+    enabled: !!user?.id,
     staleTime: 60_000,
-    refetchInterval: tableUnavailable ? false : 60_000,
-    retry: (failureCount, error) => {
-      // Don't retry if table doesn't exist or access is denied
-      const msg = (error as { message?: string })?.message ?? '';
-      const status = (error as { status?: number })?.status;
-      if (status === 404 || status === 403 || msg.includes('404') || msg.includes('42P01')) return false;
-      return failureCount < 2;
+    refetchInterval: consecutiveFailures >= MAX_FAILURES ? false : 60_000,
+    retry: (failureCount) => {
+      if (consecutiveFailures >= MAX_FAILURES) return false;
+      return failureCount < 1;
     },
   });
 

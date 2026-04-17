@@ -57,3 +57,8 @@ CREATE POLICY "Users delete own notifications"
   ON public.admin_notifications FOR DELETE
   TO authenticated
   USING (user_id = auth.uid());
+
+-- Grant table permissions to Supabase roles (required for PostgREST access)
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.admin_notifications TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.admin_notifications TO service_role;
+GRANT SELECT ON public.admin_notifications TO anon;
