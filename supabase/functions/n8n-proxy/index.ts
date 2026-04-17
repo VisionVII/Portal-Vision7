@@ -389,19 +389,33 @@ Deno.serve(async (req: Request) => {
           } catch {
             try {
               detail = (await pingRes.clone().text()).slice(0, 180);
-          const requestBody = effectiveBody ? JSON.stringify(effectiveBody) : undefined;
+            } catch { /* ignore */ }
+          }
+        }
+
+        return jsonResponse(
+          {
             status: pingRes.ok ? 'connected' : 'error',
             httpStatus: pingRes.status,
             source: 'n8n-api',
-          const n8nResponse = await fetchN8nWithFallback(normalizedPath, {
+            detail,
           },
           200,
           cors,
         );
       } catch (error) {
-            ...(requestBody ? { body: requestBody } : {}),
-            query,
-            timeoutMs: 60_000,
+        const msg = error instanceof Error ? error.message : 'Unknown error';
+        const isTimeout = /abort|timeout/i.test(msg);
+        return jsonResponse(
+          {
+            status: 'unreachable',
+            detail: isTimeout
+              ? 'Timeout ao contactar n8n (possível cold start)'
+              : msg,
+          },
+          200,
+          cors,
+        );
       }
     }
 
