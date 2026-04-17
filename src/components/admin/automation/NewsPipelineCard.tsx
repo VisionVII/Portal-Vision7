@@ -402,6 +402,25 @@ export function NewsPipelineCard() {
 
     addLogEntry('Pipeline', 'Iniciando pipeline de notícias IA...', 'running');
 
+    // Auto-activate any inactive workflows so the webhook endpoints are registered in n8n
+    const inactiveSteps = pipelineWorkflows.filter(({ wf }) => wf && wf.active === false);
+    if (inactiveSteps.length > 0) {
+      addLogEntry('Pipeline', `Ativando ${inactiveSteps.length} workflow(s) inativo(s)...`, 'running');
+      for (const { step: s, wf: w } of inactiveSteps) {
+        if (!w) continue;
+        try {
+          await activateWorkflow(w);
+          addLogEntry(s.shortLabel, 'Workflow ativado', 'success');
+        } catch (activateErr) {
+          const msg = activateErr instanceof Error ? activateErr.message : 'Erro ao ativar';
+          addLogEntry(s.shortLabel, `Aviso: não foi possível ativar: ${msg}`, 'warn');
+        }
+      }
+      // Give n8n time to register webhook endpoints after activation
+      addLogEntry('Pipeline', 'Aguardando registo de webhooks no n8n (3s)...', 'info');
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+
     for (const { step, wf } of pipelineWorkflows) {
       if (abortRef.current) {
         addLogEntry('Pipeline', 'Pipeline cancelado pelo utilizador', 'warn');
@@ -434,11 +453,16 @@ export function NewsPipelineCard() {
         }
       } catch (err) {
         if (err instanceof CronWorkflowError) {
-          // Cron workflow — not an error, it runs automatically on schedule
-          completedStepKeys.add(step.key);
-          setCompletedSteps(new Set(completedStepKeys));
-          addLogEntry(step.shortLabel, 'Workflow ativo — executa automaticamente por cron/schedule', 'info');
-          continue;
+          // Webhook not reachable — workflow may still be starting up in n8n
+          failedStepKeys.add(step.key);
+          setFailedSteps(new Set(failedStepKeys));
+          addLogEntry(step.shortLabel, 'Não foi possível disparar o workflow via webhook. Verifique que está ativo no n8n e tente novamente.', 'error');
+          toast({
+            title: `${step.label} — webhook não respondeu`,
+            description: 'Confirme que o workflow está ativo no n8n e tente novamente em alguns segundos.',
+            variant: 'destructive',
+          });
+          break;
         }
 
         const msg = err instanceof Error ? err.message : 'Erro desconhecido';
@@ -462,7 +486,7 @@ export function NewsPipelineCard() {
     if (wasAborted) {
       addLogEntry('Pipeline', `Pipeline cancelado após ${confirmedCount} confirmação(ões)`, 'warn');
     } else if (failedCount === 0) {
-      addLogEntry('Pipeline', `Pipeline concluído — ${confirmedCount} workflow(s) cron confirmados e ativos`, 'success');
+      addLogEntry('Pipeline', `Pipeline concluído — ${confirmedCount} workflow(s) disparados via webhook`, 'success');
     } else {
       addLogEntry('Pipeline', `Pipeline concluído com ${failedCount} erro(s) após ${confirmedCount} confirmação(ões)`, 'warn');
     }
