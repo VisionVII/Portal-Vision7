@@ -440,12 +440,27 @@ export const executeWorkflow = async (workflowOrId: N8nWorkflow | string): Promi
 
   const webhookPath = extractWebhookPath(workflow);
   if (webhookPath) {
+    // Try production webhook first (requires workflow to be active in n8n)
     try {
       await n8nRequest(`/webhook/${webhookPath}`, {
         method: 'POST',
         suppressHttpWarningsForStatuses: expectedExecutionFallbackStatuses,
       });
       return { executed: true, method: 'webhook' };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Erro desconhecido';
+      if (!/\[(400|404|405|422|501|503)\]/.test(msg)) {
+        throw new Error(`Falha na execução: ${msg}`);
+      }
+    }
+
+    // Fallback: webhook-test (works even for inactive workflows — single execution)
+    try {
+      await n8nRequest(`/webhook-test/${webhookPath}`, {
+        method: 'POST',
+        suppressHttpWarningsForStatuses: expectedExecutionFallbackStatuses,
+      });
+      return { executed: true, method: 'webhook-test' };
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Erro desconhecido';
       if (!/\[(400|404|405|422|501|503)\]/.test(msg)) {
