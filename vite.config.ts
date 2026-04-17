@@ -91,12 +91,15 @@ export default defineConfig(({ mode }) => ({
             id.includes("use-callback-ref") ||
             id.includes("use-sidecar") ||
             id.includes("react-day-picker") ||
-            id.includes("@floating-ui")
+            id.includes("@floating-ui") ||
+            id.includes("next-themes") ||
+            id.includes("@vercel/analytics") ||
+            id.includes("aria-hidden")
           ) {
             return "vendor-ui";
           }
 
-          if (id.includes("recharts") || id.includes("embla-carousel")) {
+          if (id.includes("recharts") || id.includes("embla-carousel") || id.includes("react-smooth")) {
             return "vendor-data-viz";
           }
 
