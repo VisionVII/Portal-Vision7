@@ -22,6 +22,22 @@
       ]
     },
     {
+      "parameters": {
+        "path": "wf03-reescrita",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook_trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "webhookId": "wf03-reescrita",
+      "position": [
+        -1400,
+        420
+      ]
+    },
+    {
       "id": "fetch_hf_token",
       "name": "Fetch HF Token",
       "type": "n8n-nodes-base.httpRequest",
@@ -365,6 +381,17 @@
   ],
   "connections": {
     "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch HF Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
       "main": [
         [
           {
