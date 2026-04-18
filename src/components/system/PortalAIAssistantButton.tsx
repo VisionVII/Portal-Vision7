@@ -191,19 +191,9 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      setMessages([{
-        id: 'welcome',
-        role: 'assistant',
-        text: 'Olá! Sou o assistente Vision7. Posso ajudá-lo a navegar pelo portal, encontrar conteúdos relevantes e responder perguntas sobre o que temos disponível. Como posso ajudar?',
-        suggestions: [
-          'Mostre-me as notícias mais recentes',
-          'Quais cursos vocês oferecem?',
-          'Fale-me sobre as categorias do portal',
-        ],
-        provider: activeProvider,
-      }]);
+      setMessages([]);
     }
-  }, [activeProvider, isOpen, messages.length]);
+  }, [isOpen, messages.length]);
 
   const createAssistantMessage = (reply: {
     summary: string;
@@ -384,9 +374,9 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   };
 
   const quickActions = [
-    { label: 'Leituras de agora', icon: Newspaper, query: 'Quais leituras recentes merecem atenção agora no portal?' },
-    { label: 'Tempo e contexto local', icon: CloudSun, query: 'Qual é a temperatura atual e como posso explorar o portal com base no meu contexto local?' },
-    { label: 'Aprender no portal', icon: TrendingUp, query: 'Que cursos ou conteúdos do portal fazem sentido para quem quer aprender mais?' },
+    { label: 'Principais notícias', icon: Newspaper, query: 'Quais são as notícias mais relevantes e recentes no Vision7?' },
+    { label: 'Guiar por categorias', icon: Search, query: 'Qual categoria do portal Vision7 é melhor para encontrar análises sobre tecnologia e inovação?' },
+    { label: 'Explorar cursos', icon: TrendingUp, query: 'Quais cursos ou formações aparecem atualmente no portal Vision7 e por que são relevantes?' },
   ];
 
   const renderCardAction = (action?: AssistantCardAction, secondary = false) => {
@@ -555,11 +545,6 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                     {msg.text}
                   </div>
 
-                  {msg.role === 'assistant' && msg.provider && (
-                    <p className="pl-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                      {msg.provider === 'groq-edge' ? 'Resposta Vision7 com Groq' : msg.provider === 'hf-edge' ? 'Resposta Vision7 com HuggingFace' : 'Resposta Vision7 em modo local'}
-                    </p>
-                  )}
 
                   {msg.suggestions && msg.suggestions.length > 0 && (
                     <div className="space-y-1 pl-1">

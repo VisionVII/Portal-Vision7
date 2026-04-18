@@ -55,11 +55,10 @@ export const useUserLocation = () => {
       if (!force && now - lastSyncTimestamp < SYNC_THROTTLE_MS) return;
 
       const geoConsent = localStorage.getItem('geo-consent');
+      const hasPersonalizationConsent = isAllowed('personalization');
+      const hasGeoConsent = geoConsent === 'accepted';
 
-      // Use CMP engine to check personalization consent (handles both old/new format)
-      const hasConsent = isAllowed('personalization') && geoConsent === 'accepted';
-
-      if (!hasConsent) {
+      if (!hasPersonalizationConsent) {
         setLocation((prev) => ({
           ...prev,
           country: null,
