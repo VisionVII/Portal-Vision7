@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ExternalLink, GraduationCap, Pencil, Plus, Save, Trash2 } from 'lucide-react';
+import { ExternalLink, Handshake, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,8 @@ interface CourseFormState {
   instructor: string;
   status: 'draft' | 'published';
   category_id: string;
+  partner_type: 'curso' | 'produto' | 'servico' | 'link';
+  image_url: string;
   affiliateUrl: string;
   partnerName: string;
   ctaLabel: string;
@@ -53,10 +55,12 @@ const defaultForm: CourseFormState = {
   instructor: '',
   status: 'published',
   category_id: '',
+  partner_type: 'curso',
+  image_url: '',
   affiliateUrl: '',
   partnerName: '',
   ctaLabel: 'Ver parceria',
-  badge: 'Afiliado',
+  badge: 'Parceiro',
 };
 
 const slugify = (value: string) =>
@@ -109,10 +113,12 @@ const AdminCoursesManager = () => {
       instructor: editingCourse.instructor || '',
       status: editingCourse.status === 'draft' ? 'draft' : 'published',
       category_id: editingCourse.category_id || '',
+      partner_type: editingCourse.partner_type || 'curso',
+      image_url: editingCourse.image_url || '',
       affiliateUrl: meta.affiliateUrl || '',
       partnerName: meta.partnerName || '',
       ctaLabel: meta.ctaLabel || 'Ver parceria',
-      badge: meta.badge || 'Afiliado',
+      badge: meta.badge || 'Parceiro',
     });
   }, [courseMeta, editingCourse]);
 
@@ -168,10 +174,12 @@ const AdminCoursesManager = () => {
           instructor: form.instructor,
           status: form.status,
           category_id: form.category_id || null,
+          partner_type: form.partner_type,
+          image_url: form.image_url || null,
         });
 
         await saveMeta(form.slug, editingCourse.slug);
-        toast({ title: 'Curso atualizado', description: 'O card da parceria foi atualizado no CMS.' });
+        toast({ title: 'Parceiro atualizado', description: 'O cartão de parceria foi atualizado.' });
       } else {
         await createCourse.mutateAsync({
           title: form.title,
@@ -182,24 +190,26 @@ const AdminCoursesManager = () => {
           instructor: form.instructor,
           status: form.status,
           category_id: form.category_id || null,
+          partner_type: form.partner_type,
+          image_url: form.image_url || null,
         });
 
         await saveMeta(form.slug);
-        toast({ title: 'Curso criado', description: 'O novo cartão já pode ser exibido no portal.' });
+        toast({ title: 'Parceiro criado', description: 'O novo cartão já pode ser exibido no portal.' });
       }
 
       resetForm();
     } catch (error) {
       toast({
-        title: 'Erro ao salvar curso',
-        description: error instanceof Error ? error.message : 'Não foi possível salvar o curso/parceria.',
+        title: 'Erro ao salvar parceiro',
+        description: error instanceof Error ? error.message : 'Não foi possível salvar o parceiro.',
         variant: 'destructive',
       });
     }
   };
 
   const handleDelete = async (course: Course) => {
-    if (!window.confirm(`Remover o curso/parceria "${course.title}"?`)) return;
+    if (!window.confirm(`Remover o parceiro "${course.title}"?`)) return;
 
     try {
       await deleteCourse.mutateAsync(course.id);
@@ -211,12 +221,12 @@ const AdminCoursesManager = () => {
         value: JSON.stringify(nextMeta),
       });
 
-      toast({ title: 'Curso removido', description: 'O cartão deixou de ser exibido no portal.' });
+      toast({ title: 'Parceiro removido', description: 'O cartão deixou de ser exibido no portal.' });
       if (editingCourse?.id === course.id) resetForm();
     } catch (error) {
       toast({
         title: 'Erro ao remover',
-        description: error instanceof Error ? error.message : 'Não foi possível remover o curso.',
+        description: error instanceof Error ? error.message : 'Não foi possível remover o parceiro.',
         variant: 'destructive',
       });
     }
@@ -227,17 +237,17 @@ const AdminCoursesManager = () => {
       <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <GraduationCap className="h-4 w-4 text-primary-600" />
-            Cursos, afiliados e parcerias
+            <Handshake className="h-4 w-4 text-primary-600" />
+            Parceiros e afiliados
           </CardTitle>
           <CardDescription>
-            Crie os cartões comerciais do portal com texto, descrição e links externos controlados pelo admin.
+            Crie cartões de parceiros com imagem, link e informações — cursos, produtos, serviços ou links externos.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="course-title">Título do curso/parceria</Label>
+              <Label htmlFor="course-title">Nome do parceiro / título</Label>
               <Input id="course-title" value={form.title} onChange={(event) => handleChange('title', event.target.value)} required />
             </div>
 
@@ -246,6 +256,31 @@ const AdminCoursesManager = () => {
                 <Label htmlFor="course-slug">Slug</Label>
                 <Input id="course-slug" value={form.slug} onChange={(event) => handleChange('slug', slugify(event.target.value))} required />
               </div>
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={form.partner_type} onValueChange={(value: CourseFormState['partner_type']) => handleChange('partner_type', value)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="curso">Curso</SelectItem>
+                    <SelectItem value="produto">Produto</SelectItem>
+                    <SelectItem value="servico">Serviço</SelectItem>
+                    <SelectItem value="link">Link / Afiliado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="partner-image-url">URL da imagem / logo</Label>
+              <Input id="partner-image-url" value={form.image_url} onChange={(event) => handleChange('image_url', event.target.value)} placeholder="https://exemplo.com/logo.png" />
+              {form.image_url && (
+                <div className="mt-1 h-16 w-16 overflow-hidden rounded-lg border border-border">
+                  <img src={form.image_url} alt="Preview" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Categoria</Label>
                 <Select value={form.category_id || 'none'} onValueChange={(value) => handleChange('category_id', value === 'none' ? '' : value)}>
@@ -275,33 +310,50 @@ const AdminCoursesManager = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Nível</Label>
-                <Select value={form.level} onValueChange={(value: CourseFormState['level']) => handleChange('level', value)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Iniciante">Iniciante</SelectItem>
-                    <SelectItem value="Intermediário">Intermediário</SelectItem>
-                    <SelectItem value="Avançado">Avançado</SelectItem>
-                  </SelectContent>
-                </Select>
+            {form.partner_type === 'curso' && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Nível</Label>
+                  <Select value={form.level} onValueChange={(value: CourseFormState['level']) => handleChange('level', value)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Iniciante">Iniciante</SelectItem>
+                      <SelectItem value="Intermediário">Intermediário</SelectItem>
+                      <SelectItem value="Avançado">Avançado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="course-duration">Duração</Label>
+                  <Input id="course-duration" value={form.duration} onChange={(event) => handleChange('duration', event.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={form.status} onValueChange={(value: CourseFormState['status']) => handleChange('status', value)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="published">Publicado</SelectItem>
+                      <SelectItem value="draft">Rascunho</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="course-duration">Duração</Label>
-                <Input id="course-duration" value={form.duration} onChange={(event) => handleChange('duration', event.target.value)} />
+            )}
+
+            {form.partner_type !== 'curso' && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={form.status} onValueChange={(value: CourseFormState['status']) => handleChange('status', value)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="published">Publicado</SelectItem>
+                      <SelectItem value="draft">Rascunho</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={(value: CourseFormState['status']) => handleChange('status', value)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="published">Publicado</SelectItem>
-                    <SelectItem value="draft">Rascunho</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="course-instructor">Instrutor / parceiro</Label>

@@ -17,7 +17,8 @@ import {
   ArrowRight,
   BookOpen,
   Clock,
-  GraduationCap,
+  ExternalLink,
+  Handshake,
   LayoutList,
   RefreshCw,
   Star,
@@ -260,15 +261,16 @@ const Index = () => {
         );
       }
 
-      // ── Courses ───────────────────────────────────────────────────────────
+      // ── Partners (conditional – hidden when empty) ──────────────────────
       case 'courses': {
+        if (!isLoading && courses.length === 0) return null;
         return (
           <SectionBlock
             key="courses"
-            id="cursos"
+            id="parceiros"
             title={sectionLabel}
-            icon={<GraduationCap size={16} />}
-            subtitle="Formação recomendada"
+            icon={<Handshake size={16} />}
+            subtitle="Parcerias recomendadas"
             className="rounded-2xl border border-primary-100/70 bg-gradient-to-br from-primary-50/60 via-background to-secondary-50/50 p-5 sm:p-7 dark:border-primary-800/30 dark:from-primary-950/20 dark:via-background dark:to-secondary-950/20"
           >
             {isLoading ? (
@@ -277,16 +279,24 @@ const Index = () => {
                   <Skeleton key={i} className="h-44 w-full rounded-2xl" />
                 ))}
               </div>
-            ) : courses.length ? (
+            ) : (
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {courses.map((course) => {
                   const meta = courseMeta[course.slug] ?? {};
+                  const pType = course.partner_type || 'curso';
+                  const imgUrl = course.image_url || null;
+                  const isCourse = pType === 'curso';
                   const cardBody = (
                     <div className="group flex h-full flex-col rounded-2xl border border-border/60 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+                      {imgUrl && (
+                        <div className="mb-3 h-32 w-full overflow-hidden rounded-xl">
+                          <img src={imgUrl} alt={course.title} loading="lazy" className="h-full w-full object-cover" width="400" height="128" />
+                        </div>
+                      )}
                       <div className="mb-3 flex items-center justify-between gap-2">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
-                          <BookOpen size={11} />
-                          {meta.badge || 'Afiliado'}
+                          {isCourse ? <BookOpen size={11} /> : <ExternalLink size={11} />}
+                          {meta.badge || 'Parceiro'}
                         </span>
                         {meta.partnerName && (
                           <span className="text-[11px] font-medium text-muted-foreground">{meta.partnerName}</span>
@@ -299,12 +309,16 @@ const Index = () => {
                         {course.description}
                       </p>
                       <div className="flex items-center gap-3 border-t border-border/60 pt-3 text-xs text-muted-foreground">
-                        <span className="rounded-full bg-muted px-2.5 py-1 font-semibold text-foreground">
-                          {course.level}
-                        </span>
-                        <span>{course.duration}</span>
+                        {isCourse && (
+                          <>
+                            <span className="rounded-full bg-muted px-2.5 py-1 font-semibold text-foreground">
+                              {course.level}
+                            </span>
+                            <span>{course.duration}</span>
+                          </>
+                        )}
                         <span className="ml-auto inline-flex items-center gap-1 font-semibold text-primary">
-                          Ver curso <ArrowRight size={12} />
+                          {meta.ctaLabel || (isCourse ? 'Ver curso' : 'Acessar')} <ArrowRight size={12} />
                         </span>
                       </div>
                     </div>
@@ -322,13 +336,6 @@ const Index = () => {
                     </Link>
                   );
                 })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2 py-10 text-center">
-                <BookOpen size={36} className="text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">
-                  Ainda não existem cursos disponíveis. Verifique novamente em breve.
-                </p>
               </div>
             )}
           </SectionBlock>
