@@ -420,6 +420,28 @@ const Index = () => {
       />}
 
       <div className="container mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:py-10">
+        {categories?.length ? (
+          <div className="mb-6 rounded-3xl border border-border/50 bg-card p-4 shadow-sm sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Explore por categoria</p>
+                <h2 className="mt-1 text-xl font-bold text-foreground sm:text-2xl">Navegue pelo portal por temas e editorias</h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {categories.slice(0, 9).map((category) => (
+                  <Link
+                    key={category.id}
+                    to={`/${category.slug}`}
+                    className="rounded-full border border-border/60 bg-background px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-1 gap-6 sm:gap-7 lg:grid-cols-12 lg:gap-9" id="noticias">
           <div className="space-y-8 sm:space-y-10 lg:col-span-8 lg:space-y-12 xl:col-span-9">
             {homeConfig.sections
