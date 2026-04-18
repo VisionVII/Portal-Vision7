@@ -70,13 +70,27 @@ export const useUserLocation = () => {
         return;
       }
 
-      const storedGeo = localStorage.getItem('user-geo');
+      let storedGeo = localStorage.getItem('user-geo');
+
+      // IP-based fallback when no GPS coords are stored but consent is given
+      if (!storedGeo && hasPersonalizationConsent) {
+        try {
+          const ipRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) });
+          if (ipRes.ok) {
+            const ipData = (await ipRes.json()) as { latitude?: number; longitude?: number };
+            if (typeof ipData.latitude === 'number' && typeof ipData.longitude === 'number') {
+              const coords = JSON.stringify({ latitude: ipData.latitude, longitude: ipData.longitude });
+              localStorage.setItem('user-geo', coords);
+              storedGeo = coords;
+            }
+          }
+        } catch {
+          // ignore — IP lookup failed, proceed without coords
+        }
+      }
+
       if (!storedGeo) {
-        setLocation((prev) => ({
-          ...prev,
-          timezone,
-          hasConsent: true,
-        }));
+        setLocation((prev) => ({ ...prev, timezone, hasConsent: true }));
         return;
       }
 

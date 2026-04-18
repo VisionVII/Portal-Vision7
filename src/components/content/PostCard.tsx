@@ -48,6 +48,7 @@ const PostCard: React.FC<PostCardProps> = ({
               alt={title}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="lazy"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
@@ -97,6 +98,7 @@ const PostCard: React.FC<PostCardProps> = ({
               alt={title}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-transparent" />
           </>
@@ -107,6 +109,7 @@ const PostCard: React.FC<PostCardProps> = ({
               alt={title}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
           </>
