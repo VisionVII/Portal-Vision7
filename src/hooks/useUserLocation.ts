@@ -53,10 +53,10 @@ export const useUserLocation = () => {
     const syncLocation = async (force = false) => {
       const now = Date.now();
       if (!force && now - lastSyncTimestamp < SYNC_THROTTLE_MS) return;
+      lastSyncTimestamp = now;
 
       const geoConsent = localStorage.getItem('geo-consent');
       const hasPersonalizationConsent = isAllowed('personalization');
-      const hasGeoConsent = geoConsent === 'accepted';
 
       if (!hasPersonalizationConsent) {
         setLocation((prev) => ({
@@ -73,7 +73,7 @@ export const useUserLocation = () => {
       let storedGeo = localStorage.getItem('user-geo');
 
       // IP-based fallback when no GPS coords are stored but consent is given
-      if (!storedGeo && hasPersonalizationConsent) {
+      if (!storedGeo) {
         try {
           const ipRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) });
           if (ipRes.ok) {
@@ -101,7 +101,6 @@ export const useUserLocation = () => {
 
       try {
         setIsLoading(true);
-        lastSyncTimestamp = now;
         const { latitude, longitude } = JSON.parse(storedGeo) as { latitude: number; longitude: number };
 
         const [weatherResponse, geoResponse] = await Promise.all([
