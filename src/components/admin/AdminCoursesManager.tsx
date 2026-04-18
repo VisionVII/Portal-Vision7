@@ -73,7 +73,7 @@ const parseMeta = (rawValue?: string | null): CourseMetaMap => {
   try {
     return JSON.parse(rawValue) as CourseMetaMap;
   } catch (error) {
-    console.warn('Falha ao ler metadados de cursos/parcerias.', error);
+    console.warn('Falha ao ler metadados de cursos/parcerias.');
     return {};
   }
 };

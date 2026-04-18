@@ -135,7 +135,7 @@ export const useUserLocation = () => {
         }));
       } catch (error) {
         if ((error as Error).name === 'AbortError') return;
-        console.warn('Não foi possível atualizar região e temperatura.', error);
+        console.warn('Não foi possível atualizar região e temperatura.', error instanceof Error ? error.message : 'unknown');
         setLocation((prev) => ({
           ...prev,
           timezone,

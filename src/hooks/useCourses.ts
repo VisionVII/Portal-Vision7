@@ -105,7 +105,7 @@ export const useCourses = (adminView: boolean | undefined = false, enabled = tru
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404') && !/AbortError|signal is aborted/i.test(error.message ?? '')) {
-          console.warn('useCourses supabase query error', error);
+          console.warn('useCourses supabase query error', error?.message || 'unknown');
         }
         return adminView ? [] : fallbackCourses;
       }

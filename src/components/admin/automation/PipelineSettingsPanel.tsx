@@ -146,7 +146,7 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar chaves';
       setCredentialsError(message);
-      console.warn('[Settings] Failed to load credentials:', err);
+      console.warn('[Settings] Failed to load credentials:', message);
       toast({
         title: 'Falha ao carregar chaves',
         description: message,

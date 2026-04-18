@@ -162,7 +162,7 @@ export const parseHomePageConfig = (rawValue?: string | null): HomePageConfig =>
       sections: normalizeSections(parsed.sections),
     };
   } catch (error) {
-    console.warn('Falha ao interpretar o layout da homepage.', error);
+    console.warn('Falha ao interpretar o layout da homepage.');
     return defaultHomePageConfig;
   }
 };

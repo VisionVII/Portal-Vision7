@@ -6,11 +6,11 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('[supabase/client] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is missing — edge function calls will fail.');
+  console.error('[supabase/client] Backend configuration missing — some features will not work.');
 }
 
 if (SUPABASE_URL && /localhost|127\.0\.0\.1/.test(SUPABASE_URL)) {
-  console.warn('[supabase/client] VITE_SUPABASE_URL points to localhost — this MUST be a production URL before go-live.');
+  console.warn('[supabase/client] Backend URL points to localhost — update before go-live.');
 }
 
 export const SUPABASE_FUNCTIONS_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : '';

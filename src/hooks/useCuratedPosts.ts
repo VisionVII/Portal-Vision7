@@ -141,7 +141,7 @@ async function notifyAdminPostReady(curatedPostId: string) {
       throw new Error(error.message || 'Falha ao disparar notificacao da curadoria');
     }
   } catch (err) {
-    console.warn('[CuratedPosts] Failed to send admin notification:', err);
+    console.warn('[CuratedPosts] Failed to send admin notification:', err instanceof Error ? err.message : 'unknown');
   }
 }
 
@@ -265,7 +265,7 @@ export function useAutoPromoteCurated() {
             console.info(`[AutoPromote] Already published: "${curated.title}"`);
           }
         } catch (err) {
-          console.warn(`[AutoPromote] Failed to promote "${curated.title}":`, err);
+          console.warn(`[AutoPromote] Failed to promote "${curated.title}":`, err instanceof Error ? err.message : 'unknown');
         }
       }
 
@@ -347,7 +347,7 @@ export function useAutoPromotePolling() {
             duplicates++;
           }
         } catch (err) {
-          console.warn(`[AutoPromote] Failed: "${curated.title}"`, err);
+          console.warn(`[AutoPromote] Failed: "${curated.title}"`, err instanceof Error ? err.message : 'unknown');
         }
       }
 
@@ -364,7 +364,7 @@ export function useAutoPromotePolling() {
         });
       }
     } catch (err) {
-      console.warn('[AutoPromote] Unexpected error:', err);
+      console.warn('[AutoPromote] Unexpected error:', err instanceof Error ? err.message : 'unknown');
     }
   }, [queryClient, toast]);
 

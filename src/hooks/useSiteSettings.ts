@@ -68,7 +68,7 @@ export const useSiteSettings = (options: UseSiteSettingsOptions = {}) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404') && !/AbortError|signal is aborted/i.test(error.message ?? '')) {
-          console.warn('useSiteSettings supabase query error', error);
+          console.warn('useSiteSettings supabase query error', error?.message || 'unknown');
         }
         return {} as SiteSettingsMap;
       }
