@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { courses as initialCourses, Course } from '@/data/courses';
+import { Course } from '@/data/courses';
 
 export interface CreateCourseData {
   title: string;
@@ -12,6 +12,8 @@ export interface CreateCourseData {
   status?: string;
   category_id?: string | null;
   tags?: string[];
+  partner_type?: string;
+  image_url?: string | null;
 }
 
 export interface UpdateCourseData extends Partial<CreateCourseData> {
@@ -36,6 +38,8 @@ const PUBLIC_COURSE_SELECT = `
   duration,
   category_id,
   thumbnail_url,
+  image_url,
+  partner_type,
   published_at,
   created_at,
   status,
@@ -51,6 +55,8 @@ const FULL_COURSE_SELECT = `
   duration,
   category_id,
   thumbnail_url,
+  image_url,
+  partner_type,
   published_at,
   created_at,
   status,
@@ -70,23 +76,10 @@ const normalizePublicCourse = (course: Partial<Course> & { created_at?: string; 
   published_at: course.published_at || course.created_at || new Date(0).toISOString(),
   status: course.status || 'published',
   tags: course.tags || [],
+  partner_type: course.partner_type || 'curso',
+  image_url: course.image_url || null,
   categories: course.categories || null,
 });
-
-const fallbackCourses: Course[] = initialCourses.map((course) => ({
-  ...course,
-  status: 'published',
-  tags: [],
-  category_id: null,
-  categories: course.category
-    ? {
-        id: `fallback-${course.slug}`,
-        name: course.category,
-        slug: course.category.toLowerCase(),
-        color: 'bg-blue-600',
-      }
-    : null,
-}));
 
 export const useCourses = (adminView: boolean | undefined = false, enabled = true) => {
   return useQuery({
@@ -107,16 +100,16 @@ export const useCourses = (adminView: boolean | undefined = false, enabled = tru
         if (error.code !== 'PGRST116' && !error.message?.includes('404') && !/AbortError|signal is aborted/i.test(error.message ?? '')) {
           console.warn('useCourses supabase query error', error?.message || 'unknown');
         }
-        return adminView ? [] : fallbackCourses;
+        return [];
       }
 
       if (!data || (Array.isArray(data) && data.length === 0)) {
-        return adminView ? [] : fallbackCourses;
+        return [];
       }
 
       return adminView
         ? ((data as unknown as Course[]) ?? [])
-        : ((data as Array<Partial<Course> & { created_at?: string; published_at?: string | null }>)?.map((course) => normalizePublicCourse(course)) ?? fallbackCourses);
+        : ((data as Array<Partial<Course> & { created_at?: string; published_at?: string | null }>)?.map((course) => normalizePublicCourse(course)) ?? []);
     },
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),

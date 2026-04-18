@@ -72,7 +72,7 @@ export const defaultHomePageConfig: HomePageConfig = {
   sections: [
     { id: 'featured', label: 'Destaque', enabled: true },
     { id: 'latest', label: 'Últimas Notícias', enabled: true },
-    { id: 'courses', label: 'Cursos em Destaque', enabled: true },
+    { id: 'courses', label: 'Parceiros', enabled: true },
     { id: 'more', label: 'Mais Notícias', enabled: true },
     { id: 'newsletter', label: 'Newsletter', enabled: true },
   ],
