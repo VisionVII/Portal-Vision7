@@ -191,7 +191,12 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      setMessages([]);
+      setMessages([{
+        id: 'welcome',
+        role: 'assistant',
+        text: 'Olá! Sou o assistente do portal. Posso ajudá-lo a encontrar notícias, cursos, análises e muito mais. O que procura?',
+        suggestions: ['Quais são as últimas notícias?', 'Mostra-me os cursos disponíveis', 'O que há de novo hoje?'],
+      }]);
     }
   }, [isOpen, messages.length]);
 
