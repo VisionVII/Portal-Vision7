@@ -2,6 +2,13 @@
   "name": "WF-01 Coleta MultiPesquisa Noticias v2",
   "nodes": [
     {
+      "id": "schedule_trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -1400,
+        200
+      ],
       "parameters": {
         "rule": {
           "interval": [
@@ -12,48 +19,63 @@
           ]
         }
       },
-      "id": "schedule_trigger",
-      "name": "Schedule Trigger",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        -1400,
-        200
-      ]
+      "typeVersion": 1.2
     },
     {
+      "id": "webhook_trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1400,
+        420
+      ],
+      "webhookId": "wf01-coleta",
       "parameters": {
         "path": "wf01-coleta",
         "httpMethod": "POST",
         "responseMode": "onReceived"
       },
-      "id": "webhook_trigger",
-      "name": "Webhook Trigger",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "webhookId": "wf01-coleta",
-      "position": [
-        -1400,
-        420
-      ]
+      "typeVersion": 2
     },
     {
-      "parameters": {
-        "jsCode": "// Dynamic feed builder — reads editorial themes from pipeline_search_config\n// v2: includes topic volume tracking for trend scoring\n\nconst SUPABASE_URL = $env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\n\nconst DEFAULT_TAGS = [\n  { tag: 'inteligência artificial', topic: 'ia' },\n  { tag: 'cibersegurança', topic: 'ciberseguranca' },\n  { tag: 'automação empresarial', topic: 'automacao' },\n];\n\nfunction buildGoogleNewsUrl(query) {\n  return 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=pt-PT&gl=PT&ceid=PT:pt';\n}\n\nfunction tagToTopic(tag) {\n  return tag.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');\n}\n\nfunction isMissingEditorialColumns(message) {\n  return /(default_post_tags|theme_rules)/i.test(String(message || '')) && /(does not exist|schema cache|Could not find)/i.test(String(message || ''));\n}\n\nasync function loadPipelineConfig() {\n  try {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags,theme_rules',\n      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },\n    });\n    const configs = Array.isArray(resp) ? resp : [];\n    return configs[0] || null;\n  } catch (e) {\n    if (!isMissingEditorialColumns(e?.message)) throw e;\n    const legacyResp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags',\n      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },\n    });\n    const legacyConfigs = Array.isArray(legacyResp) ? legacyResp : [];\n    return legacyConfigs[0] || null;\n  }\n}\n\n// Load recent staging counts per topic (last 24h) to detect velocity\nasync function loadRecentVolume() {\n  try {\n    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/news_staging?select=topic,id&collected_at=gte.' + since,\n      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },\n    });\n    const rows = Array.isArray(resp) ? resp : [];\n    const counts = {};\n    for (const r of rows) {\n      const t = r.topic || 'geral';\n      counts[t] = (counts[t] || 0) + 1;\n    }\n    return counts;\n  } catch (e) {\n    return {};\n  }\n}\n\nlet tags = DEFAULT_TAGS;\n\ntry {\n  const activeConfig = await loadPipelineConfig();\n  const themeRules = Array.isArray(activeConfig?.theme_rules) ? activeConfig.theme_rules : [];\n\n  if (themeRules.length > 0) {\n    const themedTags = themeRules.flatMap((rule) => {\n      const searchTerms = Array.isArray(rule?.searchTerms) ? rule.searchTerms : Array.isArray(rule?.search_terms) ? rule.search_terms : [];\n      const slug = String(rule?.slug || '').trim();\n      return searchTerms.map((term) => String(term || '').trim()).filter(Boolean).map((term) => ({ tag: term, topic: slug || tagToTopic(term) }));\n    });\n    if (themedTags.length > 0) tags = themedTags;\n  } else if (Array.isArray(activeConfig?.tags) && activeConfig.tags.length > 0) {\n    tags = activeConfig.tags.map((t) => ({ tag: t, topic: tagToTopic(t) }));\n  }\n} catch (e) { /* fallback to defaults */ }\n\nconst volumeByTopic = await loadRecentVolume.call(this);\n\nreturn tags.map((t) => ({\n  json: {\n    url: buildGoogleNewsUrl(t.tag),\n    topic: t.topic,\n    search_tag: t.tag,\n    recent_volume: volumeByTopic[t.topic] || 0\n  }\n}));"
-      },
       "id": "build_feeds",
       "name": "Build Feed List",
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
       "position": [
         -1160,
         200
-      ]
+      ],
+      "parameters": {
+        "jsCode": "// Dynamic feed builder — reads editorial themes from pipeline_search_config\n// v2: includes topic volume tracking for trend scoring\n\nconst SUPABASE_URL = $vars.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co';\nconst SUPABASE_KEY = $vars.SUPABASE_SERVICE_ROLE_KEY;\n\nconst DEFAULT_TAGS = [\n  { tag: 'inteligência artificial', topic: 'ia' },\n  { tag: 'cibersegurança', topic: 'ciberseguranca' },\n  { tag: 'automação empresarial', topic: 'automacao' },\n];\n\nfunction buildGoogleNewsUrl(query) {\n  return 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=pt-PT&gl=PT&ceid=PT:pt';\n}\n\nfunction tagToTopic(tag) {\n  return tag.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');\n}\n\nfunction isMissingEditorialColumns(message) {\n  return /(default_post_tags|theme_rules)/i.test(String(message || '')) && /(does not exist|schema cache|Could not find)/i.test(String(message || ''));\n}\n\nasync function loadPipelineConfig() {\n  try {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags,theme_rules',\n      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },\n    });\n    const configs = Array.isArray(resp) ? resp : [];\n    return configs[0] || null;\n  } catch (e) {\n    if (!isMissingEditorialColumns(e?.message)) throw e;\n    const legacyResp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/pipeline_search_config?is_active=eq.true&limit=1&select=tags',\n      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },\n    });\n    const legacyConfigs = Array.isArray(legacyResp) ? legacyResp : [];\n    return legacyConfigs[0] || null;\n  }\n}\n\n// Load recent staging counts per topic (last 24h) to detect velocity\nasync function loadRecentVolume() {\n  try {\n    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: SUPABASE_URL + '/rest/v1/news_staging?select=topic,id&collected_at=gte.' + since,\n      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },\n    });\n    const rows = Array.isArray(resp) ? resp : [];\n    const counts = {};\n    for (const r of rows) {\n      const t = r.topic || 'geral';\n      counts[t] = (counts[t] || 0) + 1;\n    }\n    return counts;\n  } catch (e) {\n    return {};\n  }\n}\n\nlet tags = DEFAULT_TAGS;\n\ntry {\n  const activeConfig = await loadPipelineConfig();\n  const themeRules = Array.isArray(activeConfig?.theme_rules) ? activeConfig.theme_rules : [];\n\n  if (themeRules.length > 0) {\n    const themedTags = themeRules.flatMap((rule) => {\n      const searchTerms = Array.isArray(rule?.searchTerms) ? rule.searchTerms : Array.isArray(rule?.search_terms) ? rule.search_terms : [];\n      const slug = String(rule?.slug || '').trim();\n      return searchTerms.map((term) => String(term || '').trim()).filter(Boolean).map((term) => ({ tag: term, topic: slug || tagToTopic(term) }));\n    });\n    if (themedTags.length > 0) tags = themedTags;\n  } else if (Array.isArray(activeConfig?.tags) && activeConfig.tags.length > 0) {\n    tags = activeConfig.tags.map((t) => ({ tag: t, topic: tagToTopic(t) }));\n  }\n} catch (e) { /* fallback to defaults */ }\n\nconst volumeByTopic = await loadRecentVolume.call(this);\n\nreturn tags.map((t) => ({\n  json: {\n    url: buildGoogleNewsUrl(t.tag),\n    topic: t.topic,\n    search_tag: t.tag,\n    recent_volume: volumeByTopic[t.topic] || 0\n  }\n}));"
+      },
+      "typeVersion": 2
     },
     {
+      "id": "rss_http",
+      "name": "Fetch RSS via HTTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -920,
+        200
+      ],
       "parameters": {
-        "method": "GET",
         "url": "={{ $json.url }}",
+        "method": "GET",
+        "options": {
+          "timeout": 15000,
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5,
+              "followRedirects": true
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "includeInputFields": true
+        },
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -66,69 +88,58 @@
               "value": "application/rss+xml, application/xml, text/xml, */*"
             }
           ]
-        },
-        "options": {
-          "redirect": {
-            "redirect": {
-              "followRedirects": true,
-              "maxRedirects": 5
-            }
-          },
-          "timeout": 15000,
-          "response": {
-            "response": {
-              "responseFormat": "text"
-            }
-          }
         }
       },
-      "id": "rss_http",
-      "name": "Fetch RSS via HTTP",
-      "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        -920,
-        200
-      ],
       "continueOnFail": true
     },
     {
-      "parameters": {
-        "jsCode": "// Parse RSS XML into structured items\nconst feedUrl = $('Build Feed List').item.json.url;\nconst topic = $('Build Feed List').item.json.topic;\nconst searchTag = $('Build Feed List').item.json.search_tag;\nconst recentVolume = $('Build Feed List').item.json.recent_volume || 0;\n\nconst xml = String($input.first().json.data || '');\nif (!xml || !xml.includes('<item>')) {\n  // No RSS items — return empty to skip downstream\n  return [];\n}\n\nconst itemBlocks = xml.split('<item>').slice(1);\nconst output = [];\n\nfunction extractTag(block, tag) {\n  const regex = new RegExp('<' + tag + '[^>]*><!\\\\[CDATA\\\\\\\\[(.+?)\\\\]\\\\]>|<' + tag + '[^>]*>([^<]*)</' + tag + '>', 's');\n  const m = block.match(regex);\n  return (m ? (m[1] || m[2] || '') : '').trim();\n}\n\nfor (const block of itemBlocks) {\n  try {\n    const title = extractTag(block, 'title');\n    const link = extractTag(block, 'link');\n    const pubDate = extractTag(block, 'pubDate');\n    const description = extractTag(block, 'description');\n    const source = extractTag(block, 'source');\n    if (!title || !link) continue;\n\n    let isoDate;\n    try { isoDate = new Date(pubDate).toISOString(); } catch { isoDate = new Date().toISOString(); }\n\n    output.push({\n      json: {\n        title,\n        link,\n        isoDate,\n        pubDate,\n        contentSnippet: description.replace(/<[^>]+>/g, '').substring(0, 500),\n        content: description,\n        source: source || 'Google News',\n        creator: source || 'Google News',\n        _feedUrl: feedUrl,\n        _topic: topic,\n        _searchTag: searchTag,\n        _recentVolume: recentVolume\n      }\n    });\n  } catch (e) { /* skip malformed item */ }\n}\n\nreturn output;"
-      },
       "id": "parse_rss",
       "name": "Parse RSS XML",
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
       "position": [
         -700,
         200
       ],
+      "parameters": {
+        "jsCode": "// Parse RSS XML into structured items - runs ONCE for ALL Fetch RSS items\nconst allFetches = $input.all();\nconst output = [];\n\nfunction extractTag(block, tag) {\n  const regex = new RegExp('<' + tag + '[^>]*><!\\\\[CDATA\\\\[(.+?)\\\\]\\\\]>|<' + tag + '[^>]*>([^<]*)<\\/' + tag + '>', 's');\n  const m = block.match(regex);\n  return (m ? (m[1] || m[2] || '') : '').trim();\n}\n\nfor (const fetchItem of allFetches) {\n  const feedUrl = String(fetchItem.json.url || '');\n  const topic = String(fetchItem.json.topic || 'geral');\n  const searchTag = String(fetchItem.json.search_tag || '');\n  const recentVolume = fetchItem.json.recent_volume || 0;\n  const xml = String(fetchItem.json.data || '');\n\n  if (!xml || !xml.includes('<item>')) continue;\n\n  const itemBlocks = xml.split('<item>').slice(1);\n\n  for (const block of itemBlocks) {\n    try {\n      const title = extractTag(block, 'title');\n      const link = extractTag(block, 'link');\n      const pubDate = extractTag(block, 'pubDate');\n      const description = extractTag(block, 'description');\n      const source = extractTag(block, 'source');\n      if (!title || !link) continue;\n\n      let isoDate;\n      try { isoDate = new Date(pubDate).toISOString(); } catch { isoDate = new Date().toISOString(); }\n\n      output.push({\n        json: {\n          title: title,\n          link: link,\n          isoDate: isoDate,\n          pubDate: pubDate,\n          contentSnippet: description.replace(/<[^>]+>/g, '').substring(0, 500),\n          content: description,\n          source: source || 'Google News',\n          creator: source || 'Google News',\n          _feedUrl: feedUrl,\n          _topic: topic,\n          _searchTag: searchTag,\n          _recentVolume: recentVolume\n        }\n      });\n    } catch (e) { /* skip malformed item */ }\n  }\n}\n\nreturn output;"
+      },
+      "typeVersion": 2,
       "continueOnFail": true
     },
     {
-      "parameters": {
-        "jsCode": "function fnv1aHash(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = Math.imul(h, 0x01000193);\n  }\n  h = h >>> 0;\n  let hex = h.toString(16).padStart(8, '0');\n  let h2 = 0x811c9dc5;\n  for (let i = str.length - 1; i >= 0; i--) {\n    h2 ^= str.charCodeAt(i);\n    h2 = Math.imul(h2, 0x01000193);\n  }\n  h2 = h2 >>> 0;\n  hex += h2.toString(16).padStart(8, '0');\n  let h3 = 0x811c9dc5;\n  for (let i = 0; i < str.length; i += 2) {\n    h3 ^= str.charCodeAt(i);\n    h3 = Math.imul(h3, 0x01000193);\n  }\n  h3 = h3 >>> 0;\n  hex += h3.toString(16).padStart(8, '0');\n  let h4 = 0x811c9dc5;\n  for (let i = 1; i < str.length; i += 2) {\n    h4 ^= str.charCodeAt(i);\n    h4 = Math.imul(h4, 0x01000193);\n  }\n  h4 = h4 >>> 0;\n  hex += h4.toString(16).padStart(8, '0');\n  return hex;\n}\n\n// Estimate trend score based on recency and volume signals\nfunction calculateTrendScore(item, feedMeta) {\n  let score = 50; // baseline\n\n  // Recency bonus: articles < 2h get +30, < 6h get +20, < 12h get +10\n  const pubDate = new Date(item.json.isoDate || item.json.pubDate || Date.now());\n  const hoursAgo = (Date.now() - pubDate.getTime()) / (1000 * 60 * 60);\n  if (hoursAgo < 2) score += 30;\n  else if (hoursAgo < 6) score += 20;\n  else if (hoursAgo < 12) score += 10;\n\n  // Topic volume bonus: more articles on same topic = trending\n  const vol = feedMeta.recent_volume || 0;\n  if (vol > 20) score += 15;\n  else if (vol > 10) score += 10;\n  else if (vol > 5) score += 5;\n\n  // Title signals: breaking news indicators\n  const title = String(item.json.title || '').toLowerCase();\n  const hotWords = ['urgente', 'breaking', 'exclusivo', 'alerta', 'novo', 'lança', 'anuncia', 'revela'];\n  if (hotWords.some(w => title.includes(w))) score += 10;\n\n  return Math.min(score, 100);\n}\n\nconst feedItem = $('Build Feed List').item.json;\nconst output = [];\n\nfor (const item of items) {\n  try {\n    const title = String(item.json.title || '').trim();\n    const link = String(item.json.link || '').trim();\n    if (!title || !link) continue;\n    const fingerprint = fnv1aHash(title.toLowerCase().replace(/[^a-z0-9]/g, ''));\n    const trendScore = calculateTrendScore(item, feedItem);\n\n    output.push({\n      json: {\n        title: title,\n        summary: String(item.json.contentSnippet || item.json.content || '').substring(0, 500),\n        canonical_url: link,\n        source_name: String(item.json.creator || item.json.source || 'Google News'),\n        topic: feedItem.topic || 'geral',\n        published_at: item.json.isoDate || item.json.pubDate || new Date().toISOString(),\n        source_url: feedItem.url,\n        duplicate_fingerprint: fingerprint,\n        processed: false,\n        content: null,\n        trend_score: trendScore,\n        search_volume: feedItem.recent_volume || 0,\n        trend_velocity: 0,\n        metadata: {\n          feed_url: feedItem.url,\n          search_tag: feedItem.search_tag,\n          trend_score: trendScore\n        }\n      }\n    });\n  } catch (e) { /* skip */ }\n}\n\n// Sort by trend score descending - prioritize trending content\noutput.sort((a, b) => (b.json.trend_score || 0) - (a.json.trend_score || 0));\n\nreturn output;"
-      },
       "id": "normalize",
       "name": "Normalize + Score Trends",
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
       "position": [
         -680,
         200
-      ]
+      ],
+      "parameters": {
+        "jsCode": "function fnv1aHash(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = Math.imul(h, 0x01000193);\n  }\n  h = h >>> 0;\n  let hex = h.toString(16).padStart(8, '0');\n  let h2 = 0x811c9dc5;\n  for (let i = str.length - 1; i >= 0; i--) {\n    h2 ^= str.charCodeAt(i);\n    h2 = Math.imul(h2, 0x01000193);\n  }\n  h2 = h2 >>> 0;\n  hex += h2.toString(16).padStart(8, '0');\n  let h3 = 0x811c9dc5;\n  for (let i = 0; i < str.length; i += 2) {\n    h3 ^= str.charCodeAt(i);\n    h3 = Math.imul(h3, 0x01000193);\n  }\n  h3 = h3 >>> 0;\n  hex += h3.toString(16).padStart(8, '0');\n  let h4 = 0x811c9dc5;\n  for (let i = 1; i < str.length; i += 2) {\n    h4 ^= str.charCodeAt(i);\n    h4 = Math.imul(h4, 0x01000193);\n  }\n  h4 = h4 >>> 0;\n  hex += h4.toString(16).padStart(8, '0');\n  return hex;\n}\n\nfunction calculateTrendScore(item, feedMeta) {\n  let score = 50;\n  const pubDate = new Date(item.json.isoDate || item.json.pubDate || Date.now());\n  const hoursAgo = (Date.now() - pubDate.getTime()) / (1000 * 60 * 60);\n  if (hoursAgo < 2) score += 30;\n  else if (hoursAgo < 6) score += 20;\n  else if (hoursAgo < 12) score += 10;\n  const vol = feedMeta.recent_volume || 0;\n  if (vol > 20) score += 15;\n  else if (vol > 10) score += 10;\n  else if (vol > 5) score += 5;\n  const title = String(item.json.title || '').toLowerCase();\n  const hotWords = ['urgente', 'breaking', 'exclusivo', 'alerta', 'novo', 'lança', 'anuncia', 'revela'];\n  if (hotWords.some(w => title.includes(w))) score += 10;\n  return Math.min(score, 100);\n}\n\n// runOnceForAllItems: iterate all input items from Parse RSS\nconst allItems = $input.all();\nconst output = [];\n\nfor (const item of allItems) {\n  try {\n    const title = String(item.json.title || '').trim();\n    const link = String(item.json.link || '').trim();\n    if (!title || !link) continue;\n\n    const feedMeta = {\n      url: String(item.json._feedUrl || ''),\n      topic: String(item.json._topic || 'geral'),\n      search_tag: String(item.json._searchTag || ''),\n      recent_volume: item.json._recentVolume || 0\n    };\n\n    const fingerprint = fnv1aHash(title.toLowerCase().replace(/[^a-z0-9]/g, ''));\n    const trendScore = calculateTrendScore(item, feedMeta);\n\n    output.push({\n      json: {\n        title: title,\n        summary: String(item.json.contentSnippet || item.json.content || '').substring(0, 500),\n        canonical_url: link,\n        source_name: String(item.json.creator || item.json.source || 'Google News'),\n        topic: feedMeta.topic,\n        published_at: String(item.json.isoDate || item.json.pubDate || new Date().toISOString()),\n        source_url: feedMeta.url,\n        duplicate_fingerprint: fingerprint,\n        processed: false,\n        content: null,\n        trend_score: trendScore,\n        search_volume: feedMeta.recent_volume,\n        trend_velocity: 0,\n        metadata: {\n          feed_url: feedMeta.url,\n          search_tag: feedMeta.search_tag,\n          trend_score: trendScore\n        }\n      }\n    });\n  } catch (e) { /* skip */ }\n}\n\noutput.sort((a, b) => (b.json.trend_score || 0) - (a.json.trend_score || 0));\nreturn output;"
+      },
+      "typeVersion": 2
     },
     {
+      "id": "insert_staging",
+      "name": "Insert Staging",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -440,
+        200
+      ],
       "parameters": {
+        "url": "={{ ($vars.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/news_staging' }}",
         "method": "POST",
-        "url": "={{ ($env.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/news_staging' }}",
+        "jsonBody": "={{ { title: $json.title, summary: $json.summary, canonical_url: $json.canonical_url, source_name: $json.source_name, source_url: $json.source_url, topic: $json.topic, published_at: $json.published_at, duplicate_fingerprint: $json.duplicate_fingerprint, processed: false, content: $json.content, trend_score: $json.trend_score, search_volume: $json.search_volume, trend_velocity: $json.trend_velocity, metadata: $json.metadata } }}",
+        "sendBody": true,
         "sendHeaders": true,
+        "specifyBody": "json",
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "={{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -140,22 +151,12 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
             }
           ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { title: $json.title, summary: $json.summary, canonical_url: $json.canonical_url, source_name: $json.source_name, source_url: $json.source_url, topic: $json.topic, published_at: $json.published_at, duplicate_fingerprint: $json.duplicate_fingerprint, processed: false, content: $json.content, trend_score: $json.trend_score, search_volume: $json.search_volume, trend_velocity: $json.trend_velocity, metadata: $json.metadata } }}"
+        }
       },
-      "id": "insert_staging",
-      "name": "Insert Staging",
-      "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        -440,
-        200
-      ],
       "continueOnFail": true
     }
   ],
