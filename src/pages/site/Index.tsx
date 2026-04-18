@@ -477,29 +477,28 @@ const Index = () => {
       {categories?.length ? (
         <div
           id="categorias"
-          className="sticky top-0 z-10 border-b border-border/70 bg-background/95 backdrop-blur-md"
+          className="sticky top-0 z-10 border-b border-border bg-background/98 shadow-sm backdrop-blur-xl"
         >
           <div className="container mx-auto px-4">
-            <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-none">
-              <span className="mr-1 flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                <Tag size={12} />
+            <div className="flex items-center gap-0.5 overflow-x-auto py-2.5 scrollbar-none">
+              <span className="mr-2 flex shrink-0 items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                <Tag size={11} />
                 Editorias
               </span>
-              <div className="mx-3 h-4 w-px shrink-0 bg-border" />
               {categories.slice(0, 10).map((category) => (
                 <Link
                   key={category.id}
                   to={`/${category.slug}`}
-                  className="shrink-0 rounded-full border border-transparent px-4 py-1.5 text-xs font-semibold text-muted-foreground transition-all duration-150 hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+                  className="shrink-0 rounded-md px-3.5 py-2 text-xs font-semibold text-muted-foreground transition-all duration-150 hover:bg-muted hover:text-foreground"
                 >
                   {category.name}
                 </Link>
               ))}
               <Link
                 to="/categorias"
-                className="ml-auto shrink-0 inline-flex items-center gap-1 rounded-full border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all hover:text-primary"
+                className="ml-auto shrink-0 inline-flex items-center gap-1 rounded-md px-3 py-2 text-xs font-semibold text-primary transition-all hover:bg-primary/10"
               >
-                Todas <ArrowRight size={11} />
+                Ver todas <ArrowRight size={11} />
               </Link>
             </div>
           </div>
@@ -507,101 +506,111 @@ const Index = () => {
       ) : null}
 
       {/* ── Main Content ─────────────────────────────────────────────────── */}
-      <main className="container mx-auto px-4 py-8 lg:py-12" id="noticias">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
-          {/* Content column */}
-          <div className="space-y-12 lg:col-span-8">
-            {homeConfig.sections
-              .filter((section) => section.enabled && section.id !== 'newsletter')
-              .map((section) => renderSection(section))}
-          </div>
+      <main className="bg-muted/25">
+        <div className="container mx-auto px-4 py-10 lg:py-14" id="noticias">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
+            {/* Content column */}
+            <div className="space-y-14 lg:col-span-8">
+              {homeConfig.sections
+                .filter((section) => section.enabled && section.id !== 'newsletter')
+                .map((section) => renderSection(section))}
+            </div>
 
-          {/* Sidebar */}
-          <aside className="space-y-6 lg:col-span-4">
-            <AdSpace size="square" position="Barra Lateral" className="hidden lg:flex" />
+            {/* Sidebar */}
+            <aside className="space-y-6 lg:col-span-4">
+              <AdSpace size="square" position="Barra Lateral" className="hidden lg:flex" />
 
-            <div className="space-y-6 lg:sticky lg:top-20">
-              {/* Popular posts */}
-              <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
-                <div className="mb-5 flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <TrendingUp size={15} />
-                  </span>
-                  <h3 className="text-base font-bold text-card-foreground">Em Alta</h3>
-                </div>
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Skeleton key={i} className="h-10 w-full rounded-lg" />
-                    ))}
+              <div className="space-y-6 lg:sticky lg:top-20">
+                {/* Popular posts */}
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                  <div className="flex items-center gap-3 border-b border-border/50 px-5 py-4">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
+                      <TrendingUp size={16} />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-extrabold text-card-foreground">Em Alta</h3>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Mais lidos</p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {popularPosts.map((post, index) => (
-                      <Link
-                        to={`/post/${post.slug}`}
-                        key={post.id}
-                        className="group flex gap-3"
-                      >
-                        <span className="w-7 shrink-0 text-right text-2xl font-black leading-none text-primary/20 transition-colors group-hover:text-primary/40">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <div className="min-w-0">
-                          <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-card-foreground transition-colors group-hover:text-primary">
-                            {post.title}
-                          </h4>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {formatPostDate(post.published_at, post.created_at)} · {post.views || 0} views
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
+                  <div className="divide-y divide-border/50">
+                    {isLoading ? (
+                      <div className="space-y-4 p-5">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                        ))}
+                      </div>
+                    ) : (
+                      popularPosts.map((post, index) => (
+                        <Link
+                          to={`/post/${post.slug}`}
+                          key={post.id}
+                          className="group flex items-start gap-4 px-5 py-4 transition-colors hover:bg-muted/50"
+                        >
+                          <span className="w-8 shrink-0 text-right text-2xl font-black leading-tight tabular-nums text-primary/20 transition-colors group-hover:text-primary/50">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="line-clamp-2 text-sm font-bold leading-snug text-card-foreground transition-colors group-hover:text-primary">
+                              {post.title}
+                            </h4>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {formatPostDate(post.published_at, post.created_at)} · {post.views || 0} views
+                            </p>
+                          </div>
+                        </Link>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Categories sidebar */}
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                  <div className="flex items-center gap-3 border-b border-border/50 px-5 py-4">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
+                      <Tag size={16} />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-extrabold text-card-foreground">Categorias</h3>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Navegue por temas</p>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex flex-wrap gap-2">
+                      {categories?.map((category) => (
+                        <Link
+                          key={category.id}
+                          to={`/${category.slug}`}
+                          className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <AdSpace size="square" position="Lateral 2" className="hidden lg:flex" />
+
+                {/* Newsletter */}
+                {homeConfig.sections.some((s) => s.id === 'newsletter' && s.enabled) && (
+                  <div
+                    id="newsletter"
+                    className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 p-6 text-white shadow-lg dark:from-primary-700 dark:to-secondary-700"
+                  >
+                    <h3 className="mb-1.5 text-lg font-bold">{newsletterLabel}</h3>
+                    <p className="mb-5 text-sm text-white/80">
+                      Receba as principais notícias diretamente no seu email
+                    </p>
+                    <Suspense
+                      fallback={<div className="h-10 animate-pulse rounded-xl bg-white/20" />}
+                    >
+                      <NewsletterForm variant="sidebar" />
+                    </Suspense>
                   </div>
                 )}
               </div>
-
-              {/* Categories sidebar */}
-              <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
-                <div className="mb-4 flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Tag size={15} />
-                  </span>
-                  <h3 className="text-base font-bold text-card-foreground">Categorias</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {categories?.map((category) => (
-                    <Link
-                      key={category.id}
-                      to={`/${category.slug}`}
-                      className="rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <AdSpace size="square" position="Lateral 2" className="hidden lg:flex" />
-
-              {/* Newsletter */}
-              {homeConfig.sections.some((s) => s.id === 'newsletter' && s.enabled) && (
-                <div
-                  id="newsletter"
-                  className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 p-6 text-white shadow-lg dark:from-primary-700 dark:to-secondary-700"
-                >
-                  <h3 className="mb-1.5 text-lg font-bold">{newsletterLabel}</h3>
-                  <p className="mb-5 text-sm text-white/80">
-                    Receba as principais notícias diretamente no seu email
-                  </p>
-                  <Suspense
-                    fallback={<div className="h-10 animate-pulse rounded-xl bg-white/20" />}
-                  >
-                    <NewsletterForm variant="sidebar" />
-                  </Suspense>
-                </div>
-              )}
-            </div>
-          </aside>
+            </aside>
+          </div>
         </div>
       </main>
 

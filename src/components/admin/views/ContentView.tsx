@@ -61,9 +61,29 @@ const ContentView: React.FC<ContentViewProps> = ({
   };
 
   return (
-    <div className="space-y-5">
-      {/* ── Top bar ── */}
-      <div className="rounded-3xl border border-border/40 bg-card/80 p-4 shadow-sm">
+    <div className="space-y-6">
+      {/* ── Page Header ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
+            <LayoutList className="h-3 w-3" />
+            Gestão editorial
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            Conteúdo
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Posts editoriais, curadoria de IA e categorias do portal.
+          </p>
+        </div>
+        <Button onClick={onNewPost} className="gap-2 rounded-xl shadow-sm sm:shrink-0">
+          <Plus className="h-4 w-4" />
+          Novo Post
+        </Button>
+      </div>
+
+      {/* ── Search + filter bar ── */}
+      <div className="rounded-2xl border border-border/40 bg-card/80 p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -87,11 +107,6 @@ const ContentView: React.FC<ContentViewProps> = ({
               </button>
             ))}
           </div>
-
-          <Button onClick={onNewPost} className="h-11 gap-2 rounded-2xl px-4 shadow-sm lg:min-w-[160px]">
-            <Plus className="h-4 w-4" />
-            Novo Post
-          </Button>
         </div>
       </div>
 
@@ -112,19 +127,19 @@ const ContentView: React.FC<ContentViewProps> = ({
 
       {/* ── Tabs: Posts | Curados IA | Categorias ── */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-        <TabsList className="h-9 gap-1">
-          <TabsTrigger value="posts" className="gap-1.5 text-xs">
+        <TabsList className="h-10 gap-1 rounded-2xl p-1">
+          <TabsTrigger value="posts" className="gap-2 rounded-xl px-4 text-xs font-semibold">
             <LayoutList className="w-3.5 h-3.5" />
             Posts editoriais
           </TabsTrigger>
-          <TabsTrigger value="curated" className="gap-1.5 text-xs">
+          <TabsTrigger value="curated" className="gap-2 rounded-xl px-4 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             Curados pela IA
             {curatedStats && curatedStats.ready > 0 && (
               <Badge className="bg-emerald-500 text-[10px] px-1.5 py-0 ml-0.5">{curatedStats.ready}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="categories" className="gap-1.5 text-xs">
+          <TabsTrigger value="categories" className="gap-2 rounded-xl px-4 text-xs font-semibold">
             <FolderOpen className="w-3.5 h-3.5" />
             Categorias
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-0.5">{categories.length}</Badge>
