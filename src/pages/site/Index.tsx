@@ -12,7 +12,7 @@ import { useCourses } from '@/hooks/useCourses';
 import { usePagination } from '@/hooks/usePagination';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link, NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BookOpen,
@@ -472,34 +472,6 @@ const Index = () => {
           </div>
         )}
       />}
-
-      {/* ── Category Navigation Bar ──────────────────────────────────────── */}
-      {categories?.length ? (
-        <div
-          id="categorias"
-          className="sticky top-0 z-10 border-b border-border bg-background/98 shadow-sm backdrop-blur-xl"
-        >
-          <div className="container mx-auto px-4">
-            <div className="flex items-center gap-0.5 overflow-x-auto py-2.5 scrollbar-none">
-              {categories.slice(0, 10).map((category) => (
-                <NavLink
-                  key={category.id}
-                  to={`/${category.slug}`}
-                  className={({ isActive }) =>
-                    `shrink-0 rounded-md px-3.5 py-2 text-xs font-semibold transition-all duration-150 ${
-                      isActive
-                        ? 'bg-muted text-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`
-                  }
-                >
-                  {category.name}
-                </NavLink>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {/* ── Main Content ─────────────────────────────────────────────────── */}
       <main className="bg-muted/25">
