@@ -76,9 +76,36 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     post?.category_id ? [post.category_id] : [],
   );
 
+  const [isUploading, setIsUploading] = useState(false);
+  const [isBannerUploading, setIsBannerUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(post?.image_url || null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(post?.banner_url || null);
+
   const { data: existingPostCategories } = usePostCategories(post?.id ?? null);
   const setPostCategories = useSetPostCategories();
   const categoriesInitRef = useRef(false);
+
+  // Reset all form state when switching to a different post
+  useEffect(() => {
+    categoriesInitRef.current = false;
+    setFormData({
+      title: post?.title || '',
+      excerpt: post?.excerpt || '',
+      content: post?.content || '',
+      category_id: post?.category_id || '',
+      image_url: post?.image_url || '',
+      banner_url: post?.banner_url || '',
+      author_name: post?.author_name || 'Equipa Vision7',
+      tags: post?.tags?.join(', ') || '',
+      read_time: post?.read_time || '5 min',
+      featured: post?.featured || false,
+      status: post?.status || 'draft',
+    });
+    setSelectedCategoryIds(post?.category_id ? [post.category_id] : []);
+    setImagePreview(post?.image_url || null);
+    setBannerPreview(post?.banner_url || null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post?.id]);
 
   // Sync from DB junction table on load (overrides the single category_id default)
   useEffect(() => {
@@ -94,10 +121,6 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     );
   }, []);
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [isBannerUploading, setIsBannerUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(post?.image_url || null);
-  const [bannerPreview, setBannerPreview] = useState<string | null>(post?.banner_url || null);
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
