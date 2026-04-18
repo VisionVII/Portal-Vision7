@@ -212,52 +212,53 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
   };
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-4">
-        <div className="flex flex-col gap-4 rounded-3xl border border-border/40 bg-card/80 p-4 shadow-sm backdrop-blur-sm sm:p-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              <Activity className="h-3.5 w-3.5" />
-              Dashboard executivo
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Visão geral</h2>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Controle operacional do portal, saúde do pipeline e leitura rápida de performance.
-              </p>
-            </div>
+    <div className="space-y-8">
+      {/* ── Page Header ──────────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
+            <Activity className="h-3 w-3" />
+            Dashboard executivo
           </div>
-
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {allowedViews.includes('content') && (
-              <Button onClick={onNewPost} className="justify-start gap-2 rounded-xl">
-                <Plus className="h-4 w-4" />
-                Novo post
-              </Button>
-            )}
-            {allowedViews.includes('content') && latestDraft && (
-              <Button variant="outline" onClick={handleResumeDraft} className="justify-start gap-2 rounded-xl">
-                <Sparkles className="h-4 w-4" />
-                Continuar rascunho
-              </Button>
-            )}
-            {allowedViews.includes('automations') && (
-              <Button variant="secondary" onClick={() => onNavigate('automations')} className="justify-start gap-2 rounded-xl">
-                <Bot className="h-4 w-4" />
-                Automações
-              </Button>
-            )}
-            <Link to="/" target="_blank" className="sm:col-span-2 lg:col-span-1">
-              <Button variant="outline" className="w-full justify-start gap-2 rounded-xl text-muted-foreground">
-                <Globe className="h-4 w-4" />
-                Portal
-              </Button>
-            </Link>
-          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            Visão geral
+          </h1>
+          <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
+            Controle operacional do portal, saúde do pipeline e leitura rápida de performance.
+          </p>
         </div>
 
-        <AdminStatsCards />
-      </section>
+        {/* Quick actions */}
+        <div className="flex flex-wrap items-center gap-2">
+          {allowedViews.includes('content') && (
+            <Button onClick={onNewPost} className="gap-2 rounded-xl shadow-sm">
+              <Plus className="h-4 w-4" />
+              Novo post
+            </Button>
+          )}
+          {allowedViews.includes('content') && latestDraft && (
+            <Button variant="outline" onClick={handleResumeDraft} className="gap-2 rounded-xl">
+              <Sparkles className="h-4 w-4" />
+              Continuar rascunho
+            </Button>
+          )}
+          {allowedViews.includes('automations') && (
+            <Button variant="outline" onClick={() => onNavigate('automations')} className="gap-2 rounded-xl text-muted-foreground">
+              <Bot className="h-4 w-4" />
+              Automações
+            </Button>
+          )}
+          <Link to="/" target="_blank">
+            <Button variant="ghost" className="gap-2 rounded-xl text-muted-foreground">
+              <Globe className="h-4 w-4" />
+              Portal
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Key metrics ──────────────────────────────────────────────────── */}
+      <AdminStatsCards />
 
       <section>
         <Card className="border-border/40 bg-card/80 shadow-sm">
