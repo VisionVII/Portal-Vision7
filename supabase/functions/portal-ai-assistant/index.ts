@@ -244,10 +244,10 @@ async function loadAssistantSdd() {
 }
 
 async function loadApiKey(adminClient: ReturnType<typeof createClient>): Promise<{ key: string; provider: 'huggingface' | 'groq' }> {
-  // 1. Try HF env var first
-  if (HF_API_TOKEN) return { key: HF_API_TOKEN, provider: 'huggingface' };
-  // 2. Try Groq env var
+  // 1. Try Groq env var first — fastest, most reliable for real-time chat
   if (GROQ_API_KEY) return { key: GROQ_API_KEY, provider: 'groq' };
+  // 2. Try HF env var
+  if (HF_API_TOKEN) return { key: HF_API_TOKEN, provider: 'huggingface' };
 
   // 3. Try HF_API_TOKEN from DB
   const { data: hfCred } = await adminClient

@@ -23,6 +23,23 @@ export const PUBLIC_SITE_SETTING_KEYS = [
   'home_page_config',
 ];
 
+const SITE_SETTINGS_CACHE_KEY = 'v7_public_settings_cache';
+
+function readSettingsCache(): SiteSettingsMap | undefined {
+  try {
+    const raw = localStorage.getItem(SITE_SETTINGS_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as SiteSettingsMap) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeSettingsCache(data: SiteSettingsMap) {
+  try {
+    localStorage.setItem(SITE_SETTINGS_CACHE_KEY, JSON.stringify(data));
+  } catch { /* quota exceeded — ignore */ }
+}
+
 const normalizeSiteSettingKeys = (keys?: string[]) => Array.from(new Set((keys?.length ? keys : PUBLIC_SITE_SETTING_KEYS)
   .map((key) => key.trim())
   .filter(Boolean))).sort();
@@ -57,8 +74,11 @@ export const useSiteSettings = (options: UseSiteSettingsOptions = {}) => {
       }
       const settings: SiteSettingsMap = {};
       (data as SiteSetting[])?.forEach(s => { settings[s.key] = s.value; });
+      if (!includePrivate) writeSettingsCache(settings);
       return settings;
     },
+    initialData: !includePrivate ? readSettingsCache() : undefined,
+    initialDataUpdatedAt: 0, // treat cached data as stale so a background refetch always runs
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
     staleTime: 5 * 60 * 1000,
