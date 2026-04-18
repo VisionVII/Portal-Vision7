@@ -98,14 +98,18 @@ export const useCreateRegistrationInvite = () => {
     }) => {
       const { data, error } = await supabase
         .from('registration_invites')
-        .insert([{
-          email,
-          role,
-          token: buildToken(),
-          status: 'pending',
-          invited_at: new Date().toISOString(),
-          expires_at: expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        }])
+        .upsert(
+          [{
+            email,
+            role,
+            token: buildToken(),
+            status: 'pending',
+            invited_at: new Date().toISOString(),
+            expires_at: expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            used_at: null,
+          }],
+          { onConflict: 'email' },
+        )
         .select()
         .single();
 
