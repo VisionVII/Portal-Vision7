@@ -13,18 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: '20'
-          cache: 'npm'
+          bun-version: latest
 
-      - run: npm ci
+      - run: bun install --frozen-lockfile
 
       - name: ESLint
-        run: npm run lint
+        run: bun run lint
 
       - name: TypeScript Check
-        run: npx tsc --noEmit
+        run: bunx tsc --noEmit
 
   build:
     name: Build
@@ -33,15 +32,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: '20'
-          cache: 'npm'
+          bun-version: latest
 
-      - run: npm ci
+      - run: bun install --frozen-lockfile
 
       - name: Production Build
-        run: npm run build
+        run: bun run build
 
       - name: Bundle Size Report
         run: |
