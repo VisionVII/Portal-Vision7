@@ -132,6 +132,8 @@ export const useCreateCourse = () => {
         duration: courseData.duration,
         status: courseData.status,
         category_id: courseData.category_id ?? null,
+        partner_type: courseData.partner_type ?? 'curso',
+        image_url: courseData.image_url ?? null,
         published_at: courseData.status === 'published' ? new Date().toISOString() : null,
       };
 
@@ -163,6 +165,8 @@ export const useUpdateCourse = () => {
         duration: courseData.duration,
         status: courseData.status,
         category_id: courseData.category_id ?? undefined,
+        partner_type: courseData.partner_type ?? undefined,
+        image_url: courseData.image_url !== undefined ? courseData.image_url : undefined,
         published_at: courseData.status === 'published' ? new Date().toISOString() : undefined,
       };
 
