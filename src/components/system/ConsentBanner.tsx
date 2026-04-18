@@ -42,6 +42,31 @@ const ConsentBanner: React.FC = () => {
 
   const handleAcceptAll = useCallback(() => {
     acceptAll();
+
+    // Trigger geolocation flow immediately (same as ConsentPreferences.handleSave)
+    if (typeof window !== 'undefined') {
+      const geoConsent = localStorage.getItem('geo-consent');
+      if (geoConsent !== 'accepted' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            localStorage.setItem('geo-consent', 'accepted');
+            localStorage.setItem('user-geo', JSON.stringify({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+            }));
+            window.dispatchEvent(new CustomEvent('geolocation-update', {
+              detail: { latitude: pos.coords.latitude, longitude: pos.coords.longitude },
+            }));
+          },
+          () => {
+            // GPS denied — mark as rejected; IP fallback in useUserLocation handles the rest
+            localStorage.setItem('geo-consent', 'rejected');
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+        );
+      }
+    }
+
     setAnimateIn(false);
     setTimeout(() => setShowBanner(false), 200);
   }, [acceptAll]);

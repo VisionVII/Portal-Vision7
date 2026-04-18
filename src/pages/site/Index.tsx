@@ -488,7 +488,7 @@ const Index = () => {
             <aside className="space-y-6 lg:col-span-4">
               <AdSpace size="square" position="Barra Lateral" className="hidden lg:flex" />
 
-              <div className="space-y-6">
+              <div className="space-y-6 lg:sticky lg:top-24">
                 {/* Popular posts */}
                 <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                   <div className="flex items-center gap-3 border-b border-border/50 px-5 py-4">

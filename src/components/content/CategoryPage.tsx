@@ -137,7 +137,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
           </div>
 
           {/* Sidebar */}
-          <aside className="space-y-6">
+          <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
             <AdSpace size="square" position={`Lateral ${title}`} className="mx-auto" />
 
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
