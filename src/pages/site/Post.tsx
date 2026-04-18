@@ -200,6 +200,8 @@ const Post = () => {
             <img
               src={heroImage}
               alt={post.title}
+              width={1280}
+              height={720}
               className="absolute inset-0 h-full w-full object-cover object-center"
               fetchPriority="high"
               decoding="async"
@@ -340,8 +342,11 @@ const Post = () => {
               <img
                 src={post.image_url}
                 alt={post.title}
+                width={1280}
+                height={720}
                 className="h-64 w-full object-cover sm:h-80 lg:h-[420px]"
-                loading="lazy"
+                loading="eager"
+                fetchPriority="high"
                 decoding="async"
               />
             </div>

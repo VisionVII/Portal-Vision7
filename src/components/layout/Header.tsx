@@ -207,6 +207,7 @@ const Header = () => {
                   type="button"
                   variant="outline"
                   size="icon"
+                  aria-label="Abrir menu"
                   className="h-10 w-10 rounded-xl border-white/20 bg-white/10 text-white shadow-sm hover:bg-white/20 dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted"
                 >
                   <Menu className="h-5 w-5" />

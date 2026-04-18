@@ -74,7 +74,7 @@ const Audiocast = () => {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           {hasCover ? (
-            <img src={podcast.cover_url!} alt="" className="h-full w-full object-cover" loading="eager" decoding="async" />
+            <img src={podcast.cover_url!} alt={podcast.title} width={1280} height={720} className="h-full w-full object-cover" loading="eager" decoding="async" />
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800" />
           )}

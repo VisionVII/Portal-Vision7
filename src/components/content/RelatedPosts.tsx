@@ -27,6 +27,8 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ posts }) => {
                 <img
                   src={post.image_url}
                   alt={post.title}
+                  width={640}
+                  height={360}
                   loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />

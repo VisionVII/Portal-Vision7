@@ -510,6 +510,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
+          aria-label="Abrir assistente Vision7 AI"
           className={`shrink-0 text-white shadow-lg shadow-[#027ae3]/25 hover:bg-[#0269c2] ${
             compact
               ? 'h-9 w-9 rounded-lg border border-white/15 bg-[#027ae3]/95 p-0'
