@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import AuthShell from '@/components/admin/AuthShell';
-import { SUPABASE_ANON, SUPABASE_FUNCTIONS_URL } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 const REQUESTABLE_ROLES: Array<{ value: string; label: string; description: string }> = [
   {
@@ -58,26 +58,18 @@ const TeamAccess = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/request-team-access`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
-          'apikey': SUPABASE_ANON,
-        },
-        body: JSON.stringify({
+      const { data, error: fnError } = await supabase.functions.invoke('request-team-access', {
+        body: {
           email: email.trim().toLowerCase(),
           requestedRole,
           context: context.trim(),
-        }),
+        },
       });
 
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok || data?.error) {
+      if (fnError || data?.error) {
         toast({
           title: 'Não foi possível enviar o pedido',
-          description: data?.error || `Erro ${res.status} ao solicitar acesso.`,
+          description: data?.error || fnError?.message || 'Erro ao solicitar acesso.',
           variant: 'destructive',
         });
         return;

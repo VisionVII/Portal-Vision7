@@ -5,9 +5,6 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Enums } from '@/integrations/supabase/types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? '';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
-
 export type AppRole = Enums<'app_role'>;
 
 const DASHBOARD_ROLES: AppRole[] = ['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst'];
@@ -111,33 +108,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ roles: AppRole[]; isAdmin: boolean; canAccessDashboard: boolean; queryFailed: boolean }> => {
     const empty = { roles: [] as AppRole[], isAdmin: false, canAccessDashboard: false, queryFailed: false };
 
-    // Resolve the best available token: explicit > session > anon (anon will be blocked by RLS)
-    const resolveToken = async (): Promise<string> => {
-      if (opts?.accessToken) return opts.accessToken;
-      try {
-        const sess = (await supabase.auth.getSession()).data.session;
-        if (sess?.access_token) return sess.access_token;
-      } catch { /* fall through */ }
-      return SUPABASE_ANON_KEY;
-    };
-
     const fetchRoles = async (): Promise<Array<{ role: string; is_active: boolean }> | null> => {
-      const token = await resolveToken();
-      const url = `${SUPABASE_URL}/rest/v1/user_roles?select=role,is_active&user_id=eq.${userId}&is_active=eq.true`;
+      // Use Supabase client (token from session, user_id never in URL)
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role, is_active')
+        .eq('user_id', userId)
+        .eq('is_active', true);
 
-      console.debug('[Auth] fetchRoles →', { userId, hasJwt: token !== SUPABASE_ANON_KEY });
-
-      const res = await fetch(url, {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.debug('[Auth] fetchRoles ←', res.status);
-      if (!res.ok) return null;
-      return res.json();
+      if (error) return null;
+      return data as Array<{ role: string; is_active: boolean }>;
     };
 
     let data: Array<{ role: string; is_active: boolean }> | null = null;
@@ -166,8 +146,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const activeRoles = Array.from(
       new Set(data.map((r) => r.role as AppRole).filter(Boolean)),
     );
-
-    console.debug('[Auth] Resolved roles:', activeRoles);
 
     return {
       roles: activeRoles,
@@ -304,13 +282,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let data;
     try {
-      console.debug('[Auth] signIn → calling signInWithPassword for', email.trim().toLowerCase());
       const result = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
       });
       data = result.data;
-      console.debug('[Auth] signIn ← result:', { hasUser: !!result.data.user, error: result.error?.message });
       if (result.error) {
         signingInRef.current = false;
         setIsAccessReady(true);
@@ -343,10 +319,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If no roles found, try bootstrapping the first admin (only succeeds when no admin exists)
       if (access.roles.length === 0 && !access.queryFailed) {
         try {
-          console.debug('[Auth] No roles found — calling bootstrap_first_admin()');
           const { data: bootstrapped } = await supabase.rpc('bootstrap_first_admin');
           if (bootstrapped) {
-            console.debug('[Auth] bootstrap_first_admin() returned true — re-fetching roles');
             access = await getUserAccessProfile(data.user.id, {
               accessToken: data.session.access_token,
               email: data.user.email,

@@ -20,7 +20,7 @@ import {
   useRoleAssignments,
 } from '@/hooks/useAdminAccess';
 import { useToast } from '@/hooks/use-toast';
-import { supabase, SUPABASE_FUNCTIONS_URL } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 const ROLE_BLUEPRINTS: Array<{
   role: AppRole;
@@ -115,24 +115,14 @@ const AdminAccessManager = () => {
       });
 
       // 2) Send invite email with 6-digit code via edge function
-      const { data: sessionData } = await supabase.auth.getSession();
-      const jwt = sessionData?.session?.access_token ?? '';
-
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/send-invite-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwt}`,
-        },
-        body: JSON.stringify({ email: normalizedEmail, role }),
+      const { data: resData, error: fnError } = await supabase.functions.invoke('send-invite-code', {
+        body: { email: normalizedEmail, role },
       });
 
-      const resData = await res.json().catch(() => null);
-
-      if (!res.ok || resData?.error) {
+      if (fnError || resData?.error) {
         toast({
           title: 'Convite registado, mas falha no envio do email',
-          description: resData?.error ?? 'O convite foi guardado. Tente reenviar o email.',
+          description: resData?.error ?? fnError?.message ?? 'O convite foi guardado. Tente reenviar o email.',
           variant: 'destructive',
         });
         return;
@@ -158,22 +148,12 @@ const AdminAccessManager = () => {
   };
 
   const handleResendInvite = async (inviteEmail: string, inviteRole: AppRole) => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const jwt = sessionData?.session?.access_token ?? '';
-
-    const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/send-invite-code`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${jwt}`,
-      },
-      body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+    const { data: resData, error: fnError } = await supabase.functions.invoke('send-invite-code', {
+      body: { email: inviteEmail, role: inviteRole },
     });
 
-    const resData = await res.json().catch(() => null);
-
-    if (!res.ok || resData?.error) {
-      toast({ title: 'Erro ao reenviar', description: resData?.error ?? 'Falha ao reenviar o convite.', variant: 'destructive' });
+    if (fnError || resData?.error) {
+      toast({ title: 'Erro ao reenviar', description: resData?.error ?? fnError?.message ?? 'Falha ao reenviar o convite.', variant: 'destructive' });
     } else {
       toast({ title: 'Convite reenviado', description: `Novo código enviado para ${inviteEmail}.` });
     }
