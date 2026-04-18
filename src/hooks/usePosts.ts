@@ -104,6 +104,7 @@ const ADMIN_LIST_SELECT = `
   title,
   slug,
   excerpt,
+  content,
   image_url,
   banner_url,
   category_id,
