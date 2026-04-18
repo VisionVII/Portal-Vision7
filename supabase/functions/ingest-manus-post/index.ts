@@ -19,7 +19,7 @@
  *   image_base64?: string  (data URL base64, ex: "data:image/png;base64,...")
  *   banner_base64?:string  (data URL base64)
  *   category_slug?:string  (slug da categoria, ex: "tecnologia")
- *   author_name?:  string  (default: "Manus AI")
+ *   author_name?:  string  (default: "Redação Vision7")
  *   tags?:         string[]
  *   status?:       "draft" | "published"  (default: "draft")
  *   featured?:     boolean (default: false)
@@ -47,7 +47,7 @@ const MAX_BODY_BYTES = 10 * 1024 * 1024; // 10 MB
 function getCorsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
+    'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey, x-manus-ingest-secret',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 }
@@ -60,12 +60,29 @@ function jsonResponse(data: unknown, status: number) {
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
+// O gateway Kong do Supabase exige um JWT válido no header Authorization.
+// O Manus envia:
+//   Authorization: Bearer <anon_key OU service_role_key>  → passa o Kong
+//   x-manus-ingest-secret: <MANUS_INGEST_SECRET>           → valida na nossa lógica
+// Também suportamos o fluxo legado (Authorization: Bearer <MANUS_INGEST_SECRET>)
+// para compatibilidade com funções marcadas como "Public" (sem Enforce JWT).
 function isAuthorized(req: Request): boolean {
   if (!MANUS_INGEST_SECRET) return false;
+
+  // Cabeçalho personalizado: x-manus-ingest-secret (método preferido)
+  const customHeader = req.headers.get('x-manus-ingest-secret') ?? '';
+  if (customHeader.trim() === MANUS_INGEST_SECRET) return true;
+
+  // Fallback legado: Authorization: Bearer <MANUS_INGEST_SECRET>
   const auth = req.headers.get('Authorization') ?? '';
-  const apiKey = req.headers.get('apikey') ?? '';
   const token = auth.replace(/^Bearer\s+/i, '').trim();
-  return token === MANUS_INGEST_SECRET || apiKey === MANUS_INGEST_SECRET;
+  if (token === MANUS_INGEST_SECRET) return true;
+
+  // Fallback legado: apikey: <MANUS_INGEST_SECRET>
+  const apiKey = req.headers.get('apikey') ?? '';
+  if (apiKey.trim() === MANUS_INGEST_SECRET) return true;
+
+  return false;
 }
 
 // ─── Rate limiting (in-memory, por IP) ───────────────────────────────────────
@@ -272,10 +289,10 @@ Deno.serve(async (req) => {
   // ─── Campos opcionais ─────────────────────────────────────────────────────
   const authorName = typeof body.author_name === 'string' && body.author_name.trim()
     ? body.author_name.trim().slice(0, 120)
-    : 'Manus AI';
+    : 'Redação Vision7';
 
   const statusRaw = body.status;
-  const status = statusRaw === 'published' ? 'published' : 'draft';
+  const status = statusRaw === 'draft' ? 'draft' : 'published';
 
   const featured = body.featured === true;
 
