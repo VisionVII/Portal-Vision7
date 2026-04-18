@@ -126,7 +126,7 @@ const Audiocasts = () => {
             </div>
 
             {/* Sidebar */}
-            <aside className="space-y-6">
+            <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
               <AdSpace size="square" position="Lateral Audiocasts" className="mx-auto" />
 
               {/* Categories */}

@@ -382,7 +382,7 @@ const Post = () => {
               <RelatedPosts posts={relatedPosts} />
             </div>
 
-            <aside className="min-w-0">
+            <aside className="min-w-0 xl:sticky xl:top-28 xl:self-start">
               <AdSpace size="square" position="Lateral do Post" className="mx-auto mb-8" />
             </aside>
           </div>

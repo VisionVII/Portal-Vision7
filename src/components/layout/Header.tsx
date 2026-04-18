@@ -100,7 +100,9 @@ const Header = () => {
   }, [timezone]);
 
   const locationLabel = hasConsent ? (region || timezone || 'Localização ativa') : 'Ative a localização';
-  const temperatureLabel = hasConsent && temperatureC !== null ? `${temperatureC}°C` : locationLoading ? 'A carregar...' : 'Ative a localização';
+  const temperatureLabel = hasConsent
+    ? (temperatureC !== null ? `${temperatureC}°C` : locationLoading ? 'A carregar...' : 'Sem dado')
+    : (locationLoading ? 'A carregar...' : 'Ative a localização');
 
   const mobileCategoryItems = primaryNavItems.slice(2);
 
