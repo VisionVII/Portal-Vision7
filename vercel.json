@@ -22,6 +22,13 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
+    },
+    {
+      "source": "/google496cde653fafa2d0.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
     }
   ],
   "rewrites": [
@@ -38,6 +45,7 @@
     },
     { "source": "/n8n", "destination": "https://portal-vision7.onrender.com/n8n" },
     { "source": "/n8n/(.*)", "destination": "https://portal-vision7.onrender.com/n8n/$1" },
+    { "source": "/google496cde653fafa2d0.html", "destination": "/google496cde653fafa2d0.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
