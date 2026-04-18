@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, X, Image as ImageIcon, Plus } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Plus, Link2 } from 'lucide-react';
 import { useCategories, useCreateCategory } from '@/hooks/useCategories';
 import { usePostCategories, useSetPostCategories } from '@/hooks/usePostCategories';
 import RichTextEditor from './RichTextEditor';
@@ -80,10 +80,20 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   const [isBannerUploading, setIsBannerUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(post?.image_url || null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(post?.banner_url || null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const { data: existingPostCategories } = usePostCategories(post?.id ?? null);
   const setPostCategories = useSetPostCategories();
   const categoriesInitRef = useRef(false);
+
+  const postUrl = post?.slug ? `https://www.vision7.pt/post/${post.slug}` : '';
+
+  const handleCopyPostLink = async () => {
+    if (!postUrl) return;
+    await navigator.clipboard.writeText(postUrl);
+    setCopiedLink(true);
+    window.setTimeout(() => setCopiedLink(false), 2000);
+  };
 
   // Reset all form state when switching to a different post
   useEffect(() => {
@@ -366,6 +376,26 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
+          {post?.slug && (
+            <div className="rounded-2xl border border-border/50 bg-muted/10 p-4 text-sm text-muted-foreground">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">Link do post</p>
+                  <p className="break-all text-sm text-foreground">https://www.vision7.pt/post/{post.slug}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Este URL será o mesmo após publicação. Usuários finais verão o post apenas quando estiver publicado; admins autenticados podem usá-lo desde já.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={handleCopyPostLink} className="gap-2">
+                    <Link2 className="h-4 w-4" />
+                    {copiedLink ? 'Copiado' : 'Copiar link'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="title">Título *</Label>
