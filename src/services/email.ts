@@ -28,7 +28,7 @@ export async function sendEmail<T extends EmailTemplateType>(payload: EmailPaylo
     });
 
     if (error) {
-      console.error('[EmailService] Edge function error:', error);
+      console.error('[EmailService] Edge function error:', error.message || 'unknown');
       return { error: new Error(error.message || 'Falha ao enviar email') };
     }
 
@@ -37,14 +37,13 @@ export async function sendEmail<T extends EmailTemplateType>(payload: EmailPaylo
     // In development, log the email for debugging
     if (import.meta.env.DEV) {
       console.info('[EmailService] DEV MODE — Email would be sent:', {
-        to: payload.to,
         subject: finalSubject,
         template: payload.template,
       });
       return { error: null };
     }
 
-    console.error('[EmailService] Failed to send email:', err);
+    console.error('[EmailService] Failed to send email:', err instanceof Error ? err.message : 'unknown');
     return { error: err instanceof Error ? err : new Error('Falha ao enviar email') };
   }
 }
@@ -81,7 +80,7 @@ export async function requestLoginCode(email: string): Promise<{ error: Error | 
     });
 
   if (insertError) {
-    console.error('[EmailService] Failed to store security code:', insertError);
+    console.error('[EmailService] Failed to store security code:', insertError.code || 'unknown');
     // Fallback to Supabase OTP if custom codes table doesn't exist yet
     return { error: null, expiresInMinutes: CODE_EXPIRY_MINUTES };
   }
@@ -205,7 +204,7 @@ export async function sendNewsletterWelcome(email: string): Promise<{ error: Err
     template: 'newsletter_welcome',
     data: {
       subscriberEmail: email,
-      unsubscribeUrl: `${window.location.origin}/?unsubscribe=${encodeURIComponent(email)}`,
+      unsubscribeUrl: `${window.location.origin}/?unsubscribe=1`,
     },
   });
 }

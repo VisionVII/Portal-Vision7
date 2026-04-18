@@ -97,7 +97,7 @@ export const useAudiocasts = (adminView = false) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('useAudiocasts supabase query error', error);
+          console.warn('useAudiocasts supabase query error', error?.message || 'unknown');
         }
         return [] as Audiocast[];
       }
@@ -126,7 +126,7 @@ export const useAudiocastsByCategory = (categorySlug: string) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('useAudiocastsByCategory supabase query error', error);
+          console.warn('useAudiocastsByCategory supabase query error', error?.message || 'unknown');
         }
         return [] as Audiocast[];
       }
@@ -153,7 +153,7 @@ export const useAudiocast = (slug: string) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('useAudiocast supabase query error', error);
+          console.warn('useAudiocast supabase query error', error?.message || 'unknown');
         }
         return null;
       }
@@ -180,7 +180,7 @@ export const useAudiocastById = (id: string) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('useAudiocastById supabase query error', error);
+          console.warn('useAudiocastById supabase query error', error?.message || 'unknown');
         }
         return null;
       }
@@ -208,7 +208,7 @@ export const useAudiocastsByPost = (postId: string) => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('useAudiocastsByPost supabase query error', error);
+          console.warn('useAudiocastsByPost supabase query error', error?.message || 'unknown');
         }
         return [] as Audiocast[];
       }

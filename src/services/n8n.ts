@@ -406,7 +406,7 @@ export const activateWorkflow = async (workflowOrId: N8nWorkflow | string) => {
     console.log('[n8n] ✓ Workflow activated:', id, result);
     return result;
   } catch (error) {
-    console.error('[n8n] ✗ Failed to activate workflow:', id, error);
+    console.error('[n8n] ✗ Failed to activate workflow:', id, error instanceof Error ? error.message : 'unknown');
     throw error;
   }
 };
@@ -421,7 +421,7 @@ export const deactivateWorkflow = async (id: string) => {
     console.log('[n8n] ✓ Workflow deactivated:', id, result);
     return result;
   } catch (error) {
-    console.error('[n8n] ✗ Failed to deactivate workflow:', id, error);
+    console.error('[n8n] ✗ Failed to deactivate workflow:', id, error instanceof Error ? error.message : 'unknown');
     throw error;
   }
 };

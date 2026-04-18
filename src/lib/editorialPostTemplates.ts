@@ -164,7 +164,7 @@ function stripIntroLabel(innerHtml: string) {
 
 function buildFallbackTemplate(templateId: EditorialPostTemplateId, options: EditorialTemplateContext) {
   const blueprint = TEMPLATE_BLUEPRINTS[templateId];
-  const introPrefix = `<p><strong>${blueprint.introLabel}:</strong> ${blueprint.introFallback}</p>`;
+  const introPrefix = `<p><strong>${escapeHtml(blueprint.introLabel)}:</strong> ${escapeHtml(blueprint.introFallback)}</p>`;
 
   return [
     `<h1>${escapeHtml(getWorkingTitle(options.title))}</h1>`,
@@ -265,7 +265,7 @@ function chunkBlocks(blocks: EditorialContentBlock[], groupsCount: number) {
 function buildIntroHtml(templateId: EditorialPostTemplateId, introBlocks: EditorialContentBlock[]) {
   const blueprint = TEMPLATE_BLUEPRINTS[templateId];
   if (introBlocks.length === 0) {
-    return `<p><strong>${blueprint.introLabel}:</strong> ${blueprint.introFallback}</p>`;
+    return `<p><strong>${escapeHtml(blueprint.introLabel)}:</strong> ${escapeHtml(blueprint.introFallback)}</p>`;
   }
 
   const documentNode = getBrowserDocument(introBlocks.map((block) => block.html).join(''));
@@ -274,7 +274,7 @@ function buildIntroHtml(templateId: EditorialPostTemplateId, introBlocks: Editor
 
   if (root && first?.tagName.toLowerCase() === 'p') {
     const innerHtml = stripIntroLabel(first.innerHTML);
-    first.innerHTML = `<strong>${blueprint.introLabel}:</strong> ${innerHtml || blueprint.introFallback}`;
+    first.innerHTML = `<strong>${escapeHtml(blueprint.introLabel)}:</strong> ${innerHtml || escapeHtml(blueprint.introFallback)}`;
     return root.innerHTML;
   }
 
@@ -283,12 +283,12 @@ function buildIntroHtml(templateId: EditorialPostTemplateId, introBlocks: Editor
 }
 
 function buildSectionHtml(heading: string, blocks: EditorialContentBlock[], fallbackHtml: string) {
-  return `<h2>${heading}</h2>${blocks.length > 0 ? blocks.map((block) => block.html).join('') : fallbackHtml}`;
+  return `<h2>${escapeHtml(heading)}</h2>${blocks.length > 0 ? blocks.map((block) => block.html).join('') : fallbackHtml}`;
 }
 
 function buildSourcesHtml(templateId: EditorialPostTemplateId, sourceBlocks: EditorialContentBlock[]) {
   const blueprint = TEMPLATE_BLUEPRINTS[templateId];
-  return `<h3>${blueprint.sourcesHeading}</h3>${sourceBlocks.length > 0 ? sourceBlocks.map((block) => block.html).join('') : blueprint.sourcesFallback}`;
+  return `<h3>${escapeHtml(blueprint.sourcesHeading)}</h3>${sourceBlocks.length > 0 ? sourceBlocks.map((block) => block.html).join('') : escapeHtml(blueprint.sourcesFallback)}`;
 }
 
 function buildStructuredContent(templateId: EditorialPostTemplateId, content: string, options: EditorialTemplateContext) {

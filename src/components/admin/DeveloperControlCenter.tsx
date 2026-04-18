@@ -12,8 +12,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const DEV_NOTES_KEY = 'developer_console_notes';
-const env = import.meta.env as Record<string, string | undefined>;
-const primaryAdminEmail = env.VITE_ADMIN_PRIMARY_EMAIL || 'admin@vision7.pt';
 
 const DeveloperControlCenter = () => {
   const { data: siteSettings } = useSiteSettings({ includePrivate: true });
@@ -53,7 +51,7 @@ const DeveloperControlCenter = () => {
     },
     {
       label: 'Email principal',
-      value: primaryAdminEmail,
+      value: user?.email || 'N/A',
       icon: Mail,
     },
     {

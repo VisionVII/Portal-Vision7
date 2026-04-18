@@ -9,7 +9,6 @@ export type AppRole = Enums<'app_role'>;
 
 const DASHBOARD_ROLES: AppRole[] = ['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst'];
 // No idle timeout — session stays open until manual logout (supports overnight automation monitoring)
-const PRIMARY_ADMIN_EMAIL = import.meta.env.VITE_ADMIN_PRIMARY_EMAIL ?? '';
 
 const isAbortError = (err: unknown): boolean =>
   err instanceof DOMException && err.name === 'AbortError' ||
@@ -94,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setMfaFactorId(null);
       }
     } catch (err) {
-      console.warn('[Auth] MFA check failed:', err);
+      console.warn('[Auth] MFA check failed:', err instanceof Error ? err.message : 'unknown');
       setMfaRequired(false);
       setMfaFactorId(null);
     }
@@ -127,16 +126,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data = await fetchRoles();
         if (data !== null) break;
       } catch (err) {
-        console.warn('[Auth] fetchRoles error attempt', attempt, err);
+        console.warn('[Auth] fetchRoles error attempt', attempt, err instanceof Error ? err.message : 'unknown');
       }
       if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
     }
 
-    // Fallback: if query failed or returned empty, check if this is the primary admin email
-    // NOTE: removed insecure super_admin grant by email match — roles must come from DB only
-    if ((data === null || data.length === 0) && opts?.email && PRIMARY_ADMIN_EMAIL && opts.email.toLowerCase() === PRIMARY_ADMIN_EMAIL.toLowerCase()) {
-      console.warn('[Auth] Roles query returned empty/failed for primary admin — use bootstrap_first_admin() to assign role');
-    }
+    // Roles must come from DB only — use bootstrap_first_admin() RPC for first setup
 
     if (data === null) {
       console.warn('[Auth] Failed to load roles after retries');
@@ -223,7 +218,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           if (isMounted && access) applyAccess(sess.user.id, access);
         } catch (err) {
-          console.error('[Auth] onAuthStateChange error:', err);
+          console.error('[Auth] onAuthStateChange error:', err instanceof Error ? err.message : 'unknown');
         }
       },
     );
@@ -248,7 +243,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (err) {
         if (!isAbortError(err)) {
-          console.error('[Auth] Error initializing session:', err);
+          console.error('[Auth] Error initializing session:', err instanceof Error ? err.message : 'unknown');
         }
       } finally {
         window.clearTimeout(safetyTimer);
@@ -336,7 +331,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       applyAccess(data.user.id, access);
       await checkMfaRequired(access.roles);
     } catch (err) {
-      console.error('[Auth] Error after sign-in:', err);
+      console.error('[Auth] Error after sign-in:', err instanceof Error ? err.message : 'unknown');
       access = { ...access, queryFailed: true };
     } finally {
       signingInRef.current = false;

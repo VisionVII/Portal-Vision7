@@ -40,7 +40,7 @@ export const useNewsletterSubscribers = () => {
       
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('useNewsletterSubscribers supabase query error', error);
+          console.warn('useNewsletterSubscribers supabase query error', error?.message || 'unknown');
         }
         return [];
       }
@@ -64,7 +64,7 @@ export const useNewsletterStats = () => {
 
       if (totalRes.error) {
         if (totalRes.error.code !== 'PGRST116' && !totalRes.error.message?.includes('404')) {
-          console.warn('useNewsletterStats supabase query error', totalRes.error);
+          console.warn('useNewsletterStats supabase query error', totalRes.error?.message || 'unknown');
         }
         return { total: 0, active: 0 };
       }

@@ -45,7 +45,7 @@ export const useRegistrationInvites = () => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('useRegistrationInvites supabase query error', error);
+          console.warn('useRegistrationInvites supabase query error', error?.message || 'unknown');
         }
         return [] as RegistrationInvite[];
       }
@@ -70,7 +70,7 @@ export const useRoleAssignments = () => {
 
       if (error) {
         if (error.code !== 'PGRST116' && !error.message?.includes('404')) {
-          console.warn('useRoleAssignments supabase query error', error);
+          console.warn('useRoleAssignments supabase query error', error?.message || 'unknown');
         }
         return [] as UserRoleAssignment[];
       }

@@ -375,7 +375,7 @@ export function NewsPipelineCard() {
         addLogEntry(step.shortLabel, target ? 'Ativado' : 'Desativado', 'success');
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Erro desconhecido';
-        console.error(`[Pipeline] Failed to ${target ? 'activate' : 'deactivate'} workflow ${wf.id}:`, err);
+        console.error(`[Pipeline] Failed to ${target ? 'activate' : 'deactivate'} workflow ${wf.id}:`, msg);
         addLogEntry(step.shortLabel, `Falha: ${msg}`, 'error');
       }
     }
