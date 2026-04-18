@@ -74,13 +74,13 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
           {/* Thumbnail */}
           <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg">
             {hasCover ? (
-              <img src={podcast.cover_url!} alt="" className="h-full w-full object-cover" loading="lazy" />
+              <img src={podcast.cover_url!} alt={podcast.title} width={56} height={56} className="h-full w-full object-cover" loading="lazy" />
             ) : (
               <div className={`${FALLBACK_GRADIENT} flex h-full w-full items-center justify-center`}>
                 <Headphones className="h-5 w-5 text-white/60" />
               </div>
             )}
-            <button onClick={handlePlay} className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+            <button onClick={handlePlay} aria-label={`Reproduzir ${podcast.title}`} className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
               <Play className="h-4 w-4 fill-white text-white" />
             </button>
           </div>
@@ -107,7 +107,7 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
           {/* Cover background */}
           <div className="relative h-72 sm:h-80 md:h-96">
             {hasCover ? (
-              <img src={podcast.cover_url!} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+              <img src={podcast.cover_url!} alt={podcast.title} width={640} height={400} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
             ) : (
               <div className={`${FALLBACK_GRADIENT} h-full w-full`} />
             )}
@@ -115,7 +115,7 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
             {/* Play button */}
-            <button onClick={handlePlay} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <button onClick={handlePlay} aria-label={`Reproduzir ${podcast.title}`} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:scale-110">
                 <Play className="ml-1 h-7 w-7 fill-white text-white" />
               </div>
@@ -165,7 +165,7 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
         {/* Cover image area */}
         <div className="relative aspect-[16/10] overflow-hidden">
           {hasCover ? (
-            <img src={podcast.cover_url!} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+            <img src={podcast.cover_url!} alt={podcast.title} width={640} height={400} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
           ) : (
             <div className={`${FALLBACK_GRADIENT} flex h-full w-full items-center justify-center`}>
               <Headphones className="h-12 w-12 text-white/20" />
@@ -175,7 +175,7 @@ const AudiocastCard: React.FC<AudiocastCardProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
           {/* Play button */}
-          <button onClick={handlePlay} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100 scale-75">
+          <button onClick={handlePlay} aria-label={`Reproduzir ${podcast.title}`} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100 scale-75">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg">
               <Play className="ml-0.5 h-5 w-5 fill-white text-white" />
             </div>

@@ -18,6 +18,7 @@ const ThemeToggle = ({ className, compact = false }: ThemeToggleProps) => {
         className
       )}
       aria-label="Alternar tema"
+      role="group"
     >
       {[
         { value: 'light' as const, label: 'Claro' },

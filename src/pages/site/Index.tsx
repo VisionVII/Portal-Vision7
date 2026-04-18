@@ -364,6 +364,8 @@ const Index = () => {
                           <img
                             src={post.image_url}
                             alt={post.title}
+                            width={96}
+                            height={96}
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                             loading="lazy"
                           />

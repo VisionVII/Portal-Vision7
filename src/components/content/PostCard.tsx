@@ -46,6 +46,8 @@ const PostCard: React.FC<PostCardProps> = ({
             <img
               src={heroImage}
               alt={title}
+              width={960}
+              height={540}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="eager"
               fetchPriority="high"
@@ -97,6 +99,8 @@ const PostCard: React.FC<PostCardProps> = ({
             <img
               src={bannerUrl}
               alt={title}
+              width={640}
+              height={360}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -108,6 +112,8 @@ const PostCard: React.FC<PostCardProps> = ({
             <img
               src={imageUrl}
               alt={title}
+              width={640}
+              height={360}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}

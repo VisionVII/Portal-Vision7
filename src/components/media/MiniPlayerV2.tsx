@@ -124,6 +124,7 @@ const MiniPlayerV2: React.FC = () => {
                   <Button 
                     variant="ghost" 
                     size="icon" 
+                    aria-label="Partilhar audiocast"
                     className="h-9 w-9 text-white/60 hover:bg-white/10 hover:text-white"
                     onClick={handleShare}
                   >
@@ -136,6 +137,7 @@ const MiniPlayerV2: React.FC = () => {
                     <Button 
                       variant="ghost" 
                       size="icon"
+                      aria-label="Ver página do audiocast"
                       className="h-9 w-9 text-white/60 hover:bg-white/10 hover:text-white"
                     >
                       <ExternalLink className="h-4 w-4" />
@@ -154,6 +156,8 @@ const MiniPlayerV2: React.FC = () => {
                         <img 
                           src={track.cover_url} 
                           alt={track.title} 
+                          width={400}
+                          height={400}
                           className="h-full w-full object-cover"
                           loading="lazy"
                           decoding="async"
@@ -200,6 +204,7 @@ const MiniPlayerV2: React.FC = () => {
                       variant="ghost"
                       size="icon"
                       onClick={cycleRepeatMode}
+                      aria-label={repeatMode === 'off' ? 'Ativar repetição' : repeatMode === 'one' ? 'Repetir faixa' : 'Desativar repetição'}
                       className={`h-10 w-10 text-white/50 hover:bg-white/10 hover:text-white ${
                         repeatMode !== 'off' ? 'text-white' : ''
                       }`}
@@ -211,6 +216,7 @@ const MiniPlayerV2: React.FC = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => skipBackward(15)}
+                      aria-label="Retroceder 15 segundos"
                       className="h-11 w-11 text-white hover:bg-white/10"
                     >
                       <SkipBack className="h-5 w-5" />
@@ -219,6 +225,7 @@ const MiniPlayerV2: React.FC = () => {
                     <Button
                       onClick={toggle}
                       disabled={isLoading}
+                      aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
                       className="h-14 w-14 rounded-full bg-white text-slate-900 shadow-xl hover:scale-105 hover:bg-white/90 sm:h-16 sm:w-16"
                     >
                       {isPlaying ? (
@@ -232,6 +239,7 @@ const MiniPlayerV2: React.FC = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => skipForward(15)}
+                      aria-label="Avançar 15 segundos"
                       className="h-11 w-11 text-white hover:bg-white/10"
                     >
                       <SkipForward className="h-5 w-5" />
@@ -239,6 +247,7 @@ const MiniPlayerV2: React.FC = () => {
 
                     <button
                       onClick={cyclePlaybackSpeed}
+                      aria-label={`Velocidade de reprodução: ${playbackRate}x`}
                       className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                         playbackRate !== 1 
                           ? 'bg-white/20 text-white' 
@@ -255,6 +264,7 @@ const MiniPlayerV2: React.FC = () => {
                       variant="ghost"
                       size="icon"
                       onClick={toggleMute}
+                      aria-label={isMuted ? 'Ativar som' : 'Silenciar'}
                       className="h-9 w-9 shrink-0 text-white/60 hover:bg-white/10 hover:text-white"
                     >
                       {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -312,10 +322,11 @@ const MiniPlayerV2: React.FC = () => {
           {/* Cover */}
           <button
             onClick={() => setIsExpanded(true)}
+            aria-label="Expandir player"
             className="relative shrink-0 overflow-hidden rounded-lg transition-transform hover:scale-105"
           >
             {track.cover_url ? (
-              <img src={track.cover_url} alt={track.title} className="h-11 w-11 object-cover sm:h-12 sm:w-12" loading="lazy" />
+              <img src={track.cover_url} alt={track.title} width={48} height={48} className="h-11 w-11 object-cover sm:h-12 sm:w-12" loading="lazy" />
             ) : (
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-primary-700 to-secondary-600 sm:h-12 sm:w-12">
                 <Headphones className="h-5 w-5 text-white" />
@@ -353,6 +364,7 @@ const MiniPlayerV2: React.FC = () => {
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             <button
               onClick={() => skipBackward(15)}
+              aria-label="Retroceder 15 segundos"
               className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
             >
               <SkipBack className="h-4 w-4" />
@@ -361,6 +373,7 @@ const MiniPlayerV2: React.FC = () => {
             <button
               onClick={toggle}
               disabled={isLoading}
+              aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 sm:h-10 sm:w-10"
             >
               {isPlaying ? <Pause className="h-4 w-4 sm:h-5 sm:w-5" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5" />}
@@ -368,6 +381,7 @@ const MiniPlayerV2: React.FC = () => {
 
             <button
               onClick={() => skipForward(15)}
+              aria-label="Avançar 15 segundos"
               className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
             >
               <SkipForward className="h-4 w-4" />
@@ -375,6 +389,7 @@ const MiniPlayerV2: React.FC = () => {
 
             <button
               onClick={toggleMute}
+              aria-label={isMuted ? 'Ativar som' : 'Silenciar'}
               className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:inline-flex"
             >
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -382,6 +397,7 @@ const MiniPlayerV2: React.FC = () => {
 
             <button
               onClick={close}
+              aria-label="Fechar player"
               className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
               <X className="h-4 w-4" />

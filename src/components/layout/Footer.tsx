@@ -73,10 +73,10 @@ const Footer = () => {
             © {currentYear} Vision. Todos os direitos reservados.
           </p>
           <div className="mt-4 flex space-x-6 md:mt-0">
-            <a href="#" className="text-sm text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white">Facebook</a>
-            <a href="#" className="text-sm text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white">Twitter</a>
-            <a href="#" className="text-sm text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white">Instagram</a>
-            <a href="#" className="text-sm text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white">LinkedIn</a>
+            <span className="text-sm text-muted-foreground">Facebook</span>
+            <span className="text-sm text-muted-foreground">Twitter</span>
+            <span className="text-sm text-muted-foreground">Instagram</span>
+            <span className="text-sm text-muted-foreground">LinkedIn</span>
           </div>
         </div>
       </div>

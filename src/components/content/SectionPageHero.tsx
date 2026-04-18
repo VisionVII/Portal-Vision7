@@ -55,8 +55,11 @@ const SectionPageHero: React.FC<SectionPageHeroProps> = ({
           <img
             src={desktopUrl}
             alt={media?.alt || title}
+            width={1280}
+            height={480}
             className="absolute inset-0 h-full w-full object-cover object-center"
             loading="eager"
+            fetchPriority="high"
             decoding="async"
             onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
