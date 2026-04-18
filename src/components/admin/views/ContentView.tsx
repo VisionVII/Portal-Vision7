@@ -106,7 +106,7 @@ const ContentView: React.FC<ContentViewProps> = ({
       {/* ── PostForm inline when open ── */}
       {showPostForm && (
         <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
-          <PostForm post={editingPost} onClose={onCloseForm} />
+          <PostForm key={editingPost?.id ?? 'new'} post={editingPost} onClose={onCloseForm} />
         </div>
       )}
 

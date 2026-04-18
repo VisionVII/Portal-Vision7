@@ -83,6 +83,7 @@ const AdminDashboard = () => {
     setEditingPost(post);
     setShowPostForm(true);
     setActiveView('content');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const handleCloseForm = useCallback(() => {
