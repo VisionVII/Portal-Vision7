@@ -14,12 +14,24 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import {
+  ArrowRight,
+  BookOpen,
+  Clock,
+  GraduationCap,
+  LayoutList,
+  RefreshCw,
+  Star,
+  Tag,
+  TrendingUp,
+} from 'lucide-react';
+import {
   HOME_PAGE_CONFIG_KEY,
   defaultHomePageConfig,
   getEnabledHomePageBanners,
   parseHomePageConfig,
   type HomePageConfig,
 } from '@/lib/homepage-config';
+import { SectionBlock } from '@/components/home/SectionBlock';
 
 interface CourseMeta {
   affiliateUrl?: string;
@@ -42,6 +54,33 @@ const dateFormatOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: '
 const dateFormatter = new Intl.DateTimeFormat('pt-PT', dateFormatOptions);
 const formatPostDate = (dateStr: string | null, fallback: string) =>
   dateFormatter.format(new Date(dateStr || fallback));
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+const ErrorRetryBlock: React.FC<{ message: string; onRetry: () => void }> = ({
+  message,
+  onRetry,
+}) => (
+  <div className="flex flex-col items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-6 py-10 text-center">
+    <p className="font-medium text-destructive">{message}</p>
+    <button
+      type="button"
+      onClick={onRetry}
+      className="inline-flex items-center gap-2 rounded-xl bg-destructive px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+    >
+      <RefreshCw size={14} />
+      Tentar novamente
+    </button>
+  </div>
+);
+
+const SectionSkeleton: React.FC<{ rows?: number }> = ({ rows = 3 }) => (
+  <div className="space-y-4">
+    {Array.from({ length: rows }).map((_, i) => (
+      <Skeleton key={i} className="h-28 w-full rounded-2xl" />
+    ))}
+  </div>
+);
 
 const Index = () => {
   const { data: posts = [], isLoading, isError, refetch } = usePosts();
@@ -137,33 +176,23 @@ const Index = () => {
     const sectionLabel = section.label || defaultHomePageConfig.sections.find((item) => item.id === sectionId)?.label || 'Secção';
 
     switch (sectionId) {
-      case 'featured':
-        if (isLoading) {
+      // ── Featured ──────────────────────────────────────────────────────────
+      case 'featured': {
+        if (isLoading)
           return (
-            <section key="featured">
-              <h2 className="section-title">{sectionLabel}</h2>
-              <Skeleton className="h-72 w-full rounded-xl sm:h-80" />
-            </section>
+            <SectionBlock key="featured" title={sectionLabel} icon={<Star size={16} />}>
+              <Skeleton className="h-80 w-full rounded-2xl" />
+            </SectionBlock>
           );
-        }
-
-        if (isError) {
+        if (isError)
           return (
-            <section key="featured">
-              <h2 className="section-title">{sectionLabel}</h2>
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center dark:border-red-800 dark:bg-red-950">
-                <p className="font-medium text-red-700 dark:text-red-300">Não foi possível carregar o destaque</p>
-                <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700">Tentar novamente</button>
-              </div>
-            </section>
+            <SectionBlock key="featured" title={sectionLabel} icon={<Star size={16} />}>
+              <ErrorRetryBlock message="Não foi possível carregar o destaque" onRetry={refetch} />
+            </SectionBlock>
           );
-        }
-
         if (!featuredPost) return null;
-
         return (
-          <section key="featured">
-            <h2 className="section-title">{sectionLabel}</h2>
+          <SectionBlock key="featured" title={sectionLabel} icon={<Star size={16} />}>
             <PostCard
               id={featuredPost.id}
               title={featuredPost.title}
@@ -178,26 +207,37 @@ const Index = () => {
               slug={featuredPost.slug}
               featured
             />
-          </section>
+          </SectionBlock>
         );
+      }
 
-      case 'latest':
+      // ── Latest ────────────────────────────────────────────────────────────
+      case 'latest': {
         return (
-          <section key="latest">
-            <h2 className="section-title">{sectionLabel}</h2>
+          <SectionBlock
+            key="latest"
+            title={sectionLabel}
+            icon={<Clock size={16} />}
+            subtitle="Publicado recentemente"
+            action={
+              <Link
+                to="/todas"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border/70 bg-background px-4 py-2 text-xs font-semibold text-muted-foreground transition-all hover:border-primary/50 hover:text-primary"
+              >
+                Ver todas <ArrowRight size={13} />
+              </Link>
+            }
+          >
             {isLoading ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {[1, 2, 3, 4].map((item) => (
-                  <Skeleton key={item} className="h-56 w-full rounded-xl" />
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-60 w-full rounded-2xl" />
                 ))}
               </div>
             ) : isError ? (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center dark:border-red-800 dark:bg-red-950">
-                <p className="font-medium text-red-700 dark:text-red-300">Erro ao carregar últimas notícias</p>
-                <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700">Tentar novamente</button>
-              </div>
+              <ErrorRetryBlock message="Erro ao carregar últimas notícias" onRetry={refetch} />
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {latestPosts.map((post) => (
                   <PostCard
                     key={post.id}
@@ -216,131 +256,145 @@ const Index = () => {
                 ))}
               </div>
             )}
-          </section>
+          </SectionBlock>
         );
+      }
 
-      case 'courses':
+      // ── Courses ───────────────────────────────────────────────────────────
+      case 'courses': {
         return (
-          <section key="courses" className="rounded-2xl border border-secondary-200 bg-gradient-to-br from-secondary-50 to-primary-50 p-4 sm:p-8 dark:border-neutral-700 dark:from-neutral-800 dark:to-neutral-900">
-            <h2 className="section-title">{sectionLabel}</h2>
+          <SectionBlock
+            key="courses"
+            id="cursos"
+            title={sectionLabel}
+            icon={<GraduationCap size={16} />}
+            subtitle="Formação recomendada"
+            className="rounded-2xl border border-primary-100/70 bg-gradient-to-br from-primary-50/60 via-background to-secondary-50/50 p-5 sm:p-7 dark:border-primary-800/30 dark:from-primary-950/20 dark:via-background dark:to-secondary-950/20"
+          >
             {isLoading ? (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((index) => (
-                  <Skeleton key={index} className="h-44 w-full rounded-lg" />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-44 w-full rounded-2xl" />
                 ))}
               </div>
             ) : courses.length ? (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {courses.map((course) => {
                   const meta = courseMeta[course.slug] ?? {};
-                  const cardContent = (
-                    <div className="group rounded-lg border border-primary-200 bg-background p-5 shadow-sm transition-all hover:border-primary-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-primary-500">
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <span className="rounded-full bg-secondary-100 px-2 py-1 text-[11px] font-semibold text-secondary-700 dark:bg-neutral-700 dark:text-secondary-300">
+                  const cardBody = (
+                    <div className="group flex h-full flex-col rounded-2xl border border-border/60 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+                      <div className="mb-3 flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
+                          <BookOpen size={11} />
                           {meta.badge || 'Afiliado'}
                         </span>
                         {meta.partnerName && (
-                          <span className="text-[11px] text-muted-foreground">{meta.partnerName}</span>
+                          <span className="text-[11px] font-medium text-muted-foreground">{meta.partnerName}</span>
                         )}
                       </div>
-                      <h3 className="mb-2 text-base font-semibold text-primary-700 transition-colors group-hover:text-primary-600 dark:text-primary-400">
+                      <h3 className="mb-2 text-base font-bold leading-snug text-foreground transition-colors group-hover:text-primary sm:text-lg">
                         {course.title}
                       </h3>
-                      <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">{course.description}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="rounded bg-secondary-100 px-2 py-1 text-xs font-semibold text-secondary-700 dark:bg-neutral-700 dark:text-secondary-400">
-                          Nível: {course.level}
+                      <p className="mb-4 flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-3">
+                        {course.description}
+                      </p>
+                      <div className="flex items-center gap-3 border-t border-border/60 pt-3 text-xs text-muted-foreground">
+                        <span className="rounded-full bg-muted px-2.5 py-1 font-semibold text-foreground">
+                          {course.level}
                         </span>
-                        <span className="text-xs text-muted-foreground">{course.duration}</span>
+                        <span>{course.duration}</span>
+                        <span className="ml-auto inline-flex items-center gap-1 font-semibold text-primary">
+                          Ver curso <ArrowRight size={12} />
+                        </span>
                       </div>
                     </div>
                   );
-
                   if (meta.affiliateUrl) {
                     return (
-                      <a key={course.id} href={meta.affiliateUrl} target="_blank" rel="noreferrer">
-                        {cardContent}
+                      <a key={course.id} href={meta.affiliateUrl} target="_blank" rel="noreferrer" className="block h-full">
+                        {cardBody}
                       </a>
                     );
                   }
-
                   return (
-                    <Link key={course.id} to={`/curso/${course.slug}`}>
-                      {cardContent}
+                    <Link key={course.id} to={`/curso/${course.slug}`} className="block h-full">
+                      {cardBody}
                     </Link>
                   );
                 })}
               </div>
             ) : (
-              <div className="py-8 text-center">
-                <p className="text-muted-foreground">Ainda não existem cursos disponíveis. Verifique novamente em breve.</p>
+              <div className="flex flex-col items-center gap-2 py-10 text-center">
+                <BookOpen size={36} className="text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">
+                  Ainda não existem cursos disponíveis. Verifique novamente em breve.
+                </p>
               </div>
             )}
-          </section>
+          </SectionBlock>
         );
+      }
 
-      case 'more':
+      // ── More (paginated list) ─────────────────────────────────────────────
+      case 'more': {
         return (
-          <section key="more">
-            <AdSpace size="rectangle" position="Meio do Conteúdo" className="mb-8" />
-            <h2 className="section-title">{sectionLabel}</h2>
+          <SectionBlock
+            key="more"
+            title={sectionLabel}
+            icon={<LayoutList size={16} />}
+            subtitle="Todas as publicações"
+          >
+            <AdSpace size="rectangle" position="Meio do Conteúdo" className="mb-6" />
             {isLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((item) => (
-                  <Skeleton key={item} className="h-28 w-full rounded-xl" />
-                ))}
-              </div>
+              <SectionSkeleton rows={4} />
             ) : isError ? (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center dark:border-red-800 dark:bg-red-950">
-                <p className="font-medium text-red-700 dark:text-red-300">Erro ao carregar notícias</p>
-                <p className="mt-2 text-sm text-red-600 dark:text-red-400">Verifique a conexão e tente novamente.</p>
-                <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700">Tentar novamente</button>
-              </div>
+              <ErrorRetryBlock message="Erro ao carregar notícias" onRetry={refetch} />
             ) : paginatedRegularPosts.length === 0 ? (
-              <div className="rounded-xl border border-border bg-muted/30 px-4 py-12 text-center">
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-muted/30 px-6 py-14 text-center">
                 <p className="font-medium text-muted-foreground">Nenhuma notícia disponível no momento</p>
-                <p className="mt-2 text-sm text-muted-foreground">Verifique novamente mais tarde para novo conteúdo.</p>
+                <p className="text-sm text-muted-foreground">Verifique novamente mais tarde para novo conteúdo.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {paginatedRegularPosts.map((post) => (
-                  <Link to={`/post/${post.slug}`} key={post.id}>
-                    <div className="group overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all duration-200 hover:border-primary/20 hover:shadow-md sm:p-5">
-                      <div className="flex gap-3 sm:gap-4">
-                        {post.image_url && (
+                  <Link to={`/post/${post.slug}`} key={post.id} className="block">
+                    <article className="group flex gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-md">
+                      {post.image_url && (
+                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl sm:h-24 sm:w-24">
                           <img
                             src={post.image_url}
                             alt={post.title}
-                            className="h-16 w-16 flex-shrink-0 rounded-lg object-cover transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24 sm:rounded-xl"
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                             loading="lazy"
                           />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <span className={`category-badge ${post.categories?.color || 'bg-muted'} mb-1.5 text-[10px]`}>
-                            {post.categories?.name || 'Geral'}
-                          </span>
-                          <h3 className="mb-1 line-clamp-2 text-[clamp(0.9rem,2.5vw,1.125rem)] font-headline font-bold leading-snug text-card-foreground transition-colors group-hover:text-primary">
-                            {post.title}
-                          </h3>
-                          <p className="hidden line-clamp-2 text-[clamp(0.75rem,1.8vw,0.875rem)] text-muted-foreground sm:block">
-                            {post.excerpt}
-                          </p>
-                          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                            <span>{post.author_name}</span>
-                            <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-                            <span>{formatPostDate(post.published_at, post.created_at)}</span>
-                            <span className="font-medium text-primary">{post.read_time}</span>
-                          </div>
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1 py-0.5">
+                        <span className={`category-badge ${post.categories?.color || 'bg-muted'} mb-2 text-[10px]`}>
+                          {post.categories?.name || 'Geral'}
+                        </span>
+                        <h3 className="mb-1.5 line-clamp-2 text-sm font-bold leading-snug text-card-foreground transition-colors group-hover:text-primary sm:text-base">
+                          {post.title}
+                        </h3>
+                        <p className="hidden line-clamp-1 text-xs text-muted-foreground sm:block">{post.excerpt}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span>{post.author_name}</span>
+                          <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+                          <span>{formatPostDate(post.published_at, post.created_at)}</span>
+                          <span className="font-semibold text-primary">{post.read_time}</span>
                         </div>
                       </div>
-                    </div>
+                    </article>
                   </Link>
                 ))}
-                {totalPages > 1 && <PostPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />}
+                {totalPages > 1 && (
+                  <PostPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+                )}
               </div>
             )}
-          </section>
+          </SectionBlock>
         );
+      }
 
       default:
         return null;
@@ -419,99 +473,137 @@ const Index = () => {
         )}
       />}
 
-      <div className="container mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:py-10">
-        {categories?.length ? (
-          <div className="mb-6 rounded-3xl border border-border/50 bg-card p-4 shadow-sm sm:p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Explore por categoria</p>
-                <h2 className="mt-1 text-xl font-bold text-foreground sm:text-2xl">Navegue pelo portal por temas e editorias</h2>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {categories.slice(0, 9).map((category) => (
-                  <Link
-                    key={category.id}
-                    to={`/${category.slug}`}
-                    className="rounded-full border border-border/60 bg-background px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
-              </div>
+      {/* ── Category Navigation Bar ──────────────────────────────────────── */}
+      {categories?.length ? (
+        <div
+          id="categorias"
+          className="sticky top-0 z-10 border-b border-border/70 bg-background/95 backdrop-blur-md"
+        >
+          <div className="container mx-auto px-4">
+            <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-none">
+              <span className="mr-1 flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                <Tag size={12} />
+                Editorias
+              </span>
+              <div className="mx-3 h-4 w-px shrink-0 bg-border" />
+              {categories.slice(0, 10).map((category) => (
+                <Link
+                  key={category.id}
+                  to={`/${category.slug}`}
+                  className="shrink-0 rounded-full border border-transparent px-4 py-1.5 text-xs font-semibold text-muted-foreground transition-all duration-150 hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+                >
+                  {category.name}
+                </Link>
+              ))}
+              <Link
+                to="/categorias"
+                className="ml-auto shrink-0 inline-flex items-center gap-1 rounded-full border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all hover:text-primary"
+              >
+                Todas <ArrowRight size={11} />
+              </Link>
             </div>
           </div>
-        ) : null}
+        </div>
+      ) : null}
 
-        <div className="grid grid-cols-1 gap-6 sm:gap-7 lg:grid-cols-12 lg:gap-9" id="noticias">
-          <div className="space-y-8 sm:space-y-10 lg:col-span-8 lg:space-y-12 xl:col-span-9">
+      {/* ── Main Content ─────────────────────────────────────────────────── */}
+      <main className="container mx-auto px-4 py-8 lg:py-12" id="noticias">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
+          {/* Content column */}
+          <div className="space-y-12 lg:col-span-8">
             {homeConfig.sections
               .filter((section) => section.enabled && section.id !== 'newsletter')
               .map((section) => renderSection(section))}
           </div>
 
-          <aside className="space-y-6 sm:space-y-7 lg:col-span-4 xl:col-span-3">
+          {/* Sidebar */}
+          <aside className="space-y-6 lg:col-span-4">
             <AdSpace size="square" position="Barra Lateral" className="hidden lg:flex" />
 
-            <div className="space-y-6 lg:sticky lg:top-28">
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
-                <h3 className="mb-4 text-lg font-headline font-bold text-card-foreground">Mais Populares</h3>
-              {isLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3, 4, 5].map((item) => (
-                    <Skeleton key={item} className="h-10 w-full" />
-                  ))}
+            <div className="space-y-6 lg:sticky lg:top-20">
+              {/* Popular posts */}
+              <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+                <div className="mb-5 flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <TrendingUp size={15} />
+                  </span>
+                  <h3 className="text-base font-bold text-card-foreground">Em Alta</h3>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {popularPosts.map((post, index) => (
-                    <Link to={`/post/${post.slug}`} key={post.id} className="group flex gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/50">
-                      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                        {index + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <h4 className="line-clamp-2 text-sm font-semibold leading-tight text-card-foreground transition-colors group-hover:text-primary">
-                          {post.title}
-                        </h4>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {formatPostDate(post.published_at, post.created_at)} • {post.views || 0} views
-                        </p>
-                      </div>
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {popularPosts.map((post, index) => (
+                      <Link
+                        to={`/post/${post.slug}`}
+                        key={post.id}
+                        className="group flex gap-3"
+                      >
+                        <span className="w-7 shrink-0 text-right text-2xl font-black leading-none text-primary/20 transition-colors group-hover:text-primary/40">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <div className="min-w-0">
+                          <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-card-foreground transition-colors group-hover:text-primary">
+                            {post.title}
+                          </h4>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {formatPostDate(post.published_at, post.created_at)} · {post.views || 0} views
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Categories sidebar */}
+              <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+                <div className="mb-4 flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Tag size={15} />
+                  </span>
+                  <h3 className="text-base font-bold text-card-foreground">Categorias</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {categories?.map((category) => (
+                    <Link
+                      key={category.id}
+                      to={`/${category.slug}`}
+                      className="rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                    >
+                      {category.name}
                     </Link>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div id="categorias" className="rounded-xl border border-border bg-card p-5">
-              <h3 className="mb-3 text-lg font-headline font-bold text-card-foreground">Categorias</h3>
-              <div className="space-y-1">
-                {categories?.map((category) => (
-                  <Link
-                    key={category.id}
-                    to={`/${category.slug}`}
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+              <AdSpace size="square" position="Lateral 2" className="hidden lg:flex" />
+
+              {/* Newsletter */}
+              {homeConfig.sections.some((s) => s.id === 'newsletter' && s.enabled) && (
+                <div
+                  id="newsletter"
+                  className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 p-6 text-white shadow-lg dark:from-primary-700 dark:to-secondary-700"
+                >
+                  <h3 className="mb-1.5 text-lg font-bold">{newsletterLabel}</h3>
+                  <p className="mb-5 text-sm text-white/80">
+                    Receba as principais notícias diretamente no seu email
+                  </p>
+                  <Suspense
+                    fallback={<div className="h-10 animate-pulse rounded-xl bg-white/20" />}
                   >
-                    {category.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <AdSpace size="square" position="Lateral 2" className="hidden lg:flex" />
-
-            {homeConfig.sections.some((section) => section.id === 'newsletter' && section.enabled) && (
-              <div id="newsletter" className="rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 p-6 text-white shadow-lg dark:from-primary-700 dark:to-secondary-700">
-                <h3 className="mb-2 text-xl font-bold">{newsletterLabel}</h3>
-                <p className="mb-5 text-sm text-white/90">Receba as principais notícias diretamente no seu email</p>
-                <Suspense fallback={<div className="h-10 animate-pulse rounded bg-white/20" />}>
-                  <NewsletterForm variant="sidebar" />
-                </Suspense>
-              </div>
-            )}
+                    <NewsletterForm variant="sidebar" />
+                  </Suspense>
+                </div>
+              )}
             </div>
           </aside>
         </div>
-      </div>
+      </main>
 
       <Footer />
     </div>
