@@ -47,7 +47,8 @@ const PostCard: React.FC<PostCardProps> = ({
               src={heroImage}
               alt={title}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              loading="lazy"
+              loading="eager"
+              fetchPriority="high"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           ) : (
