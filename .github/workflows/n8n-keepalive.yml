@@ -1,0 +1,16 @@
+name: n8n Keepalive
+
+on:
+  schedule:
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping n8n on Render
+    runs-on: ubuntu-latest
+    steps:
+      - name: Keepalive ping
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://portal-vision7.onrender.com/healthz || echo "000")
+          echo "n8n ping status: $STATUS"
