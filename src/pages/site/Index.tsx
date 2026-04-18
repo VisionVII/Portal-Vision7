@@ -89,6 +89,12 @@ const Index = () => {
   const isHashBannerHref = bannerHref.startsWith('#');
   const activeBannerDesktopUrl = activeBanner?.imageUrl || homeConfig.bannerUrl || defaultHomePageConfig.bannerUrl;
   const activeBannerMobileUrl = activeBanner?.mobileImageUrl || homeConfig.mobileBannerUrl || activeBannerDesktopUrl;
+  const heroTitle = activeBanner?.title?.trim() || homeConfig.heroTitle;
+  const heroDescription = activeBanner?.description?.trim() || homeConfig.heroDescription;
+  const heroBadge = homeConfig.heroBadge?.trim() || activeBanner?.title ? 'Destaque Vision7' : undefined;
+  const heroPrimaryCta = bannerCtaLabel || homeConfig.primaryCtaLabel || 'Explorar Notícias';
+  const heroSecondaryCta = homeConfig.secondaryCtaLabel || 'Categorias';
+  const heroSecondaryHref = '#categorias';
 
   useEffect(() => {
     setActiveBannerIndex((prev) => (prev >= activeBanners.length ? 0 : prev));
@@ -346,9 +352,10 @@ const Index = () => {
       <Header />
 
       {activeBannerDesktopUrl && <SectionPageHero
-        title=""
-        description=""
-        align="left"
+        title={heroTitle}
+        description={heroDescription}
+        badge={heroBadge}
+        align={homeConfig.heroAlignment}
         fallbackClassName="bg-[#020817]"
         media={{
           desktopUrl: activeBannerDesktopUrl,
@@ -356,33 +363,42 @@ const Index = () => {
           alt: activeBanner?.title || 'Banner principal do Vision7',
         }}
         overlayClassName="bg-[linear-gradient(118deg,rgba(2,6,23,0.58)_0%,rgba(2,6,23,0.12)_42%,rgba(2,6,23,0.62)_100%)]"
-        contentClassName="max-w-[34rem] pb-2 text-left sm:pb-6 lg:pb-10 xl:pl-6"
+        contentClassName="max-w-[36rem] pb-2 text-left sm:pb-6 lg:pb-10 xl:pl-6"
         actionsSlot={(
           <div className="flex flex-col items-start gap-4 pt-6 sm:pt-8">
-            {isExternalBannerHref ? (
-              <a
-                href={bannerHref}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
-              >
-                {bannerCtaLabel}
-              </a>
-            ) : isHashBannerHref ? (
-              <a
-                href={bannerHref}
-                className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
-              >
-                {bannerCtaLabel}
-              </a>
-            ) : (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {isExternalBannerHref ? (
+                <a
+                  href={bannerHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                >
+                  {heroPrimaryCta}
+                </a>
+              ) : isHashBannerHref ? (
+                <a
+                  href={bannerHref}
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                >
+                  {heroPrimaryCta}
+                </a>
+              ) : (
+                <Link
+                  to={bannerHref}
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                >
+                  {heroPrimaryCta}
+                </Link>
+              )}
+
               <Link
-                to={bannerHref}
-                className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                to={heroSecondaryHref}
+                className="inline-flex min-w-[220px] items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/15"
               >
-                {bannerCtaLabel}
+                {heroSecondaryCta}
               </Link>
-            )}
+            </div>
 
             {activeBanners.length > 1 ? (
               <div className="flex items-center gap-2">
@@ -444,7 +460,7 @@ const Index = () => {
               )}
             </div>
 
-            <div className="rounded-xl border border-border bg-card p-5">
+            <div id="categorias" className="rounded-xl border border-border bg-card p-5">
               <h3 className="mb-3 text-lg font-headline font-bold text-card-foreground">Categorias</h3>
               <div className="space-y-1">
                 {categories?.map((category) => (
