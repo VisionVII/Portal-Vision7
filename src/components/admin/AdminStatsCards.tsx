@@ -28,70 +28,63 @@ const AdminStatsCards = () => {
   const targetProgress = Math.min((thisMonth / monthlyTarget) * 100, 100);
 
   return (
-    <div className="space-y-4">
-      {/* ── HERO KPI: dominant metric ── */}
-      <Card className="relative overflow-hidden rounded-[28px] border border-border/20 bg-gradient-to-br from-slate-50 via-white to-slate-50 shadow-[0_8px_32px_rgba(15,23,42,0.08)] dark:border-border/10 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950">
-        <CardContent className="p-5 sm:p-7">
-          <div className="flex min-h-[160px] flex-col justify-between gap-4 sm:min-h-[210px] sm:gap-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Performance este mês
-                </p>
-                <p className="mt-2 text-4xl font-extrabold tracking-tight text-foreground sm:mt-3 sm:text-6xl">
+    <div className="space-y-3">
+      {/* ── HERO KPI: compact dominant metric ── */}
+      <Card className="relative overflow-hidden rounded-2xl border border-border/20 bg-gradient-to-br from-slate-50 via-white to-slate-50 shadow-sm dark:border-border/10 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Performance este mês
+              </p>
+              <div className="mt-1.5 flex items-baseline gap-2">
+                <p className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
                   {thisMonth}
                 </p>
-                <p className="mt-1 text-sm font-medium text-muted-foreground">
+                <p className="text-sm font-medium text-muted-foreground">
                   {thisMonth === 1 ? 'publicação' : 'publicações'}
                 </p>
-                <div className="mt-3 flex items-center gap-1.5">
-                  {thisMonth >= monthlyTarget ? (
-                    <div className="flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-                      <ArrowUpRight className="h-3 w-3" />
-                      <span className="text-xs font-semibold">Meta atingida</span>
-                    </div>
-                  ) : thisMonth > 0 ? (
-                    <div className="flex items-center gap-0.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
-                      <Minus className="h-3 w-3" />
-                      <span className="text-xs font-semibold">Publique +{monthlyTarget - thisMonth} para meta</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-0.5 rounded-full bg-red-500/10 px-2 py-0.5 text-red-600 dark:bg-red-500/15 dark:text-red-400">
-                      <ArrowDownRight className="h-3 w-3" />
-                      <span className="text-xs font-semibold">Nenhuma publicação ainda</span>
-                    </div>
-                  )}
-                </div>
               </div>
-              <div className="shrink-0 rounded-2xl bg-primary/10 p-3 dark:bg-primary/15">
-                <TrendingUp className="h-6 w-6 text-primary" />
+              <div className="mt-2 flex items-center gap-1.5">
+                {thisMonth >= monthlyTarget ? (
+                  <div className="flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+                    <ArrowUpRight className="h-3 w-3" />
+                    <span className="text-xs font-semibold">Meta atingida</span>
+                  </div>
+                ) : thisMonth > 0 ? (
+                  <div className="flex items-center gap-0.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
+                    <Minus className="h-3 w-3" />
+                    <span className="text-xs font-semibold">+{monthlyTarget - thisMonth} para meta</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-0.5 rounded-full bg-red-500/10 px-2 py-0.5 text-red-600 dark:bg-red-500/15 dark:text-red-400">
+                    <ArrowDownRight className="h-3 w-3" />
+                    <span className="text-xs font-semibold">Sem publicações</span>
+                  </div>
+                )}
               </div>
             </div>
-
-            <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Meta editorial
-              </p>
-              <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground sm:gap-3">
-                <span className="truncate">Objetivo mensal</span>
-                <span className="font-semibold text-foreground">{Math.min(thisMonth, monthlyTarget)}/{monthlyTarget} publicações</span>
+            <div className="shrink-0">
+              <div className="rounded-xl bg-primary/10 p-2.5 dark:bg-primary/15">
+                <TrendingUp className="h-5 w-5 text-primary" />
               </div>
-              <div className="h-2.5 rounded-full bg-muted/50 dark:bg-muted/30">
-                <div
-                  className="h-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500 dark:from-emerald-400 dark:to-emerald-500"
-                  style={{ width: `${Math.max(targetProgress, thisMonth > 0 ? 10 : 0)}%` }}
-                />
+              <div className="mt-2 text-right">
+                <p className="text-[10px] text-muted-foreground">{Math.min(thisMonth, monthlyTarget)}/{monthlyTarget}</p>
               </div>
             </div>
           </div>
+          {/* Progress bar */}
+          <div className="mt-3 h-1.5 rounded-full bg-muted/50 dark:bg-muted/30">
+            <div
+              className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500 dark:from-emerald-400 dark:to-emerald-500"
+              style={{ width: `${Math.max(targetProgress, thisMonth > 0 ? 10 : 0)}%` }}
+            />
+          </div>
         </CardContent>
-        {/* decorative accent */}
-        <div className="absolute -bottom-8 -right-8 h-32 w-32 rounded-full bg-primary/5 dark:bg-primary/10" />
-        <div className="absolute -top-4 right-20 h-16 w-16 rounded-full bg-secondary/5 dark:bg-secondary/10" />
       </Card>
 
-      {/* ── SECONDARY KPIs: 2-col mobile, 3-col sm+ ── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {/* ── SECONDARY KPIs: 3-col always ── */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {[
           {
             label: 'Total de posts',
@@ -120,18 +113,18 @@ const AdminStatsCards = () => {
           return (
             <Card
               key={card.label}
-              className={`group border-border/30 bg-card/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-border/20 ${index === 2 ? 'col-span-2 sm:col-span-1' : ''}`}
+              className="group border-border/30 bg-card/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-border/20"
             >
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-center gap-3">
-                  <div className={`shrink-0 rounded-xl p-2.5 ${card.bg}`}>
-                    <Icon className={`h-4 w-4 ${card.color}`} />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className={`shrink-0 rounded-lg p-2 sm:rounded-xl sm:p-2.5 ${card.bg}`}>
+                    <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${card.color}`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+                    <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-muted-foreground sm:text-[10px]">
                       {card.label}
                     </p>
-                    <p className="mt-0.5 truncate text-2xl font-bold text-foreground">
+                    <p className="mt-0.5 truncate text-lg font-bold text-foreground sm:text-2xl">
                       {card.format ? card.value.toLocaleString('pt-PT') : card.value}
                     </p>
                   </div>

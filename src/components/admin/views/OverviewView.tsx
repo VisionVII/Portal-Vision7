@@ -1,13 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Bot,
   ChevronDown,
   ChevronUp,
   Clock,
-  Globe,
-  LayoutTemplate,
   Plus,
   Sparkles,
   TrendingUp,
@@ -17,7 +14,6 @@ import {
   BarChart3,
   Layers3,
   Radio,
-  CheckCircle2,
   Clock3,
   Activity,
 } from 'lucide-react';
@@ -212,48 +208,38 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {/* ── Page Header ──────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
-            <Activity className="h-3 w-3" />
-            Dashboard executivo
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             Visão geral
           </h1>
-          <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
-            Controle operacional do portal, saúde do pipeline e leitura rápida de performance.
+          <p className="mt-1 text-sm text-muted-foreground">
+            Controle operacional do portal e leitura rápida de performance.
           </p>
         </div>
 
         {/* Quick actions */}
         <div className="flex flex-wrap items-center gap-2">
           {allowedViews.includes('content') && (
-            <Button onClick={onNewPost} className="gap-2 rounded-xl shadow-sm">
-              <Plus className="h-4 w-4" />
+            <Button size="sm" onClick={onNewPost} className="gap-1.5 rounded-lg shadow-sm">
+              <Plus className="h-3.5 w-3.5" />
               Novo post
             </Button>
           )}
           {allowedViews.includes('content') && latestDraft && (
-            <Button variant="outline" onClick={handleResumeDraft} className="gap-2 rounded-xl">
-              <Sparkles className="h-4 w-4" />
-              Continuar rascunho
+            <Button size="sm" variant="outline" onClick={handleResumeDraft} className="gap-1.5 rounded-lg">
+              <Sparkles className="h-3.5 w-3.5" />
+              Rascunho
             </Button>
           )}
           {allowedViews.includes('automations') && (
-            <Button variant="outline" onClick={() => onNavigate('automations')} className="gap-2 rounded-xl text-muted-foreground">
-              <Bot className="h-4 w-4" />
+            <Button size="sm" variant="outline" onClick={() => onNavigate('automations')} className="gap-1.5 rounded-lg text-muted-foreground">
+              <Bot className="h-3.5 w-3.5" />
               Automações
             </Button>
           )}
-          <Link to="/" target="_blank">
-            <Button variant="ghost" className="gap-2 rounded-xl text-muted-foreground">
-              <Globe className="h-4 w-4" />
-              Portal
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -262,78 +248,67 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
       <section>
         <Card className="border-border/40 bg-card/80 shadow-sm">
-          <CardHeader className="border-b border-border/30 pb-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Shield className="h-4 w-4 text-primary" />
-                  Saúde do sistema
-                </CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Resumo curto do estado operacional do portal.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Sistema operacional
+          <CardHeader className="pb-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Shield className="h-4 w-4 text-primary" />
+                Pipeline & saúde
+              </CardTitle>
+              {/* Inline health indicators */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {systemHealthItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${toneClasses(item.tone)}`}>
+                      <Icon className="h-3 w-3" />
+                      {item.label}: {item.value}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 p-4 sm:p-5">
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              {systemHealthItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.label} className={`rounded-2xl border px-3 py-3 ${toneClasses(item.tone)}`}>
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4" />
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.14em]">{item.label}</span>
-                    </div>
-                    <p className="mt-2 text-lg font-bold text-foreground">{item.value}</p>
-                  </div>
-                );
-              })}
-            </div>
-
+          <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {pipelineStages.map((stage, index) => {
                 const Icon = stage.icon;
                 const remaining = getCountdownMs(stage.lastTimestamp, stage.intervalMs);
                 return (
-                  <div key={stage.label} className="relative rounded-2xl border border-border/40 bg-muted/20 p-4 shadow-sm">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{index + 1}</span>
+                  <div key={stage.label} className="relative rounded-xl border border-border/40 bg-muted/20 p-3 sm:p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{index + 1}</span>
                           {stage.label}
                         </p>
-                        <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">{stage.count}</p>
+                        <p className="mt-1 text-xl font-bold tracking-tight text-foreground sm:text-2xl">{stage.count}</p>
                       </div>
-                      <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${toneClasses(stage.tone)}`}>
-                        <Icon className="h-4 w-4" />
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${toneClasses(stage.tone)}`}>
+                        <Icon className="h-3.5 w-3.5" />
                       </div>
                     </div>
-                    <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                    <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
                       <span>{stage.helper}</span>
                       {stage.intervalMs > 0 && stage.lastTimestamp ? (
                         remaining > 0 ? (
-                          <Badge variant="outline" className="border-blue-500/25 text-blue-500 font-mono tabular-nums px-2 py-0.5 text-xs">
-                            <Clock className="mr-1 h-3 w-3" />
+                          <Badge variant="outline" className="border-blue-500/25 text-blue-500 font-mono tabular-nums px-1.5 py-0 text-[10px]">
+                            <Clock className="mr-0.5 h-2.5 w-2.5" />
                             {formatCountdown(remaining)}
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="border-primary/25 text-primary px-2 py-0.5 text-xs">
+                          <Badge variant="outline" className="border-primary/25 text-primary px-1.5 py-0 text-[10px]">
                             iminente
                           </Badge>
                         )
                       ) : (
-                        <span className={`rounded-full border px-2 py-0.5 font-medium ${toneClasses(stage.tone)}`}>
-                          {stage.tone === 'warning' ? 'Atenção' : stage.count > 0 ? 'OK' : 'Aguardando'}
+                        <span className={`rounded-full border px-1.5 py-0 text-[10px] font-medium ${toneClasses(stage.tone)}`}>
+                          {stage.tone === 'warning' ? 'Atenção' : stage.count > 0 ? 'OK' : '—'}
                         </span>
                       )}
                     </div>
+                    {/* Horizontal arrow (desktop) */}
                     {index < pipelineStages.length - 1 && (
-                      <div className={`absolute right-[-0.75rem] top-1/2 hidden -translate-y-1/2 ${index % 2 === 0 ? 'sm:block' : 'xl:block'}`}>
+                      <div className={`absolute right-[-0.75rem] top-1/2 z-10 hidden -translate-y-1/2 ${index % 2 === 0 ? 'sm:block' : 'xl:block'}`}>
                         <ArrowRight className="h-4 w-4 text-muted-foreground/40" />
                       </div>
                     )}
@@ -345,7 +320,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         </Card>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-3 lg:grid-cols-2">
         <Card className="border-border/40 bg-card/80 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
