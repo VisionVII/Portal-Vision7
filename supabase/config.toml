@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.send-login-code]
 verify_jwt = false
 
+[functions.send-invite-code]
+verify_jwt = false
+
 [functions.verify-login-code]
 verify_jwt = false
 
@@ -28,4 +31,13 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.portal-ai-assistant]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.ingest-manus-post]
+verify_jwt = false
+
+[functions.n8n-workflow-import]
 verify_jwt = false
