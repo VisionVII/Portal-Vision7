@@ -204,7 +204,7 @@ export async function sendNewsletterWelcome(email: string): Promise<{ error: Err
     template: 'newsletter_welcome',
     data: {
       subscriberEmail: email,
-      unsubscribeUrl: `${window.location.origin}/?unsubscribe=1`,
+      unsubscribeUrl: `${window.location.origin}/newsletter/cancelar?email=${encodeURIComponent(email)}`,
     },
   });
 }

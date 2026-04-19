@@ -28,6 +28,7 @@ const Audiocasts = lazy(() => import("@/pages/site/Audiocasts"));
 const Course = lazy(() => import("@/pages/site/Course"));
 const PrivacyPolicy = lazy(() => import("@/pages/site/PrivacyPolicy"));
 const NotFound = lazy(() => import("@/pages/site/NotFound"));
+const NewsletterUnsubscribe = lazy(() => import("@/pages/site/NewsletterUnsubscribe"));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminAutomationLab = lazy(() => import("@/pages/admin/AdminAutomationLab"));
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -69,6 +70,7 @@ const AnimatedRoutes = () => {
       <Route path="/post/:slug" element={<Post />} />
       <Route path="/curso/:slug" element={<Course />} />
       <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
+      <Route path="/newsletter/cancelar" element={<NewsletterUnsubscribe />} />
 
         {/* ── Auth routes ── */}
         <Route path="/admin/login" element={<AdminLogin />} />
