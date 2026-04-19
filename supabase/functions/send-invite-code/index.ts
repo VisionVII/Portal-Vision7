@@ -7,7 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
-const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'noreply@vision7.pt';
+const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'Vision VII <noreply@vision7.pt>';
 const DEFAULT_SITE_URL = Deno.env.get('SITE_URL') ?? 'https://www.vision7.pt';
 
 // Invite codes are valid for 48 hours
@@ -315,8 +315,9 @@ Deno.serve(async (req: Request) => {
     const resData = await res.json();
 
     if (!res.ok) {
-      console.error('[send-invite-code] Resend error:', resData);
-      return jsonResponse({ error: 'Erro ao enviar email de convite. Tente novamente.' }, 500, corsHeaders);
+      console.error(`[send-invite-code] Resend error (${res.status}):`, JSON.stringify(resData));
+      const detail = resData?.message || resData?.error?.message || 'Erro ao enviar email de convite. Tente novamente.';
+      return jsonResponse({ error: detail }, 500, corsHeaders);
     }
 
     console.log(`[send-invite-code] Invite sent to ${normalizedEmail} (role: ${role}), id: ${resData.id}`);
