@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
 import {
   BarChart3,
   Bot,
@@ -94,14 +93,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             const Icon = item.icon;
             const isActive = activeView === item.id;
             return (
-              <motion.button
+              <button
                 key={item.id}
                 type="button"
                 onClick={() => onViewChange(item.id)}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                className={`relative inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-150 ${
+                className={`relative inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
                   isActive
                     ? 'border-primary/30 bg-primary/10 text-primary shadow-sm dark:border-primary/40 dark:bg-primary/15 dark:text-primary-300'
                     : 'border-border/50 bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -114,7 +110,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     {item.badge}
                   </span>
                 ) : null}
-              </motion.button>
+              </button>
             );
           })}
         </div>
@@ -133,13 +129,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   onClick={onToggleCollapse}
                   className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/5"
                 >
-                  <motion.div
-                    initial={false}
-                    animate={{ rotate: collapsed ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
+                  <div className={`transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`}>
                     <ChevronLeft className="h-4 w-4" />
-                  </motion.div>
+                  </div>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -151,39 +143,23 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
         <div className="space-y-5">
           {groups.map((group, groupIndex) => (
-            <motion.div
-              key={group.title}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: groupIndex * 0.05 }}
-            >
-              <AnimatePresence initial={false} mode="wait">
-                {!collapsed && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-500"
-                  >
-                    {group.title}
-                  </motion.p>
-                )}
-              </AnimatePresence>
+            <div key={group.title}>
+              {!collapsed && (
+                <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-neutral-400 transition-opacity duration-150 dark:text-neutral-500">
+                  {group.title}
+                </p>
+              )}
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeView === item.id;
                   
                   const button = (
-                    <motion.button
+                    <button
                       key={item.id}
                       type="button"
                       onClick={() => onViewChange(item.id)}
-                      whileHover={{ scale: 1.02, x: collapsed ? 0 : 2 }}
-                      whileTap={{ scale: 0.98 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                      className={`flex w-full items-center ${collapsed ? 'justify-center' : 'gap-3'} rounded-lg px-3 py-2 text-left transition-all duration-150 ${
+                      className={`flex w-full items-center ${collapsed ? 'justify-center' : 'gap-3'} rounded-lg px-3 py-2 text-left transition-all duration-150 active:scale-[0.98] ${
                         isActive
                           ? 'border-l-2 border-l-primary-500 bg-primary/8 pl-[10px] text-primary-700 dark:bg-primary/12 dark:text-primary-300'
                           : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
@@ -198,25 +174,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                       >
                         <Icon className="h-4 w-4" />
                       </div>
-                      <AnimatePresence initial={false} mode="wait">
-                        {!collapsed && (
-                          <motion.div
-                            initial={{ opacity: 0, width: 0 }}
-                            animate={{ opacity: 1, width: 'auto' }}
-                            exit={{ opacity: 0, width: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="min-w-0 flex-1 overflow-hidden"
-                          >
-                            <span className={`block truncate text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      <div className={`min-w-0 overflow-hidden transition-all duration-200 ${collapsed ? 'w-0 opacity-0' : 'flex-1 opacity-100'}`}>
+                        <span className={`block truncate whitespace-nowrap text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
+                      </div>
                       {item.badge && !collapsed ? (
                         <Badge className="h-5 min-w-[20px] justify-center rounded-full bg-amber-500 px-1.5 text-[10px] text-white hover:bg-amber-500">
                           {item.badge}
                         </Badge>
                       ) : null}
-                    </motion.button>
+                    </button>
                   );
 
                   return collapsed ? (
@@ -236,17 +202,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   ) : button;
                 })}
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Portal quick link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-6 border-t border-border/30 pt-4"
-        >
+        <div className="mt-6 border-t border-border/30 pt-4">
           <Tooltip>
             <TooltipTrigger asChild>
               <a
@@ -256,19 +217,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'} rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all duration-150 hover:bg-muted/40 hover:text-foreground`}
               >
                 <Globe className="h-4 w-4 text-emerald-500 shrink-0" />
-                <AnimatePresence initial={false} mode="wait">
-                  {!collapsed && (
-                    <motion.span
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: 'auto' }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      Abrir portal
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                <span className={`overflow-hidden transition-all duration-200 ${collapsed ? 'w-0 opacity-0' : 'opacity-100'}`}>
+                  Abrir portal
+                </span>
               </a>
             </TooltipTrigger>
             {collapsed && (
@@ -277,7 +228,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               </TooltipContent>
             )}
           </Tooltip>
-        </motion.div>
+        </div>
       </nav>
     </>
   );

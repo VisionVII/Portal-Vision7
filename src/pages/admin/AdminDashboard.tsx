@@ -1,6 +1,5 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import DashboardHeader from '@/components/admin/DashboardHeader';
 import DashboardSidebar from '@/components/admin/DashboardSidebar';
 import type { AdminView } from '@/components/admin/dashboard-types';
@@ -100,25 +99,11 @@ const AdminDashboard = () => {
   // Helper: wrap lazy view in a div that hides when not active (keeps state mounted)
   const Panel = useCallback(
     ({ view, children }: { view: AdminView; children: React.ReactNode }) => {
-      const isActive = activeView === view;
-      
+      if (activeView !== view) return null;
       return (
-        <AnimatePresence mode="wait">
-          {isActive && (
-            <motion.div
-              key={view}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{
-                duration: 0.3,
-                ease: [0.4, 0, 0.2, 1], // ease-out cubic-bezier
-              }}
-            >
-              {children}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out fill-mode-both">
+          {children}
+        </div>
       );
     },
     [activeView],
@@ -183,7 +168,7 @@ const AdminDashboard = () => {
 
         {/* Main content — grows to fill remaining width */}
         <main className="min-w-0 flex-1 overflow-x-hidden">
-          <div className="mx-auto max-w-[1380px] px-3 py-6 sm:px-5 sm:py-7 lg:px-6 xl:px-8">
+          <div className="mx-auto max-w-[1600px] px-3 py-6 sm:px-5 sm:py-7 lg:px-6 xl:px-8">
 
             <Suspense fallback={<ViewSkeleton />}>
               <Panel view="overview">
