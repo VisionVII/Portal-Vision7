@@ -38,11 +38,11 @@ export default function AISettingsPanel() {
       try {
         const { data } = await supabase
           .from('site_settings')
-          .select('setting_value')
-          .eq('setting_key', 'portal_ai_config')
+          .select('value')
+          .eq('key', 'portal_ai_config')
           .maybeSingle();
-        if (data?.setting_value && typeof data.setting_value === 'object') {
-          const v = data.setting_value as Record<string, unknown>;
+        if (data?.value) {
+          const v = typeof data.value === 'string' ? JSON.parse(data.value) as Record<string, unknown> : data.value as Record<string, unknown>;
           setSettings((prev) => ({
             enabled: typeof v.enabled === 'boolean' ? v.enabled : prev.enabled,
             provider: typeof v.provider === 'string' ? v.provider : prev.provider,
@@ -65,8 +65,8 @@ export default function AISettingsPanel() {
       await supabase
         .from('site_settings')
         .upsert(
-          { setting_key: 'portal_ai_config', setting_value: updated as unknown as Record<string, unknown>, is_public: false },
-          { onConflict: 'setting_key' },
+          { key: 'portal_ai_config', value: JSON.stringify(updated), updated_at: new Date().toISOString() },
+          { onConflict: 'key' },
         );
       toast({ title: 'Definições IA atualizadas' });
     } catch {
