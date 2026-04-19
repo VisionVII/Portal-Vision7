@@ -303,7 +303,10 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                   <div key={stage.label} className="relative rounded-2xl border border-border/40 bg-muted/20 p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-foreground">{stage.label}</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{index + 1}</span>
+                          {stage.label}
+                        </p>
                         <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">{stage.count}</p>
                       </div>
                       <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${toneClasses(stage.tone)}`}>
@@ -330,7 +333,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                       )}
                     </div>
                     {index < pipelineStages.length - 1 && (
-                      <div className="absolute right-[-0.75rem] top-1/2 hidden -translate-y-1/2 xl:block">
+                      <div className={`absolute right-[-0.75rem] top-1/2 hidden -translate-y-1/2 ${index % 2 === 0 ? 'sm:block' : 'xl:block'}`}>
                         <ArrowRight className="h-4 w-4 text-muted-foreground/40" />
                       </div>
                     )}
