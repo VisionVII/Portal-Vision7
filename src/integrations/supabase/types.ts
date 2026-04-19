@@ -1447,6 +1447,45 @@ export type Database = {
       }
     }
     Functions: {
+      change_user_role: {
+        Args: {
+          _user_id: string
+          _old_role: Database["public"]["Enums"]["app_role"]
+          _new_role: Database["public"]["Enums"]["app_role"]
+          _reason?: string
+        }
+        Returns: boolean
+      }
+      deactivate_team_member: {
+        Args: {
+          _user_id: string
+          _reason?: string
+        }
+        Returns: boolean
+      }
+      get_team_members: {
+        Args: Record<string, never>
+        Returns: {
+          assignment_id: string
+          user_id: string
+          email: string
+          full_name: string
+          avatar_url: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          is_active: boolean
+          assigned_at: string | null
+          expires_at: string | null
+          reason: string | null
+        }[]
+      }
+      reactivate_team_member: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _reason?: string
+        }
+        Returns: boolean
+      }
       assign_role_with_audit: {
         Args: {
           _reason?: string

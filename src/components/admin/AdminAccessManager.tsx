@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, KeyRound, Loader2, Mail, Send, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import {
+  CheckCircle2, KeyRound, Loader2, Mail, MoreHorizontal,
+  Send, Shield, ShieldCheck, UserMinus, UserPlus, Users,
+} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,108 +16,143 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   AppRole,
+  TeamMember,
+  useChangeUserRole,
   useCreateRegistrationInvite,
+  useDeactivateTeamMember,
   useExpireRegistrationInvite,
+  useReactivateTeamMember,
   useRegistrationInvites,
-  useRoleAssignments,
+  useTeamMembers,
 } from '@/hooks/useAdminAccess';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+
+// ── Role blueprints ─────────────────────────────────────────────────────────
 
 const ROLE_BLUEPRINTS: Array<{
   role: AppRole;
   title: string;
   description: string;
   scope: string[];
+  color: string;
 }> = [
   {
     role: 'super_admin',
-    title: 'Desenvolvedor / Super Admin',
-    description: 'Acesso total ao CMS, infraestrutura editorial, configurações críticas e gestão da equipa.',
-    scope: ['Configurações avançadas', 'Infra & diagnósticos', 'Convites e permissões', 'Builder completo'],
+    title: 'Super Admin',
+    description: 'Acesso total: infraestrutura, configurações críticas, gestão da equipa.',
+    scope: ['Config avançadas', 'Infra & diagnósticos', 'Convites e permissões', 'Builder completo'],
+    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
   },
   {
     role: 'admin',
     title: 'Administrador',
-    description: 'Opera o portal, homepage, cursos, parceiros e conteúdo em produção.',
+    description: 'Opera o portal, homepage, cursos, parceiros e conteúdo.',
     scope: ['Homepage builder', 'Gestão de posts', 'Newsletter e CRM', 'Cursos e parcerias'],
+    color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   },
   {
     role: 'editor',
     title: 'Editor',
     description: 'Coordena destaques, aprova posts e organiza a pauta editorial.',
     scope: ['Publicar posts', 'Curadoria da homepage', 'Revisão editorial'],
+    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   },
   {
     role: 'redator',
-    title: 'Redator / Revisor',
-    description: 'Cria textos, atualiza conteúdo e trabalha em drafts com escopo controlado.',
-    scope: ['Criar rascunhos', 'Editar o próprio conteúdo', 'Enviar para revisão'],
+    title: 'Redator',
+    description: 'Cria textos, atualiza conteúdo e trabalha em drafts.',
+    scope: ['Criar rascunhos', 'Editar próprio conteúdo', 'Enviar para revisão'],
+    color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
   },
   {
     role: 'moderador',
     title: 'Moderador',
     description: 'Apoio operacional, comentários e moderação de comunidade.',
     scope: ['Fila de revisão', 'Moderação de comunidade'],
+    color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
   },
   {
     role: 'analyst',
     title: 'Analista',
     description: 'Acesso focado em analytics, insights e leitura de performance.',
     scope: ['Painel de insights', 'Relatórios e KPIs'],
+    color: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
   },
 ];
 
-const getRoleTitle = (role: AppRole) => {
-  return ROLE_BLUEPRINTS.find((item) => item.role === role)?.title ?? role.replace('_', ' ');
-};
+const getBlueprintForRole = (role: AppRole) =>
+  ROLE_BLUEPRINTS.find((b) => b.role === role);
 
-const AdminAccessManager = () => {
-  const { data: invites = [] } = useRegistrationInvites();
-  const { data: roleAssignments = [] } = useRoleAssignments();
+const getRoleTitle = (role: AppRole) =>
+  getBlueprintForRole(role)?.title ?? role.replace('_', ' ');
+
+const getRoleBadgeClass = (role: AppRole) =>
+  getBlueprintForRole(role)?.color ?? 'bg-muted text-muted-foreground';
+
+// ── Sub-components ──────────────────────────────────────────────────────────
+
+const RoleBadge: React.FC<{ role: AppRole }> = ({ role }) => (
+  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${getRoleBadgeClass(role)}`}>
+    <Shield className="h-3 w-3" />
+    {getRoleTitle(role)}
+  </span>
+);
+
+const StatusDot: React.FC<{ active: boolean }> = ({ active }) => (
+  <span className={`inline-block h-2 w-2 rounded-full ${active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+);
+
+// ── Invite Form ─────────────────────────────────────────────────────────────
+
+const InviteForm: React.FC = () => {
   const createInvite = useCreateRegistrationInvite();
-  const expireInvite = useExpireRegistrationInvite();
   const { toast } = useToast();
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<AppRole>('editor');
   const [scopeNote, setScopeNote] = useState('');
-  const [expiresAt, setExpiresAt] = useState(() => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
+  const [expiresAt, setExpiresAt] = useState(() =>
+    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+  );
   const [isSending, setIsSending] = useState(false);
   const [lastSentEmail, setLastSentEmail] = useState<string | null>(null);
 
-  const selectedBlueprint = useMemo(
-    () => ROLE_BLUEPRINTS.find((item) => item.role === role),
-    [role]
-  );
+  const selectedBlueprint = useMemo(() => getBlueprintForRole(role), [role]);
 
-  const inviteSummary = useMemo(() => {
-    const now = Date.now();
-
-    return {
-      activeMembers: roleAssignments.filter((assignment) => assignment.is_active !== false).length,
-      pendingInvites: invites.filter((invite) => invite.status === 'pending' && new Date(invite.expires_at).getTime() > now).length,
-      expiredInvites: invites.filter((invite) => invite.status === 'expired' || new Date(invite.expires_at).getTime() <= now).length,
-    };
-  }, [invites, roleAssignments]);
-
-  const handleCreateInvite = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSending(true);
     setLastSentEmail(null);
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
 
-      // 1) Register invite in DB (for tracking)
       await createInvite.mutateAsync({
         email: normalizedEmail,
         role,
         expiresAt: new Date(expiresAt).toISOString(),
       });
 
-      // 2) Send invite email with 6-digit code via edge function
       const { data: resData, error: fnError } = await supabase.functions.invoke('send-invite-code', {
         body: { email: normalizedEmail, role },
       });
@@ -122,7 +160,7 @@ const AdminAccessManager = () => {
       if (fnError || resData?.error) {
         toast({
           title: 'Convite registado, mas falha no envio do email',
-          description: resData?.error ?? fnError?.message ?? 'O convite foi guardado. Tente reenviar o email.',
+          description: resData?.error ?? fnError?.message ?? 'O convite foi guardado. Tente reenviar.',
           variant: 'destructive',
         });
         return;
@@ -131,15 +169,11 @@ const AdminAccessManager = () => {
       setLastSentEmail(normalizedEmail);
       setEmail('');
       setScopeNote('');
-
-      toast({
-        title: 'Convite enviado',
-        description: `Email de convite com código de ativação enviado para ${normalizedEmail}.`,
-      });
+      toast({ title: 'Convite enviado', description: `Código de ativação enviado para ${normalizedEmail}.` });
     } catch (error) {
       toast({
         title: 'Erro ao criar convite',
-        description: error instanceof Error ? error.message : 'Não foi possível gerar o convite.',
+        description: error instanceof Error ? error.message : 'Falha ao gerar convite.',
         variant: 'destructive',
       });
     } finally {
@@ -147,208 +181,457 @@ const AdminAccessManager = () => {
     }
   };
 
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <UserPlus className="h-4 w-4 text-primary" />
+          Convidar membro
+        </CardTitle>
+        <CardDescription>Envie um convite com código de ativação por email.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="invite-email">Email</Label>
+            <Input
+              id="invite-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="colaborador@vision.pt"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Papel</Label>
+              <Select value={role} onValueChange={(v: AppRole) => setRole(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_BLUEPRINTS.map((b) => (
+                    <SelectItem key={b.role} value={b.role}>{b.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="invite-expire">Validade</Label>
+              <Input
+                id="invite-expire"
+                type="datetime-local"
+                value={expiresAt}
+                onChange={(e) => setExpiresAt(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="scope-note">Observações (opcional)</Label>
+            <Textarea
+              id="scope-note"
+              value={scopeNote}
+              onChange={(e) => setScopeNote(e.target.value)}
+              placeholder="Ex.: acesso apenas ao CMS da homepage."
+              className="min-h-[60px]"
+            />
+          </div>
+
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5">
+            <p className="text-xs font-semibold text-foreground">{selectedBlueprint?.title}</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{selectedBlueprint?.description}</p>
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {selectedBlueprint?.scope.map((s) => (
+                <span key={s} className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">{s}</span>
+              ))}
+            </div>
+          </div>
+
+          {lastSentEmail && (
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2 text-xs text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-300">
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              Enviado para <strong>{lastSentEmail}</strong>
+            </div>
+          )}
+
+          <Button type="submit" className="w-full gap-2" size="sm" disabled={isSending}>
+            {isSending
+              ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> A enviar…</>
+              : <><Send className="h-3.5 w-3.5" /> Enviar convite</>}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+};
+
+// ── Role Blueprints Panel ───────────────────────────────────────────────────
+
+const RoleBlueprintsPanel: React.FC = () => (
+  <div className="space-y-2">
+    {ROLE_BLUEPRINTS.map((b, i) => (
+      <div key={b.role} className="flex items-start gap-3 rounded-lg border border-border/60 p-2.5">
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+          {i + 1}
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <RoleBadge role={b.role} />
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">{b.description}</p>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {b.scope.map((s) => (
+              <span key={s} className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{s}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+// ── Team Members Table ──────────────────────────────────────────────────────
+
+const TeamMembersTable: React.FC<{
+  members: TeamMember[];
+  currentUserId: string | undefined;
+  isSuperAdmin: boolean;
+}> = ({ members, currentUserId, isSuperAdmin }) => {
+  const changeRole = useChangeUserRole();
+  const deactivate = useDeactivateTeamMember();
+  const reactivate = useReactivateTeamMember();
+  const { toast } = useToast();
+
+  const [confirmAction, setConfirmAction] = useState<{
+    type: 'deactivate' | 'reactivate' | 'change-role';
+    member: TeamMember;
+    newRole?: AppRole;
+  } | null>(null);
+
+  const activeMembers = members.filter((m) => m.is_active);
+  const inactiveMembers = members.filter((m) => !m.is_active);
+
+  const handleConfirm = async () => {
+    if (!confirmAction) return;
+    const { type, member, newRole } = confirmAction;
+
+    try {
+      if (type === 'deactivate') {
+        await deactivate.mutateAsync({ userId: member.user_id });
+        toast({ title: 'Membro desativado', description: `${member.full_name} foi desativado.` });
+      } else if (type === 'reactivate' && newRole) {
+        await reactivate.mutateAsync({ userId: member.user_id, role: newRole });
+        toast({ title: 'Membro reativado', description: `${member.full_name} reativado como ${getRoleTitle(newRole)}.` });
+      } else if (type === 'change-role' && newRole) {
+        await changeRole.mutateAsync({ userId: member.user_id, oldRole: member.role, newRole });
+        toast({ title: 'Papel alterado', description: `${member.full_name} é agora ${getRoleTitle(newRole)}.` });
+      }
+    } catch (err) {
+      toast({
+        title: 'Erro',
+        description: err instanceof Error ? err.message : 'Operação falhou.',
+        variant: 'destructive',
+      });
+    } finally {
+      setConfirmAction(null);
+    }
+  };
+
+  const renderMemberRow = (member: TeamMember) => {
+    const isCurrentUser = member.user_id === currentUserId;
+    const canManage = isSuperAdmin && !isCurrentUser;
+
+    return (
+      <div
+        key={member.assignment_id}
+        className={`flex flex-col gap-2 rounded-lg border p-3 md:flex-row md:items-center md:justify-between ${
+          member.is_active ? 'border-border/60' : 'border-border/30 opacity-60'
+        }`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase text-muted-foreground">
+            {member.full_name.slice(0, 2)}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-medium text-foreground">
+                {member.full_name}
+                {isCurrentUser && <span className="ml-1 text-[10px] text-muted-foreground">(tu)</span>}
+              </p>
+              <StatusDot active={member.is_active} />
+            </div>
+            <p className="truncate text-[11px] text-muted-foreground">
+              {member.email || member.user_id.slice(0, 12) + '…'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <RoleBadge role={member.role} />
+          <span className="text-[10px] text-muted-foreground">
+            {member.assigned_at ? new Date(member.assigned_at).toLocaleDateString('pt-PT') : '—'}
+          </span>
+
+          {canManage && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <p className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">Alterar papel</p>
+                {ROLE_BLUEPRINTS.filter((b) => b.role !== member.role).map((b) => (
+                  <DropdownMenuItem
+                    key={b.role}
+                    onClick={() => setConfirmAction({ type: 'change-role', member, newRole: b.role })}
+                  >
+                    <Shield className="mr-2 h-3.5 w-3.5" />
+                    {b.title}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                {member.is_active ? (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => setConfirmAction({ type: 'deactivate', member })}
+                  >
+                    <UserMinus className="mr-2 h-3.5 w-3.5" />
+                    Desativar membro
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => setConfirmAction({ type: 'reactivate', member, newRole: member.role })}
+                  >
+                    <UserPlus className="mr-2 h-3.5 w-3.5" />
+                    Reativar membro
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <div className="space-y-2">
+        {activeMembers.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">Nenhum membro ativo.</p>
+        ) : (
+          activeMembers.map(renderMemberRow)
+        )}
+
+        {inactiveMembers.length > 0 && (
+          <>
+            <div className="flex items-center gap-2 pt-2">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Inativos</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            {inactiveMembers.map(renderMemberRow)}
+          </>
+        )}
+      </div>
+
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.type === 'deactivate' && 'Desativar membro'}
+              {confirmAction?.type === 'reactivate' && 'Reativar membro'}
+              {confirmAction?.type === 'change-role' && 'Alterar papel'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.type === 'deactivate' && (
+                <>Todos os papéis de <strong>{confirmAction.member.full_name}</strong> serão desativados. O membro perde acesso ao dashboard.</>
+              )}
+              {confirmAction?.type === 'reactivate' && (
+                <><strong>{confirmAction.member.full_name}</strong> será reativado como <strong>{getRoleTitle(confirmAction.newRole!)}</strong>.</>
+              )}
+              {confirmAction?.type === 'change-role' && (
+                <>O papel de <strong>{confirmAction.member.full_name}</strong> será alterado de <strong>{getRoleTitle(confirmAction.member.role)}</strong> para <strong>{getRoleTitle(confirmAction.newRole!)}</strong>.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
+
+// ── Invites List ────────────────────────────────────────────────────────────
+
+const InvitesList: React.FC = () => {
+  const { data: invites = [] } = useRegistrationInvites();
+  const expireInvite = useExpireRegistrationInvite();
+  const { toast } = useToast();
+
   const handleResendInvite = async (inviteEmail: string, inviteRole: AppRole) => {
     const { data: resData, error: fnError } = await supabase.functions.invoke('send-invite-code', {
       body: { email: inviteEmail, role: inviteRole },
     });
 
     if (fnError || resData?.error) {
-      toast({ title: 'Erro ao reenviar', description: resData?.error ?? fnError?.message ?? 'Falha ao reenviar o convite.', variant: 'destructive' });
+      toast({ title: 'Erro ao reenviar', description: resData?.error ?? fnError?.message ?? 'Falha ao reenviar.', variant: 'destructive' });
     } else {
-      toast({ title: 'Convite reenviado', description: `Novo código enviado para ${inviteEmail}.` });
+      toast({ title: 'Reenviado', description: `Novo código para ${inviteEmail}.` });
     }
   };
 
+  if (invites.length === 0) {
+    return <p className="py-4 text-center text-sm text-muted-foreground">Nenhum convite registado.</p>;
+  }
+
   return (
-    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <UserPlus className="h-4 w-4 text-primary-600" />
-              Convidar utilizadores
-            </CardTitle>
-            <CardDescription>
-              Configure perfis, privilégios e escopos claros para devs, editores, revisores e restantes membros da equipa.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreateInvite} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="invite-email">Email do utilizador</Label>
-                <Input
-                  id="invite-email"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="colaborador@vision.pt"
-                  required
-                />
+    <div className="space-y-2">
+      {invites.map((invite) => {
+        const isExpired = invite.status === 'expired' || new Date(invite.expires_at).getTime() <= Date.now();
+        const isUsed = invite.status === 'used';
+
+        return (
+          <div
+            key={invite.id}
+            className={`flex flex-col gap-2 rounded-lg border p-3 md:flex-row md:items-center md:justify-between ${
+              isExpired || isUsed ? 'border-border/30 opacity-50' : 'border-border/60'
+            }`}
+          >
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">{invite.email}</p>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                <RoleBadge role={invite.role} />
+                <span>•</span>
+                <span>{isUsed ? 'usado' : isExpired ? 'expirado' : 'pendente'}</span>
+                <span>•</span>
+                <span>{new Date(invite.expires_at).toLocaleDateString('pt-PT')}</span>
               </div>
-
-              <div className="space-y-2">
-                <Label>Papel e nível de acesso</Label>
-                <Select value={role} onValueChange={(value: AppRole) => setRole(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLE_BLUEPRINTS.map((item) => (
-                      <SelectItem key={item.role} value={item.role}>
-                        {item.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            </div>
+            {!isUsed && !isExpired && (
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  onClick={() => handleResendInvite(invite.email, invite.role)}
+                >
+                  <Mail className="h-3 w-3" /> Reenviar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  onClick={() => expireInvite.mutate(invite.id)}
+                >
+                  <KeyRound className="h-3 w-3" /> Expirar
+                </Button>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="invite-expire">Validade do convite</Label>
-                <Input
-                  id="invite-expire"
-                  type="datetime-local"
-                  value={expiresAt}
-                  onChange={(event) => setExpiresAt(event.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="scope-note">Escopo / observações</Label>
-                <Textarea
-                  id="scope-note"
-                  value={scopeNote}
-                  onChange={(event) => setScopeNote(event.target.value)}
-                  placeholder="Ex.: acesso apenas ao CMS da homepage, cursos e conteúdos patrocinados."
-                />
-              </div>
-
-              <div className="rounded-xl border border-primary-200 bg-primary-50/60 p-3 dark:border-primary-900/40 dark:bg-primary-900/10">
-                <p className="text-sm font-semibold text-foreground">Escopo recomendado</p>
-                <p className="mt-1 text-sm text-muted-foreground">{selectedBlueprint?.description}</p>
-                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  {selectedBlueprint?.scope.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {lastSentEmail && (
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-300">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  Email enviado para <strong>{lastSentEmail}</strong>
-                </div>
-              )}
-
-              <Button type="submit" className="w-full gap-2" disabled={isSending}>
-                {isSending
-                  ? <><Loader2 className="h-4 w-4 animate-spin" />A enviar convite…</>
-                  : <><Send className="h-4 w-4" />Enviar convite por email</>}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ShieldCheck className="h-4 w-4 text-secondary-500" />
-              Regras e escopos
-            </CardTitle>
-            <CardDescription>
-              Padrões de governança para não misturar perfis administrativos, editoriais e técnicos.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {ROLE_BLUEPRINTS.map((item) => (
-              <div key={item.role} className="rounded-xl border border-border p-3">
-                <p className="font-medium text-foreground">{item.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Membros ativos</p>
-            <p className="mt-2 text-2xl font-bold text-foreground">{inviteSummary.activeMembers}</p>
+            )}
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Convites pendentes</p>
-            <p className="mt-2 text-2xl font-bold text-foreground">{inviteSummary.pendingInvites}</p>
+        );
+      })}
+    </div>
+  );
+};
+
+// ── Main Component ──────────────────────────────────────────────────────────
+
+type TabId = 'team' | 'invites' | 'roles';
+
+const AdminAccessManager: React.FC = () => {
+  const { data: teamMembers = [] } = useTeamMembers();
+  const { data: invites = [] } = useRegistrationInvites();
+  const { user, isSuperAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabId>('team');
+
+  const stats = useMemo(() => {
+    const now = Date.now();
+    return {
+      active: teamMembers.filter((m) => m.is_active).length,
+      inactive: teamMembers.filter((m) => !m.is_active).length,
+      pending: invites.filter((i) => i.status === 'pending' && new Date(i.expires_at).getTime() > now).length,
+    };
+  }, [teamMembers, invites]);
+
+  const tabs: Array<{ id: TabId; label: string; icon: React.ReactNode; count?: number }> = [
+    { id: 'team', label: 'Equipa', icon: <Users className="h-3.5 w-3.5" />, count: stats.active },
+    { id: 'invites', label: 'Convites', icon: <Mail className="h-3.5 w-3.5" />, count: stats.pending },
+    { id: 'roles', label: 'Papéis', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+      {/* Left: Invite form */}
+      <div className="space-y-5">
+        <InviteForm />
+
+        {/* Stats summary */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl border border-border/60 bg-card p-3 text-center shadow-sm">
+            <p className="text-lg font-bold text-foreground">{stats.active}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Ativos</p>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Convites expirados</p>
-            <p className="mt-2 text-2xl font-bold text-foreground">{inviteSummary.expiredInvites}</p>
+          <div className="rounded-xl border border-border/60 bg-card p-3 text-center shadow-sm">
+            <p className="text-lg font-bold text-foreground">{stats.pending}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Pendentes</p>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-card p-3 text-center shadow-sm">
+            <p className="text-lg font-bold text-foreground">{stats.inactive}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Inativos</p>
           </div>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-4 w-4 text-primary-600" />
-              Equipa atual e convites ativos
-            </CardTitle>
-            <CardDescription>
-              Vista operacional para controlar quem está ativo, pendente ou com acesso expirado.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="mb-2 text-sm font-semibold text-foreground">Papéis atribuídos</p>
-              <div className="space-y-2">
-                {roleAssignments.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Ainda não existem papéis ativos carregados do Supabase.</p>
-                ) : roleAssignments.map((assignment) => (
-                  <div key={assignment.id} className="flex flex-col gap-2 rounded-xl border border-border p-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="max-w-[200px] truncate font-medium text-foreground sm:max-w-xs" title={assignment.user_id}>{assignment.user_id.slice(0, 8)}…</p>
-                      <p className="text-xs text-muted-foreground">Role: {getRoleTitle(assignment.role)} • {assignment.is_active ? 'ativo' : 'inativo'}</p>
-                    </div>
-                    <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">
-                      {assignment.assigned_at ? new Date(assignment.assigned_at).toLocaleDateString('pt-PT') : 'Sem data'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="mb-2 text-sm font-semibold text-foreground">Convites pendentes</p>
-              <div className="space-y-2">
-                {invites.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhum convite pendente no momento.</p>
-                ) : invites.map((invite) => (
-                  <div key={invite.id} className="flex flex-col gap-3 rounded-xl border border-border p-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">{invite.email}</p>
-                      <p className="text-xs text-muted-foreground">{getRoleTitle(invite.role)} • {invite.status || 'pending'} • expira em {new Date(invite.expires_at).toLocaleDateString('pt-PT')}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleResendInvite(invite.email, invite.role)}
-                        className="gap-1.5"
-                        disabled={invite.status === 'used'}
-                      >
-                        <Send className="h-4 w-4" />
-                        Reenviar
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => expireInvite.mutate(invite.id)} className="gap-1.5">
-                        <KeyRound className="h-4 w-4" />
-                        Expirar
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Right: Tabs — Team / Invites / Roles */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-0.5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+                {tab.count !== undefined && (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${
+                    activeTab === tab.id ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {activeTab === 'team' && (
+            <TeamMembersTable
+              members={teamMembers}
+              currentUserId={user?.id}
+              isSuperAdmin={isSuperAdmin}
+            />
+          )}
+          {activeTab === 'invites' && <InvitesList />}
+          {activeTab === 'roles' && <RoleBlueprintsPanel />}
+        </CardContent>
+      </Card>
     </div>
   );
 };

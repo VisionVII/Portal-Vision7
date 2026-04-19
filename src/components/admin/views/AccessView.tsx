@@ -5,14 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ShieldCheck } from 'lucide-react';
 
 const AccessView: React.FC = () => (
-  <div className="space-y-6">
+  <div className="space-y-5">
     <Card className="border-border/40">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />
-          <CardTitle className="text-base">Segurança da Conta</CardTitle>
+          <div>
+            <CardTitle className="text-base">Segurança da Conta</CardTitle>
+            <CardDescription className="mt-0.5">Autenticação de dois fatores (TOTP) para administradores.</CardDescription>
+          </div>
         </div>
-        <CardDescription>Gerir autenticação de dois fatores para a sua conta de administrador.</CardDescription>
       </CardHeader>
       <CardContent>
         <MFASetup />
