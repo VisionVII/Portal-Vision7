@@ -697,6 +697,171 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_contacts: {
+        Row: {
+          id: string
+          email: string
+          name: string | null
+          company: string | null
+          phone: string | null
+          contact_type: Database["public"]["Enums"]["crm_contact_type"]
+          source: string | null
+          notes: string | null
+          is_active: boolean
+          newsletter_subscriber_id: string | null
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          name?: string | null
+          company?: string | null
+          phone?: string | null
+          contact_type?: Database["public"]["Enums"]["crm_contact_type"]
+          source?: string | null
+          notes?: string | null
+          is_active?: boolean
+          newsletter_subscriber_id?: string | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          name?: string | null
+          company?: string | null
+          phone?: string | null
+          contact_type?: Database["public"]["Enums"]["crm_contact_type"]
+          source?: string | null
+          notes?: string | null
+          is_active?: boolean
+          newsletter_subscriber_id?: string | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_tags: {
+        Row: {
+          id: string
+          name: string
+          color: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          color?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          color?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      crm_contact_tags: {
+        Row: {
+          contact_id: string
+          tag_id: string
+        }
+        Insert: {
+          contact_id: string
+          tag_id: string
+        }
+        Update: {
+          contact_id?: string
+          tag_id?: string
+        }
+        Relationships: []
+      }
+      crm_interactions: {
+        Row: {
+          id: string
+          contact_id: string
+          interaction_type: Database["public"]["Enums"]["crm_interaction_type"]
+          subject: string | null
+          body: string | null
+          performed_by: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          contact_id: string
+          interaction_type?: Database["public"]["Enums"]["crm_interaction_type"]
+          subject?: string | null
+          body?: string | null
+          performed_by?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          contact_id?: string
+          interaction_type?: Database["public"]["Enums"]["crm_interaction_type"]
+          subject?: string | null
+          body?: string | null
+          performed_by?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      crm_deals: {
+        Row: {
+          id: string
+          contact_id: string
+          title: string
+          value: number | null
+          currency: string
+          stage: Database["public"]["Enums"]["crm_deal_stage"]
+          expected_close_date: string | null
+          notes: string | null
+          assigned_to: string | null
+          created_by: string | null
+          closed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          contact_id: string
+          title: string
+          value?: number | null
+          currency?: string
+          stage?: Database["public"]["Enums"]["crm_deal_stage"]
+          expected_close_date?: string | null
+          notes?: string | null
+          assigned_to?: string | null
+          created_by?: string | null
+          closed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          contact_id?: string
+          title?: string
+          value?: number | null
+          currency?: string
+          stage?: Database["public"]["Enums"]["crm_deal_stage"]
+          expected_close_date?: string | null
+          notes?: string | null
+          assigned_to?: string | null
+          created_by?: string | null
+          closed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           email: string
@@ -1614,6 +1779,27 @@ export type Database = {
         | "analyst"
         | "moderator"
         | "user"
+      crm_contact_type:
+        | "subscriber"
+        | "lead"
+        | "partner"
+        | "advertiser"
+        | "contributor"
+        | "other"
+      crm_deal_stage:
+        | "lead"
+        | "qualified"
+        | "proposal"
+        | "negotiation"
+        | "won"
+        | "lost"
+      crm_interaction_type:
+        | "email"
+        | "note"
+        | "meeting"
+        | "call"
+        | "form_submission"
+        | "newsletter_signup"
     }
     CompositeTypes: {
       [_ in never]: never
