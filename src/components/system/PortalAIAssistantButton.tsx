@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, Bot, CloudSun, Loader2, Lock, MapPin, Newspaper, Search, Send, Sparkles, TrendingUp, User } from 'lucide-react';
+import { AlertTriangle, ArrowUpRight, Bot, CloudSun, Loader2, Lock, MapPin, Newspaper, Search, Send, Sparkles, TrendingUp, User, WifiOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,36 @@ import {
 } from '@/modules/portal-ai';
 import type { PortalAssistantConfig } from '@/modules/portal-ai';
 import BrandLogo from '@/components/system/BrandLogo';
+
+/** Retry a fetch-based call with exponential backoff for network errors */
+async function retryEdgeFunction<T>(
+  fn: () => Promise<T>,
+  maxRetries = 2,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      const isNetworkError =
+        err instanceof TypeError && /fetch|network|internet|disconnected/i.test(err.message);
+      if (!isNetworkError || attempt === maxRetries) throw lastError;
+      // Wait 800ms, then 1600ms before retrying
+      await new Promise((r) => setTimeout(r, 800 * 2 ** attempt));
+    }
+  }
+  throw lastError;
+}
+
+function isNetworkError(err: unknown): boolean {
+  if (err instanceof TypeError && /fetch|network|internet|disconnected/i.test(err.message)) return true;
+  if (err && typeof err === 'object' && 'message' in err) {
+    const msg = String((err as { message: string }).message);
+    return /fetch|network|internet|disconnected|ERR_INTERNET/i.test(msg);
+  }
+  return false;
+}
 
 interface AssistantCardAction {
   label: string;
@@ -95,13 +125,17 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
   // Load AI config from DB (site_settings), merge with hardcoded defaults
   const [aiConfig, setAiConfig] = useState<PortalAssistantConfig>(portalAssistantConfig);
+  const configLoadedRef = useRef(false);
   useEffect(() => {
+    if (!isOpen || configLoadedRef.current) return;
+    const controller = new AbortController();
     const loadConfig = async () => {
       try {
         const { data } = await supabase
           .from('site_settings')
           .select('value')
           .eq('key', 'portal_ai_config')
+          .abortSignal(controller.signal)
           .maybeSingle();
         if (data?.value) {
           const parsed = typeof data.value === 'string' ? JSON.parse(data.value) as Record<string, unknown> : null;
@@ -114,13 +148,17 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                 : prev.provider,
               model: typeof parsed.model === 'string' && parsed.model ? parsed.model : prev.model,
             }));
+            configLoadedRef.current = true;
           }
+        } else {
+          configLoadedRef.current = true; // No config in DB, use defaults
         }
       } catch {
-        // Use hardcoded defaults
+        // Use hardcoded defaults — DB might be offline
       }
     };
-    if (isOpen) void loadConfig();
+    void loadConfig();
+    return () => controller.abort();
   }, [isOpen]);
 
   const [activeProvider, setActiveProvider] = useState<'groq-edge' | 'hf-edge' | 'local-preview'>(
@@ -333,46 +371,61 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
     try {
       let reply = null;
+      let edgeError: string | null = null;
 
       if (
         aiConfig.enabled &&
         (aiConfig.provider === 'groq-edge' || aiConfig.provider === 'hf-edge') &&
         aiConfig.edgeFunctionName
       ) {
-        const { data, error } = await supabase.functions.invoke(
-          aiConfig.edgeFunctionName,
-          {
-            body: {
-              question: trimmed,
-              knowledge: assistantContext,
-              conversation: conversationContext,
-              viewerContext,
-              assistantId: aiConfig.assistantId,
-              model: aiConfig.model,
-            },
+        try {
+          const { data, error } = await retryEdgeFunction(() =>
+            supabase.functions.invoke(
+              aiConfig.edgeFunctionName!,
+              {
+                body: {
+                  question: trimmed,
+                  knowledge: assistantContext,
+                  conversation: conversationContext,
+                  viewerContext,
+                  assistantId: aiConfig.assistantId,
+                  model: aiConfig.model,
+                },
+              }
+            ),
+          );
+
+          if (error) {
+            console.warn('[Vision7 AI] Edge function error:', error.message || error);
+            edgeError = isNetworkError(error)
+              ? 'network'
+              : String(error.message || 'Erro na função IA');
+          } else if (data?.error) {
+            console.warn('[Vision7 AI] Edge function returned error:', data.error);
+            edgeError = String(data.error);
+          } else {
+            reply = normalizePortalAssistantReply(data);
+            if (!reply) {
+              console.warn('[Vision7 AI] Edge function response could not be normalized:', JSON.stringify(data).slice(0, 300));
+              edgeError = 'Resposta do modelo IA não pôde ser interpretada';
+            }
           }
-        );
-
-        if (error) {
-          console.warn('[Vision7 AI] Edge function error:', error.message || error);
-          throw error;
-        }
-
-        if (data?.error) {
-          console.warn('[Vision7 AI] Edge function returned error:', data.error);
-        }
-
-        reply = normalizePortalAssistantReply(data);
-
-        if (!reply) {
-          console.warn('[Vision7 AI] Edge function response could not be normalized:', JSON.stringify(data).slice(0, 300));
+        } catch (fnErr) {
+          console.warn('[Vision7 AI] Edge function call failed:', fnErr instanceof Error ? fnErr.message : 'unknown');
+          edgeError = isNetworkError(fnErr) ? 'network' : 'Falha ao contactar o serviço IA';
         }
       }
 
       if (!reply) {
         const fallbackReply = buildPortalAssistantReply(trimmed, assistantContext, conversationContext);
+        const offlineNotice = edgeError === 'network'
+          ? '\n\n⚠️ _Sem ligação à Internet — a usar modo offline com conteúdos do portal._'
+          : edgeError
+            ? '\n\n⚠️ _IA temporariamente indisponível — a mostrar sugestões do portal._'
+            : '';
         reply = {
           ...fallbackReply,
+          summary: fallbackReply.summary + offlineNotice,
           provider: 'local-preview' as const,
           links: fallbackReply.links.map((link) => ({
             label: link.label,
@@ -390,25 +443,23 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       setActiveProvider(reply.provider ?? 'local-preview');
       setMessages((prev) => [...prev, createAssistantMessage(reply, cards)]);
     } catch (err) {
-      console.warn('[Vision7 AI] Fallback to local-preview:', err instanceof Error ? err.message : 'unknown error');
-      const fallbackReply = buildPortalAssistantReply(trimmed, assistantContext, conversationContext);
-      const cards = [
-        ...(wantsLocationTool ? [buildWeatherCard()] : []),
-        ...buildCardsFromLinks(fallbackReply.links),
-      ].slice(0, 4);
+      console.warn('[Vision7 AI] Unexpected error:', err instanceof Error ? err.message : 'unknown error');
+      const isNetwork = isNetworkError(err);
       setActiveProvider('local-preview');
       setMessages((prev) => [
         ...prev,
         createAssistantMessage({
-          summary: fallbackReply.summary,
-          suggestions: fallbackReply.suggestions,
-          links: fallbackReply.links.map((link) => ({
-            label: link.label,
-            href: link.href,
-            type: link.type,
-          })),
+          summary: isNetwork
+            ? 'Parece que a ligação à Internet foi interrompida. Verifique a sua conexão e tente novamente.'
+            : 'Ocorreu um erro inesperado ao processar a pergunta. Tente novamente em alguns instantes.',
+          suggestions: [
+            'Verifique a ligação à Internet',
+            'Tente reformular a pergunta',
+            'Navegue pelas categorias do portal',
+          ],
+          links: [{ label: 'Ir para a página inicial', href: '/', type: 'action' }],
           provider: 'local-preview',
-        }, cards),
+        }),
       ]);
     } finally {
       setIsLoading(false);
@@ -681,6 +732,12 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
         </div>
 
         <div className="shrink-0 border-t border-border bg-background px-4 py-3">
+          {activeProvider === 'local-preview' && messages.length > 1 && (
+            <div className="mb-2 flex items-center gap-1.5 text-[10px] text-amber-600 dark:text-amber-400">
+              <WifiOff className="h-3 w-3" />
+              <span>Modo offline — respostas baseadas no conteúdo do portal</span>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
               value={question}
