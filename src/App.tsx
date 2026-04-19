@@ -47,6 +47,11 @@ const PublicPrivacyControls = () => {
   return <ConsentBanner />;
 };
 
+const RedirectWithParams = ({ to }: { to: string }) => {
+  const location = useLocation();
+  return <Navigate to={`${to}${location.search}`} replace />;
+};
+
 const RouteFallback = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
     <div className="flex flex-col items-center gap-3">
@@ -79,11 +84,11 @@ const AnimatedRoutes = () => {
         {/* ── Legacy redirects ── */}
         <Route path="/podcasts" element={<Navigate to="/audiocasts" replace />} />
         <Route path="/podcast/:id" element={<Navigate to="/audiocasts" replace />} />
-        <Route path="/validar/entrada/tipodeuser" element={<Navigate to="/acesso/equipa" replace />} />
+        <Route path="/validar/entrada/tipodeuser" element={<RedirectWithParams to="/acesso/equipa" />} />
         <Route path="/acesso/admin/controlado" element={<Navigate to="/admin/login" replace />} />
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin/register" element={<Navigate to="/admin/login" replace />} />
-        <Route path="/acesso/convidado" element={<Navigate to="/acesso/equipa" replace />} />
+        <Route path="/acesso/convidado" element={<RedirectWithParams to="/acesso/equipa" />} />
 
         {/* ── Protected admin routes ── */}
         <Route
