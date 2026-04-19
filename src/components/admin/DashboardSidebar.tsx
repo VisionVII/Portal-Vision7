@@ -86,32 +86,43 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
   return (
     <>
-      {/* ─── Mobile: horizontal scrollable pills ─── */}
+      {/* ─── Mobile: horizontal scrollable pills with group dots ─── */}
       <div className="lg:hidden">
-        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeView === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onViewChange(item.id)}
-                className={`relative inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
-                  isActive
-                    ? 'border-primary/30 bg-primary/10 text-primary shadow-sm dark:border-primary/40 dark:bg-primary/15 dark:text-primary-300'
-                    : 'border-border/50 bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-                {item.badge ? (
-                  <span className="ml-0.5 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">
-                    {item.badge}
-                  </span>
-                ) : null}
-              </button>
-            );
+        <div className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {groups.flatMap((group, gi) => {
+            const buttons = group.items.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onViewChange(item.id)}
+                  className={`relative inline-flex shrink-0 snap-start items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-medium transition-all duration-150 active:scale-[0.97] ${
+                    isActive
+                      ? 'border-primary/30 bg-primary/10 text-primary shadow-sm dark:border-primary/40 dark:bg-primary/15'
+                      : 'border-transparent bg-muted/40 text-muted-foreground active:bg-muted/60'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="whitespace-nowrap">{item.label}</span>
+                  {item.badge ? (
+                    <span className="ml-0.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white">
+                      {item.badge}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            });
+            // Add a thin separator between groups (not after last)
+            if (gi < groups.length - 1) {
+              buttons.push(
+                <div key={`sep-${gi}`} className="flex shrink-0 items-center px-0.5">
+                  <div className="h-4 w-px bg-border/60" />
+                </div>
+              );
+            }
+            return buttons;
           })}
         </div>
       </div>
@@ -127,7 +138,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={onToggleCollapse}
-                  className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/5"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 >
                   <div className={`transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`}>
                     <ChevronLeft className="h-4 w-4" />
@@ -159,10 +170,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                       key={item.id}
                       type="button"
                       onClick={() => onViewChange(item.id)}
-                      className={`flex w-full items-center ${collapsed ? 'justify-center' : 'gap-3'} rounded-lg px-3 py-2 text-left transition-all duration-150 active:scale-[0.98] ${
+                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-150 active:scale-[0.98] ${
                         isActive
-                          ? 'border-l-2 border-l-primary-500 bg-primary/8 pl-[10px] text-primary-700 dark:bg-primary/12 dark:text-primary-300'
-                          : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                          ? 'bg-primary/8 text-primary-700 shadow-sm ring-1 ring-primary/15 dark:bg-primary/12 dark:text-primary-300'
+                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                       }`}
                     >
                       <div
@@ -174,9 +185,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                       >
                         <Icon className="h-4 w-4" />
                       </div>
-                      <div className={`min-w-0 overflow-hidden transition-all duration-200 ${collapsed ? 'w-0 opacity-0' : 'flex-1 opacity-100'}`}>
-                        <span className={`block truncate whitespace-nowrap text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
-                      </div>
+                      {!collapsed && (
+                        <span className={`min-w-0 flex-1 truncate text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
+                      )}
                       {item.badge && !collapsed ? (
                         <Badge className="h-5 min-w-[20px] justify-center rounded-full bg-amber-500 px-1.5 text-[10px] text-white hover:bg-amber-500">
                           {item.badge}
@@ -214,12 +225,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 href="/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'} rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all duration-150 hover:bg-muted/40 hover:text-foreground`}
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all duration-150 hover:bg-muted/50 hover:text-foreground`}
               >
                 <Globe className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span className={`overflow-hidden transition-all duration-200 ${collapsed ? 'w-0 opacity-0' : 'opacity-100'}`}>
-                  Abrir portal
-                </span>
+                {!collapsed && <span>Abrir portal</span>}
               </a>
             </TooltipTrigger>
             {collapsed && (

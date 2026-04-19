@@ -55,8 +55,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/40 bg-gradient-to-r from-background via-background to-primary-50/30 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 dark:from-background dark:via-background dark:to-primary-950/20">
-      <div className="flex items-center justify-between px-4 py-2.5 sm:px-6">
+    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
+      <div className="flex items-center justify-between gap-2 px-3 py-2 sm:px-5">
         <div className="flex items-center gap-3">
           <Link
             to="/"
@@ -65,9 +65,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
             <ArrowLeft className="h-4 w-4" />
           </Link>
           {logoUrl ? (
-            <img src={logoUrl} alt="Logo" width={400} height={267} className="h-11 w-auto object-contain sm:h-14" />
+            <img src={logoUrl} alt="Logo" width={400} height={267} className="h-8 w-auto object-contain sm:h-10" />
           ) : (
-            <span className="font-headline text-xl font-bold tracking-tight text-white sm:text-2xl">Vision7</span>
+            <span className="font-headline text-lg font-bold tracking-tight text-foreground sm:text-xl">Vision7</span>
           )}
         </div>
 
