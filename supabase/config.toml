@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.n8n-workflow-import]
 verify_jwt = false
+
+[functions.assign-invite-role]
+verify_jwt = false
