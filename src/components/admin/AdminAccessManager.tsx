@@ -157,10 +157,24 @@ const InviteForm: React.FC = () => {
         body: { email: normalizedEmail, role },
       });
 
-      if (fnError || resData?.error) {
+      if (fnError) {
+        let errorMessage = fnError.message;
+        try {
+          const body = await (fnError as unknown as { context?: Response }).context?.json();
+          if (body?.error) errorMessage = body.error;
+        } catch { /* context may not be JSON */ }
         toast({
           title: 'Convite registado, mas falha no envio do email',
-          description: resData?.error ?? fnError?.message ?? 'O convite foi guardado. Tente reenviar.',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (resData?.error) {
+        toast({
+          title: 'Convite registado, mas falha no envio do email',
+          description: resData.error,
           variant: 'destructive',
         });
         return;
@@ -483,8 +497,18 @@ const InvitesList: React.FC = () => {
       body: { email: inviteEmail, role: inviteRole },
     });
 
-    if (fnError || resData?.error) {
-      toast({ title: 'Erro ao reenviar', description: resData?.error ?? fnError?.message ?? 'Falha ao reenviar.', variant: 'destructive' });
+    if (fnError) {
+      let errorMessage = fnError.message;
+      try {
+        const body = await (fnError as unknown as { context?: Response }).context?.json();
+        if (body?.error) errorMessage = body.error;
+      } catch { /* context may not be JSON */ }
+      toast({ title: 'Erro ao reenviar', description: errorMessage, variant: 'destructive' });
+      return;
+    }
+
+    if (resData?.error) {
+      toast({ title: 'Erro ao reenviar', description: resData.error, variant: 'destructive' });
     } else {
       toast({ title: 'Reenviado', description: `Novo código para ${inviteEmail}.` });
     }
