@@ -22,6 +22,7 @@ import {
   portalAssistantConfig,
   selectPortalAssistantContext,
 } from '@/modules/portal-ai';
+import type { PortalAssistantConfig } from '@/modules/portal-ai';
 import BrandLogo from '@/components/system/BrandLogo';
 
 interface AssistantCardAction {
@@ -91,6 +92,37 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load AI config from DB (site_settings), merge with hardcoded defaults
+  const [aiConfig, setAiConfig] = useState<PortalAssistantConfig>(portalAssistantConfig);
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('value')
+          .eq('key', 'portal_ai_config')
+          .maybeSingle();
+        if (data?.value) {
+          const parsed = typeof data.value === 'string' ? JSON.parse(data.value) as Record<string, unknown> : null;
+          if (parsed) {
+            setAiConfig((prev) => ({
+              ...prev,
+              enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : prev.enabled,
+              provider: (parsed.provider === 'groq-edge' || parsed.provider === 'hf-edge' || parsed.provider === 'local-preview')
+                ? parsed.provider
+                : prev.provider,
+              model: typeof parsed.model === 'string' && parsed.model ? parsed.model : prev.model,
+            }));
+          }
+        }
+      } catch {
+        // Use hardcoded defaults
+      }
+    };
+    if (isOpen) void loadConfig();
+  }, [isOpen]);
+
   const [activeProvider, setActiveProvider] = useState<'groq-edge' | 'hf-edge' | 'local-preview'>(
     portalAssistantConfig.provider === 'groq-edge' ? 'groq-edge' : portalAssistantConfig.provider === 'hf-edge' ? 'hf-edge' : 'local-preview'
   );
@@ -303,29 +335,38 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       let reply = null;
 
       if (
-        portalAssistantConfig.enabled &&
-        (portalAssistantConfig.provider === 'groq-edge' || portalAssistantConfig.provider === 'hf-edge') &&
-        portalAssistantConfig.edgeFunctionName
+        aiConfig.enabled &&
+        (aiConfig.provider === 'groq-edge' || aiConfig.provider === 'hf-edge') &&
+        aiConfig.edgeFunctionName
       ) {
         const { data, error } = await supabase.functions.invoke(
-          portalAssistantConfig.edgeFunctionName,
+          aiConfig.edgeFunctionName,
           {
             body: {
               question: trimmed,
               knowledge: assistantContext,
               conversation: conversationContext,
               viewerContext,
-              assistantId: portalAssistantConfig.assistantId,
-              model: portalAssistantConfig.model,
+              assistantId: aiConfig.assistantId,
+              model: aiConfig.model,
             },
           }
         );
 
         if (error) {
+          console.warn('[Vision7 AI] Edge function error:', error.message || error);
           throw error;
         }
 
+        if (data?.error) {
+          console.warn('[Vision7 AI] Edge function returned error:', data.error);
+        }
+
         reply = normalizePortalAssistantReply(data);
+
+        if (!reply) {
+          console.warn('[Vision7 AI] Edge function response could not be normalized:', JSON.stringify(data).slice(0, 300));
+        }
       }
 
       if (!reply) {
@@ -348,7 +389,8 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
       setActiveProvider(reply.provider ?? 'local-preview');
       setMessages((prev) => [...prev, createAssistantMessage(reply, cards)]);
-    } catch {
+    } catch (err) {
+      console.warn('[Vision7 AI] Fallback to local-preview:', err instanceof Error ? err.message : 'unknown error');
       const fallbackReply = buildPortalAssistantReply(trimmed, assistantContext, conversationContext);
       const cards = [
         ...(wantsLocationTool ? [buildWeatherCard()] : []),

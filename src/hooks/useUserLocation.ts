@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { isAllowed } from '@/cmp';
+import { boot, isAllowed } from '@/cmp';
 
 export interface UserLocation {
   country: string | null;
@@ -37,6 +37,9 @@ export const useUserLocation = () => {
   useEffect(() => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+    // Ensure CMP engine is booted before checking consent (idempotent)
+    boot();
+
     const updateTime = () => {
       const now = new Date();
       setLocation((prev) => {
@@ -55,7 +58,6 @@ export const useUserLocation = () => {
       if (!force && now - lastSyncTimestamp < SYNC_THROTTLE_MS) return;
       lastSyncTimestamp = now;
 
-      const geoConsent = localStorage.getItem('geo-consent');
       const hasPersonalizationConsent = isAllowed('personalization');
 
       if (!hasPersonalizationConsent) {
@@ -164,6 +166,8 @@ export const useUserLocation = () => {
     window.addEventListener('geolocation-update', handleLocationRefresh);
     window.addEventListener('cookie-preferences-updated', handleLocationRefresh);
     window.addEventListener('cookie-preferences-reset', handleLocationRefresh);
+    window.addEventListener('consent:loaded', handleLocationRefresh);
+    window.addEventListener('consent:updated', handleLocationRefresh);
     window.addEventListener('storage', handleStorageChange as EventListener);
 
     return () => {
@@ -175,6 +179,8 @@ export const useUserLocation = () => {
       window.removeEventListener('geolocation-update', handleLocationRefresh);
       window.removeEventListener('cookie-preferences-updated', handleLocationRefresh);
       window.removeEventListener('cookie-preferences-reset', handleLocationRefresh);
+      window.removeEventListener('consent:loaded', handleLocationRefresh);
+      window.removeEventListener('consent:updated', handleLocationRefresh);
       window.removeEventListener('storage', handleStorageChange as EventListener);
     };
   }, [browserTimezone]);
