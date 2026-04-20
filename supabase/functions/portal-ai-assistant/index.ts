@@ -282,27 +282,38 @@ async function loadApiKey(adminClient: ReturnType<typeof createClient>): Promise
   return { key: '', provider: 'groq' };
 }
 
-function buildSystemPrompt(sdd: Record<string, unknown>) {
+function buildSystemPrompt(sdd: Record<string, unknown>, viewerContext: Record<string, unknown>) {
   const allowedScope = Array.isArray(sdd.allowed_scope) ? sdd.allowed_scope.join('; ') : '';
   const forbiddenScope = Array.isArray(sdd.forbidden_scope) ? sdd.forbidden_scope.join('; ') : '';
   const rules = Array.isArray(sdd.response_contract?.rules) ? sdd.response_contract.rules.join('; ') : '';
 
+  const hasConsent = Boolean(viewerContext.hasConsent);
+  const contextBlock = hasConsent
+    ? [
+        `CONTEXTO DO LEITOR (consentimento ATIVO): regiao=${viewerContext.region || 'desconhecida'}, pais=${viewerContext.country || 'desconhecido'}, fuso=${viewerContext.timezone || 'auto'}, hora=${viewerContext.localTime || 'n/a'}, temperatura=${viewerContext.temperatureC != null ? viewerContext.temperatureC + '°C' : 'sem dado'}.`,
+        'O utilizador JA AUTORIZOU personalização — USE estes dados livremente nas respostas. Inclua clima, hora e região quando relevante, sem pedir consentimento.',
+      ].join(' ')
+    : 'CONTEXTO DO LEITOR (sem consentimento): o utilizador NAO autorizou personalização. Se pedir clima, hora ou localização, explique que precisa ativar nas preferências de privacidade.';
+
   return [
-    'Você é o Vision7 AI, o assistente editorial e de navegação do portal, e deve seguir estritamente o SDD do assistente.',
-    'Fale com naturalidade, segurança e clareza, sem soar robótico. Adapte o tom ao nível da pergunta, mas mantenha credibilidade e foco prático.',
-    'Quando houver base suficiente, ofereça uma recomendação principal, um insight curto e próximos passos acionáveis dentro do portal.',
-    `Escopo permitido: ${allowedScope || 'apenas portal Vision7, noticias, categorias, cursos e navegacao interna.'}`,
-    `Escopo proibido: ${forbiddenScope || 'nada fora do portal Vision7.'}`,
-    `Regras de resposta: ${rules || 'responda apenas em JSON valido com summary, suggestions e links internos.'}`,
-    'Nunca invente dados, nunca crie links externos e nunca responda fora do contexto do portal.',
-    'Se a pergunta fugir do escopo, responda educadamente que so pode ajudar com o Vision7 e sugira uma reformulacao dentro do portal.',
-    'Use o historico recente da conversa apenas para manter continuidade, nunca para extrapolar alem do que foi fornecido.',
-    'Clima, regiao, hora local e qualquer contexto pessoal so podem ser usados quando viewer_context.hasConsent for true.',
-    'Se viewer_context.hasConsent for false e o utilizador pedir clima ou localizacao, explique que essa ferramenta depende de consentimento e oriente a ativar as preferencias de privacidade.',
-    'Padroes de rota internos: posts usam /post/{slug}; cursos usam /curso/{slug}; categorias usam /{slug}; audiocasts usam /audiocasts.',
-    'A resposta deve ser JSON valido com a forma: {"summary": string, "suggestions": string[], "links": [{"label": string, "href": string, "type": "post|course|category|action"}]}.',
-    'O campo summary deve soar humano e confiavel; suggestions devem ser concretas e orientar o proximo passo no Vision7.',
-  ].join(' ');
+    'Você é o Vision7 AI — assistente editorial do portal Vision7, especializado em tecnologia, inovação e tendências.',
+    'Personalidade: comunicativo, direto, confiante mas sem arrogância. Fale como um jornalista tech experiente que conversa com um colega curioso.',
+    'Varie o vocabulário e a estrutura das frases — nunca repita a mesma abertura ou padrão em mensagens seguidas. Surpreenda.',
+    'Se o utilizador faz uma pergunta simples, responda de forma curta e objetiva. Se complexa, aprofunde com contexto editorial.',
+    'Adapte o tom: casual para saudações, analítico para perguntas sobre tendências, prático para navegação.',
+    contextBlock,
+    `Escopo: ${allowedScope || 'portal Vision7 — noticias, categorias, cursos, audiocasts e navegacao interna.'}`,
+    `Fora de escopo: ${forbiddenScope || 'nada fora do universo Vision7.'}`,
+    'Se a pergunta fugir do escopo, redirecione com elegância para algo relevante no portal.',
+    'Use o histórico da conversa para manter contexto e lembrar preferências do utilizador dentro da sessão.',
+    'Se o utilizador mostrou interesse por um tema, proponha conteúdos relacionados sem que ele peça — antecipe necessidades.',
+    'Rotas internas: posts /post/{slug}; cursos /curso/{slug}; categorias /{slug}; audiocasts /audiocasts.',
+    `Formato: ${rules || 'responda APENAS em JSON válido: {"summary": string, "suggestions": string[], "links": [{"label": string, "href": string, "type": "post|course|category|action"}]}.'}`,
+    'IMPORTANTE: O array "links" DEVE conter 1 a 4 links internos extraidos do knowledge fornecido. Cada link deve ter label (titulo curto), href (rota interna começando com /), e type (post, course, category ou action).',
+    'Exemplo de link: {"label": "Supercomputação em Portugal", "href": "/post/supercomputacao-ia-portugal", "type": "post"}.',
+    'O summary deve ser fluido e humano. Suggestions devem ser ações concretas que o utilizador pode fazer agora no portal.',
+    'Nunca invente dados, links externos ou produtos que não existam no portal.',
+  ].join('\n');
 }
 
 function parseAssistantResponse(rawContent: string) {
@@ -320,6 +331,84 @@ function parseAssistantResponse(rawContent: string) {
 const RATE_WINDOW_MS = 60_000; // 1 minute
 const RATE_MAX = 10; // max 10 requests / min / IP
 const rateBuckets = new Map();
+
+/* ── User Preferences / Learning ── */
+
+interface UserPrefs {
+  preferred_topics: string[];
+  preferred_categories: string[];
+  interaction_count: number;
+  last_questions: string[];
+}
+
+const EMPTY_PREFS: UserPrefs = {
+  preferred_topics: [],
+  preferred_categories: [],
+  interaction_count: 0,
+  last_questions: [],
+};
+
+async function loadUserPrefs(adminClient: ReturnType<typeof createClient>, fingerprint: string): Promise<UserPrefs> {
+  if (!fingerprint) return EMPTY_PREFS;
+  try {
+    const { data } = await adminClient
+      .from('ai_user_preferences')
+      .select('preferred_topics, preferred_categories, interaction_count, last_questions')
+      .eq('user_fingerprint', fingerprint)
+      .maybeSingle();
+    if (data) return data as UserPrefs;
+  } catch { /* ignore */ }
+  return EMPTY_PREFS;
+}
+
+function updateUserPrefsAsync(adminClient: ReturnType<typeof createClient>, fingerprint: string, question: string, knowledge: Record<string, unknown>[]) {
+  if (!fingerprint) return;
+  // Extract topics from the question (simple keyword extraction)
+  const normalized = question.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const topicKeywords = normalized.split(/\s+/).filter((w) => w.length > 3);
+
+  // Extract matched categories from knowledge
+  const categories: string[] = [];
+  if (Array.isArray(knowledge)) {
+    for (const item of knowledge) {
+      if (item && typeof item === 'object' && 'category' in item && typeof item.category === 'string') {
+        categories.push(item.category);
+      }
+    }
+  }
+
+  // Fire-and-forget upsert
+  adminClient
+    .from('ai_user_preferences')
+    .upsert({
+      user_fingerprint: fingerprint,
+      preferred_topics: topicKeywords.slice(0, 20),
+      preferred_categories: [...new Set(categories)].slice(0, 10),
+      interaction_count: 1,
+      last_questions: [question.slice(0, 200)],
+    }, { onConflict: 'user_fingerprint' })
+    .then(async () => {
+      // Increment count and append question
+      await adminClient.rpc('increment_ai_interaction', { fp: fingerprint, q: question.slice(0, 200) }).catch(() => {});
+    })
+    .catch(() => {});
+}
+
+function buildUserPrefsContext(prefs: UserPrefs): string {
+  if (prefs.interaction_count === 0) return '';
+  const parts = [];
+  if (prefs.interaction_count > 0) {
+    parts.push(`Este utilizador ja interagiu ${prefs.interaction_count} vez${prefs.interaction_count > 1 ? 'es' : ''} com o assistente.`);
+  }
+  if (prefs.preferred_categories.length > 0) {
+    parts.push(`Categorias de interesse: ${prefs.preferred_categories.slice(0, 5).join(', ')}.`);
+  }
+  if (prefs.last_questions.length > 0) {
+    parts.push(`Perguntas anteriores (para contexto): ${prefs.last_questions.slice(0, 3).map((q) => `"${q}"`).join(', ')}.`);
+  }
+  parts.push('Use estas preferencias para personalizar a resposta — sugira conteudos que se alinhem aos interesses demonstrados.');
+  return parts.join(' ');
+}
 
 function getClientIp(req) {
   return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -379,21 +468,25 @@ Deno.serve(async (req: Request) => {
     const knowledge = sanitizeKnowledge(body?.knowledge);
     const conversation = sanitizeConversation(body?.conversation);
     const viewerContext = sanitizeViewerContext(body?.viewerContext);
+    const userFingerprint = String(body?.fingerprint || clientIp || '').slice(0, 128);
     const sdd = await loadAssistantSdd();
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { key: apiKey, provider: llmProvider } = await loadApiKey(adminClient);
+    const [{ key: apiKey, provider: llmProvider }, userPrefs] = await Promise.all([
+      loadApiKey(adminClient),
+      loadUserPrefs(adminClient, userFingerprint),
+    ]);
 
     if (!apiKey) {
       return jsonResponse({ error: 'Nenhuma chave de IA configurada (HF_API_TOKEN ou GROQ_API_KEY). Configure via dashboard em Automação > Configurações.' }, 503, cors);
     }
 
-    const systemPrompt = buildSystemPrompt(sdd);
+    // Build system prompt with viewer context and user learning
+    const prefsContext = buildUserPrefsContext(userPrefs);
+    const systemPrompt = buildSystemPrompt(sdd, viewerContext) + (prefsContext ? '\n\nPERFIL DO UTILIZADOR:\n' + prefsContext : '');
     const userPayload = JSON.stringify({
       question,
       knowledge,
-      viewer_context: viewerContext,
       assistant_id: String(body?.assistantId || 'vision7-assistant-core'),
-      note: 'Use apenas estes dados do portal, respeite os padroes de rota internos, utilize clima/localizacao apenas com consentimento e devolva apenas JSON valido.',
     });
 
     // Resolve the model name: ensure it matches the resolved provider
@@ -422,7 +515,7 @@ Deno.serve(async (req: Request) => {
           inputs: '<s>' + hfPrompt,
           parameters: {
             max_new_tokens: 900,
-            temperature: 0.28,
+            temperature: 0.45,
             return_full_text: false,
           },
         }),
@@ -445,8 +538,8 @@ Deno.serve(async (req: Request) => {
         },
         body: JSON.stringify({
           model: resolvedModel,
-          temperature: 0.28,
-          top_p: 0.9,
+          temperature: 0.5,
+          top_p: 0.92,
           max_tokens: 900,
           messages: [
             { role: 'system', content: systemPrompt },
@@ -472,6 +565,9 @@ Deno.serve(async (req: Request) => {
     if (!parsed) {
       return jsonResponse({ error: `Resposta invalida do modelo (${usedProvider})`, raw_preview: String(content).slice(0, 200) }, 502, cors);
     }
+
+    // Fire-and-forget: learn from this interaction
+    updateUserPrefsAsync(adminClient, userFingerprint, question, knowledge as unknown as Record<string, unknown>[]);
 
     return jsonResponse({
       summary: String(parsed.summary ?? '').trim().slice(0, 1200),

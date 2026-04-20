@@ -116,22 +116,27 @@ ALTER TABLE public.crm_interactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.crm_deals ENABLE ROW LEVEL SECURITY;
 
 -- Admin-only access for all CRM tables
+DROP POLICY IF EXISTS "Admin CRM contacts" ON public.crm_contacts;
 CREATE POLICY "Admin CRM contacts" ON public.crm_contacts FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'))
   WITH CHECK (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'));
 
+DROP POLICY IF EXISTS "Admin CRM tags" ON public.crm_tags;
 CREATE POLICY "Admin CRM tags" ON public.crm_tags FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'))
   WITH CHECK (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'));
 
+DROP POLICY IF EXISTS "Admin CRM contact_tags" ON public.crm_contact_tags;
 CREATE POLICY "Admin CRM contact_tags" ON public.crm_contact_tags FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'))
   WITH CHECK (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'));
 
+DROP POLICY IF EXISTS "Admin CRM interactions" ON public.crm_interactions;
 CREATE POLICY "Admin CRM interactions" ON public.crm_interactions FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'))
   WITH CHECK (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'));
 
+DROP POLICY IF EXISTS "Admin CRM deals" ON public.crm_deals;
 CREATE POLICY "Admin CRM deals" ON public.crm_deals FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'))
   WITH CHECK (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin') OR public.has_role(auth.uid(), 'editor'));
