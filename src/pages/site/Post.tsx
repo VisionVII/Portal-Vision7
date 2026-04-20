@@ -11,7 +11,7 @@ import { sanitizeRichContent } from '@/lib/richContent';
 
 const SITE_URL = 'https://www.vision7.pt';
 const DEFAULT_SEO = {
-  title: 'Vision7 - Portal Tecnologico',
+  title: 'Vision7 - Mídia Tech',
   description: 'Vision7 reúne notícias, análises e conteúdos premium sobre tecnologia, negócios, cultura, saúde e tendências globais.',
   image: '',
   url: `${SITE_URL}/`,

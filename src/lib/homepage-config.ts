@@ -61,7 +61,7 @@ export const defaultHomePageConfig: HomePageConfig = {
   heroBadge: '',
   heroTitle: 'Vision7',
   heroDescription:
-    'Portal tecnológico com notícias, cultura, negócios, saúde e tendências globais — com curadoria inteligente, leitura clara e visão de futuro.',
+    'Mídia tech com notícias, cultura, negócios, saúde e tendências globais — com curadoria inteligente, leitura clara e visão de futuro.',
   heroAlignment: 'left',
   primaryCtaLabel: 'Explorar Notícias',
   secondaryCtaLabel: '',

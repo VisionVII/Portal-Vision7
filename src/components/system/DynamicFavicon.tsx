@@ -19,7 +19,7 @@ const DynamicFavicon = () => {
 
     link.href = DEFAULT_FAVICON;
     link.type = 'image/png';
-    document.title = `${brandName} - Portal Tecnologico`;
+    document.title = `${brandName} - Mídia Tech`;
   }, [brandName]);
 
   return null;
