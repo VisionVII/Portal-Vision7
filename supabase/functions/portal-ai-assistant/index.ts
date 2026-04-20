@@ -565,7 +565,22 @@ Deno.serve(async (req: Request) => {
 
     const parsed = parseAssistantResponse(String(content));
     if (!parsed) {
-      return jsonResponse({ error: `Resposta invalida do modelo (${usedProvider})`, raw_preview: String(content).slice(0, 200) }, 502, cors);
+      // Instead of returning 502, provide a graceful fallback
+      console.warn(`[portal-ai-assistant] Could not parse LLM response (${usedProvider}):`, String(content).slice(0, 200));
+      const fallbacks = [
+        'Olá! Estou aqui para ajudar. Pergunte-me sobre notícias, cursos ou navegue pelas categorias do portal.',
+        'Oi! Sou o assistente do Vision7. Diga-me o que procura — posso sugerir conteúdos, cursos e muito mais.',
+        'Bem-vindo! Explore o portal Vision7 comigo — pergunte sobre tecnologia, categorias ou audiocasts.',
+      ];
+      return jsonResponse({
+        summary: fallbacks[Math.floor(Math.random() * fallbacks.length)],
+        suggestions: ['Quais são as últimas notícias?', 'Que cursos estão disponíveis?', 'Explorar categorias'],
+        links: [{ label: 'Ver notícias', href: '/#noticias', type: 'action' }, { label: 'Explorar categorias', href: '/', type: 'action' }],
+        provider: usedProvider === 'huggingface' ? 'hf-edge' : 'groq-edge',
+        assistantId: String(body?.assistantId || 'vision7-assistant-core'),
+        sddVersion: String(sdd.version ?? '0.1.0'),
+        sddModule: String(sdd.module ?? 'Portal Assistant'),
+      }, 200, cors);
     }
 
     // Fallback: if LLM returned empty summary, generate a helpful default
