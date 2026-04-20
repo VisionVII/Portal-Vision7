@@ -129,6 +129,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     localTime,
     temperatureC,
     hasConsent,
+    locationSource,
     isLoading: locationLoading,
   } = useUserLocation();
   const skyInfo = useSkyInfo(temperatureC, localTime);
@@ -254,6 +255,29 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   }, [posts, courses, categories]);
 
   const assistantContext = useMemo(() => selectPortalAssistantContext(dataContext), [dataContext]);
+
+  const precisionLabel = (() => {
+    switch (locationSource) {
+      case 'gps': return 'GPS (exata)';
+      case 'ip': return 'IP (cidade)';
+      case 'timezone': return 'Fuso horário (aprox.)';
+      default: return 'Indisponível';
+    }
+  })();
+
+  const precisionHint = (() => {
+    switch (locationSource) {
+      case 'gps':
+        return 'Precisão máxima ativa — localização obtida via GPS do dispositivo.';
+      case 'ip':
+        return 'Precisão ao nível da cidade (via IP). Para dados exatos, ative a localização do browser nas preferências de privacidade.';
+      case 'timezone':
+        return 'Precisão aproximada (capital do fuso horário). Para dados exatos, ative a localização do browser nas preferências de privacidade.';
+      default:
+        return 'Ative personalização e localização para usar clima, região e contexto local no chat.';
+    }
+  })();
+
   const viewerContext = useMemo(
     () => ({
       hasConsent,
@@ -262,8 +286,10 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       timezone,
       localTime,
       temperatureC,
+      locationSource,
+      precisionLabel,
     }),
-    [country, hasConsent, localTime, region, temperatureC, timezone],
+    [country, hasConsent, localTime, locationSource, precisionLabel, region, temperatureC, timezone],
   );
 
   useEffect(() => {
@@ -302,14 +328,13 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     id: `weather-${Date.now()}`,
     kind: 'weather',
     title: hasConsent ? (region || country || 'Contexto local ativo') : 'Ferramenta local indisponível',
-    description: hasConsent
-      ? 'Clima e hora local autorizados para enriquecer a conversa no Vision7.'
-      : 'Ative personalização e localização para usar clima, região e contexto local no chat.',
+    description: hasConsent ? precisionHint : precisionHint,
     badge: 'Ferramenta local',
     stats: [
       { label: 'Temperatura', value: hasConsent ? (temperatureC !== null ? `${temperatureC}°C` : locationLoading ? 'A carregar...' : 'Sem dado') : 'Bloqueado' },
       { label: 'Hora local', value: hasConsent ? localTime : 'Bloqueado' },
       { label: 'Fuso', value: hasConsent ? (timezone || 'Automático') : 'Bloqueado' },
+      { label: 'Precisão', value: precisionLabel },
     ],
   });
 
