@@ -1,0 +1,177 @@
+INFORMACOES PORTAL VISION7
+
+Este documento explica, em linguagem simples, como o Portal Vision7 funciona hoje.
+A ideia e servir como base para conversar com GPT sem termos tecnicos.
+
+1) O QUE E O PORTAL VISION7
+
+O Vision7 e uma midia tech focada em noticias e conteudo sobre inovacao e temas digitais.
+Ele junta tres frentes principais:
+- Conteudo diario para o publico
+- Painel interno para a equipa organizar e revisar conteudos
+- Fluxo automatico que ajuda a encontrar, selecionar e preparar materias
+
+Em resumo: o portal recebe ideias e noticias, filtra o que vale a pena, prepara conteudo e publica para os leitores.
+
+2) COMO UMA PUBLICACAO NASCE (DO INICIO AO FIM)
+
+Passo 1: o sistema procura novidades em varias fontes.
+Passo 2: remove repeticoes e junta assuntos parecidos.
+Passo 3: escolhe o que tem mais valor para o publico do Vision7.
+Passo 4: prepara um rascunho de texto.
+Passo 5: aplica regras editoriais (clareza, qualidade, coerencia).
+Passo 6: envia para publicacao no portal e distribuicao.
+
+Depois disso, o sistema observa o resultado e aprende com o desempenho dos conteudos.
+
+3) ESTRUTURA DOS FLUXOS WF-01 AO WF-06 (LINGUAGEM SIMPLES)
+
+WF-01 - Coleta de conteudo
+- Busca noticias e temas recentes em varias fontes.
+- Guarda tudo em uma area temporaria para analise.
+
+WF-02 - Limpeza e organizacao
+- Remove duplicados.
+- Agrupa assuntos parecidos.
+- Prepara a base para selecao editorial.
+
+WF-03 - Curadoria inteligente
+- Avalia relevancia e qualidade.
+- Prioriza o que tem mais potencial para virar materia.
+- Gera lista de conteudos prontos para revisao/publicacao.
+
+WF-04 - Monitoramento do pipeline
+- Acompanha se os fluxos estao rodando bem.
+- Ajuda a detectar travamentos, pausas ou falhas.
+
+WF-05 - Distribuicao social
+- Leva conteudos para canais externos (quando aplicavel).
+- Ajuda na divulgacao e alcance das publicacoes.
+
+WF-06 - Aprendizado continuo
+- Observa o resultado das publicacoes.
+- Usa esse retorno para melhorar escolhas futuras.
+
+4) O QUE JA ESTA PRONTO
+
+- Os 6 fluxos (WF-01 a WF-06) estao ativos em producao.
+- O ciclo principal de conteudo esta funcionando de ponta a ponta.
+- O painel interno de acompanhamento e operacao esta funcionando.
+- Fluxo de curadoria com apoio de IA esta ativo.
+- Estrutura geral de seguranca, testes e publicacao esta implementada.
+- Backlog principal registrado como concluido para os itens criticos e core.
+
+5) O QUE FALTA TERMINAR
+
+No estado atual, nao ha pendencia critica bloqueando a operacao principal.
+
+O que fica como proxima etapa (melhoria continua):
+- Refinar ainda mais a qualidade de selecao de temas por nicho.
+- Ajustar frequencia e equilibrio entre quantidade e qualidade.
+- Expandir regras editoriais para novos tipos de conteudo.
+- Melhorar continuamente distribuicao e aprendizado com resultados reais.
+
+6) RESUMO EXECUTIVO (PARA USAR COM GPT)
+
+O Portal Vision7 ja funciona com um ciclo completo de conteudo:
+coleta, limpeza, curadoria, monitoramento, distribuicao e aprendizado.
+
+Hoje, o essencial esta pronto e em operacao.
+As proximas entregas sao de evolucao e melhoria continua, nao de correcao estrutural.
+
+Se precisar explicar em uma frase:
+"O Vision7 ja roda um fluxo completo de conteudo do inicio ao fim, com seis etapas ativas e foco agora em melhorar cada vez mais a qualidade e o alcance." 
+
+7) FORMAS DE MONETIZACAO QUE JA TEMOS
+
+Hoje o portal ja possui uma base de monetizacao pronta para operar e evoluir.
+
+7.1 Publicidade
+- O portal pode ligar e desligar publicidade.
+- Existem posicoes de exibicao para anuncios, como topo, lateral, meio do conteudo e rodape.
+- E possivel gerenciar anuncios e acompanhar resultado de exibicao, cliques e retorno.
+
+7.2 Anuncios de diferentes origens
+- O sistema aceita anuncios proprios (arte e link direto).
+- Tambem aceita Google AdSense.
+- Tambem aceita outros provedores.
+
+7.3 Premium e subscricao
+- O portal pode ligar e desligar modo premium.
+- E possivel definir quais recursos ficam reservados para assinantes.
+- Isso permite criar camadas de valor para publico gratuito e publico premium.
+
+7.4 Parcerias e afiliados
+- Existe area de parceiros para organizar cursos, links e acordos.
+- Isso ajuda no crescimento de receita por colaboracoes e recomendacoes.
+
+8) COMO FUNCIONAM OS ACESSOS (ENTRADAS DO SISTEMA)
+
+O Vision7 trabalha com portas de entrada diferentes para perfis diferentes:
+
+- Acesso admin: para gestao completa do portal.
+- Acesso equipa/parceiros: para operacao interna e colaboracao.
+- Acesso publico/convidado: para solicitacoes e encaminhamento de entrada.
+
+Dentro do painel, cada pessoa enxerga e usa apenas o que combina com sua responsabilidade.
+Assim, o sistema fica organizado e mais seguro.
+
+9) ASSISTENTE VISION7 AI (O QUE ELE FAZ)
+
+O portal ja tem o assistente Vision7 AI para apoiar leitores e navegacao.
+
+Principais capacidades:
+- Responde perguntas sobre temas e conteudos do portal.
+- Ajuda a encontrar noticias, cursos e materiais relevantes.
+- Sugere proximos assuntos para leitura.
+- Usa contexto local (quando permitido) para enriquecer respostas, como hora e clima.
+
+Sobre dados locais:
+- Se a pessoa permitir localizacao, os dados podem ser bem mais precisos.
+- O sistema informa o nivel de precisao mostrado no cartao local (exato, cidade ou aproximado).
+
+10) FERRAMENTAS EXISTENTES NO PAINEL INTERNO
+
+O painel interno ja esta completo com areas praticas para operacao diaria.
+
+10.1 Area de conteudo
+- Visao geral com indicadores e atalhos.
+- Gestao de posts e fluxo editorial.
+- Gestao de audiocasts e episodios.
+- Organizador da homepage.
+- Galeria de imagens e midias.
+
+10.2 Area de crescimento e operacao
+- Automacoes (motor de fluxos e acompanhamento de execucoes).
+- CRM para newsletter e leads.
+- Analytics para metricas e trafego.
+- Parceiros para cursos e relacionamentos comerciais.
+
+10.3 Area de sistema
+- Acessos, papeis e convites.
+- Ferramentas de diagnostico para manutencao.
+- Configuracoes gerais do portal.
+- Configuracao do assistente IA.
+- Configuracao de monetizacao.
+
+11) COMO TUDO SE CONECTA NA PRATICA
+
+Em operacao normal, o ciclo funciona assim:
+
+1. O sistema coleta e organiza oportunidades de conteudo.
+2. O time revisa, ajusta e aprova no painel.
+3. O portal publica e distribui.
+4. O painel mede desempenho e ajuda a melhorar os proximos conteudos.
+5. Monetizacao e assistente entram como camadas de valor para aumentar resultado e experiencia do leitor.
+
+12) RESUMO FINAL (VERSAO COMPLETA PARA GPT)
+
+O Vision7 e uma midia tech ativa, com operacao completa e organizada.
+Ele ja possui:
+- Pipeline de conteudo em seis etapas (WF-01 a WF-06)
+- Painel interno com ferramentas de gestao
+- Controle de acessos por perfil
+- Assistente Vision7 AI para apoio ao leitor
+- Base de monetizacao com publicidade, premium e parcerias
+
+O que vem pela frente e evolucao continua para aumentar qualidade, alcance e receita, sem depender de refazer a estrutura principal.
