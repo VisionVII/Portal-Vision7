@@ -88,6 +88,14 @@ Deno.serve(async (req) => {
 
     const inviteRole = (usedCode.metadata as { role?: string })?.role ?? role;
 
+    // Auto-confirm email since user was invited via verified security code
+    const { error: confirmError } = await adminClient.auth.admin.updateUserById(user_id, {
+      email_confirm: true,
+    });
+    if (confirmError) {
+      console.warn('[assign-invite-role] Could not auto-confirm email:', confirmError.message);
+    }
+
     // Insert role into user_roles
     const { error: roleError } = await adminClient.from('user_roles').insert({
       user_id,
