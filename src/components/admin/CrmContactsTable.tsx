@@ -61,12 +61,12 @@ const CONTACT_TYPE_LABELS: Record<CrmContactType, string> = {
 };
 
 const CONTACT_TYPE_COLORS: Record<CrmContactType, string> = {
-  subscriber: 'bg-emerald-100 text-emerald-800',
-  lead: 'bg-amber-100 text-amber-800',
-  partner: 'bg-indigo-100 text-indigo-800',
-  advertiser: 'bg-pink-100 text-pink-800',
-  contributor: 'bg-blue-100 text-blue-800',
-  other: 'bg-gray-100 text-gray-800',
+  subscriber: 'badge-status-success',
+  lead: 'badge-status-warning',
+  partner: 'badge-status-info',
+  advertiser: 'badge-status-purple',
+  contributor: 'badge-status-info',
+  other: 'badge-status-neutral',
 };
 
 const INITIAL_FORM: Partial<CrmContact> = {
@@ -287,7 +287,7 @@ const CrmContactsTable: React.FC = () => {
                       {c.is_active ? (
                         <Badge variant="outline" className="bg-emerald-50 text-emerald-700">Ativo</Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-gray-50 text-gray-500">Inativo</Badge>
+                        <Badge variant="outline" className="badge-status-neutral">Inativo</Badge>
                       )}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
