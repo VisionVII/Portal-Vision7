@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { boot, isAllowed } from '@/cmp';
 
+export type LocationSource = 'gps' | 'ip' | 'timezone' | 'none';
+
 export interface UserLocation {
   country: string | null;
   region: string | null;
@@ -8,6 +10,7 @@ export interface UserLocation {
   localTime: string;
   temperatureC: number | null;
   hasConsent: boolean;
+  locationSource: LocationSource;
 }
 
 const GEO_RELEVANT_KEYS = new Set(['cookie-consent-v2', 'geo-consent', 'user-geo']);
@@ -29,6 +32,7 @@ export const useUserLocation = () => {
     }),
     temperatureC: null,
     hasConsent: false,
+    locationSource: 'none',
   });
   const [isLoading, setIsLoading] = useState(false);
   const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -72,6 +76,7 @@ export const useUserLocation = () => {
             timezone,
             temperatureC: null,
             hasConsent: false,
+            locationSource: 'none',
           };
         });
         return;
@@ -87,6 +92,12 @@ export const useUserLocation = () => {
       lastSyncTimestamp = now;
 
       let storedGeo = localStorage.getItem('user-geo');
+      let source: LocationSource = 'none';
+
+      // Determine source: GPS coords stored from navigator.geolocation
+      if (storedGeo) {
+        source = 'gps';
+      }
 
       // IP-based fallback when no GPS coords are stored but consent is given
       if (!storedGeo) {
@@ -98,6 +109,7 @@ export const useUserLocation = () => {
               const coords = JSON.stringify({ latitude: ipData.latitude, longitude: ipData.longitude });
               localStorage.setItem('user-geo', coords);
               storedGeo = coords;
+              source = 'ip';
             }
           }
         } catch {
@@ -119,12 +131,13 @@ export const useUserLocation = () => {
         const fallbackCoords = tzFallbacks[timezone];
         if (fallbackCoords) {
           storedGeo = JSON.stringify(fallbackCoords);
+          source = 'timezone';
           // Don't persist to localStorage — these are approximate
         }
       }
 
       if (!storedGeo) {
-        setLocation((prev) => ({ ...prev, timezone, hasConsent: true }));
+        setLocation((prev) => ({ ...prev, timezone, hasConsent: true, locationSource: 'none' }));
         return;
       }
 
@@ -166,6 +179,7 @@ export const useUserLocation = () => {
               ? Math.round(weatherData.current.temperature_2m)
               : null,
           hasConsent: true,
+          locationSource: source,
         }));
       } catch (error) {
         if ((error as Error).name === 'AbortError') return;
@@ -176,6 +190,7 @@ export const useUserLocation = () => {
           region: prev.region ?? timezone?.split('/').pop()?.replace(/_/g, ' ') ?? null,
           temperatureC: prev.temperatureC,
           hasConsent: true,
+          locationSource: source,
         }));
       } finally {
         setIsLoading(false);

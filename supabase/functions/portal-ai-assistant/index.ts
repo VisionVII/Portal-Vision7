@@ -158,6 +158,10 @@ function sanitizeConversation(values: unknown) {
 function sanitizeViewerContext(value: unknown) {
   const item = value && typeof value === 'object' ? value as Record<string, unknown> : {};
   const hasConsent = Boolean(item.hasConsent);
+  const validSources = ['gps', 'ip', 'timezone', 'none'];
+  const locationSource = validSources.includes(String(item.locationSource ?? ''))
+    ? String(item.locationSource)
+    : 'none';
 
   if (!hasConsent) {
     return {
@@ -167,6 +171,8 @@ function sanitizeViewerContext(value: unknown) {
       timezone: '',
       localTime: '',
       temperatureC: null,
+      locationSource: 'none',
+      precisionLabel: '',
     };
   }
 
@@ -177,6 +183,8 @@ function sanitizeViewerContext(value: unknown) {
     timezone: String(item.timezone ?? '').trim().slice(0, 80),
     localTime: String(item.localTime ?? '').trim().slice(0, 40),
     temperatureC: typeof item.temperatureC === 'number' ? Math.round(item.temperatureC) : null,
+    locationSource,
+    precisionLabel: String(item.precisionLabel ?? '').trim().slice(0, 60),
   };
 }
 
@@ -288,10 +296,18 @@ function buildSystemPrompt(sdd: Record<string, unknown>, viewerContext: Record<s
   const rules = Array.isArray(sdd.response_contract?.rules) ? sdd.response_contract.rules.join('; ') : '';
 
   const hasConsent = Boolean(viewerContext.hasConsent);
+  const locSource = String(viewerContext.locationSource || 'none');
+  const precLabel = String(viewerContext.precisionLabel || '');
   const contextBlock = hasConsent
     ? [
-        `CONTEXTO DO LEITOR (consentimento ATIVO): regiao=${viewerContext.region || 'desconhecida'}, pais=${viewerContext.country || 'desconhecido'}, fuso=${viewerContext.timezone || 'auto'}, hora=${viewerContext.localTime || 'n/a'}, temperatura=${viewerContext.temperatureC != null ? viewerContext.temperatureC + '°C' : 'sem dado'}.`,
-        'O utilizador JA AUTORIZOU personalização — USE estes dados livremente nas respostas. Inclua clima, hora e região quando relevante, sem pedir consentimento.',
+        `CONTEXTO DO LEITOR (consentimento ATIVO): regiao=${viewerContext.region || 'desconhecida'}, pais=${viewerContext.country || 'desconhecido'}, fuso=${viewerContext.timezone || 'auto'}, hora=${viewerContext.localTime || 'n/a'}, temperatura=${viewerContext.temperatureC != null ? viewerContext.temperatureC + '°C' : 'sem dado'}, precisao=${precLabel || locSource}.`,
+        locSource === 'gps'
+          ? 'Localização obtida via GPS do dispositivo (precisão máxima). USE estes dados livremente nas respostas.'
+          : locSource === 'ip'
+            ? 'Localização obtida via IP (precisão ao nível da cidade). Mencione que para dados mais exatos, o utilizador pode ativar a localização do browser nas preferências de privacidade.'
+            : locSource === 'timezone'
+              ? 'Localização aproximada baseada no fuso horário (capital do fuso). Informe que os dados são aproximados e que para precisão exata, o utilizador pode ativar a localização do browser nas preferências de privacidade.'
+              : 'O utilizador JA AUTORIZOU personalização — USE estes dados livremente nas respostas.',
       ].join(' ')
     : 'CONTEXTO DO LEITOR (sem consentimento): o utilizador NAO autorizou personalização. Se pedir clima, hora ou localização, explique que precisa ativar nas preferências de privacidade.';
 
