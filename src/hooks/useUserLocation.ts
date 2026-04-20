@@ -16,8 +16,12 @@ export interface UserLocation {
 const GEO_RELEVANT_KEYS = new Set(['cookie-consent-v2', 'geo-consent', 'user-geo']);
 const SYNC_THROTTLE_MS = 5 * 60 * 1000; // 5 minutes between API calls
 const CLOCK_INTERVAL_MS = 60 * 1000; // update clock every 60s (minutes precision)
+// Cooldown after GPS success — prevents re-entering GPS acquisition on the
+// syncLocation(true) call triggered by the success callback itself.
+const GPS_REACQUIRE_MS = 30_000;
 
 let lastSyncTimestamp = 0;
+let lastGpsSuccess = 0;
 
 export const useUserLocation = () => {
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -85,31 +89,35 @@ export const useUserLocation = () => {
         return { ...prev, hasConsent: true };
       });
 
-      // Sempre tenta obter posição atual do GPS se consentimento ativo
-      if (navigator.geolocation) {
+      // Tenta GPS apenas se não está em cooldown (evita loop infinito:
+      // GPS success → syncLocation(true) → GPS success → ...)
+      if (navigator.geolocation && Date.now() - lastGpsSuccess > GPS_REACQUIRE_MS) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
+            // Marca cooldown ANTES de despachar o evento, para que qualquer
+            // syncLocation(true) resultante salte a aquisição GPS e vá direto
+            // para o fallbackSync com as coordenadas já guardadas.
+            lastGpsSuccess = Date.now();
             const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
             localStorage.setItem('geo-consent', 'accepted');
             localStorage.setItem('user-geo', JSON.stringify(coords));
             window.dispatchEvent(new CustomEvent('geolocation-update', { detail: coords }));
-            // Após atualizar, faz syncLocation novamente para garantir dados frescos
-            setTimeout(() => syncLocation(true), 100);
+            // force=true ignora throttle; GPS está agora em cooldown → vai para fallbackSync
+            void syncLocation(true);
           },
-          (err) => {
-            // Se rejeitado, marca como rejeitado e remove user-geo
+          (_err) => {
+            // Se rejeitado/erro, marca e vai para fallback (IP/timezone)
             localStorage.setItem('geo-consent', 'rejected');
             localStorage.removeItem('user-geo');
-            // Continua para fallback
             fallbackSync();
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
         );
-        // Enquanto espera, mostra loading
+        // Enquanto espera GPS, mostra loading
         setIsLoading(true);
         return;
       } else {
-        // Se não suportado, vai direto para fallback
+        // GPS em cooldown, não disponível, ou forçado — usa cache/IP/fuso
         fallbackSync();
         return;
       }
