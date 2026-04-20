@@ -130,7 +130,7 @@ export function AutomationForm({
   };
 
   return (
-    <Card className="bg-slate-800/60 border-slate-700/50">
+    <Card className="bg-card border-border">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">
@@ -144,36 +144,36 @@ export function AutomationForm({
       <CardContent className="space-y-4">
         {/* Name */}
         <div>
-          <Label className="text-xs text-gray-400">Nome</Label>
+          <Label className="text-xs text-muted-foreground">Nome</Label>
           <Input
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Ex.: Coleta RSS manhã"
-            className="bg-slate-900/50 border-slate-600 mt-1"
+            className="mt-1"
           />
         </div>
 
         {/* Description */}
         <div>
-          <Label className="text-xs text-gray-400">Descrição</Label>
+          <Label className="text-xs text-muted-foreground">Descrição</Label>
           <Textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             placeholder="Descreva o que esta automação faz..."
             rows={2}
-            className="bg-slate-900/50 border-slate-600 mt-1"
+            className="mt-1"
           />
         </div>
 
         {/* Category + Trigger */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-xs text-gray-400">Categoria</Label>
+            <Label className="text-xs text-muted-foreground">Categoria</Label>
             <Select
               value={form.category}
               onValueChange={(v) => setForm({ ...form, category: v as AutomationCategory, config: {} })}
             >
-              <SelectTrigger className="bg-slate-900/50 border-slate-600 mt-1">
+              <SelectTrigger className="mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -186,12 +186,12 @@ export function AutomationForm({
             </Select>
           </div>
           <div>
-            <Label className="text-xs text-gray-400">Trigger</Label>
+            <Label className="text-xs text-muted-foreground">Trigger</Label>
             <Select
               value={form.triggerType}
               onValueChange={(v) => setForm({ ...form, triggerType: v as TriggerType })}
             >
-              <SelectTrigger className="bg-slate-900/50 border-slate-600 mt-1">
+              <SelectTrigger className="mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -207,12 +207,12 @@ export function AutomationForm({
         {/* Workflow + Interval */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-xs text-gray-400">Workflow n8n</Label>
+            <Label className="text-xs text-muted-foreground">Workflow n8n</Label>
             <Select
               value={form.workflowId || '__none__'}
               onValueChange={(v) => setForm({ ...form, workflowId: v === '__none__' ? '' : v })}
             >
-              <SelectTrigger className="bg-slate-900/50 border-slate-600 mt-1">
+              <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Selecionar..." />
               </SelectTrigger>
               <SelectContent>
@@ -226,7 +226,7 @@ export function AutomationForm({
             </Select>
           </div>
           <div>
-            <Label className="text-xs text-gray-400">
+            <Label className="text-xs text-muted-foreground">
               {form.triggerType === 'schedule' ? 'Intervalo (min)' : 'Cron (se aplicável)'}
             </Label>
             {form.triggerType === 'schedule' ? (
@@ -235,14 +235,14 @@ export function AutomationForm({
                 min={1}
                 value={form.intervalMinutes}
                 onChange={(e) => setForm({ ...form, intervalMinutes: Number(e.target.value) || 30 })}
-                className="bg-slate-900/50 border-slate-600 mt-1"
+                className="mt-1"
               />
             ) : (
               <Input
                 value={form.cronExpression}
                 onChange={(e) => setForm({ ...form, cronExpression: e.target.value })}
                 placeholder="0 9 * * 1"
-                className="bg-slate-900/50 border-slate-600 mt-1"
+                className="mt-1"
               />
             )}
           </div>
@@ -250,8 +250,8 @@ export function AutomationForm({
 
         {/* Dynamic config fields */}
         {fields.length > 0 && (
-          <div className="border-t border-slate-700/50 pt-4 mt-4">
-            <h5 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
+          <div className="border-t border-border/50 pt-4 mt-4">
+            <h5 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
               Configuração — {CATEGORY_META[form.category].label}
             </h5>
             <div className="space-y-3">
@@ -268,15 +268,14 @@ export function AutomationForm({
         )}
 
         {/* Actions */}
-        <div className="flex justify-end gap-2 pt-3 border-t border-slate-700/50">
-          <Button variant="outline" size="sm" onClick={onCancel} className="border-slate-600">
+        <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+          <Button variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
           <Button
             size="sm"
             onClick={handleSubmit}
             disabled={!form.name.trim() || isSaving}
-            className="bg-cyan-600 hover:bg-cyan-700"
           >
             {isSaving ? 'Salvando...' : editing ? 'Atualizar' : 'Criar Automação'}
           </Button>
@@ -299,11 +298,11 @@ function DynamicField({
   if (field.type === 'text') {
     return (
       <div>
-        <Label className="text-xs text-gray-500">{field.label}</Label>
+        <Label className="text-xs text-muted-foreground">{field.label}</Label>
         <Input
           value={String(value ?? '')}
           onChange={(e) => onChange(e.target.value)}
-          className="bg-slate-900/50 border-slate-600 mt-1"
+          className="mt-1"
         />
       </div>
     );
@@ -312,12 +311,12 @@ function DynamicField({
   if (field.type === 'textarea') {
     return (
       <div>
-        <Label className="text-xs text-gray-500">{field.label}</Label>
+        <Label className="text-xs text-muted-foreground">{field.label}</Label>
         <Textarea
           value={String(value ?? '')}
           onChange={(e) => onChange(e.target.value)}
           rows={3}
-          className="bg-slate-900/50 border-slate-600 mt-1"
+          className="mt-1"
         />
       </div>
     );
@@ -326,12 +325,12 @@ function DynamicField({
   if (field.type === 'number') {
     return (
       <div>
-        <Label className="text-xs text-gray-500">{field.label}</Label>
+        <Label className="text-xs text-muted-foreground">{field.label}</Label>
         <Input
           type="number"
           value={Number(value ?? 0)}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="bg-slate-900/50 border-slate-600 mt-1"
+          className="mt-1"
         />
       </div>
     );
@@ -344,9 +343,9 @@ function DynamicField({
           type="checkbox"
           checked={Boolean(value)}
           onChange={(e) => onChange(e.target.checked)}
-          className="rounded border-slate-600"
+          className="rounded border-border"
         />
-        <Label className="text-xs text-gray-400">{field.label}</Label>
+        <Label className="text-xs text-muted-foreground">{field.label}</Label>
       </div>
     );
   }
@@ -366,7 +365,7 @@ function DynamicField({
                   next[i] = e.target.value;
                   onChange(next);
                 }}
-                className="bg-slate-900/50 border-slate-600 text-xs"
+                className="text-xs"
               />
               <Button
                 size="sm"
@@ -381,7 +380,7 @@ function DynamicField({
           <Button
             size="sm"
             variant="outline"
-            className="text-xs h-7 border-dashed border-slate-600"
+            className="text-xs h-7 border-dashed"
             onClick={() => onChange([...items, ''])}
           >
             <Plus className="w-3 h-3 mr-1" /> Adicionar

@@ -26,15 +26,15 @@ export function AutomationTemplateGallery({
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <Sparkles className="w-4 h-4 text-primary-400" />
-        <h4 className="text-sm font-medium text-gray-300">Templates rápidos</h4>
+        <h4 className="text-sm font-medium text-foreground">Templates rápidos</h4>
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-700">
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted">
         {filtered.map((tpl) => {
           const meta = CATEGORY_META[tpl.category];
           return (
             <Card
               key={tpl.id}
-              className="bg-slate-800/40 border-slate-700/40 hover:border-slate-600/60 transition-colors min-w-[220px] max-w-[260px] shrink-0 cursor-pointer"
+              className="bg-card border-border hover:border-border/80 hover:shadow-sm transition-all min-w-[220px] max-w-[260px] shrink-0 cursor-pointer"
               onClick={() => onUseTemplate(tpl)}
             >
               <CardContent className="p-3">
@@ -48,12 +48,12 @@ export function AutomationTemplateGallery({
                     </Badge>
                   )}
                 </div>
-                <h5 className="text-sm font-medium text-white mb-1">{tpl.name}</h5>
-                <p className="text-[11px] text-gray-500 line-clamp-2 mb-2">{tpl.description}</p>
+                <h5 className="text-sm font-medium text-foreground mb-1">{tpl.name}</h5>
+                <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2">{tpl.description}</p>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs border-slate-600 w-full"
+                  className="h-7 text-xs w-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     onUseTemplate(tpl);

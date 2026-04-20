@@ -149,7 +149,7 @@ const AdminAutomationLab: React.FC = () => {
 
             <div className="relative h-[78vh] overflow-hidden rounded-xl border border-cyan-300/20 bg-black/20">
               {!iframeLoaded && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-card/95 backdrop-blur-sm">
                   <Loader2 className="h-12 w-12 animate-spin text-cyan-400" />
                   <p className="text-lg font-medium text-cyan-300">{loadingMessage}</p>
                   {coldStarting && (
