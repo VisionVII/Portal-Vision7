@@ -435,21 +435,21 @@ const Index = () => {
                   href={bannerHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100"
                 >
                   {heroPrimaryCta}
                 </a>
               ) : isHashBannerHref ? (
                 <a
                   href={bannerHref}
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100"
                 >
                   {heroPrimaryCta}
                 </a>
               ) : (
                 <Link
                   to={bannerHref}
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100"
                 >
                   {heroPrimaryCta}
                 </Link>
