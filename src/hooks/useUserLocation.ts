@@ -57,18 +57,16 @@ export const useUserLocation = () => {
       });
     };
 
+
+    // Nova versão: sempre tenta obter GPS real se consentimento ativo
     const syncLocation = async (force = false) => {
       const hasPersonalizationConsent = isAllowed('personalization');
-
-      // Always allow consent state changes to propagate immediately;
-      // only throttle the external API calls (weather, geo)
       const now = Date.now();
       const withinThrottle = !force && now - lastSyncTimestamp < SYNC_THROTTLE_MS;
 
       if (!hasPersonalizationConsent) {
-        // Update consent state immediately even if throttled
         setLocation((prev) => {
-          if (!prev.hasConsent) return prev; // already false, skip
+          if (!prev.hasConsent) return prev;
           return {
             ...prev,
             country: null,
@@ -82,118 +80,144 @@ export const useUserLocation = () => {
         return;
       }
 
-      // Consent is granted — update hasConsent immediately
       setLocation((prev) => {
-        if (prev.hasConsent) return prev; // already true, skip
+        if (prev.hasConsent) return prev;
         return { ...prev, hasConsent: true };
       });
 
-      if (withinThrottle) return;
-      lastSyncTimestamp = now;
-
-      let storedGeo = localStorage.getItem('user-geo');
-      let source: LocationSource = 'none';
-
-      // Determine source: GPS coords stored from navigator.geolocation
-      if (storedGeo) {
-        source = 'gps';
-      }
-
-      // IP-based fallback when no GPS coords are stored but consent is given
-      if (!storedGeo) {
-        try {
-          const ipRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) });
-          if (ipRes.ok) {
-            const ipData = (await ipRes.json()) as { latitude?: number; longitude?: number };
-            if (typeof ipData.latitude === 'number' && typeof ipData.longitude === 'number') {
-              const coords = JSON.stringify({ latitude: ipData.latitude, longitude: ipData.longitude });
-              localStorage.setItem('user-geo', coords);
-              storedGeo = coords;
-              source = 'ip';
-            }
-          }
-        } catch {
-          // ignore — IP lookup failed, proceed without coords
-        }
-      }
-
-      // Timezone-based approximate coords fallback (when IP lookup is blocked)
-      if (!storedGeo) {
-        const tzFallbacks: Record<string, { latitude: number; longitude: number }> = {
-          'Europe/Lisbon': { latitude: 38.72, longitude: -9.14 },
-          'Europe/London': { latitude: 51.51, longitude: -0.13 },
-          'Europe/Madrid': { latitude: 40.42, longitude: -3.70 },
-          'Europe/Paris': { latitude: 48.86, longitude: 2.35 },
-          'Europe/Berlin': { latitude: 52.52, longitude: 13.41 },
-          'America/Sao_Paulo': { latitude: -23.55, longitude: -46.63 },
-          'America/New_York': { latitude: 40.71, longitude: -74.01 },
-        };
-        const fallbackCoords = tzFallbacks[timezone];
-        if (fallbackCoords) {
-          storedGeo = JSON.stringify(fallbackCoords);
-          source = 'timezone';
-          // Don't persist to localStorage — these are approximate
-        }
-      }
-
-      if (!storedGeo) {
-        setLocation((prev) => ({ ...prev, timezone, hasConsent: true, locationSource: 'none' }));
+      // Sempre tenta obter posição atual do GPS se consentimento ativo
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+            localStorage.setItem('geo-consent', 'accepted');
+            localStorage.setItem('user-geo', JSON.stringify(coords));
+            window.dispatchEvent(new CustomEvent('geolocation-update', { detail: coords }));
+            // Após atualizar, faz syncLocation novamente para garantir dados frescos
+            setTimeout(() => syncLocation(true), 100);
+          },
+          (err) => {
+            // Se rejeitado, marca como rejeitado e remove user-geo
+            localStorage.setItem('geo-consent', 'rejected');
+            localStorage.removeItem('user-geo');
+            // Continua para fallback
+            fallbackSync();
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        );
+        // Enquanto espera, mostra loading
+        setIsLoading(true);
+        return;
+      } else {
+        // Se não suportado, vai direto para fallback
+        fallbackSync();
         return;
       }
 
-      // Abort any in-flight request
-      syncAbortRef.current?.abort();
-      const controller = new AbortController();
-      syncAbortRef.current = controller;
+      // Fallback para IP/timezone
+      function fallbackSync() {
+        if (withinThrottle) return;
+        lastSyncTimestamp = now;
 
-      try {
-        setIsLoading(true);
-        const { latitude, longitude } = JSON.parse(storedGeo) as { latitude: number; longitude: number };
+        let storedGeo = localStorage.getItem('user-geo');
+        let source: LocationSource = 'none';
+        if (storedGeo) {
+          source = 'gps';
+        }
 
-        const [weatherResponse, geoResponse] = await Promise.all([
-          fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&timezone=auto`,
-            { signal: controller.signal }
-          ),
-          fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt`,
-            { signal: controller.signal }
-          ),
-        ]);
+        if (!storedGeo) {
+          // IP-based fallback
+          fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) })
+            .then((ipRes) => ipRes.ok ? ipRes.json() : null)
+            .then((ipData) => {
+              if (ipData && typeof ipData.latitude === 'number' && typeof ipData.longitude === 'number') {
+                const coords = JSON.stringify({ latitude: ipData.latitude, longitude: ipData.longitude });
+                localStorage.setItem('user-geo', coords);
+                storedGeo = coords;
+                source = 'ip';
+              }
+            })
+            .finally(() => {
+              timezoneFallback();
+            });
+        } else {
+          timezoneFallback();
+        }
 
-        const weatherData = weatherResponse.ok ? await weatherResponse.json() : null;
-        const geoData = geoResponse.ok ? await geoResponse.json() : null;
-        const fallbackRegion = timezone?.split('/').pop()?.replace(/_/g, ' ') ?? null;
+        function timezoneFallback() {
+          if (!storedGeo) {
+            const tzFallbacks: Record<string, { latitude: number; longitude: number }> = {
+              'Europe/Lisbon': { latitude: 38.72, longitude: -9.14 },
+              'Europe/London': { latitude: 51.51, longitude: -0.13 },
+              'Europe/Madrid': { latitude: 40.42, longitude: -3.70 },
+              'Europe/Paris': { latitude: 48.86, longitude: 2.35 },
+              'Europe/Berlin': { latitude: 52.52, longitude: 13.41 },
+              'America/Sao_Paulo': { latitude: -23.55, longitude: -46.63 },
+              'America/New_York': { latitude: 40.71, longitude: -74.01 },
+            };
+            const fallbackCoords = tzFallbacks[timezone];
+            if (fallbackCoords) {
+              storedGeo = JSON.stringify(fallbackCoords);
+              source = 'timezone';
+            }
+          }
 
-        setLocation((prev) => ({
-          ...prev,
-          country: geoData?.countryName ?? prev.country,
-          region:
-            geoData?.city ??
-            geoData?.locality ??
-            geoData?.principalSubdivision ??
-            fallbackRegion,
-          timezone: weatherData?.timezone ?? timezone,
-          temperatureC:
-            typeof weatherData?.current?.temperature_2m === 'number'
-              ? Math.round(weatherData.current.temperature_2m)
-              : null,
-          hasConsent: true,
-          locationSource: source,
-        }));
-      } catch (error) {
-        if ((error as Error).name === 'AbortError') return;
-        console.warn('Não foi possível atualizar região e temperatura.', error instanceof Error ? error.message : 'unknown');
-        setLocation((prev) => ({
-          ...prev,
-          timezone,
-          region: prev.region ?? timezone?.split('/').pop()?.replace(/_/g, ' ') ?? null,
-          temperatureC: prev.temperatureC,
-          hasConsent: true,
-          locationSource: source,
-        }));
-      } finally {
-        setIsLoading(false);
+          if (!storedGeo) {
+            setLocation((prev) => ({ ...prev, timezone, hasConsent: true, locationSource: 'none' }));
+            return;
+          }
+
+          // Abort any in-flight request
+          syncAbortRef.current?.abort();
+          const controller = new AbortController();
+          syncAbortRef.current = controller;
+
+          setIsLoading(true);
+          const { latitude, longitude } = JSON.parse(storedGeo) as { latitude: number; longitude: number };
+          Promise.all([
+            fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&timezone=auto`,
+              { signal: controller.signal }
+            ),
+            fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt`,
+              { signal: controller.signal }
+            ),
+          ])
+            .then(async ([weatherResponse, geoResponse]) => {
+              const weatherData = weatherResponse.ok ? await weatherResponse.json() : null;
+              const geoData = geoResponse.ok ? await geoResponse.json() : null;
+              const fallbackRegion = timezone?.split('/').pop()?.replace(/_/g, ' ') ?? null;
+              setLocation((prev) => ({
+                ...prev,
+                country: geoData?.countryName ?? prev.country,
+                region:
+                  geoData?.city ??
+                  geoData?.locality ??
+                  geoData?.principalSubdivision ??
+                  fallbackRegion,
+                timezone: weatherData?.timezone ?? timezone,
+                temperatureC:
+                  typeof weatherData?.current?.temperature_2m === 'number'
+                    ? Math.round(weatherData.current.temperature_2m)
+                    : null,
+                hasConsent: true,
+                locationSource: source,
+              }));
+            })
+            .catch((error) => {
+              if ((error as Error).name === 'AbortError') return;
+              setLocation((prev) => ({
+                ...prev,
+                timezone,
+                region: prev.region ?? timezone?.split('/').pop()?.replace(/_/g, ' ') ?? null,
+                temperatureC: prev.temperatureC,
+                hasConsent: true,
+                locationSource: source,
+              }));
+            })
+            .finally(() => setIsLoading(false));
+        }
       }
     };
 
