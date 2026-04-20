@@ -24,6 +24,32 @@ const matchesQuestion = (value: string, terms: string[]) => {
 
 const hasIntent = (normalizedQuestion: string, patterns: RegExp[]) => patterns.some((pattern) => pattern.test(normalizedQuestion));
 
+const pickRandom = <T>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
+
+const GREETING_SUMMARIES = [
+  'Olá! Sou o assistente do Vision7. Diga-me o que procura — posso sugerir notícias, cursos, audiocasts ou ajudar a navegar pelo portal.',
+  'Bem-vindo ao Vision7! Estou aqui para o ajudar a encontrar o que precisa — desde as últimas notícias até cursos e ferramentas do portal.',
+  'Oi! Pronto para explorar o Vision7? Pergunte-me qualquer coisa sobre os nossos conteúdos, categorias ou cursos.',
+];
+
+const GREETING_SUGGESTIONS = [
+  ['Que notícias há de novo?', 'Quais cursos recomendam?', 'Que categorias existem?', 'Fale-me dos audiocasts'],
+  ['Mostre as novidades do portal', 'Quero explorar as categorias', 'Há cursos sobre IA?', 'O que são audiocasts?'],
+  ['O que está em destaque hoje?', 'Recomende-me algo para ler', 'Quais os temas mais populares?', 'Como funciona o portal?'],
+];
+
+const NO_MATCH_SUMMARIES = [
+  'Não encontrei resultados diretos para essa busca, mas posso ajudar de outra forma — tente reformular ou explore uma categoria.',
+  'Essa pergunta não teve correspondência nos nossos conteúdos atuais. Quer tentar com outras palavras ou explorar os destaques?',
+  'Não localizei nada específico, mas o portal tem muito para descobrir. Diga-me mais sobre o que procura.',
+];
+
+const NO_MATCH_SUGGESTIONS = [
+  ['Reformule a pergunta com outro ângulo', 'Explore as categorias do portal', 'Veja os conteúdos mais recentes'],
+  ['Tente usar palavras-chave diferentes', 'Navegue pelas categorias', 'Descubra os cursos disponíveis'],
+  ['Seja mais específico no tema', 'Veja o que há de novo', 'Pergunte sobre uma categoria'],
+];
+
 const addUniqueLinks = (bucket: PortalAssistantReplyLink[], nextLinks: PortalAssistantReplyLink[]) => {
   const seen = new Set(bucket.map((link) => `${link.type}:${link.href}`));
 
@@ -100,15 +126,10 @@ export const buildPortalAssistantReply = (
   const normalizedQuestion = normalizeText(contextualQuestion);
 
   if (!cleanQuestion) {
+    const suggestionSet = pickRandom(GREETING_SUGGESTIONS);
     return {
-      summary:
-        'Olá! Sou o assistente Vision7. Posso ajudá-lo a encontrar conteúdos, navegar categorias, descobrir cursos e muito mais. Comece fazendo uma pergunta ou explorando as sugestões abaixo.',
-      suggestions: [
-        'Mostre-me as últimas notícias do portal',
-        'Que cursos vocês recomendam?',
-        'Fale-me sobre as categorias disponíveis',
-        'O que há de interessante nos audiocasts?',
-      ],
+      summary: pickRandom(GREETING_SUMMARIES),
+      suggestions: suggestionSet,
       links: [
         { label: 'Ver página inicial', href: '/', type: 'action' },
         { label: 'Explorar audiocasts', href: '/audiocasts', type: 'action' },
@@ -202,15 +223,10 @@ export const buildPortalAssistantReply = (
   }
 
   if (!links.length) {
+    const suggestionSet = pickRandom(NO_MATCH_SUGGESTIONS);
     return {
-      summary:
-        'Ainda não encontrei conteúdo específico para essa pergunta no portal. Tente reformular ou me diga mais sobre o que procura - posso buscar por categoria, tipo de conteúdo ou tema específico.',
-      suggestions: [
-        'Experimente mencionar um tema ou categoria',
-        'Peça para ver os conteúdos mais recentes',
-        'Pergunte sobre cursos ou audiocasts específicos',
-        'Diga-me que tipo de informação você procura',
-      ],
+      summary: pickRandom(NO_MATCH_SUMMARIES),
+      suggestions: suggestionSet,
       links: [
         { label: 'Ver todas as notícias', href: '/#noticias', type: 'action' },
         { label: 'Explorar categorias', href: '/', type: 'action' },
@@ -239,10 +255,16 @@ export const buildPortalAssistantReply = (
   const suggestions = Array.from(
     new Set(
       [
-        links.length > 1 ? `Veja ${links.length > 2 ? 'todos os' : 'os'} links sugeridos abaixo` : '',
-        'Quer que eu refine a busca por categoria específica?',
-        matchedCourses.length || wantsCourses ? 'Posso detalhar mais sobre os cursos disponíveis' : 'Quer saber sobre outros formatos de conteúdo?',
-        'Precisa de mais informações sobre algum desses conteúdos?',
+        links.length > 1 ? 'Veja todos os links sugeridos abaixo' : '',
+        matchedCourses.length || wantsCourses
+          ? pickRandom(['Posso detalhar mais sobre os cursos', 'Quer saber mais sobre algum curso?', 'Explore os cursos sugeridos'])
+          : pickRandom(['Quer saber sobre outros formatos de conteúdo?', 'Posso buscar em outras categorias', 'Quer explorar audiocasts ou cursos?']),
+        pickRandom([
+          'Quer que eu refine a busca por categoria?',
+          'Precisa de mais informações sobre algum destes?',
+          'Posso aprofundar algum tema específico?',
+          'Quer que eu busque algo mais específico?',
+        ]),
       ].filter(Boolean),
     ),
   ).slice(0, 3);

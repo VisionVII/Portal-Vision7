@@ -103,6 +103,17 @@ const openCookiePreferences = () => {
   window.dispatchEvent(new CustomEvent('open-cookie-preferences'));
 };
 
+// Simple anonymous fingerprint for learning preferences (not PII)
+const getUserFingerprint = (): string => {
+  const key = 'v7_ai_fp';
+  let fp = localStorage.getItem(key);
+  if (!fp) {
+    fp = `anon_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    localStorage.setItem(key, fp);
+  }
+  return fp;
+};
+
 const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: posts = [] } = usePosts(false, isOpen);
@@ -388,6 +399,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                   knowledge: assistantContext,
                   conversation: conversationContext,
                   viewerContext,
+                  fingerprint: getUserFingerprint(),
                   assistantId: aiConfig.assistantId,
                   model: aiConfig.model,
                 },
