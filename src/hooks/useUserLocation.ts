@@ -105,6 +105,24 @@ export const useUserLocation = () => {
         }
       }
 
+      // Timezone-based approximate coords fallback (when IP lookup is blocked)
+      if (!storedGeo) {
+        const tzFallbacks: Record<string, { latitude: number; longitude: number }> = {
+          'Europe/Lisbon': { latitude: 38.72, longitude: -9.14 },
+          'Europe/London': { latitude: 51.51, longitude: -0.13 },
+          'Europe/Madrid': { latitude: 40.42, longitude: -3.70 },
+          'Europe/Paris': { latitude: 48.86, longitude: 2.35 },
+          'Europe/Berlin': { latitude: 52.52, longitude: 13.41 },
+          'America/Sao_Paulo': { latitude: -23.55, longitude: -46.63 },
+          'America/New_York': { latitude: 40.71, longitude: -74.01 },
+        };
+        const fallbackCoords = tzFallbacks[timezone];
+        if (fallbackCoords) {
+          storedGeo = JSON.stringify(fallbackCoords);
+          // Don't persist to localStorage — these are approximate
+        }
+      }
+
       if (!storedGeo) {
         setLocation((prev) => ({ ...prev, timezone, hasConsent: true }));
         return;
