@@ -14,7 +14,7 @@ import {
   Shield,
   TerminalSquare,
   ChevronLeft,
-  ChevronRight,
+  ExternalLink,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -98,16 +98,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   key={item.id}
                   type="button"
                   onClick={() => onViewChange(item.id)}
-                  className={`relative inline-flex shrink-0 snap-start items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-medium transition-all duration-150 active:scale-[0.97] ${
+                  className={`relative inline-flex shrink-0 snap-start items-center gap-1.5 rounded-xl border px-3.5 py-2.5 text-[13px] font-medium transition-all duration-200 active:scale-[0.97] ${
                     isActive
-                      ? 'border-primary/30 bg-primary/10 text-primary shadow-sm dark:border-primary/40 dark:bg-primary/15'
-                      : 'border-transparent bg-muted/40 text-muted-foreground active:bg-muted/60'
+                      ? 'border-primary/30 bg-primary/10 text-primary shadow-sm shadow-primary/10 dark:border-primary/40 dark:bg-primary/15'
+                      : 'border-border/30 bg-card/50 text-muted-foreground active:bg-muted/60'
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-4 w-4" />
                   <span className="whitespace-nowrap">{item.label}</span>
                   {item.badge ? (
-                    <span className="ml-0.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white">
+                    <span className="ml-0.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-500 px-1.5 text-[10px] font-bold text-white shadow-sm">
                       {item.badge}
                     </span>
                   ) : null}
@@ -117,8 +117,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             // Add a thin separator between groups (not after last)
             if (gi < groups.length - 1) {
               buttons.push(
-                <div key={`sep-${gi}`} className="flex shrink-0 items-center px-0.5">
-                  <div className="h-4 w-px bg-border/60" />
+                <div key={`sep-${gi}`} className="flex shrink-0 items-center px-1">
+                  <div className="h-5 w-px rounded-full bg-border/40" />
                 </div>
               );
             }
@@ -128,39 +128,39 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       </div>
 
       {/* ─── Desktop: grouped sidebar nav with collapse ─── */}
-      <nav className="hidden lg:block">
+      <nav className="hidden lg:flex lg:flex-col lg:h-full">
         {/* Toggle button */}
         {onToggleCollapse && (
-          <div className="mb-4 flex justify-end">
+          <div className="mb-5 flex justify-end">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onToggleCollapse}
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  className="h-8 w-8 rounded-lg border border-border/30 p-0 text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
                 >
-                  <div className={`transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`}>
+                  <div className={`transition-transform duration-300 ease-out ${collapsed ? 'rotate-180' : ''}`}>
                     <ChevronLeft className="h-4 w-4" />
                   </div>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="rounded-lg">
                 {collapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
               </TooltipContent>
             </Tooltip>
           </div>
         )}
 
-        <div className="space-y-5">
-          {groups.map((group, groupIndex) => (
+        <div className="flex-1 space-y-6">
+          {groups.map((group) => (
             <div key={group.title}>
               {!collapsed && (
-                <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-neutral-400 transition-opacity duration-150 dark:text-neutral-500">
+                <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 transition-opacity duration-200">
                   {group.title}
                 </p>
               )}
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeView === item.id;
@@ -170,26 +170,28 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                       key={item.id}
                       type="button"
                       onClick={() => onViewChange(item.id)}
-                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-150 active:scale-[0.98] ${
+                      className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200 active:scale-[0.98] ${
                         isActive
-                          ? 'bg-primary/8 text-primary-700 shadow-sm ring-1 ring-primary/15 dark:bg-primary/12 dark:text-primary-300'
-                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                          ? 'bg-primary/8 text-primary shadow-sm ring-1 ring-primary/15 dark:bg-primary/12'
+                          : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
                       }`}
                     >
                       <div
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors duration-150 ${
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200 ${
                           isActive
-                            ? 'bg-primary/15 text-primary-600 dark:bg-primary/20 dark:text-primary-400'
-                            : 'text-muted-foreground'
+                            ? 'bg-primary/15 text-primary shadow-sm dark:bg-primary/20'
+                            : 'bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground'
                         }`}
                       >
                         <Icon className="h-4 w-4" />
                       </div>
                       {!collapsed && (
-                        <span className={`min-w-0 flex-1 truncate text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
+                        <span className={`min-w-0 flex-1 truncate text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                          {item.label}
+                        </span>
                       )}
                       {item.badge && !collapsed ? (
-                        <Badge className="h-5 min-w-[20px] justify-center rounded-full bg-amber-500 px-1.5 text-[10px] text-white hover:bg-amber-500">
+                        <Badge className="h-5 min-w-[22px] justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-500 px-1.5 text-[10px] font-bold text-white shadow-sm hover:from-amber-400 hover:to-amber-500">
                           {item.badge}
                         </Badge>
                       ) : null}
@@ -201,10 +203,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                       <TooltipTrigger asChild>
                         {button}
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="flex items-center gap-2">
+                      <TooltipContent side="right" className="flex items-center gap-2 rounded-lg">
                         {item.label}
                         {item.badge && (
-                          <Badge className="h-5 min-w-[20px] justify-center rounded-full bg-amber-500 px-1.5 text-[10px] text-white">
+                          <Badge className="h-5 min-w-[20px] justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-500 px-1.5 text-[10px] font-bold text-white">
                             {item.badge}
                           </Badge>
                         )}
@@ -218,21 +220,28 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
 
         {/* Portal quick link */}
-        <div className="mt-6 border-t border-border/30 pt-4">
+        <div className="mt-auto border-t border-border/20 pt-5">
           <Tooltip>
             <TooltipTrigger asChild>
               <a
                 href="/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all duration-150 hover:bg-muted/50 hover:text-foreground`}
+                className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-emerald-500/5 hover:text-emerald-600 dark:hover:text-emerald-400`}
               >
-                <Globe className="h-4 w-4 text-emerald-500 shrink-0" />
-                {!collapsed && <span>Abrir portal</span>}
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 transition-colors group-hover:bg-emerald-500/15">
+                  <Globe className="h-4 w-4" />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className="flex-1">Abrir portal</span>
+                    <ExternalLink className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+                  </>
+                )}
               </a>
             </TooltipTrigger>
             {collapsed && (
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="rounded-lg">
                 Abrir portal
               </TooltipContent>
             )}
