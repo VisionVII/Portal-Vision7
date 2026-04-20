@@ -310,7 +310,9 @@ function buildSystemPrompt(sdd: Record<string, unknown>, viewerContext: Record<s
     'Rotas internas: posts /post/{slug}; cursos /curso/{slug}; categorias /{slug}; audiocasts /audiocasts.',
     `Formato: ${rules || 'responda APENAS em JSON válido: {"summary": string, "suggestions": string[], "links": [{"label": string, "href": string, "type": "post|course|category|action"}]}.'}`,
     'IMPORTANTE: O array "links" DEVE conter 1 a 4 links internos extraidos do knowledge fornecido. Cada link deve ter label (titulo curto), href (rota interna começando com /), e type (post, course, category ou action).',
+    'Se o knowledge estiver vazio (sem posts/cursos/categorias), use apenas links genéricos de navegação como {"label":"Ver notícias","href":"/#noticias","type":"action"} ou {"label":"Explorar categorias","href":"/","type":"action"} ou {"label":"Audiocasts","href":"/audiocasts","type":"action"}. NUNCA invente slugs que não existam no knowledge.',
     'Exemplo de link: {"label": "Supercomputação em Portugal", "href": "/post/supercomputacao-ia-portugal", "type": "post"}.',
+    'NUNCA retorne summary vazio. Se nao tiver o que dizer, cumprimente o utilizador e sugira conteudos do portal.',
     'O summary deve ser fluido e humano. Suggestions devem ser ações concretas que o utilizador pode fazer agora no portal.',
     'Nunca invente dados, links externos ou produtos que não existam no portal.',
   ].join('\n');
@@ -566,11 +568,31 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: `Resposta invalida do modelo (${usedProvider})`, raw_preview: String(content).slice(0, 200) }, 502, cors);
     }
 
+    // Fallback: if LLM returned empty summary, generate a helpful default
+    const summary = String(parsed.summary ?? '').trim().slice(0, 1200);
+    if (!summary) {
+      const greetings = [
+        'Olá! Estou aqui para ajudar. Pergunte-me sobre notícias, cursos ou navegue pelas categorias do portal.',
+        'Oi! Sou o assistente do Vision7. Diga-me o que procura — posso sugerir conteúdos, cursos e muito mais.',
+        'Bem-vindo! Explore o portal Vision7 comigo — pergunte sobre tecnologia, categorias ou audiocasts.',
+      ];
+      const fallbackSummary = greetings[Math.floor(Math.random() * greetings.length)];
+      return jsonResponse({
+        summary: fallbackSummary,
+        suggestions: ['Quais são as últimas notícias?', 'Que cursos estão disponíveis?', 'Explorar categorias'],
+        links: [{ label: 'Ver notícias', href: '/#noticias', type: 'action' }, { label: 'Explorar categorias', href: '/', type: 'action' }],
+        provider: usedProvider === 'huggingface' ? 'hf-edge' : 'groq-edge',
+        assistantId: String(body?.assistantId || 'vision7-assistant-core'),
+        sddVersion: String(sdd.version ?? '0.1.0'),
+        sddModule: String(sdd.module ?? 'Portal Assistant'),
+      }, 200, cors);
+    }
+
     // Fire-and-forget: learn from this interaction
     updateUserPrefsAsync(adminClient, userFingerprint, question, knowledge as unknown as Record<string, unknown>[]);
 
     return jsonResponse({
-      summary: String(parsed.summary ?? '').trim().slice(0, 1200),
+      summary,
       suggestions: Array.isArray(parsed.suggestions)
         ? parsed.suggestions.map((value: unknown) => String(value ?? '').trim()).filter(Boolean).slice(0, 4)
         : [],
