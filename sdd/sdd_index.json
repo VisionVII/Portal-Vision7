@@ -1,9 +1,21 @@
 {
   "project": "Vision7 Portal",
   "version": "1.0.0",
-  "last_updated": "2026-04-12",
+  "last_updated": "2026-04-20",
   "description": "Índice central SDD do projeto Vision7 — mapa de todos os módulos, dependências e status.",
   "modules": [
+    {
+      "id": "design-system",
+      "name": "Design System",
+      "spec_file": "sdd/modules/design-system.md",
+      "version": "1.0.0",
+      "status": "Ativo",
+      "owner": "Vision7 Core Team",
+      "depends_on": [],
+      "dependents": ["frontend-ui", "cms", "analytics", "crm"],
+      "priority": "Alta",
+      "tags": ["ui", "tokens", "theming", "css"]
+    },
     {
       "id": "news-aggregator",
       "name": "Agregador de Notícias",
