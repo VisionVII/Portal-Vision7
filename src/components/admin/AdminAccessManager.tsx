@@ -119,7 +119,7 @@ const RoleBadge: React.FC<{ role: AppRole }> = ({ role }) => (
 );
 
 const StatusDot: React.FC<{ active: boolean }> = ({ active }) => (
-  <span className={`inline-block h-2 w-2 rounded-full ${active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+  <span className={`inline-block h-2 w-2 rounded-full ${active ? 'bg-emerald-500' : 'bg-neutral-300 dark:bg-neutral-600'}`} />
 );
 
 // ── Invite Form ─────────────────────────────────────────────────────────────
