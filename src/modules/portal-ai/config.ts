@@ -34,8 +34,8 @@ export const portalAssistantSkills: PortalAssistantSkill[] = [
 ];
 
 export const portalAssistantConfig: PortalAssistantConfig = {
-  provider: 'hf-edge',
-  model: 'mistralai/Mistral-7B-Instruct-v0.3',
+  provider: 'groq-edge',
+  model: 'llama-3.1-8b-instant',
   enabled: true,
   requiresApiKey: true,
   apiBaseUrl: '',

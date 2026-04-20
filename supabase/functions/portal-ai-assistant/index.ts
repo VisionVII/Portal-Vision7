@@ -396,6 +396,14 @@ Deno.serve(async (req: Request) => {
       note: 'Use apenas estes dados do portal, respeite os padroes de rota internos, utilize clima/localizacao apenas com consentimento e devolva apenas JSON valido.',
     });
 
+    // Resolve the model name: ensure it matches the resolved provider
+    const GROQ_DEFAULT_MODEL = 'llama-3.1-8b-instant';
+    const requestedModel = String(body?.model || DEFAULT_MODEL || '');
+    // If using Groq but the model looks like an HF model/token, force the Groq default
+    const resolvedModel = llmProvider === 'groq' && (requestedModel.includes('/') || requestedModel.startsWith('hf_') || !requestedModel)
+      ? GROQ_DEFAULT_MODEL
+      : (requestedModel || GROQ_DEFAULT_MODEL);
+
     let content = '';
     let usedProvider = llmProvider;
 
@@ -436,7 +444,7 @@ Deno.serve(async (req: Request) => {
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: String(body?.model || DEFAULT_MODEL),
+          model: resolvedModel,
           temperature: 0.28,
           top_p: 0.9,
           max_tokens: 900,
