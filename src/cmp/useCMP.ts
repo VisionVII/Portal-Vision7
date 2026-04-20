@@ -85,9 +85,11 @@ export function useCMP(): UseCMP {
 
   const consent = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
-  const [consented, setConsented] = useState(hasConsent);
+  const [consented, setConsented] = useState(() => hasConsent());
 
   useEffect(() => {
+    // Re-check after boot in case storage was read before engine init
+    setConsented(hasConsent());
     const off1 = on('consent:updated', () => setConsented(true));
     const off2 = on('consent:reset', () => setConsented(false));
     return () => { off1(); off2(); };

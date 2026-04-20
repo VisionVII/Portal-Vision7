@@ -78,9 +78,11 @@ const ConsentBanner: React.FC = () => {
   }, [rejectAll]);
 
   const handleDismiss = useCallback(() => {
+    // RGPD: closing the banner = rejecting optional cookies (essentials only)
+    rejectAll();
     setAnimateIn(false);
     setTimeout(() => setShowBanner(false), 200);
-  }, []);
+  }, [rejectAll]);
 
   const handleOpenPrefs = useCallback(() => {
     setShowPrefs(true);
