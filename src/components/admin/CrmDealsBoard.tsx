@@ -33,21 +33,21 @@ import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
 const STAGES: { key: CrmDealStage; label: string; color: string }[] = [
-  { key: 'lead', label: 'Lead', color: 'bg-slate-100 border-slate-300' },
-  { key: 'qualified', label: 'Qualificado', color: 'bg-blue-50 border-blue-300' },
-  { key: 'proposal', label: 'Proposta', color: 'bg-amber-50 border-amber-300' },
-  { key: 'negotiation', label: 'Negociação', color: 'bg-purple-50 border-purple-300' },
-  { key: 'won', label: 'Ganho', color: 'bg-emerald-50 border-emerald-300' },
-  { key: 'lost', label: 'Perdido', color: 'bg-red-50 border-red-300' },
+  { key: 'lead', label: 'Lead', color: 'badge-status-neutral border' },
+  { key: 'qualified', label: 'Qualificado', color: 'badge-status-info border' },
+  { key: 'proposal', label: 'Proposta', color: 'badge-status-warning border' },
+  { key: 'negotiation', label: 'Negoçiação', color: 'badge-status-purple border' },
+  { key: 'won', label: 'Ganho', color: 'badge-status-success border' },
+  { key: 'lost', label: 'Perdido', color: 'badge-status-destructive border' },
 ];
 
 const STAGE_BADGE: Record<CrmDealStage, string> = {
-  lead: 'bg-slate-100 text-slate-700',
-  qualified: 'bg-blue-100 text-blue-700',
-  proposal: 'bg-amber-100 text-amber-700',
-  negotiation: 'bg-purple-100 text-purple-700',
-  won: 'bg-emerald-100 text-emerald-700',
-  lost: 'bg-red-100 text-red-700',
+  lead: 'badge-status-neutral',
+  qualified: 'badge-status-info',
+  proposal: 'badge-status-warning',
+  negotiation: 'badge-status-purple',
+  won: 'badge-status-success',
+  lost: 'badge-status-destructive',
 };
 
 const CrmDealsBoard: React.FC = () => {
