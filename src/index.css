@@ -70,6 +70,8 @@
     --success-foreground: 138 76% 97%;
     --warning: 38 92% 50%;
     --warning-foreground: 48 100% 96%;
+    --info: 210 90% 52%;
+    --info-foreground: 210 100% 97%;
     --background: 210 20% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -149,6 +151,8 @@
     --muted-foreground: 213 13% 83%;
     --accent: 38 92% 48%;
     --accent-foreground: 229 84% 5%;
+    --info: 209 98% 60%;
+    --info-foreground: 229 84% 5%;
     --background: 229 84% 5%;
     --foreground: 210 16% 96%;
     --card: 222 47% 11%;
@@ -336,5 +340,50 @@
   /* Selection */
   ::selection {
     @apply bg-primary-500 text-white dark:bg-primary-600;
+  }
+
+  /* ── Status badge utilities (CRM, automations, content) ── */
+  /* Neutral / lead */
+  .badge-status-neutral {
+    @apply bg-neutral-100 text-neutral-700 border-neutral-200
+           dark:bg-neutral-800/60 dark:text-neutral-300 dark:border-neutral-700;
+  }
+  /* Info / qualified */
+  .badge-status-info {
+    @apply bg-blue-50 text-blue-700 border-blue-200
+           dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800;
+  }
+  /* Warning / proposal */
+  .badge-status-warning {
+    @apply bg-amber-50 text-amber-700 border-amber-200
+           dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800;
+  }
+  /* Purple / negotiation */
+  .badge-status-purple {
+    @apply bg-purple-50 text-purple-700 border-purple-200
+           dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800;
+  }
+  /* Success / won */
+  .badge-status-success {
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200
+           dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800;
+  }
+  /* Destructive / lost */
+  .badge-status-destructive {
+    @apply bg-red-50 text-red-700 border-red-200
+           dark:bg-red-900/30 dark:text-red-300 dark:border-red-800;
+  }
+
+  /* ── Subtle card gradient (replaces hardcoded slate gradients) ── */
+  .gradient-card-subtle {
+    @apply bg-gradient-to-br from-card via-card/95 to-card/90;
+  }
+
+  .gradient-card-hero {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--background)) 100%
+    );
   }
 }
