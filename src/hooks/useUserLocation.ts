@@ -54,23 +54,37 @@ export const useUserLocation = () => {
     };
 
     const syncLocation = async (force = false) => {
-      const now = Date.now();
-      if (!force && now - lastSyncTimestamp < SYNC_THROTTLE_MS) return;
-      lastSyncTimestamp = now;
-
       const hasPersonalizationConsent = isAllowed('personalization');
 
+      // Always allow consent state changes to propagate immediately;
+      // only throttle the external API calls (weather, geo)
+      const now = Date.now();
+      const withinThrottle = !force && now - lastSyncTimestamp < SYNC_THROTTLE_MS;
+
       if (!hasPersonalizationConsent) {
-        setLocation((prev) => ({
-          ...prev,
-          country: null,
-          region: null,
-          timezone,
-          temperatureC: null,
-          hasConsent: false,
-        }));
+        // Update consent state immediately even if throttled
+        setLocation((prev) => {
+          if (!prev.hasConsent) return prev; // already false, skip
+          return {
+            ...prev,
+            country: null,
+            region: null,
+            timezone,
+            temperatureC: null,
+            hasConsent: false,
+          };
+        });
         return;
       }
+
+      // Consent is granted — update hasConsent immediately
+      setLocation((prev) => {
+        if (prev.hasConsent) return prev; // already true, skip
+        return { ...prev, hasConsent: true };
+      });
+
+      if (withinThrottle) return;
+      lastSyncTimestamp = now;
 
       let storedGeo = localStorage.getItem('user-geo');
 
