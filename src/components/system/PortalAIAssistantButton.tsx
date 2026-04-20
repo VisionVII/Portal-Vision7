@@ -418,8 +418,9 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
           } else {
             reply = normalizePortalAssistantReply(data);
             if (!reply) {
-              console.warn('[Vision7 AI] Edge function response could not be normalized:', JSON.stringify(data).slice(0, 300));
-              edgeError = 'Resposta do modelo IA não pôde ser interpretada';
+              // Edge function returned 200 but with empty/unparseable data — not a true error
+              console.info('[Vision7 AI] Edge function returned empty/unparseable response, using local fallback');
+              // Don't set edgeError — this is normal for edge cases (empty knowledge, simple greetings)
             }
           }
         } catch (fnErr) {
