@@ -121,7 +121,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
           </>
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-slate-800 to-slate-900" />
+          <div className="h-full w-full bg-gradient-to-br from-neutral-800 to-neutral-900" />
         )}
         <div className="absolute left-2.5 top-2.5 sm:left-3 sm:top-3">
           <span className={`category-badge ${categoryColor} !px-2 !py-0.5 !text-[10px]`}>{category}</span>
