@@ -54,14 +54,14 @@ export const DashboardCardSkeleton = ({
         {showHeader && (
           <div className="flex items-start gap-3 mb-6">
             {/* Icon skeleton */}
-            <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 animate-pulse" />
+            <div className="shrink-0 w-10 h-10 rounded-xl bg-muted animate-pulse" />
             
             <div className="flex-1 space-y-2">
               {/* Title skeleton */}
-              <div className="h-5 w-3/4 rounded-lg bg-gradient-to-r from-gray-700 to-gray-800 animate-pulse" />
+              <div className="h-5 w-3/4 rounded-lg bg-muted animate-pulse" />
               
               {/* Subtitle skeleton */}
-              <div className="h-3 w-1/2 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 animate-pulse" />
+              <div className="h-3 w-1/2 rounded-lg bg-muted/70 animate-pulse" />
             </div>
           </div>
         )}
@@ -71,7 +71,7 @@ export const DashboardCardSkeleton = ({
           {Array.from({ length: contentLines }).map((_, i) => (
             <div
               key={i}
-              className="h-3 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 animate-pulse"
+              className="h-3 rounded-lg bg-muted/70 animate-pulse"
               style={{
                 width: `${Math.random() * 30 + 60}%`,
                 animationDelay: `${i * 0.1}s`,
@@ -83,8 +83,8 @@ export const DashboardCardSkeleton = ({
         {/* Footer */}
         {showFooter && (
           <div className="mt-6 flex gap-2">
-            <div className="h-10 w-28 rounded-xl bg-gradient-to-r from-gray-700 to-gray-800 animate-pulse" />
-            <div className="h-10 w-20 rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 animate-pulse" />
+            <div className="h-10 w-28 rounded-xl bg-muted animate-pulse" />
+            <div className="h-10 w-20 rounded-xl bg-muted/70 animate-pulse" />
           </div>
         )}
       </div>

@@ -151,7 +151,7 @@ const AdminDashboard = () => {
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         {/* Desktop sidebar — fixed left column */}
-        <div className={`hidden shrink-0 border-r border-border/40 bg-slate-50/80 backdrop-blur-sm lg:block dark:border-border/20 dark:bg-slate-950/60 transition-[width] duration-300 ease-in-out ${
+        <div className={`hidden shrink-0 border-r border-border/40 bg-sidebar/80 backdrop-blur-sm lg:block dark:border-border/20 transition-[width] duration-300 ease-in-out ${
           sidebarCollapsed ? 'w-16' : 'w-60 xl:w-72'
         }`}>
           <div className="sticky top-14 p-3 xl:p-4">
