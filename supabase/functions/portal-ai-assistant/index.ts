@@ -299,7 +299,8 @@ function buildSystemPrompt(sdd: Record<string, unknown>, viewerContext: Record<s
     'Você é o Vision7 AI — assistente editorial do portal Vision7, especializado em tecnologia, inovação e tendências.',
     'Personalidade: comunicativo, direto, confiante mas sem arrogância. Fale como um jornalista tech experiente que conversa com um colega curioso.',
     'Varie o vocabulário e a estrutura das frases — nunca repita a mesma abertura ou padrão em mensagens seguidas. Surpreenda.',
-    'Se o utilizador faz uma pergunta simples, responda de forma curta e objetiva. Se complexa, aprofunde com contexto editorial.',
+    'Se o utilizador faz uma pergunta simples (como "qual seu nome", "olá", "quem és"), responda de forma curta, direta e com personalidade. Exemplo: para "qual seu nome" responda algo como "Sou o Vision7 AI, o assistente editorial deste portal!".',
+    'Se a pergunta é sobre conteúdo (últimos posts, cursos, notícias), use o knowledge fornecido para dar respostas específicas com links reais.',
     'Adapte o tom: casual para saudações, analítico para perguntas sobre tendências, prático para navegação.',
     contextBlock,
     `Escopo: ${allowedScope || 'portal Vision7 — noticias, categorias, cursos, audiocasts e navegacao interna.'}`,
@@ -308,7 +309,8 @@ function buildSystemPrompt(sdd: Record<string, unknown>, viewerContext: Record<s
     'Use o histórico da conversa para manter contexto e lembrar preferências do utilizador dentro da sessão.',
     'Se o utilizador mostrou interesse por um tema, proponha conteúdos relacionados sem que ele peça — antecipe necessidades.',
     'Rotas internas: posts /post/{slug}; cursos /curso/{slug}; categorias /{slug}; audiocasts /audiocasts.',
-    `Formato: ${rules || 'responda APENAS em JSON válido: {"summary": string, "suggestions": string[], "links": [{"label": string, "href": string, "type": "post|course|category|action"}]}.'}`,
+    `Formato: ${rules || 'responda APENAS em JSON válido, sem texto antes ou depois: {"summary": string, "suggestions": string[], "links": [{"label": string, "href": string, "type": "post|course|category|action"}]}.'}`,
+    'REGRA CRITICA DE FORMATO: A sua resposta INTEIRA deve ser APENAS o objeto JSON, sem nenhum texto adicional antes ou depois. Não inclua explicações, saudações ou comentários fora do JSON. O JSON deve começar com { e terminar com }.',
     'IMPORTANTE: O array "links" DEVE conter 1 a 4 links internos extraidos do knowledge fornecido. Cada link deve ter label (titulo curto), href (rota interna começando com /), e type (post, course, category ou action).',
     'Se o knowledge estiver vazio (sem posts/cursos/categorias), use apenas links genéricos de navegação como {"label":"Ver notícias","href":"/#noticias","type":"action"} ou {"label":"Explorar categorias","href":"/","type":"action"} ou {"label":"Audiocasts","href":"/audiocasts","type":"action"}. NUNCA invente slugs que não existam no knowledge.',
     'Exemplo de link: {"label": "Supercomputação em Portugal", "href": "/post/supercomputacao-ia-portugal", "type": "post"}.',
@@ -319,14 +321,24 @@ function buildSystemPrompt(sdd: Record<string, unknown>, viewerContext: Record<s
 }
 
 function parseAssistantResponse(rawContent: string) {
-  const cleaned = rawContent.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
+  // Strip markdown fences
+  let cleaned = rawContent.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
   if (!cleaned) return null;
 
+  // Try direct parse first
   try {
     return JSON.parse(cleaned);
-  } catch {
-    return null;
+  } catch { /* fall through */ }
+
+  // Try to extract JSON object from mixed text (LLM sometimes wraps JSON in prose)
+  const jsonMatch = cleaned.match(/\{[\s\S]*"summary"[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch { /* fall through */ }
   }
+
+  return null;
 }
 
 /* ── Rate Limiter (in-memory, per IP) ── */
@@ -543,6 +555,7 @@ Deno.serve(async (req: Request) => {
           temperature: 0.5,
           top_p: 0.92,
           max_tokens: 900,
+          response_format: { type: 'json_object' },
           messages: [
             { role: 'system', content: systemPrompt },
             ...conversation.map((turn) => ({

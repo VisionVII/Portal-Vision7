@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useCategories } from '@/hooks/useCategories';
 import { useCourses } from '@/hooks/useCourses';
 import { usePosts } from '@/hooks/usePosts';
@@ -630,8 +632,10 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
       <SheetContent
         side="right"
+        aria-describedby={undefined}
         className="flex w-[96vw] flex-col gap-0 p-0 sm:max-w-lg lg:max-w-xl [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-white/15 [&>button]:p-1.5 [&>button]:text-white [&>button]:opacity-100 [&>button:hover]:bg-white/25 [&>button:hover]:text-white"
       >
+        <VisuallyHidden><SheetTitle>Assistente Vision7 AI</SheetTitle></VisuallyHidden>
         {/* Chat header */}
         <div className="shrink-0 border-b border-border bg-gradient-to-r from-[#027ae3] to-[#035aa6] px-5 py-4 dark:from-[#027ae3] dark:to-[#013b73]">
           <div className="flex items-center min-h-[36px] pr-12">
