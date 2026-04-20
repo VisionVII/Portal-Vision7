@@ -30,7 +30,7 @@ const AdminStatsCards = () => {
   return (
     <div className="space-y-3">
       {/* ── HERO KPI: compact dominant metric ── */}
-      <Card className="relative overflow-hidden rounded-2xl border border-border/20 bg-gradient-to-br from-slate-50 via-white to-slate-50 shadow-sm dark:border-border/10 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950">
+      <Card className="gradient-card-hero relative overflow-hidden rounded-2xl border border-border/20 shadow-sm dark:border-border/10">
         <CardContent className="p-4 sm:p-5">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 flex-1">
