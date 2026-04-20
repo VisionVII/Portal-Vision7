@@ -168,7 +168,7 @@ const AdminDashboard = () => {
 
         {/* Main content — grows to fill remaining width */}
         <main className="min-w-0 flex-1 overflow-x-hidden">
-          <div className="mx-auto max-w-[1440px] px-3 py-5 sm:px-5 sm:py-6 lg:px-6 xl:px-8">
+          <div className="px-3 py-5 sm:px-5 sm:py-6 lg:px-6 xl:px-8">
 
             <Suspense fallback={<ViewSkeleton />}>
               <Panel view="overview">
