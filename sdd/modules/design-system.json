@@ -1,0 +1,49 @@
+{
+  "module": "Design System",
+  "version": "1.0.0",
+  "owner": "Vision7 Core Team",
+  "status": "Ativo",
+  "last_updated": "2026-04-20",
+  "objective": "Sistema de design token-first para o portal Vision7: tokens de cor, tipografia, raios, espaçamento, componentes base e suporte nativo a dark-mode via variáveis CSS mapeadas no Tailwind config.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Tokens de cor definidos em src/index.css (@layer base) como variáveis CSS HSL, mapeados em tailwind.config.ts",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-002",
+      "description": "Dark-mode nativo via classe .dark no root — cada token tem variante dark sem lógica condicional nos componentes",
+      "priority": "Crítica",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-003",
+      "description": "Tipografia: Manrope (primária, preloaded) + Inter (secundária, deferred via media=print trick)",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-004",
+      "description": "Componentes UI base em src/components/ui usando shadcn/ui primitives com variantes token-based",
+      "priority": "Alta",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-005",
+      "description": "Utilitários CSS de badge-status (badge-status-published, badge-status-draft, etc.) em src/index.css",
+      "priority": "Média",
+      "status": "Finalizado"
+    },
+    {
+      "id": "FR-006",
+      "description": "gradient-card-hero utility class para hero cards do dashboard admin",
+      "priority": "Média",
+      "status": "Finalizado"
+    }
+  ],
+  "technical_notes": "Ver design-system.md para documentação detalhada dos tokens, paletas e regras de uso. Nunca usar cores hardcoded (bg-white, text-black) — usar sempre tokens semânticos (bg-card, bg-background, text-foreground).",
+  "dependencies": [],
+  "tags": ["ui", "tokens", "theming", "css", "tailwind", "dark-mode"]
+}
