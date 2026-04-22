@@ -116,15 +116,25 @@ const AdminStatsCards = () => {
               className="group border-border/30 bg-card/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-border/20"
             >
               <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className={`shrink-0 rounded-lg p-2 sm:rounded-xl sm:p-2.5 ${card.bg}`}>
-                    <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${card.color}`} />
+                {/* Mobile: centered value + label (no icon) */}
+                <div className="flex flex-col items-center gap-0.5 text-center sm:hidden">
+                  <p className="text-2xl font-extrabold text-foreground">
+                    {card.format ? card.value.toLocaleString('pt-PT') : card.value}
+                  </p>
+                  <p className="text-[9px] font-medium uppercase leading-tight tracking-wide text-muted-foreground">
+                    {card.label}
+                  </p>
+                </div>
+                {/* Desktop: icon + text side by side */}
+                <div className="hidden sm:flex sm:items-center sm:gap-3">
+                  <div className={`shrink-0 rounded-xl p-2.5 ${card.bg}`}>
+                    <Icon className={`h-4 w-4 ${card.color}`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:text-[10px] sm:tracking-[0.2em]">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
                       {card.label}
                     </p>
-                    <p className="mt-0.5 truncate text-lg font-bold text-foreground sm:text-2xl">
+                    <p className="mt-0.5 truncate text-2xl font-bold text-foreground">
                       {card.format ? card.value.toLocaleString('pt-PT') : card.value}
                     </p>
                   </div>
