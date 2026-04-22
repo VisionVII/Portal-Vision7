@@ -100,7 +100,7 @@ const SiteSettingsManager = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Current Logo Preview */}
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
             <div className="w-24 h-24 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted overflow-hidden">
               {settings?.logo_url ? (
                 <img src={settings.logo_url} alt="Logo" className="w-full h-full object-contain p-2" />

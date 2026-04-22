@@ -121,7 +121,7 @@ const AdminStatsCards = () => {
                     <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${card.color}`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-muted-foreground sm:text-[10px]">
+                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:text-[10px] sm:tracking-[0.2em]">
                       {card.label}
                     </p>
                     <p className="mt-0.5 truncate text-lg font-bold text-foreground sm:text-2xl">
