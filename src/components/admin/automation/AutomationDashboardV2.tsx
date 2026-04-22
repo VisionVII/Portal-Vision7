@@ -98,9 +98,9 @@ function Section({
       >
         <div className="flex items-center gap-3 min-w-0">
           {icon}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-            {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold text-foreground">{title}</h3>
+            {description && <p className="truncate text-xs text-muted-foreground mt-0.5">{description}</p>}
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -144,9 +144,9 @@ function SummaryPill({
 
   return (
     <div className={`rounded-2xl border px-3 py-3 ${toneClass}`}>
-      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em]">
-        <Icon className="h-4 w-4" />
-        <span>{label}</span>
+      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide">
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="truncate">{label}</span>
       </div>
       <p className="mt-2 text-lg font-bold text-foreground">{value}</p>
     </div>

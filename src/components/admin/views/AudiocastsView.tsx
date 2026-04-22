@@ -302,9 +302,9 @@ const AudiocastsView: React.FC = () => {
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <s.icon className="h-4 w-4 text-primary" />
               </div>
-              <div>
-                <p className="text-2xl font-bold">{s.value.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-2xl font-bold">{s.value.toLocaleString()}</p>
+                <p className="truncate text-xs text-muted-foreground">{s.label}</p>
               </div>
             </CardContent>
           </Card>

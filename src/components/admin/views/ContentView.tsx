@@ -127,20 +127,20 @@ const ContentView: React.FC<ContentViewProps> = ({
 
       {/* ── Tabs: Posts | Curados IA | Categorias ── */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-        <TabsList className="h-10 gap-1 rounded-2xl p-1">
-          <TabsTrigger value="posts" className="gap-2 rounded-xl px-4 text-xs font-semibold">
-            <LayoutList className="w-3.5 h-3.5" />
+        <TabsList className="h-auto w-full gap-1 overflow-x-auto rounded-2xl p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger value="posts" className="gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold sm:px-4">
+            <LayoutList className="w-3.5 h-3.5 shrink-0" />
             Posts editoriais
           </TabsTrigger>
-          <TabsTrigger value="curated" className="gap-2 rounded-xl px-4 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" />
+          <TabsTrigger value="curated" className="gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold sm:px-4">
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
             Curados pela IA
             {curatedStats && curatedStats.ready > 0 && (
               <Badge className="bg-emerald-500 text-[10px] px-1.5 py-0 ml-0.5">{curatedStats.ready}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="categories" className="gap-2 rounded-xl px-4 text-xs font-semibold">
-            <FolderOpen className="w-3.5 h-3.5" />
+          <TabsTrigger value="categories" className="gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold sm:px-4">
+            <FolderOpen className="w-3.5 h-3.5 shrink-0" />
             Categorias
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-0.5">{categories.length}</Badge>
           </TabsTrigger>
