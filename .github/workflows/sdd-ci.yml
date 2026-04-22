@@ -105,26 +105,13 @@ jobs:
 
       - name: Check SQL syntax
         run: |
-          # Write paren-checker to a temp file to avoid heredoc-in-subshell issues
-          cat > /tmp/check_parens.py << 'EOF'
-import re, sys
-content = open(sys.argv[1]).read()
-no_strings = re.sub(r"'(?:[^']|'')*'", "''", content)
-no_line_comments = re.sub(r'--[^\n]*', '', no_strings)
-clean = re.sub(r'/\*.*?\*/', '', no_line_comments, flags=re.DOTALL)
-o, c = clean.count('('), clean.count(')')
-if o != c:
-    print(f"MISMATCH open={o} close={c}")
-EOF
           errors=0
           for f in supabase/migrations/*.sql; do
             [ -f "$f" ] || continue
-            # Check for common SQL issues
             if grep -qiP '(DROP\s+TABLE|DROP\s+SCHEMA|TRUNCATE)\s' "$f" 2>/dev/null; then
               echo "⚠️  Destructive statement in $f"
             fi
-            # Validate basic syntax (unmatched parens — excludes string literals and comments)
-            result=$(python3 /tmp/check_parens.py "$f")
+            result=$(python3 .github/scripts/check_sql_parens.py "$f")
             if [[ "$result" == MISMATCH* ]]; then
               echo "❌ Unmatched parentheses in $f ($result)"
               errors=$((errors + 1))
