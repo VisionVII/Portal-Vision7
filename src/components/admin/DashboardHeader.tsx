@@ -99,7 +99,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0" sideOffset={8}>
+            <PopoverContent align="end" className="w-[min(20rem,_calc(100vw-1rem))] p-0" sideOffset={8}>
               <div className="flex items-center justify-between border-b px-3 py-2">
                 <span className="text-sm font-semibold">Notificações</span>
                 {unreadCount > 0 && (

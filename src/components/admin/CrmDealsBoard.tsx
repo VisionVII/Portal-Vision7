@@ -138,8 +138,8 @@ const CrmDealsBoard: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            <div>
+            <TrendingUp className="h-5 w-5 shrink-0 text-blue-600" />
+            <div className="min-w-0 flex-1">
               <p className="text-2xl font-bold">{deals?.length ?? 0}</p>
               <p className="text-xs text-muted-foreground">Total de deals</p>
             </div>
@@ -147,18 +147,18 @@ const CrmDealsBoard: React.FC = () => {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <TrendingUp className="h-5 w-5 text-indigo-600" />
-            <div>
-              <p className="text-2xl font-bold">€{totalPipeline.toLocaleString('pt-PT')}</p>
+            <TrendingUp className="h-5 w-5 shrink-0 text-indigo-600" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-2xl font-bold">€{totalPipeline.toLocaleString('pt-PT')}</p>
               <p className="text-xs text-muted-foreground">Pipeline ativo</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Trophy className="h-5 w-5 text-emerald-600" />
-            <div>
-              <p className="text-2xl font-bold">€{totalWon.toLocaleString('pt-PT')}</p>
+            <Trophy className="h-5 w-5 shrink-0 text-emerald-600" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-2xl font-bold">€{totalWon.toLocaleString('pt-PT')}</p>
               <p className="text-xs text-muted-foreground">Valor ganho</p>
             </div>
           </CardContent>
@@ -181,24 +181,28 @@ const CrmDealsBoard: React.FC = () => {
             </CardHeader>
             <CardContent className="p-3 pt-1 space-y-2 max-h-[400px] overflow-y-auto">
               {(grouped[key] ?? []).map((deal) => (
-                <div key={deal.id} className="bg-white rounded border p-2 space-y-1 shadow-sm">
-                  <p className="text-sm font-medium leading-tight">{deal.title}</p>
-                  <p className="text-xs text-muted-foreground">{deal.crm_contacts?.name ?? deal.crm_contacts?.email}</p>
+                <div key={deal.id} className="bg-card rounded border p-2 space-y-1 shadow-sm">
+                  <p className="text-sm font-medium leading-tight truncate" title={deal.title}>{deal.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{deal.crm_contacts?.name ?? deal.crm_contacts?.email}</p>
                   {deal.value != null && (
                     <p className="text-xs font-semibold">€{deal.value.toLocaleString('pt-PT')}</p>
                   )}
-                  <div className="flex gap-1 flex-wrap pt-1">
-                    {STAGES.filter((s) => s.key !== key && s.key !== 'lost').map((s) => (
-                      <Button
-                        key={s.key}
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-[10px]"
-                        onClick={() => moveStage(deal.id, s.key)}
-                      >
-                        → {s.label}
-                      </Button>
-                    ))}
+                  <div className="pt-1">
+                    <Select
+                      value={key}
+                      onValueChange={(v) => moveStage(deal.id, v as CrmDealStage)}
+                    >
+                      <SelectTrigger className="h-6 text-[10px] px-2 py-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STAGES.map((s) => (
+                          <SelectItem key={s.key} value={s.key} className="text-xs">
+                            {s.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               ))}

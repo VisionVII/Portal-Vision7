@@ -660,7 +660,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
             </Label>
           </div>
           
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-2">
             <Button 
               type="button"
               onClick={(e) => handleSubmit(e, true)}

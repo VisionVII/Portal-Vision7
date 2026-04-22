@@ -250,6 +250,7 @@ const CrmContactsTable: React.FC = () => {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -272,9 +273,9 @@ const CrmContactsTable: React.FC = () => {
                 filtered.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell>
-                      <div>
-                        <p className="font-medium text-sm">{c.name ?? '—'}</p>
-                        <p className="text-xs text-muted-foreground">{c.email}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate max-w-[160px] sm:max-w-none">{c.name ?? '—'}</p>
+                        <p className="text-xs text-muted-foreground truncate max-w-[160px] sm:max-w-none" title={c.email}>{c.email}</p>
                       </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-sm">{c.company ?? '—'}</TableCell>
@@ -318,6 +319,7 @@ const CrmContactsTable: React.FC = () => {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 

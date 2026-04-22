@@ -85,9 +85,9 @@ const DeveloperControlCenter = () => {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
                   <Icon className="h-5 w-5" />
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="text-sm text-muted-foreground">{item.label}</p>
-                  <p className="font-semibold text-foreground">{item.value}</p>
+                  <p className="truncate font-semibold text-foreground" title={item.value}>{item.value}</p>
                 </div>
               </CardContent>
             </Card>
@@ -167,9 +167,9 @@ const DeveloperControlCenter = () => {
           {topPosts.length === 0 ? (
             <p className="text-sm text-muted-foreground">Ainda não existem métricas suficientes para ranquear os posts.</p>
           ) : topPosts.map((post, index) => (
-            <div key={post.id} className="flex items-center justify-between rounded-xl border border-border p-3">
-              <div>
-                <p className="font-medium text-foreground">#{index + 1} • {post.title}</p>
+            <div key={post.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-foreground">#{index + 1} • {post.title}</p>
                 <p className="text-xs text-muted-foreground">{post.status} • {post.read_time}</p>
               </div>
               <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
