@@ -112,11 +112,20 @@ jobs:
             if grep -qiP '(DROP\s+TABLE|DROP\s+SCHEMA|TRUNCATE)\s' "$f" 2>/dev/null; then
               echo "⚠️  Destructive statement in $f"
             fi
-            # Validate basic syntax (unmatched parens, missing semicolons)
-            open=$(grep -o '(' "$f" | wc -l)
-            close=$(grep -o ')' "$f" | wc -l)
-            if [ "$open" -ne "$close" ]; then
-              echo "❌ Unmatched parentheses in $f (open=$open close=$close)"
+            # Validate basic syntax (unmatched parens — excludes string literals and comments)
+            result=$(python3 - "$f" <<'PYEOF'
+import re, sys
+content = open(sys.argv[1]).read()
+no_strings = re.sub(r"'(?:[^']|'')*'", "''", content)
+no_line_comments = re.sub(r'--[^\n]*', '', no_strings)
+clean = re.sub(r'/\*.*?\*/', '', no_line_comments, flags=re.DOTALL)
+o, c = clean.count('('), clean.count(')')
+if o != c:
+    print(f"MISMATCH open={o} close={c}")
+PYEOF
+)
+            if [[ "$result" == MISMATCH* ]]; then
+              echo "❌ Unmatched parentheses in $f ($result)"
               errors=$((errors + 1))
             fi
           done

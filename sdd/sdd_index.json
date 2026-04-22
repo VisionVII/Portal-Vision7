@@ -7,14 +7,23 @@
     {
       "id": "design-system",
       "name": "Design System",
-      "spec_file": "sdd/modules/design-system.md",
+      "spec_file": "sdd/modules/design-system.json",
       "version": "1.0.0",
       "status": "Ativo",
       "owner": "Vision7 Core Team",
       "depends_on": [],
-      "dependents": ["frontend-ui", "cms", "analytics", "crm"],
+      "dependents": [
+        "frontend-ui",
+        "cms",
+        "analytics"
+      ],
       "priority": "Alta",
-      "tags": ["ui", "tokens", "theming", "css"]
+      "tags": [
+        "ui",
+        "tokens",
+        "theming",
+        "css"
+      ]
     },
     {
       "id": "news-aggregator",
