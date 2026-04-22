@@ -190,28 +190,28 @@ const CrmContactsTable: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Users className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <p className="text-2xl font-bold">{stats?.total ?? 0}</p>
-              <p className="text-xs text-muted-foreground">Total de contactos</p>
+            <Users className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-2xl font-bold">{stats?.total ?? 0}</p>
+              <p className="truncate text-xs text-muted-foreground">Total de contactos</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Eye className="h-5 w-5 text-emerald-600" />
-            <div>
-              <p className="text-2xl font-bold">{stats?.active ?? 0}</p>
-              <p className="text-xs text-muted-foreground">Ativos</p>
+            <Eye className="h-5 w-5 shrink-0 text-emerald-600" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-2xl font-bold">{stats?.active ?? 0}</p>
+              <p className="truncate text-xs text-muted-foreground">Ativos</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <UserPlus className="h-5 w-5 text-amber-600" />
-            <div>
-              <p className="text-2xl font-bold">{stats?.leads ?? 0}</p>
-              <p className="text-xs text-muted-foreground">Leads</p>
+            <UserPlus className="h-5 w-5 shrink-0 text-amber-600" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-2xl font-bold">{stats?.leads ?? 0}</p>
+              <p className="truncate text-xs text-muted-foreground">Leads</p>
             </div>
           </CardContent>
         </Card>

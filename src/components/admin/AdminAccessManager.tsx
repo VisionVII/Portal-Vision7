@@ -619,7 +619,7 @@ const AdminAccessManager: React.FC = () => {
       {/* Right: Tabs — Team / Invites / Roles */}
       <Card>
         <CardHeader className="pb-2">
-          <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-0.5">
+          <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-muted/50 p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

@@ -15,15 +15,15 @@ const Fallback = () => (
 
 const CrmView: React.FC = () => (
   <Tabs defaultValue="contacts" className="w-full">
-    <TabsList className="mb-4">
-      <TabsTrigger value="contacts" className="gap-1.5">
-        <Users className="h-4 w-4" /> Contactos
+    <TabsList className="mb-4 h-auto w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <TabsTrigger value="contacts" className="gap-1.5 px-3 py-2 text-xs sm:px-4">
+        <Users className="h-4 w-4 shrink-0" /> Contactos
       </TabsTrigger>
-      <TabsTrigger value="newsletter" className="gap-1.5">
-        <Mail className="h-4 w-4" /> Newsletter
+      <TabsTrigger value="newsletter" className="gap-1.5 px-3 py-2 text-xs sm:px-4">
+        <Mail className="h-4 w-4 shrink-0" /> Newsletter
       </TabsTrigger>
-      <TabsTrigger value="deals" className="gap-1.5">
-        <TrendingUp className="h-4 w-4" /> Pipeline
+      <TabsTrigger value="deals" className="gap-1.5 px-3 py-2 text-xs sm:px-4">
+        <TrendingUp className="h-4 w-4 shrink-0" /> Pipeline
       </TabsTrigger>
     </TabsList>
     <TabsContent value="contacts">
