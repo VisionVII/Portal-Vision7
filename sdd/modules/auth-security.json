@@ -1,237 +1,211 @@
 {
-  "module": "Auth & Segurança",
-  "version": "1.3.0",
+  "module": "Auth & Security Core",
+  "version": "2.0.0",
   "owner": "Vision7 Core Team",
-  "status": "Finalizado",
-  "last_updated": "2026-04-12",
-  "objective": "Sistema de autenticação e autorização robusto com OTP, RBAC extensível, fluxos distintos para admin e equipa, proteção contra abuso, inteligência de sessão e observabilidade de segurança.",
-  "functional_requirements": [
-    {
-      "id": "FR-010",
-      "description": "Audit logs com classificação de risco (low, medium, high, critical)",
-      "priority": "Alta",
-      "status": "Finalizado"
-    },
-    {
-      "id": "FR-011",
-      "description": "Detecção de comportamento anômalo (auth e ações administrativas)",
-      "priority": "Alta",
-      "status": "Finalizado"
-    },
-    {
-      "id": "FR-012",
-      "description": "Invite vinculado a email específico, uso único e token armazenado como hash",
-      "priority": "Alta",
-      "status": "Finalizado"
-    },
-    {
-      "id": "FR-013",
-      "description": "Suporte a MFA (TOTP/WebAuthn) para roles críticas (admin/super_admin)",
-      "priority": "Alta",
-      "status": "Planejado"
-    },
-    {
-      "id": "FR-014",
-      "description": "Entrada hierárquica: admin apenas em /acesso/admin/controlado e equipa/parceiros em /validar/entrada/tipodeuser",
-      "priority": "Alta",
-      "status": "Em desenvolvimento"
-    },
-    {
-      "id": "FR-015",
-      "description": "Pedido público de acesso/parceria com triagem manual antes de qualquer convite para o dashboard",
-      "priority": "Alta",
-      "status": "Em desenvolvimento"
-    }
-  ],
-  "non_functional_requirements": [
-    {
-      "id": "NFR-004",
-      "description": "Rate limiting granular por IP, email e device fingerprint",
-      "rules": [
-        "Máx 5 OTP requests / minuto / email",
-        "Máx 10 OTP requests / hora / IP",
-        "Exponential backoff após falhas",
-        "Bloqueio temporário após 10 falhas"
-      ],
-      "category": "Segurança",
-      "status": "Finalizado"
-    },
-    {
-      "id": "NFR-006",
-      "description": "Session fingerprinting e detecção de anomalias (IP, user-agent, região)",
-      "category": "Segurança",
-      "status": "Finalizado"
-    },
-    {
-      "id": "NFR-007",
-      "description": "JWT com rotação, curta duração e invalidação ativa de sessão",
-      "category": "Segurança",
-      "status": "Finalizado"
-    },
-    {
-      "id": "NFR-008",
-      "description": "Respostas genéricas para evitar enumeração de usuários",
-      "category": "Segurança",
-      "status": "Finalizado"
-    },
-    {
-      "id": "NFR-009",
-      "description": "Criptografia de dados sensíveis (PII) no banco",
-      "category": "Segurança",
-      "status": "Finalizado"
-    },
-    {
-      "id": "NFR-010",
-      "description": "Observabilidade de segurança com métricas de autenticação",
-      "category": "Observabilidade",
-      "status": "Finalizado"
-    },
-    {
-      "id": "NFR-011",
-      "description": "Timeout de sessão por inatividade (30 minutos). Idle timer otimizado: throttle 10s entre resets, eventos reduzidos de 6 para 4 (sem mousemove/scroll), AuthContext value memoizado com useMemo",
-      "category": "Segurança",
-      "status": "Finalizado"
-    }
-  ],
-  "flows": {
-    "data_flow": "Pedido de acesso público → triagem manual → convite por papel → validação em /validar/entrada/tipodeuser → OTP/email ou código de convite → Session Fingerprint → JWT → AuthContext → Access Control",
-    "user_flow": "Admin → /acesso/admin/controlado → OTP → Dashboard | Equipa/Parceiro → /validar/entrada/tipodeuser → código por email → Dashboard conforme role",
-    "security_flow": "OTP Request → Rate Limit → Behavior Analysis → Risk Score → Allow | Block | Challenge (MFA)"
+  "status": "Production Design Ready",
+  "last_updated": "2026-05-02",
+  "objective": "Arquitetura de autenticação e autorização de nível SaaS enterprise baseada em OTP, RBAC dinâmico, Security Gate centralizado, risk scoring adaptativo, proteção anti-abuso, auditabilidade imutável e observabilidade completa de segurança.",
+
+  "architecture": {
+    "security_gateway": "Centralized Security Gate (single decision point for all sensitive operations)",
+    "decision_engine": "Risk-based decision system (0-100 score)",
+    "auth_model": "OTP-based authentication + JWT short-lived tokens",
+    "session_model": "Device-bound sessions with fingerprinting",
+    "rbac_model": "Dynamic RBAC via database (JSONB-ready)",
+    "audit_model": "Append-only immutable audit log with hash chaining"
   },
-  "security_intelligence": {
-    "risk_engine": {
-      "inputs": [
+
+  "security_gateway_flow": {
+    "input": "Any sensitive request (login, OTP, invite, admin action, session refresh)",
+    "pipeline": [
+      "Request Ingestion",
+      "Context Builder (IP, UA, Device, Geo, Action)",
+      "Risk Engine Evaluation",
+      "Decision Engine (ALLOW | CHALLENGE | BLOCK)",
+      "Action Execution",
+      "Audit Logging"
+    ]
+  },
+
+  "decision_model": {
+    "risk_score_range": "0-100",
+    "classification": {
+      "ALLOW": "0-39",
+      "CHALLENGE": "40-69",
+      "BLOCK": "70-100"
+    },
+    "actions": {
+      "ALLOW": ["Proceed normally"],
+      "CHALLENGE": ["OTP revalidation", "MFA required", "Device verification"],
+      "BLOCK": ["Temporary ban", "Cooldown", "Security flag"]
+    }
+  },
+
+  "risk_engine": {
+    "inputs": [
+      "IP reputation",
+      "User-Agent entropy",
+      "Device fingerprint mismatch",
+      "Geolocation change",
+      "OTP failure rate",
+      "Login velocity",
+      "Admin action anomalies",
+      "Session age"
+    ],
+    "scoring_rules": [
+      "New device +15",
+      "Country change +25",
+      "OTP failure +20 per attempt",
+      "Rapid login attempts +30",
+      "Suspicious admin action +40"
+    ],
+    "output": {
+      "risk_score": "integer (0-100)",
+      "confidence": "float (0-1)",
+      "reasoning_tags": ["geo_change", "otp_failure", "device_mismatch"]
+    }
+  },
+
+  "authentication": {
+    "method": "OTP-based (passwordless)",
+    "otp_policy": {
+      "expiration": "5 minutes",
+      "max_requests_per_minute": 5,
+      "max_requests_per_hour_ip": 10,
+      "lockout_threshold": 10
+    },
+    "mfa_support": {
+      "totp": "planned",
+      "webauthn": "planned",
+      "required_roles": ["admin", "super_admin"]
+    }
+  },
+
+  "authorization": {
+    "model": "RBAC + hierarchical entry system",
+    "roles": [
+      "public",
+      "user",
+      "partner",
+      "admin",
+      "super_admin"
+    ],
+    "entry_points": {
+      "admin": "/acesso/admin/controlado",
+      "team": "/validar/entrada/tipodeuser",
+      "public": "/request-access"
+    }
+  },
+
+  "session_security": {
+    "jwt": {
+      "ttl_seconds": 900,
+      "refresh_rotation": true,
+      "revocation_enabled": true
+    },
+    "device_binding": {
+      "enabled": true,
+      "fingerprint_sources": [
         "IP",
         "User-Agent",
-        "Geolocation",
-        "OTP attempts",
-        "Admin actions frequency"
-      ],
-      "rules": [
-        "Mudança de país → risco médio",
-        "Múltiplas falhas OTP → risco alto",
-        "Mudança de role frequente → risco crítico"
-      ],
-      "actions": [
-        "Forçar novo OTP",
-        "Bloqueio temporário",
-        "Flag em audit_logs",
-        "Exigir MFA"
+        "Browser fingerprint hash"
       ]
-    }
+    },
+    "session_rules": [
+      "Session invalidated on device mismatch",
+      "Session expires after inactivity timeout",
+      "Session revalidation on risk increase"
+    ]
   },
-  "audit_logs_model": {
+
+  "invite_system": {
+    "security_model": {
+      "token_type": "UUID v4 hashed",
+      "single_use": true,
+      "expiration_hours": 24,
+      "email_bound": true
+    },
+    "abuse_prevention": [
+      "Rate-limited invite generation",
+      "IP tracking",
+      "Role-based quota limits"
+    ]
+  },
+
+  "audit_system": {
+    "model": "append-only immutable log",
     "fields": [
       "id",
       "actor_id",
-      "target_id",
       "action",
-      "old_value",
-      "new_value",
+      "target_id",
+      "risk_score",
       "ip",
       "user_agent",
-      "risk_level",
+      "prev_hash",
+      "event_hash",
       "created_at"
     ],
-    "risk_levels": [
-      "low",
-      "medium",
-      "high",
-      "critical"
+    "properties": [
+      "tamper-resistant",
+      "chain-hashed integrity",
+      "queryable by risk level",
+      "partition-ready for scale"
     ]
   },
-  "invite_security": {
-    "features": [
-      "Token único (UUID)",
-      "Armazenamento com hash",
-      "Vinculado a email",
-      "Expiração (24h)",
-      "Uso único obrigatório",
-      "Limite de invites por role"
-    ]
-  },
-  "session_security": {
-    "jwt": {
-      "expiration": "5-15 minutos",
-      "refresh_rotation": true,
-      "revocation": true
-    },
-    "fingerprinting": [
-      "IP",
-      "User-Agent",
-      "Device pattern"
-    ]
-  },
-  "observability": {
-    "metrics": [
-      "Pedidos de acesso/parceria",
-      "OTP requests/min",
-      "Login success rate",
-      "Failed OTP attempts",
-      "Admin actions per user",
-      "Logins por país"
-    ]
-  },
+
   "abuse_protection": {
     "mechanisms": [
-      "Rate limiting",
-      "CAPTCHA invisível",
-      "Behavior analysis",
-      "Temporary blocking"
+      "Rate limiting (multi-layer)",
+      "Behavior anomaly detection",
+      "Invisible CAPTCHA fallback",
+      "Temporary IP/device blocking",
+      "Risk escalation system"
     ]
   },
-  "ci_cd_integration": [
-    {
-      "step": "Detectar vazamento de secrets",
-      "tool": "Gitleaks / GitHub Security",
-      "trigger": "PR",
-      "status": "Pendente"
-    }
-  ],
-  "scalability_notes": [
-    "Sistema preparado para multi-tenant",
-    "Security layer desacoplado (risk engine)",
-    "Audit logs particionáveis",
-    "RBAC dinâmico via JSONB",
-    "Rate limit distribuído (Redis-ready)"
-  ],
-  "security_considerations": [
-    "OTP elimina senha e reduz vetor de ataque",
-    "Rate limit evita brute force",
-    "Fingerprint detecta sessões suspeitas",
-    "JWT rotativo reduz risco de hijack",
-    "Audit logs com risco permitem investigação",
-    "Invite-only previne acesso indevido",
-    "Respostas genéricas evitam enumeração",
-    "Criptografia protege dados sensíveis"
-  ],
-  "change_history": [
-    {
-      "date": "2026-04-05",
-      "version": "1.1.0",
-      "author": "Vision7 Team",
-      "description": "Security hardening: rate limit, session intelligence, JWT rotation, audit risk, anti-abuse, observability"
-    },
-    {
-      "date": "2026-04-06",
-      "version": "1.2.0",
-      "author": "Vision7 Team",
-      "description": "Arquitetura de entradas separadas por hierarquia, pedido público de acesso e validação central para equipa/parceiros"
-    },
-    {
-      "date": "2026-04-07",
-      "version": "1.2.1",
-      "author": "sdd-sync",
-      "description": "Auto-sync: file list updated"
-    }
-  ],
-  "files": {
-    "hooks": [
-      "src/hooks/useAdminAccess.ts",
-      "src/hooks/useUserProfiles.ts"
+
+  "observability": {
+    "security_metrics": [
+      "login_success_rate",
+      "otp_failure_rate",
+      "risk_score_distribution",
+      "blocked_requests",
+      "challenge_rate",
+      "admin_action_frequency",
+      "geo_anomaly_events"
     ],
-    "pages": [
-      "src/pages/admin/AdminLogin.tsx"
+    "logging_level": "structured JSON logs",
+    "security_dashboard": "planned"
+  },
+
+  "ci_cd_security": {
+    "controls": [
+      "Secret scanning (Gitleaks)",
+      "Dependency vulnerability scanning",
+      "PR blocking on critical vulnerabilities",
+      "Security policy enforcement in CI"
     ]
-  }
+  },
+
+  "scalability_design": {
+    "principles": [
+      "Stateless auth layer",
+      "Security Gate as independent service",
+      "Risk engine horizontally scalable",
+      "Audit logs partitioned by time",
+      "RBAC stored in flexible JSONB schema"
+    ],
+    "multi_tenant_ready": true
+  },
+
+  "security_principles": [
+    "Passwordless authentication reduces attack surface",
+    "Centralized Security Gate ensures deterministic access control",
+    "Risk-based adaptive authentication increases resilience",
+    "Immutable audit logs ensure forensic integrity",
+    "Device binding mitigates session hijacking",
+    "Rate limiting prevents brute force and abuse",
+    "Short-lived JWT reduces token replay impact",
+    "Behavior analysis improves anomaly detection over time"
+  ]
 }
