@@ -95,6 +95,77 @@ O front-end do botão Vision7 AI está preparado em `src/modules/portal-ai/` com
 - `sdd/modules/auth-security.json` (v1.3.0)
 - `sdd/modules/automation-engine.json` (v2.1.0)
 
+## Motor Editorial Vision7 v1.0 (NOVO ✨)
+
+Motor de geração de conteúdo editorial de referência, integrado com n8n workflows para produção em escala.
+
+### 🚀 Comece Aqui (5 min)
+
+**Novo na equipa?** Leia [GETTING_STARTED_MOTOR_EDITORIAL.md](./GETTING_STARTED_MOTOR_EDITORIAL.md) — guia rápido em português.
+
+### Documentação do Motor Editorial
+
+| Documento | Propósito | Audiência |
+|-----------|-----------|-----------|
+| [GETTING_STARTED_MOTOR_EDITORIAL.md](./GETTING_STARTED_MOTOR_EDITORIAL.md) | Onboarding 5–10 min, fluxo 3-passos | Todos (novo na equipa) |
+| [MOTOR_EDITORIAL_V1.0.md](./MOTOR_EDITORIAL_V1.0.md) | Especificação completa da estrutura, estilo, SEO/AEO e padrões por categoria | Redatores, Prompt Engineers, Revisores |
+| [MOTOR_EDITORIAL_INTEGRACAO_N8N.md](./MOTOR_EDITORIAL_INTEGRACAO_N8N.md) | Guia de integração com n8n (WF-02), Edge Functions e fluxo de publicação | Engenheiros n8n, DevOps, Integradores |
+| [CHECKLIST_VALIDACAO_EDITORIAL.md](./CHECKLIST_VALIDACAO_EDITORIAL.md) | Checklist rápido (2 min) de validação pré-publicação e troubleshooting | Operadores n8n, QA Editorial |
+
+### Estrutura do Motor
+
+```
+n8n WF-02 (Editorial Engine)
+  ├── Ler briefing (Notion)
+  ├── Enriquecer dados (APIs externas)
+  ├── Gerar artigo (Claude Opus 4.6)
+  ├── Estruturar JSON (MOTOR_EDITORIAL_V1.0)
+  ├── Validar Quality Score (≥9.5)
+  └── POST → /functions/v1/ingest-manus-post
+       ↓
+Supabase Edge Function (ingest-manus-post)
+  ├── Detectar formato (Editorial vs Simples)
+  ├── Validar estrutura
+  ├── Processar SEO/AEO/metadados
+  ├── Inserir em posts + post_categories
+  └── Retornar { id, url, quality_score, published }
+```
+
+### Campos Críticos
+
+| Campo | Tipo | Validação | Impacto |
+|-------|------|-----------|--------|
+| `title` | string | 55–65 chars, SEO keyword início | H1 + Indexação |
+| `slug` | string | 6 palavras max, sem acentos | URL única |
+| `meta_description` | string | 145–155 chars exactos | SERP snippet |
+| `category` | enum | tecn\|mundo\|saude\|musica\|desporto\|audio | Organização |
+| `seo.primary_keyword` | string | Palavra-chave principal | Ranking |
+| `content.body` | string | 1400–1800 wds, ≥5 H2 | Autoridade |
+| `quality_score.total` | number | 0–10, ≥9.5 publicável | Auditoria |
+| `workflow_metadata.publish_ready` | boolean | true = auto-publish | Fluxo |
+
+### QA Editorial
+
+Cada artigo passa por:
+- ✅ **Validação Estrutural** (30%) — H1, ToC, secções, Portugal, lead
+- ✅ **SEO/AEO** (25%) — Keywords, meta, FAQs, entidades, heading questions
+- ✅ **Dados & Fontes** (20%) — Dados por secção com fonte, links primários
+- ✅ **Links** (10%) — Internos contextuais + externos com rel
+- ✅ **Formatação** (10%) — Parágrafos, negrito, listas, framework visual
+- ✅ **Tom** (5%) — Analítico, sem clichés, CTA com valor
+
+**Threshold:** Score 9.5+ = publicação automática | 8.5–9.4 = revisão rápida | <8.5 = re-gerar
+
+### Próximas Integrações
+
+- [ ] Webhooks (Slack, Discord, email)
+- [ ] Dashboard de KPIs (articles/day, avg quality, % published)
+- [ ] A/B testing de titles + meta descriptions
+- [ ] Auto-geração de imagens (Stable Diffusion, Midjourney)
+- [ ] Multi-language (PT-PT → EN/ES/FR)
+
+---
+
 ## Desenvolvimento
 
 Para contribuir com novos agentes ou skills:
