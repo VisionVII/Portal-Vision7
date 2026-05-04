@@ -20,7 +20,7 @@
 | # | Arquivo | Propósito | Tempo | Abrir |
 |---|---------|-----------|-------|-------|
 | 1 | **GETTING_STARTED_MOTOR_EDITORIAL.md** | Onboarding 5–10 min | 5 min | [→](./GETTING_STARTED_MOTOR_EDITORIAL.md) |
-| 2 | **MOTOR_EDITORIAL_V1.0.md** | Especificação completa | 45–60 min | [→](./MOTOR_EDITORIAL_V1.0.md) |
+| 2 | **MOTOR_EDITORIAL_V1.1.md** | Especificação completa | 45–60 min | [→](./MOTOR_EDITORIAL_V1.1.md) |
 | 3 | **MOTOR_EDITORIAL_INTEGRACAO_N8N.md** | Integração técnica | 30–45 min | [→](./MOTOR_EDITORIAL_INTEGRACAO_N8N.md) |
 | 4 | **CHECKLIST_VALIDACAO_EDITORIAL.md** | Validação rápida | 5–10 min | [→](./CHECKLIST_VALIDACAO_EDITORIAL.md) |
 | 5 | **SUMARIO_MOTOR_EDITORIAL.md** | Visão geral técnica | 15–20 min | [→](./SUMARIO_MOTOR_EDITORIAL.md) |
@@ -39,7 +39,7 @@
 ### 📝 Sou Redator/Jornalista
 **Ordem de Leitura:**
 1. [GETTING_STARTED_MOTOR_EDITORIAL.md](./GETTING_STARTED_MOTOR_EDITORIAL.md) (5 min) — fluxo básico
-2. [MOTOR_EDITORIAL_V1.0.md](./MOTOR_EDITORIAL_V1.0.md) (45 min) — **LEITURA OBRIGATÓRIA**
+2. [MOTOR_EDITORIAL_V1.1.md](./MOTOR_EDITORIAL_V1.1.md) (45 min) — **LEITURA OBRIGATÓRIA**
 3. [CHECKLIST_VALIDACAO_EDITORIAL.md](./CHECKLIST_VALIDACAO_EDITORIAL.md) (5 min) — antes de publicar cada artigo
 
 ### 🔧 Sou Engenheiro n8n / DevOps
@@ -52,7 +52,7 @@
 **Ordem de Leitura:**
 1. [GETTING_STARTED_MOTOR_EDITORIAL.md](./GETTING_STARTED_MOTOR_EDITORIAL.md) (5 min) — contexto
 2. [CHECKLIST_VALIDACAO_EDITORIAL.md](./CHECKLIST_VALIDACAO_EDITORIAL.md) (5 min) — **LEITURA OBRIGATÓRIA** (usar diariamente)
-3. [MOTOR_EDITORIAL_V1.0.md](./MOTOR_EDITORIAL_V1.0.md) § 8 (15 min) — critérios de qualidade
+3. [MOTOR_EDITORIAL_V1.1.md](./MOTOR_EDITORIAL_V1.1.md) § 8 (15 min) — critérios de qualidade
 
 ### 📊 Sou Gestor / Liderança
 **Ordem de Leitura:**
@@ -146,7 +146,7 @@ Portal Frontend (exibição)
 R: Leia [GETTING_STARTED_MOTOR_EDITORIAL.md](./GETTING_STARTED_MOTOR_EDITORIAL.md) (5 min)
 
 **P: Qual é a estrutura de um artigo?**  
-R: Veja [MOTOR_EDITORIAL_V1.0.md](./MOTOR_EDITORIAL_V1.0.md) § 2
+R: Veja [MOTOR_EDITORIAL_V1.1.md](./MOTOR_EDITORIAL_V1.1.md) § 2
 
 **P: Como valido um artigo?**  
 R: Use [CHECKLIST_VALIDACAO_EDITORIAL.md](./CHECKLIST_VALIDACAO_EDITORIAL.md) (2 min)

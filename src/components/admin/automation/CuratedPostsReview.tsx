@@ -172,8 +172,7 @@ export function CuratedPostsReview({
     { value: '', label: 'Todos' },
   ];
 
-  const visiblePosts = posts?.slice(0, 2);
-  const showingLimited = posts != null && posts.length > 2;
+  const visiblePosts = posts;
   const activeFilter = filterOptions.find((f) => f.value === statusFilter);
 
   const statusActions = (post: CuratedPost) => {
@@ -244,11 +243,6 @@ export function CuratedPostsReview({
         </div>
       ) : (
         <div className="space-y-3">
-          {showingLimited && (
-            <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-              Mostrando apenas os dois primeiros artigos curados para validar a estrutura visual.
-            </div>
-          )}
           {visiblePosts?.map((post) => {
             const badge = STATUS_BADGE[post.status] ?? STATUS_BADGE.draft;
             return (
