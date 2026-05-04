@@ -1,6 +1,9 @@
 -- Migration: Add Editorial Engine fields to posts table
 -- Extends posts table with SEO/AEO metadata, quality scoring, and workflow tracking
 
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
 -- Add new columns to posts table
 ALTER TABLE public.posts
 ADD COLUMN IF NOT EXISTS meta_description TEXT,
@@ -17,7 +20,19 @@ ADD COLUMN IF NOT EXISTS editorial_metadata JSONB DEFAULT '{}'::jsonb,
 ADD COLUMN IF NOT EXISTS workflow_metadata JSONB DEFAULT '{}'::jsonb;
 
 -- Create indexes for new search/filter capabilities
-CREATE INDEX IF NOT EXISTS idx_posts_meta_description ON public.posts USING gin (meta_description gin_trgm_ops);
+-- Note: pg_trgm extension required for text search on meta_description
+-- If extension is not available, this index will be skipped
+DO $$
+BEGIN
+    -- Try to create the trigram index, skip if extension not available
+    BEGIN
+        CREATE INDEX IF NOT EXISTS idx_posts_meta_description ON public.posts USING gin (meta_description gin_trgm_ops);
+    EXCEPTION
+        WHEN undefined_function OR invalid_parameter_value THEN
+            RAISE NOTICE 'pg_trgm extension not available, skipping meta_description trigram index';
+    END;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_posts_quality_score ON public.posts (quality_score DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_editorial_template ON public.posts (editorial_template);
 CREATE INDEX IF NOT EXISTS idx_posts_seo_keywords ON public.posts USING gin (seo_keywords);

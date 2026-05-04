@@ -172,6 +172,8 @@ export function CuratedPostsReview({
     { value: '', label: 'Todos' },
   ];
 
+  const visiblePosts = posts?.slice(0, 2);
+  const showingLimited = posts != null && posts.length > 2;
   const activeFilter = filterOptions.find((f) => f.value === statusFilter);
 
   const statusActions = (post: CuratedPost) => {
@@ -242,13 +244,18 @@ export function CuratedPostsReview({
         </div>
       ) : (
         <div className="space-y-3">
-          {posts.map((post) => {
+          {showingLimited && (
+            <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+              Mostrando apenas os dois primeiros artigos curados para validar a estrutura visual.
+            </div>
+          )}
+          {visiblePosts?.map((post) => {
             const badge = STATUS_BADGE[post.status] ?? STATUS_BADGE.draft;
             return (
               <div key={post.id} className="rounded-lg border border-border/40 bg-muted/20 p-4 transition-colors hover:border-border/60">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
                       <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${badge.className}`}>
                         {badge.label}
                       </Badge>
@@ -362,7 +369,7 @@ export function CuratedPostsReview({
                 {!editMode && detailPost.subtitle && (
                   <DialogDescription className="mt-1 text-base text-muted-foreground">{detailPost.subtitle}</DialogDescription>
                 )}
-                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-6">
                   <Badge
                     variant="outline"
                     className={`justify-center text-xs ${STATUS_BADGE[detailPost.status]?.className ?? ''}`}
@@ -438,27 +445,37 @@ export function CuratedPostsReview({
                   )}
                 </div>
 
-                {/* Meta description */}
-                {detailPost.meta_description && (
-                  <p className="mt-2 rounded-lg border border-border/40 bg-muted/15 px-3 py-2 text-[11px] text-muted-foreground italic leading-relaxed">
-                    <span className="font-semibold not-italic text-foreground/70">Meta: </span>
-                    {detailPost.meta_description}
-                  </p>
-                )}
-
-                {/* Secondary keywords */}
-                {detailPost.secondary_keywords && (detailPost.secondary_keywords as string[]).length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {(detailPost.secondary_keywords as string[]).map((kw) => (
-                      <Badge key={kw} variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/5">
-                        {kw}
-                      </Badge>
-                    ))}
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  {detailPost.meta_description && (
+                    <div className="col-span-2 rounded-2xl border border-border/50 bg-background/80 p-4 text-sm leading-relaxed text-muted-foreground">
+                      <p className="font-semibold text-foreground text-xs uppercase tracking-[0.12em] mb-2">Meta description</p>
+                      <p>{detailPost.meta_description}</p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    {detailPost.secondary_keywords && (detailPost.secondary_keywords as string[]).length > 0 && (
+                      <div className="rounded-2xl border border-border/50 bg-background/80 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2">Keywords secundárias</p>
+                        <div className="flex flex-wrap gap-2">
+                          {(detailPost.secondary_keywords as string[]).map((kw) => (
+                            <Badge key={kw} variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/5">
+                              {kw}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {detailPost.internal_links && (detailPost.internal_links as string[]).length > 0 && (
+                      <div className="rounded-2xl border border-border/50 bg-background/80 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2">Links internos</p>
+                        <p className="text-sm font-medium text-foreground">{(detailPost.internal_links as string[]).length} sugeridos</p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </DialogHeader>
 
-              <Tabs defaultValue="preview" className="flex flex-1 flex-col overflow-hidden">
+              <Tabs defaultValue="preview" className="flex flex-1 overflow-hidden">
                 <TabsList className="h-auto w-full justify-start gap-2 rounded-none border-b border-border/60 bg-background px-6 py-3">
                   <TabsTrigger value="preview" className="gap-2 rounded-lg px-3 py-1.5">
                     <FileText className="w-4 h-4" />
@@ -470,9 +487,10 @@ export function CuratedPostsReview({
                   </TabsTrigger>
                 </TabsList>
 
-                <div className="flex-1 overflow-y-auto bg-muted/10 px-6 py-5" style={{ maxHeight: 'calc(88vh - 280px)' }}>
-                  <TabsContent value="preview" className="mt-0">
-                    {editMode ? (
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] overflow-hidden px-6 py-5">
+                  <div className="flex flex-col overflow-hidden rounded-3xl border border-border/60 bg-background p-6 shadow-sm" style={{ maxHeight: 'calc(88vh - 280px)' }}>
+                    <TabsContent value="preview" className="mt-0 flex-1 overflow-y-auto">
+                      {editMode ? (
                       <div className="space-y-4">
                         <div>
                           <label className="text-sm font-medium text-foreground mb-1 block">Excerto</label>

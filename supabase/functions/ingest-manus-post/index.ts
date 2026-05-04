@@ -103,28 +103,39 @@ function detectFormat(body: Record<string, unknown>): 'editorial' | 'simple' {
   }
   return 'simple'; // Fallback
 }
+
+function validateEditorialStructure(
+  content: string,
+  template: 'noticia-padrao' | 'analise-executiva' | 'guia-pratico',
+) {
   const errors: string[] = [];
-  
+  const textOnly = content.replace(/<[^>]+>/g, ' ');
+
   // Verificar se tem as seções estruturais básicas
-  const hasIntro = /<(h[1-6]|p)[^>]*>/.test(content);
-  const hasSections = /<h[2-3][^>]*>/.test(content);
-  
+  const hasIntro = /<(h[1-6]|p)[^>]*>/.test(content) || /(^|\n)#{1,2}\s+/.test(content) || /\b(introdução|resumo|objetivo)\b/i.test(textOnly);
+  const hasSections = /<(h[2-3])[^>]*>/.test(content) || /(^|\n)#{2,3}\s+/.test(content);
+
   if (!hasIntro) {
     errors.push('Conteúdo deve ter uma introdução (lide/resumo/objetivo)');
   }
-  
+
   if (!hasSections) {
     errors.push('Conteúdo deve ter seções estruturadas (h2/h3)');
   }
-  
+
   // Verificar se tem fontes ou referências
-  const hasSources = /fontes|referências|links|sources/i.test(content);
+  const hasSources = /fontes|referências|links|sources/i.test(textOnly);
   if (!hasSources) {
     errors.push('Conteúdo deve incluir seção de fontes/referências');
   }
-  
-  return { isValid: errors.length === 0, errors };
 
+  // Checagem fraca por tipo de template
+  if (template === 'guia-pratico' && !/\b(passos|como|tutorial|guia prático|instruções|passo a passo)\b/i.test(textOnly)) {
+    errors.push('Guia prático deve incluir instruções claras ou passos estruturados');
+  }
+
+  return { isValid: errors.length === 0, errors };
+}
 
 // ─── Processamento do Formato Editorial ───────────────────────────────────
 interface EditorialPayload {
