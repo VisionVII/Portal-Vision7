@@ -491,58 +491,59 @@ export function CuratedPostsReview({
                   <div className="flex flex-col overflow-hidden rounded-3xl border border-border/60 bg-background p-6 shadow-sm" style={{ maxHeight: 'calc(88vh - 280px)' }}>
                     <TabsContent value="preview" className="mt-0 flex-1 overflow-y-auto">
                       {editMode ? (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium text-foreground mb-1 block">Excerto</label>
-                          <Textarea
-                            value={editExcerpt}
-                            onChange={(e) => setEditExcerpt(e.target.value)}
-                            rows={2}
-                            placeholder="Excerto / resumo do artigo"
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm font-medium text-foreground mb-1 block">Excerto</label>
+                            <Textarea
+                              value={editExcerpt}
+                              onChange={(e) => setEditExcerpt(e.target.value)}
+                              rows={2}
+                              placeholder="Excerto / resumo do artigo"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-foreground mb-1 block">Conteúdo (Markdown)</label>
+                            <Textarea
+                              value={editBody}
+                              onChange={(e) => setEditBody(e.target.value)}
+                              rows={16}
+                              className="font-mono text-sm"
+                              placeholder="Corpo do artigo em markdown..."
+                            />
+                          </div>
+                        </div>
+                      ) : detailPost.body_html ? (
+                        <div className="overflow-y-auto rounded-xl border border-border/60 bg-background p-6">
+                          <RichContentPreview
+                            html={detailPost.body_html}
+                            variant="full"
                           />
                         </div>
-                        <div>
-                          <label className="text-sm font-medium text-foreground mb-1 block">Conteúdo (Markdown)</label>
-                          <Textarea
-                            value={editBody}
-                            onChange={(e) => setEditBody(e.target.value)}
-                            rows={16}
-                            className="font-mono text-sm"
-                            placeholder="Corpo do artigo em markdown..."
-                          />
+                      ) : (
+                        <div className="rounded-xl border border-border/60 bg-background p-6">
+                          <p className="text-sm font-medium text-foreground">Sem conteúdo HTML formatado</p>
+                          <p className="mt-1 text-sm text-muted-foreground">A estrutura renderizada ainda não foi gerada. Use o conteúdo markdown abaixo como referência editorial.</p>
+                          {detailPost.body_markdown && (
+                            <pre className="mt-4 max-h-[44vh] overflow-auto whitespace-pre-wrap rounded-lg border border-border/50 bg-muted/40 p-4 font-mono text-sm text-foreground/85">
+                              {detailPost.body_markdown}
+                            </pre>
+                          )}
                         </div>
-                      </div>
-                    ) : detailPost.body_html ? (
-                      <div className="overflow-y-auto rounded-xl border border-border/60 bg-background p-6">
-                        <RichContentPreview
-                          html={detailPost.body_html}
-                          variant="full"
-                        />
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border border-border/60 bg-background p-6">
-                        <p className="text-sm font-medium text-foreground">Sem conteúdo HTML formatado</p>
-                        <p className="mt-1 text-sm text-muted-foreground">A estrutura renderizada ainda não foi gerada. Use o conteúdo markdown abaixo como referência editorial.</p>
-                        {detailPost.body_markdown && (
-                          <pre className="mt-4 max-h-[44vh] overflow-auto whitespace-pre-wrap rounded-lg border border-border/50 bg-muted/40 p-4 font-mono text-sm text-foreground/85">
-                            {detailPost.body_markdown}
-                          </pre>
-                        )}
-                      </div>
-                    )}
-                  </TabsContent>
+                      )}
+                    </TabsContent>
 
-                  <TabsContent value="source" className="mt-0">
-                    {detailPost.body_markdown ? (
-                      <pre className="overflow-auto whitespace-pre-wrap rounded-xl border border-border/60 bg-background p-4 font-mono text-sm leading-relaxed text-foreground/85">
-                        {detailPost.body_markdown}
-                      </pre>
-                    ) : (
-                      <div className="rounded-xl border border-border/60 bg-background p-6 text-center">
-                        <p className="text-sm text-muted-foreground">Sem código fonte markdown disponível</p>
-                      </div>
-                    )}
-                  </TabsContent>
+                    <TabsContent value="source" className="mt-0">
+                      {detailPost.body_markdown ? (
+                        <pre className="overflow-auto whitespace-pre-wrap rounded-xl border border-border/60 bg-background p-4 font-mono text-sm leading-relaxed text-foreground/85">
+                          {detailPost.body_markdown}
+                        </pre>
+                      ) : (
+                        <div className="rounded-xl border border-border/60 bg-background p-6 text-center">
+                          <p className="text-sm text-muted-foreground">Sem código fonte markdown disponível</p>
+                        </div>
+                      )}
+                    </TabsContent>
+                  </div>
                 </div>
               </Tabs>
 
