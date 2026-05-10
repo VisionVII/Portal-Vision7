@@ -296,7 +296,10 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const { data: authData, error: authError } = await supabaseUser.auth.getUser();
+    // Pass token explicitly — with persistSession:false there is no internal
+    // session state, so getUser() without an argument returns null in newer
+    // Supabase JS SDK versions.
+    const { data: authData, error: authError } = await supabaseUser.auth.getUser(token);
     if (authError || !authData.user?.id) {
       console.error('[n8n-proxy] Auth error:', authError?.message ?? 'Invalid token', 'code:', authError?.code);
       return jsonResponse({ error: 'Unauthorized — invalid or expired token' }, 401, cors);
