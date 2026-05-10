@@ -25,6 +25,7 @@ import {
   executeWorkflow,
   getExecutions,
   CronWorkflowError,
+  ColdStartError,
   deduplicateN8nWorkflows,
 } from '@/services/n8n';
 import type { N8nWorkflow, N8nExecution } from '@/types/automation';
@@ -393,7 +394,22 @@ export function NewsPipelineCard() {
       addLogEntry(step.shortLabel, `Executando workflow "${wf.name}" (ID: ${wf.id})...`, 'running');
 
       try {
-        const result = await executeWorkflow(wf);
+        // Execute with one automatic cold-start retry (502/503 from Render free tier)
+        let result: { executed: boolean; method: string };
+        try {
+          result = await executeWorkflow(wf);
+        } catch (firstErr) {
+          if (firstErr instanceof ColdStartError && !abortRef.current) {
+            addLogEntry('Sistema', 'n8n cold start detectado — a aguardar 45s e a tentar novamente...', 'warn');
+            await new Promise((r) => setTimeout(r, 45_000));
+            if (abortRef.current) throw firstErr;
+            addLogEntry('Sistema', 'A tentar novamente após cold start...', 'info');
+            result = await executeWorkflow(wf);
+          } else {
+            throw firstErr;
+          }
+        }
+
         completedStepKeys.add(step.key);
         setCompletedSteps(new Set(completedStepKeys));
         addLogEntry(step.shortLabel, `✓ "${wf.name}" executado com sucesso (método: ${result.method})`, 'success');
@@ -420,6 +436,14 @@ export function NewsPipelineCard() {
             description: 'Confirme que o workflow está ativo no n8n e tente novamente em alguns segundos.',
             variant: 'destructive',
           });
+          break;
+        }
+
+        if (err instanceof ColdStartError) {
+          failedStepKeys.add(step.key);
+          setFailedSteps(new Set(failedStepKeys));
+          addLogEntry(step.shortLabel, 'n8n ainda a arrancar após cold start. Aguarde 1-2 minutos e tente novamente.', 'error');
+          toast({ title: 'n8n cold start', description: 'Aguarde 1-2 min e tente novamente.', variant: 'destructive' });
           break;
         }
 

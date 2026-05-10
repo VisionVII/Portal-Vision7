@@ -429,7 +429,10 @@ export const deactivateWorkflow = async (id: string) => {
 export const executeWorkflow = async (workflowOrId: N8nWorkflow | string): Promise<{ executed: boolean; method: string }> => {
   const workflow = await ensureWorkflowDetails(workflowOrId, { requireNodes: true });
   const id = getWorkflowId(workflow);
-  const expectedExecutionFallbackStatuses = [400, 404, 405, 422, 501, 503];
+  // 502 added: Render free tier returns 502 on cold start — treat as fallback, not fatal
+  const expectedExecutionFallbackStatuses = [400, 404, 405, 422, 501, 502, 503];
+  const COLD_START_RE = /\[(502|503)\]|timeout|cold.?start|unreachable/i;
+  const FALLBACK_RE = /\[(400|404|405|422|501|502|503)\]/;
 
   if (isScheduleOnlyWorkflow(workflow)) {
     const detail = workflow.active
@@ -449,9 +452,9 @@ export const executeWorkflow = async (workflowOrId: N8nWorkflow | string): Promi
       return { executed: true, method: 'webhook' };
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Erro desconhecido';
-      if (!/\[(400|404|405|422|501|503)\]/.test(msg)) {
-        throw new Error(`Falha na execução: ${msg}`);
-      }
+      // 502 cold-start: surface as ColdStartError so caller can retry
+      if (COLD_START_RE.test(msg)) throw new ColdStartError(msg);
+      if (!FALLBACK_RE.test(msg)) throw new Error(`Falha na execução: ${msg}`);
     }
 
     // Fallback: webhook-test (works even for inactive workflows — single execution)
@@ -463,24 +466,19 @@ export const executeWorkflow = async (workflowOrId: N8nWorkflow | string): Promi
       return { executed: true, method: 'webhook-test' };
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Erro desconhecido';
-      if (!/\[(400|404|405|422|501|503)\]/.test(msg)) {
-        throw new Error(`Falha na execução: ${msg}`);
-      }
+      if (COLD_START_RE.test(msg)) throw new ColdStartError(msg);
+      if (!FALLBACK_RE.test(msg)) throw new Error(`Falha na execução: ${msg}`);
     }
   }
 
-  // Attempt 1 & 2: Standard n8n API execution endpoints (requires Manual Trigger node)
+  // Attempt 1 & 2: Standard n8n API execution endpoints
   const apiAttempts = [
     `/api/v1/workflows/${id}/run`,
     `/api/v1/workflows/${id}/execute`,
   ];
 
   let lastError = '';
-
-  // Status codes that indicate "can't run this way" rather than a real error:
-  // 404/405/501 = endpoint doesn't exist / method not allowed
-  // 503 = n8n database cold-starting on Render (transient)
-  const NON_FATAL_RE = /\[(404|405|501|503)\]/;
+  const NON_FATAL_RE = /\[(404|405|501|502|503)\]/;
 
   for (const path of apiAttempts) {
     try {
@@ -491,9 +489,8 @@ export const executeWorkflow = async (workflowOrId: N8nWorkflow | string): Promi
       return { executed: true, method: 'api-run' };
     } catch (error) {
       lastError = error instanceof Error ? error.message : 'Erro desconhecido';
-      if (!NON_FATAL_RE.test(lastError)) {
-        throw new Error(`Falha na execução: ${lastError}`);
-      }
+      if (COLD_START_RE.test(lastError)) throw new ColdStartError(lastError);
+      if (!NON_FATAL_RE.test(lastError)) throw new Error(`Falha na execução: ${lastError}`);
     }
   }
 
@@ -507,16 +504,11 @@ export const executeWorkflow = async (workflowOrId: N8nWorkflow | string): Promi
     return { executed: true, method: 'api-executions' };
   } catch (error) {
     const msg = error instanceof Error ? error.message : '';
-    if (!/\[(400|404|405|422|501|503)\]/.test(msg)) {
-      throw new Error(`Falha na execução: ${msg}`);
-    }
+    if (COLD_START_RE.test(msg)) throw new ColdStartError(msg);
+    if (!FALLBACK_RE.test(msg)) throw new Error(`Falha na execução: ${msg}`);
   }
 
-  if (/\[(503)\]/.test(lastError) || /timeout|cold start/i.test(lastError)) {
-    throw new Error(`Falha na execução: ${lastError}`);
-  }
-
-  // All methods failed — this is a cron-only workflow
+  // All methods exhausted — cron-only workflow
   throw new CronWorkflowError(id, lastError);
 };
 
@@ -529,6 +521,14 @@ export class CronWorkflowError extends Error {
     );
     this.name = 'CronWorkflowError';
     this.workflowId = workflowId;
+  }
+}
+
+/** Thrown when n8n returns 502/503 during execution — Render cold start. Caller should wait and retry. */
+export class ColdStartError extends Error {
+  constructor(detail: string) {
+    super(`n8n cold start — aguarde 40-60s e tente novamente. (${detail})`);
+    this.name = 'ColdStartError';
   }
 }
 
