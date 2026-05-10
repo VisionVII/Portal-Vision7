@@ -1,21 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Activity,
   ArrowRight,
+  BarChart3,
   Bot,
-  ChevronDown,
-  ChevronUp,
   Clock,
+  ExternalLink,
+  Layers3,
   Plus,
+  Radio,
   Sparkles,
   TrendingUp,
-  Zap,
-  Shield,
-  Database,
-  BarChart3,
-  Layers3,
-  Radio,
-  Clock3,
-  Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +20,6 @@ import { Post, usePosts } from '@/hooks/usePosts';
 import { useCategories } from '@/hooks/useCategories';
 import { usePipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
-import { useToast } from '@/hooks/use-toast';
 import type { AdminView } from '@/components/admin/dashboard-types';
 
 interface OverviewViewProps {
@@ -38,19 +32,18 @@ interface OverviewViewProps {
 type HealthTone = 'success' | 'warning' | 'neutral';
 
 function formatRelativeTime(iso: string | null | undefined) {
-  if (!iso) return 'sem registo';
+  if (!iso) return '—';
+  const diff = Math.max(Math.floor((Date.now() - new Date(iso).getTime()) / 60_000), 0);
+  if (diff < 1) return 'agora';
+  if (diff < 60) return `${diff} min`;
+  const h = Math.floor(diff / 60);
+  if (h < 24) return `${h} h`;
+  return `${Math.floor(h / 24)} d`;
+}
 
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const minutes = Math.max(Math.floor(diffMs / 60_000), 0);
-
-  if (minutes < 1) return 'agora';
-  if (minutes < 60) return `${minutes} min atrás`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} h atrás`;
-
-  const days = Math.floor(hours / 24);
-  return `${days} d atrás`;
+function formatDate(iso: string | null | undefined) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
 }
 
 function getHealthTone(value: number, threshold: number, emptyTone: HealthTone = 'neutral'): HealthTone {
@@ -64,74 +57,76 @@ function toneClasses(tone: HealthTone) {
   return 'border-border/60 bg-muted/40 text-muted-foreground';
 }
 
-/* ── Countdown helpers ── */
 const STAGE_INTERVALS: Record<string, number> = {
-  Coleta: 30 * 60_000,       // WF-01 — 30 min
-  Cluster: 20 * 60_000,      // WF-02 — 20 min
-  'IA Reescrita': 60 * 60_000, // WF-03 — 60 min
+  Coleta: 30 * 60_000,
+  Cluster: 20 * 60_000,
+  'IA Reescrita': 60 * 60_000,
 };
 
-function formatCountdown(ms: number): string {
+function formatCountdown(ms: number) {
   if (ms <= 0) return '0:00';
-  const totalSec = Math.ceil(ms / 1000);
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  const s = Math.ceil(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-function getCountdownMs(lastIso: string | null | undefined, intervalMs: number): number {
+function getCountdownMs(lastIso: string | null | undefined, intervalMs: number) {
   if (!lastIso || !intervalMs) return -1;
-  const nextRun = new Date(lastIso).getTime() + intervalMs;
-  return nextRun - Date.now();
+  return new Date(lastIso).getTime() + intervalMs - Date.now();
 }
+
+const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
+  published: { label: 'Publicado', cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' },
+  draft:     { label: 'Rascunho',  cls: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400' },
+  scheduled: { label: 'Agendado',  cls: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' },
+};
 
 const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEdit, allowedViews }) => {
   const { data: posts, isLoading: postsLoading } = usePosts(true);
   const { data: categories = [] } = useCategories();
-  const { data: diagnostics, isLoading: diagnosticsLoading } = usePipelineDiagnostics();
-  const { executions = [], isLoading: executionsLoading } = useAutomationExecutions({ pageSize: 40 });
-  const [showEcosystem, setShowEcosystem] = useState(false);
-  const { toast } = useToast();
+  const { data: diagnostics } = usePipelineDiagnostics();
+  const { executions = [] } = useAutomationExecutions({ pageSize: 10 });
 
-  /* ── Countdown tick (1 s) ── */
   const [, setTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
 
+  const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);
+  const draftPosts = useMemo(() => posts?.filter((p) => p.status === 'draft') ?? [], [posts]);
 
-
-  const publishedPosts = useMemo(() => posts?.filter((post) => post.status === 'published') ?? [], [posts]);
-  const draftPosts = useMemo(() => posts?.filter((post) => post.status === 'draft') ?? [], [posts]);
+  const recentPosts = useMemo(
+    () => [...(posts ?? [])].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 8),
+    [posts],
+  );
 
   const weeklyPosts = useMemo(() => {
-    const weeks: number[] = [0, 0, 0, 0];
+    const weeks = [0, 0, 0, 0];
     const now = Date.now();
-
-    publishedPosts.forEach((post) => {
-      const age = now - new Date(post.created_at).getTime();
-      const weekIdx = Math.floor(age / (7 * 24 * 60 * 60 * 1000));
-      if (weekIdx >= 0 && weekIdx < 4) weeks[3 - weekIdx] += 1;
+    publishedPosts.forEach((p) => {
+      const idx = Math.floor((now - new Date(p.created_at).getTime()) / (7 * 86_400_000));
+      if (idx >= 0 && idx < 4) weeks[3 - idx]++;
     });
-
     return weeks;
   }, [publishedPosts]);
 
   const maxWeekly = Math.max(...weeklyPosts, 1);
   const weeklyChange = weeklyPosts[3] - weeklyPosts[2];
 
-  const postsByCategory = useMemo(() => {
-    const map: Record<string, number> = {};
-    publishedPosts.forEach((post) => {
-      const categoryName = post.categories?.name ?? 'Sem categoria';
-      map[categoryName] = (map[categoryName] ?? 0) + 1;
-    });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [publishedPosts]);
+  const postsByCategory = useMemo(
+    () =>
+      Object.entries(
+        publishedPosts.reduce<Record<string, number>>((acc, p) => {
+          const name = p.categories?.name ?? 'Sem categoria';
+          acc[name] = (acc[name] ?? 0) + 1;
+          return acc;
+        }, {}),
+      )
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5),
+    [publishedPosts],
+  );
 
-  const latestExecution = executions[0] ?? null;
-  const pipelineIsActive = Boolean((diagnostics?.staging.total ?? 0) > 0 || (diagnostics?.clusters.total ?? 0) > 0 || (diagnostics?.curated.total ?? 0) > 0);
   const clusterTone = getHealthTone(diagnostics?.clusters.lowConfidence ?? 0, 1, 'neutral');
   const iaTone = getHealthTone((diagnostics?.curated.ready ?? 0) + (diagnostics?.curated.draft ?? 0), 1, 'neutral');
 
@@ -169,73 +164,34 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       helper: `${publishedPosts.length} publicados`,
       tone: getHealthTone(diagnostics?.curated.published ?? 0, 1, 'neutral'),
       icon: Radio,
-      lastTimestamp: null,
+      lastTimestamp: null as string | null | undefined,
       intervalMs: 0,
     },
   ] as const;
 
-  const systemHealthItems = [
-    {
-      label: 'Pipeline',
-      value: pipelineIsActive ? 'Ativo' : 'Em espera',
-      tone: pipelineIsActive ? 'success' : 'neutral',
-      icon: Shield,
-    },
-    {
-      label: 'Cluster',
-      value: clusterTone === 'warning' ? 'Atenção' : 'OK',
-      tone: clusterTone,
-      icon: Database,
-    },
-    {
-      label: 'IA',
-      value: iaTone === 'warning' ? 'Atenção' : 'OK',
-      tone: iaTone,
-      icon: Zap,
-    },
-    {
-      label: 'Última execução',
-      value: formatRelativeTime(latestExecution?.startedAt ?? null),
-      tone: latestExecution?.status === 'error' ? 'warning' : 'neutral',
-      icon: Clock3,
-    },
-  ] as const;
-
-  const latestDraft = draftPosts[0];
-
-  const handleResumeDraft = () => {
-    if (latestDraft) onEdit(latestDraft);
-  };
+  const latestExecution = executions[0] ?? null;
 
   return (
-    <div className="space-y-5">
-      {/* ── Page Header ──────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6">
+      {/* ── Page header ───────────────────────────────────────────── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             Visão geral
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Controle operacional do portal e leitura rápida de performance.
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
-
-        {/* Quick actions */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           {allowedViews.includes('content') && (
-            <Button size="sm" onClick={onNewPost} className="gap-1.5 rounded-lg shadow-sm">
+            <Button size="sm" onClick={onNewPost} className="gap-1.5">
               <Plus className="h-3.5 w-3.5" />
               Novo post
             </Button>
           )}
-          {allowedViews.includes('content') && latestDraft && (
-            <Button size="sm" variant="outline" onClick={handleResumeDraft} className="gap-1.5 rounded-lg">
-              <Sparkles className="h-3.5 w-3.5" />
-              Rascunho
-            </Button>
-          )}
           {allowedViews.includes('automations') && (
-            <Button size="sm" variant="outline" onClick={() => onNavigate('automations')} className="gap-1.5 rounded-lg text-muted-foreground">
+            <Button size="sm" variant="outline" onClick={() => onNavigate('automations')} className="gap-1.5 text-muted-foreground">
               <Bot className="h-3.5 w-3.5" />
               Automações
             </Button>
@@ -243,180 +199,210 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         </div>
       </div>
 
-      {/* ── Key metrics ──────────────────────────────────────────────────── */}
+      {/* ── KPI stats ─────────────────────────────────────────────── */}
       <AdminStatsCards />
 
-      <section>
-        <Card className="border-border/40 bg-card/80 shadow-sm">
+      {/* ── Pipeline ──────────────────────────────────────────────── */}
+      <Card className="border-border/40 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              Pipeline editorial
+            </CardTitle>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              {latestExecution && (
+                <span>Última execução: {formatRelativeTime(latestExecution.startedAt)}</span>
+              )}
+              {allowedViews.includes('automations') && (
+                <button
+                  type="button"
+                  onClick={() => onNavigate('automations')}
+                  className="flex items-center gap-1 text-primary hover:underline"
+                >
+                  Ver detalhes <ExternalLink className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {pipelineStages.map((stage, i) => {
+              const Icon = stage.icon;
+              const remaining = getCountdownMs(stage.lastTimestamp, stage.intervalMs);
+              return (
+                <div key={stage.label} className="relative rounded-lg border border-border/40 bg-muted/20 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-muted text-[9px] font-bold text-muted-foreground">
+                          {i + 1}
+                        </span>
+                        <p className="text-xs font-semibold text-foreground">{stage.label}</p>
+                      </div>
+                      <p className="mt-1.5 text-xl font-bold text-foreground">{stage.count}</p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">{stage.helper}</p>
+                    </div>
+                    <div className={`rounded-md border p-1.5 ${toneClasses(stage.tone)}`}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </div>
+                  </div>
+                  {stage.intervalMs > 0 && stage.lastTimestamp && (
+                    <div className="mt-2.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {remaining > 0 ? (
+                        <span className="font-mono tabular-nums">{formatCountdown(remaining)}</span>
+                      ) : (
+                        <span className="text-primary font-medium">iminente</span>
+                      )}
+                    </div>
+                  )}
+                  {i < pipelineStages.length - 1 && (
+                    <div className="absolute right-[-0.65rem] top-1/2 z-10 hidden -translate-y-1/2 xl:block">
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Recent posts + Charts ─────────────────────────────────── */}
+      <div className="grid gap-4 lg:grid-cols-5">
+        {/* Recent posts — wider column */}
+        <Card className="border-border/40 shadow-sm lg:col-span-3">
           <CardHeader className="pb-3">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Shield className="h-4 w-4 text-primary" />
-                Pipeline & saúde
-              </CardTitle>
-              {/* Inline health indicators */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {systemHealthItems.map((item) => {
-                  const Icon = item.icon;
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold">Artigos recentes</CardTitle>
+              {allowedViews.includes('content') && (
+                <button
+                  type="button"
+                  onClick={() => onNavigate('content')}
+                  className="flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  Ver todos <ExternalLink className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {postsLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-10 animate-pulse rounded-lg bg-muted/50" />
+                ))}
+              </div>
+            ) : recentPosts.length === 0 ? (
+              <div className="py-10 text-center">
+                <p className="text-sm text-muted-foreground">Sem artigos ainda.</p>
+                {allowedViews.includes('content') && (
+                  <Button size="sm" variant="ghost" onClick={onNewPost} className="mt-2 gap-1.5">
+                    <Plus className="h-3.5 w-3.5" /> Criar primeiro artigo
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-border/40">
+                {recentPosts.map((post) => {
+                  const statusInfo = STATUS_LABEL[post.status] ?? { label: post.status, cls: 'bg-muted text-muted-foreground' };
                   return (
-                    <div key={item.label} className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${toneClasses(item.tone)}`}>
-                      <Icon className="h-3 w-3" />
-                      {item.label}: {item.value}
+                    <div
+                      key={post.id}
+                      className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          onClick={() => onEdit(post)}
+                          className="block max-w-full truncate text-left text-sm font-medium text-foreground hover:text-primary"
+                        >
+                          {post.title}
+                        </button>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {post.categories?.name ?? 'Sem categoria'} · {formatDate(post.created_at)}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold ${statusInfo.cls}`}>
+                        {statusInfo.label}
+                      </span>
                     </div>
                   );
                 })}
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {pipelineStages.map((stage, index) => {
-                const Icon = stage.icon;
-                const remaining = getCountdownMs(stage.lastTimestamp, stage.intervalMs);
-                return (
-                  <div key={stage.label} className="relative rounded-xl border border-border/40 bg-muted/20 p-3 sm:p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{index + 1}</span>
-                          {stage.label}
-                        </p>
-                        <p className="mt-1 text-xl font-bold tracking-tight text-foreground sm:text-2xl">{stage.count}</p>
-                      </div>
-                      <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${toneClasses(stage.tone)}`}>
-                        <Icon className="h-3.5 w-3.5" />
-                      </div>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                      <span>{stage.helper}</span>
-                      {stage.intervalMs > 0 && stage.lastTimestamp ? (
-                        remaining > 0 ? (
-                          <Badge variant="outline" className="border-blue-500/25 text-blue-500 font-mono tabular-nums px-1.5 py-0 text-[10px]">
-                            <Clock className="mr-0.5 h-2.5 w-2.5" />
-                            {formatCountdown(remaining)}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="border-primary/25 text-primary px-1.5 py-0 text-[10px]">
-                            iminente
-                          </Badge>
-                        )
-                      ) : (
-                        <span className={`rounded-full border px-1.5 py-0 text-[10px] font-medium ${toneClasses(stage.tone)}`}>
-                          {stage.tone === 'warning' ? 'Atenção' : stage.count > 0 ? 'OK' : '—'}
-                        </span>
-                      )}
-                    </div>
-                    {/* Horizontal arrow (desktop) */}
-                    {index < pipelineStages.length - 1 && (
-                      <div className={`absolute right-[-0.75rem] top-1/2 z-10 hidden -translate-y-1/2 ${index % 2 === 0 ? 'sm:block' : 'xl:block'}`}>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground/40" />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            )}
           </CardContent>
         </Card>
-      </section>
 
-      <section className="grid gap-3 lg:grid-cols-2">
-        <Card className="border-border/40 bg-card/80 shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              <CardTitle className="text-base">Publicações semanais</CardTitle>
-              {weeklyChange !== 0 && (
-                <span className={`ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${weeklyChange > 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
-                  <BarChart3 className={`h-3 w-3 ${weeklyChange < 0 ? 'rotate-90' : ''}`} />
-                  {weeklyChange > 0 ? '+' : ''}{weeklyChange}
-                </span>
+        {/* Charts — narrower column */}
+        <div className="space-y-4 lg:col-span-2">
+          {/* Weekly chart */}
+          <Card className="border-border/40 shadow-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                  <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                  Publicações semanais
+                </CardTitle>
+                {weeklyChange !== 0 && (
+                  <span className={`text-xs font-bold ${weeklyChange > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+                    {weeklyChange > 0 ? '+' : ''}{weeklyChange}
+                  </span>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {weeklyPosts.every((v) => v === 0) ? (
+                <p className="py-4 text-center text-xs text-muted-foreground">Sem publicações nas últimas 4 semanas</p>
+              ) : (
+                <div className="flex items-end gap-2">
+                  {weeklyPosts.map((count, idx) => (
+                    <div key={idx} className="flex flex-1 flex-col items-center gap-1.5">
+                      <span className={`text-[11px] font-bold ${idx === 3 ? 'text-primary' : 'text-muted-foreground'}`}>{count}</span>
+                      <div
+                        className={`w-full rounded-t-sm ${idx === 3 ? 'bg-primary' : 'bg-muted'}`}
+                        style={{ height: `${Math.max((count / maxWeekly) * 80, 4)}px` }}
+                      />
+                      <span className="text-[9px] uppercase tracking-widest text-muted-foreground">S{idx + 1}</span>
+                    </div>
+                  ))}
+                </div>
               )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-end gap-2">
-              {weeklyPosts.map((count, index) => {
-                const isLatest = index === 3;
-                return (
-                  <div key={index} className="flex flex-1 flex-col items-center gap-2">
-                    <span className={`text-xs font-bold ${isLatest ? 'text-primary' : 'text-muted-foreground'}`}>{count}</span>
-                    <div className={`w-full rounded-t-md ${isLatest ? 'bg-primary' : 'bg-muted'}`} style={{ height: `${Math.max((count / maxWeekly) * 120, 10)}px` }} />
-                    <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">S{index + 1}</span>
-                  </div>
-                );
-              })}
-            </div>
-            {weeklyPosts.every((value) => value === 0) && (
-              <p className="text-center text-sm text-muted-foreground">Sem publicações nas últimas 4 semanas</p>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="border-border/40 bg-card/80 shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Layers3 className="h-4 w-4 text-primary" />
-              <CardTitle className="text-base">Top categorias</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {postsByCategory.length > 0 ? (
-              postsByCategory.map(([category, count]) => (
-                <div key={category} className="flex items-center gap-3 rounded-xl border border-border/30 bg-muted/20 px-3 py-2.5">
-                  <span className="min-w-0 flex-1 truncate text-sm text-foreground">{category}</span>
-                  <div className="h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-muted/60">
-                    <div className="h-full rounded-full bg-primary/80" style={{ width: `${Math.round((count / Math.max(publishedPosts.length, 1)) * 100)}%` }} />
-                  </div>
-                  <span className="w-6 shrink-0 text-right text-xs font-bold text-muted-foreground">{count}</span>
+          {/* Top categories */}
+          <Card className="border-border/40 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <BarChart3 className="h-3.5 w-3.5 text-primary" />
+                Top categorias
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {postsByCategory.length === 0 ? (
+                <p className="py-4 text-center text-xs text-muted-foreground">Sem dados</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {postsByCategory.map(([cat, count]) => (
+                    <div key={cat} className="flex items-center gap-2">
+                      <span className="min-w-0 flex-1 truncate text-xs text-foreground">{cat}</span>
+                      <div className="h-1 w-16 shrink-0 overflow-hidden rounded-full bg-muted/60">
+                        <div
+                          className="h-full rounded-full bg-primary/70"
+                          style={{ width: `${Math.round((count / Math.max(publishedPosts.length, 1)) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="w-5 shrink-0 text-right text-[11px] font-bold text-muted-foreground">{count}</span>
+                    </div>
+                  ))}
                 </div>
-              ))
-            ) : (
-              <p className="py-8 text-center text-sm text-muted-foreground">Sem dados de categorias</p>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="rounded-3xl border border-border/40 bg-card/80 shadow-sm overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setShowEcosystem((value) => !value)}
-          className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-muted/30"
-        >
-          <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">Ecossistema</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{(publishedPosts.length + draftPosts.length + categories.length)} itens</span>
-            {showEcosystem ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </div>
-        </button>
-        {showEcosystem && (
-          <div className="border-t border-border/30 p-5">
-            <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-3 lg:grid-cols-6">
-              {[
-                { label: 'Publicados', value: publishedPosts.length, color: 'text-emerald-600 dark:text-emerald-400' },
-                { label: 'Rascunhos', value: draftPosts.length, color: 'text-amber-500' },
-                { label: 'Categorias', value: categories.length, color: 'text-foreground/70' },
-                { label: 'Processando', value: diagnostics?.staging.unprocessed ?? 0, color: 'text-sky-500' },
-                { label: 'Cluster', value: diagnostics?.clusters.total ?? 0, color: 'text-primary-500' },
-                { label: 'IA', value: diagnostics?.curated.ready ?? 0, color: 'text-violet-500' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl bg-muted/30 p-3">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{item.label}</p>
-                  <p className={`mt-1 text-lg font-bold ${item.color}`}>{item.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-
-      {(postsLoading || diagnosticsLoading || executionsLoading) && (
-        <p className="text-xs text-muted-foreground">A carregar dados do painel...</p>
-      )}
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

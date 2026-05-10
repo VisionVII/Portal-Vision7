@@ -24,10 +24,14 @@ const MediaGalleryView = lazy(() => import('@/components/admin/views/MediaGaller
 const AnalyticsView = lazy(() => import('@/components/admin/views/AnalyticsView'));
 
 const ViewSkeleton = () => (
-  <div className="space-y-4">
-    {[1, 2, 3].map((i) => (
-      <div key={i} className="h-24 animate-pulse rounded-xl bg-muted/50" />
-    ))}
+  <div className="space-y-4 pt-2">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="h-24 animate-pulse rounded-xl bg-muted/50" />
+      ))}
+    </div>
+    <div className="h-40 animate-pulse rounded-xl bg-muted/50" />
+    <div className="h-64 animate-pulse rounded-xl bg-muted/50" />
   </div>
 );
 
@@ -156,11 +160,11 @@ const AdminDashboard = () => {
       </Sheet>
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        {/* Desktop sidebar — fixed left column */}
-        <div className={`hidden shrink-0 border-r border-border/40 bg-sidebar/80 backdrop-blur-sm lg:block dark:border-border/20 transition-[width] duration-300 ease-in-out ${
-          sidebarCollapsed ? 'w-16' : 'w-60 xl:w-72'
+        {/* Desktop sidebar */}
+        <div className={`hidden shrink-0 border-r border-border/40 bg-background lg:block transition-[width] duration-300 ease-in-out ${
+          sidebarCollapsed ? 'w-[60px]' : 'w-56 xl:w-64'
         }`}>
-          <div className="sticky top-14 p-3 xl:p-4">
+          <div className="sticky top-14 overflow-y-auto p-3">
             <DashboardSidebar
               activeView={activeView}
               onViewChange={setActiveView}
@@ -172,9 +176,9 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Main content — grows to fill remaining width */}
-        <main className="min-w-0 flex-1 overflow-x-hidden">
-          <div className="px-3 py-5 sm:px-5 sm:py-6 lg:px-6 xl:px-8">
+        {/* Main content */}
+        <main className="min-w-0 flex-1 overflow-x-hidden bg-muted/20">
+          <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
 
             <Suspense fallback={<ViewSkeleton />}>
               <Panel view="overview">

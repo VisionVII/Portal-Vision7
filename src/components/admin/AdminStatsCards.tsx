@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Eye, Edit, PenTool, TrendingUp, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { Eye, Edit, PenTool, TrendingUp } from 'lucide-react';
 import { usePostStats } from '@/hooks/usePosts';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -9,141 +9,90 @@ const AdminStatsCards = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-28 w-full rounded-2xl" />
-        <div className="flex gap-3 overflow-x-auto">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-20 min-w-[140px] flex-1 rounded-xl" />
-          ))}
-        </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-24 rounded-xl" />
+        ))}
       </div>
     );
   }
 
-  const thisMonth = stats?.thisMonth || 0;
-  const total = stats?.total || 0;
-  const totalViews = stats?.totalViews || 0;
-  const drafts = stats?.drafts || 0;
+  const thisMonth = stats?.thisMonth ?? 0;
+  const total = stats?.total ?? 0;
+  const totalViews = stats?.totalViews ?? 0;
+  const drafts = stats?.drafts ?? 0;
   const monthlyTarget = Math.max(Math.ceil(total / 30), 1);
   const targetProgress = Math.min((thisMonth / monthlyTarget) * 100, 100);
+  const onTarget = thisMonth >= monthlyTarget;
+
+  const cards = [
+    {
+      label: 'Este mês',
+      value: thisMonth,
+      meta: onTarget ? 'Meta atingida' : `${monthlyTarget - thisMonth} em falta`,
+      metaColor: onTarget ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-500',
+      icon: TrendingUp,
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+      progress: targetProgress,
+      progressColor: onTarget ? 'bg-emerald-500' : 'bg-primary',
+    },
+    {
+      label: 'Publicados',
+      value: total,
+      icon: PenTool,
+      iconColor: 'text-primary',
+      iconBg: 'bg-primary/10 dark:bg-primary/20',
+    },
+    {
+      label: 'Visualizações',
+      value: totalViews.toLocaleString('pt-PT'),
+      icon: Eye,
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      iconBg: 'bg-blue-50 dark:bg-blue-950/40',
+    },
+    {
+      label: 'Rascunhos',
+      value: drafts,
+      icon: Edit,
+      iconColor: 'text-amber-600 dark:text-amber-400',
+      iconBg: 'bg-amber-50 dark:bg-amber-950/40',
+    },
+  ] as const;
 
   return (
-    <div className="space-y-3">
-      {/* ── HERO KPI: compact dominant metric ── */}
-      <Card className="gradient-card-hero relative overflow-hidden rounded-2xl border border-border/20 shadow-sm dark:border-border/10">
-        <CardContent className="p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Performance este mês
-              </p>
-              <div className="mt-1.5 flex items-baseline gap-2">
-                <p className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                  {thisMonth}
-                </p>
-                <p className="text-sm font-medium text-muted-foreground">
-                  {thisMonth === 1 ? 'publicação' : 'publicações'}
-                </p>
-              </div>
-              <div className="mt-2 flex items-center gap-1.5">
-                {thisMonth >= monthlyTarget ? (
-                  <div className="flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-                    <ArrowUpRight className="h-3 w-3" />
-                    <span className="text-xs font-semibold">Meta atingida</span>
-                  </div>
-                ) : thisMonth > 0 ? (
-                  <div className="flex items-center gap-0.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
-                    <Minus className="h-3 w-3" />
-                    <span className="text-xs font-semibold">+{monthlyTarget - thisMonth} para meta</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-0.5 rounded-full bg-red-500/10 px-2 py-0.5 text-red-600 dark:bg-red-500/15 dark:text-red-400">
-                    <ArrowDownRight className="h-3 w-3" />
-                    <span className="text-xs font-semibold">Sem publicações</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="shrink-0">
-              <div className="rounded-xl bg-primary/10 p-2.5 dark:bg-primary/15">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              <div className="mt-2 text-right">
-                <p className="text-[10px] text-muted-foreground">{Math.min(thisMonth, monthlyTarget)}/{monthlyTarget}</p>
-              </div>
-            </div>
-          </div>
-          {/* Progress bar */}
-          <div className="mt-3 h-1.5 rounded-full bg-muted/50 dark:bg-muted/30">
-            <div
-              className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500 dark:from-emerald-400 dark:to-emerald-500"
-              style={{ width: `${Math.max(targetProgress, thisMonth > 0 ? 10 : 0)}%` }}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── SECONDARY KPIs: 3-col always ── */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        {[
-          {
-            label: 'Total de posts',
-            value: total,
-            icon: PenTool,
-            color: 'text-primary-600 dark:text-primary-400',
-            bg: 'bg-primary-50 dark:bg-primary-900/30',
-          },
-          {
-            label: 'Visualizações',
-            value: totalViews,
-            icon: Eye,
-            color: 'text-blue-600 dark:text-blue-400',
-            bg: 'bg-blue-50 dark:bg-blue-900/30',
-            format: true,
-          },
-          {
-            label: 'Rascunhos',
-            value: drafts,
-            icon: Edit,
-            color: 'text-amber-600 dark:text-amber-400',
-            bg: 'bg-amber-50 dark:bg-amber-900/30',
-          },
-        ].map((card, index) => {
-          const Icon = card.icon;
-          return (
-            <Card
-              key={card.label}
-              className="group border-border/30 bg-card/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-border/20"
-            >
-              <CardContent className="p-3 sm:p-4">
-                {/* Mobile: centered value + label (no icon) */}
-                <div className="flex flex-col items-center gap-0.5 text-center sm:hidden">
-                  <p className="text-2xl font-extrabold text-foreground">
-                    {card.format ? card.value.toLocaleString('pt-PT') : card.value}
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <Card key={card.label} className="border-border/40 bg-card shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">{card.label}</p>
+                  <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">
+                    {card.value}
                   </p>
-                  <p className="text-[9px] font-medium uppercase leading-tight tracking-wide text-muted-foreground">
-                    {card.label}
-                  </p>
+                  {'meta' in card && card.meta && (
+                    <p className={`mt-0.5 text-[11px] font-medium ${card.metaColor}`}>{card.meta}</p>
+                  )}
                 </div>
-                {/* Desktop: icon + text side by side */}
-                <div className="hidden sm:flex sm:items-center sm:gap-3">
-                  <div className={`shrink-0 rounded-xl p-2.5 ${card.bg}`}>
-                    <Icon className={`h-4 w-4 ${card.color}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                      {card.label}
-                    </p>
-                    <p className="mt-0.5 truncate text-2xl font-bold text-foreground">
-                      {card.format ? card.value.toLocaleString('pt-PT') : card.value}
-                    </p>
-                  </div>
+                <div className={`shrink-0 rounded-lg p-2 ${card.iconBg}`}>
+                  <Icon className={`h-4 w-4 ${card.iconColor}`} />
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              </div>
+              {'progress' in card && card.progress !== undefined && (
+                <div className="mt-3 h-1 w-full rounded-full bg-muted/60">
+                  <div
+                    className={`h-1 rounded-full transition-all duration-700 ${card.progressColor}`}
+                    style={{ width: `${Math.max(card.progress, thisMonth > 0 ? 6 : 0)}%` }}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };
