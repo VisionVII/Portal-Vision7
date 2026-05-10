@@ -71,7 +71,7 @@ const PIPELINE_STEPS: PipelineStep[] = [
     key: 'wf03',
     label: 'IA Reescrita',
     shortLabel: 'IA',
-    description: 'Geração de artigos por IA + notificação email',
+    description: 'Geração e publicação de artigos por IA',
     icon: Sparkles,
     nameMatch: 'WF-03',
     delayAfterMs: 0,
@@ -861,14 +861,7 @@ export function NewsPipelineCard() {
         )}
 
         {/* ── Pipeline Steps Visual ── */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fluxo de Execução</span>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {PIPELINE_STEPS.map((step, idx) => {
               const wf = matchWorkflow(workflows, step.nameMatch);
               if (!wf) return null;
@@ -902,7 +895,6 @@ export function NewsPipelineCard() {
                 />
               );
             })}
-          </div>
         </div>
 
         {/* ── Activity Log ── */}
@@ -912,33 +904,6 @@ export function NewsPipelineCard() {
             onClear={() => setActivityLog([])}
             onClose={() => setShowLog(false)}
           />
-        )}
-
-        {/* ── Recent n8n Executions ── */}
-        {latestUniqueExecutions.length > 0 && !showLog && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <Eye className="w-3 h-3 text-muted-foreground" />
-            <span className="text-[10px] text-muted-foreground">Recentes:</span>
-            {latestUniqueExecutions.slice(0, 5).map((exec) => {
-              const wfName = workflows.find((w) => String(w.id) === String(exec.workflowId))?.name;
-              const statusLabel = exec.status === 'success' ? 'OK' : exec.status === 'error' ? 'Erro' : exec.status === 'running' ? 'A correr' : exec.status;
-              return (
-                <Badge
-                  key={String(exec.id)}
-                  variant="outline"
-                  className={`text-[9px] px-1.5 py-0 ${
-                    exec.status === 'success' ? 'border-primary/25 text-primary' :
-                    exec.status === 'error' ? 'border-red-500/30 text-red-400' :
-                    exec.status === 'running' ? 'border-blue-500/30 text-blue-500 animate-pulse' :
-                    'border-border text-muted-foreground'
-                  }`}
-                >
-                  {exec.status === 'running' && <Loader2 className="w-2 h-2 animate-spin mr-0.5" />}
-                  {wfName ?? `WF-${exec.workflowId}`} · {statusLabel} · {formatRelativeTime(exec.startedAt)}
-                </Badge>
-              );
-            })}
-          </div>
         )}
 
         {/* ── Actions & Stats ── */}
