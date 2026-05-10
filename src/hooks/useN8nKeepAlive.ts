@@ -10,8 +10,8 @@ import { checkN8nHealth } from '@/services/n8n';
  * ────────────────────────────────────────────────────────────────────── */
 
 const STORAGE_KEY = 'n8n:keepAliveActive';
-const INTERVAL_MS = 10 * 60 * 1000; // 10 minutes (Render spins down after 15min inactivity)
-const HIDDEN_INTERVAL_MS = 13 * 60 * 1000; // 13 minutes when tab hidden (still < 15min)
+const INTERVAL_MS = 4 * 60 * 1000; // 4 minutes (Render spins down after 15min inactivity)
+const HIDDEN_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes when tab hidden (still < 15min)
 const COLD_START_RETRY_MS = 35_000; // retry after 35s on cold-start timeout (Render takes 30-60s)
 const MAX_CONSECUTIVE_FAILURES = 8;
 

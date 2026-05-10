@@ -161,6 +161,20 @@ export function AutomationDashboardV2({
 
   useEffect(() => { void refreshN8n(); }, [refreshN8n]);
 
+  // Sync isConnected with keep-alive ping results so the status dot
+  // updates automatically without requiring a manual refresh.
+  useEffect(() => {
+    if (!keepAlive.lastStatus) return;
+    if (keepAlive.lastStatus === 'connected') {
+      setIsConnected(true);
+      // Also refresh workflows list on reconnect
+      void refreshN8n();
+    } else if (keepAlive.lastStatus === 'unreachable') {
+      setIsConnected(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keepAlive.lastPing]);
+
   const activeAutomations = useMemo(() => automations.filter((a) => a.status === 'active').length, [automations]);
   const activeWorkflows = useMemo(() => workflows.filter((w) => w.active).length, [workflows]);
   const successRate = useMemo(() => {
