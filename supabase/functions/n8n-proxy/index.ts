@@ -475,12 +475,15 @@ Deno.serve(async (req: Request) => {
 
     const responseData = await n8nResponse.text();
 
-    // For 500/503, wrap in 200 OK to avoid browser network errors
-    if (n8nResponse.status === 503 || n8nResponse.status === 500) {
+    // Wrap 500/502/503 in 200 OK to avoid browser Network tab errors.
+    // Render cold starts return 502 or 503; n8n internal errors return 500.
+    if (n8nResponse.status >= 500) {
       return jsonResponse(
         {
           error: n8nResponse.status === 503
             ? 'n8n Service Unavailable (cold start)'
+            : n8nResponse.status === 502
+            ? 'n8n Gateway Error (cold start)'
             : 'n8n Internal Server Error',
           httpStatus: n8nResponse.status,
           detail: responseData.slice(0, 200),
