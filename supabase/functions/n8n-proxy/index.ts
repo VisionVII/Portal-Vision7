@@ -290,27 +290,19 @@ Deno.serve(async (req: Request) => {
     const token = authHeader.slice(7);
 
     // ── 2. Verify token and resolve user via Supabase Auth ──────────────────
-    // Create client with user's token for validation, then switch to service role
-    const supabaseUser = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      global: { headers: { Authorization: authHeader } },
+    // Use the admin client to validate the user JWT — avoids header conflicts
+    // that occur when setting both service-role key and user Authorization.
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Pass token explicitly — with persistSession:false there is no internal
-    // session state, so getUser() without an argument returns null in newer
-    // Supabase JS SDK versions.
-    const { data: authData, error: authError } = await supabaseUser.auth.getUser(token);
+    const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !authData.user?.id) {
       console.error('[n8n-proxy] Auth error:', authError?.message ?? 'Invalid token', 'code:', authError?.code);
       return jsonResponse({ error: 'Unauthorized — invalid or expired token' }, 401, cors);
     }
 
     const userId = authData.user.id;
-
-    // Create service-role client for database operations
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
 
     // ── 3. Verify user has an allowed admin role (via service-role client) ──
     const { data: roles, error: rolesError } = await supabaseAdmin
