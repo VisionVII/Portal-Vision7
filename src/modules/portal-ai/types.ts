@@ -13,7 +13,7 @@ export interface PortalAssistantSkill {
 }
 
 export interface PortalAssistantConfig {
-  provider: 'local-preview' | 'openai-compatible' | 'groq-edge' | 'hf-edge';
+  provider: 'local-preview' | 'claude-haiku' | 'claude-sonnet';
   model: string;
   enabled: boolean;
   requiresApiKey: boolean;
@@ -21,7 +21,7 @@ export interface PortalAssistantConfig {
   scope: string[];
   assistantId?: string;
   edgeFunctionName?: string;
-  fallbackProvider?: 'local-preview' | 'openai-compatible' | 'groq-edge' | 'hf-edge';
+  fallbackProvider?: 'local-preview' | 'claude-haiku' | 'claude-sonnet';
   sddPath?: string;
 }
 
@@ -35,7 +35,7 @@ export interface PortalAssistantReply {
   summary: string;
   suggestions: string[];
   links: PortalAssistantReplyLink[];
-  provider?: 'local-preview' | 'groq-edge' | 'hf-edge';
+  provider?: 'local-preview' | 'claude-edge';
   assistantId?: string;
   sddVersion?: string;
 }
@@ -81,7 +81,7 @@ export interface PortalAssistantViewerContext {
 export interface PortalAssistantRequest {
   question: string;
   assistantId: string;
-  provider: 'local-preview' | 'groq-edge' | 'hf-edge';
+  provider: 'local-preview' | 'claude-haiku' | 'claude-sonnet';
   knowledge: PortalAssistantKnowledge;
   conversation?: PortalAssistantConversationTurn[];
   viewerContext?: PortalAssistantViewerContext;

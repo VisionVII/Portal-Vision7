@@ -148,7 +148,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const clusterData = $('Clusterize + Priority Rank').item.json;\nconst ids = Array.isArray(clusterData.staging_ids) ? clusterData.staging_ids : [];\nconst out = [];\nfor (const id of ids) {\n  out.push({ json: { id: id, duplicate_fingerprint: clusterData.fingerprint } });\n}\nreturn out;"
+        "jsCode": "const clusterData = $('Clusterize + Priority Rank').all()[0]?.json || {};\nconst ids = Array.isArray(clusterData.staging_ids) ? clusterData.staging_ids : [];\nconst out = [];\nfor (const id of ids) {\n  out.push({ json: { id: id, duplicate_fingerprint: clusterData.fingerprint } });\n}\nreturn out;"
       },
       "id": "expand_ids",
       "name": "Expand Staging IDs",
@@ -245,11 +245,6 @@
             "node": "Upsert Cluster",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Expand Staging IDs",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -259,6 +254,17 @@
         [
           {
             "node": "Mark Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Cluster": {
+      "main": [
+        [
+          {
+            "node": "Expand Staging IDs",
             "type": "main",
             "index": 0
           }

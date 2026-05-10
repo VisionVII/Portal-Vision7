@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, CheckCheck, LogOut, Plus } from 'lucide-react';
+import { ArrowLeft, Bell, CheckCheck, LogOut, Menu, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -10,9 +10,10 @@ import { useAdminNotifications, useMarkNotificationRead, useMarkAllRead } from '
 
 interface DashboardHeaderProps {
   onNewPost: () => void;
+  onMenuOpen?: () => void;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost, onMenuOpen }) => {
   const { user, primaryRole, roles, signOut } = useAuth();
   const navigate = useNavigate();
   const { data: siteSettings } = useSiteSettings();
@@ -57,7 +58,18 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost }) => {
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
       <div className="flex items-center justify-between gap-2 px-3 py-2 sm:px-5">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {onMenuOpen && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onMenuOpen}
+              className="lg:hidden rounded-lg p-1.5 text-muted-foreground hover:text-foreground"
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
           <Link
             to="/"
             className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"

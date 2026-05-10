@@ -49,7 +49,7 @@ function formatHours(value: number): string {
   return `${(value / 24).toFixed(1)} dias`;
 }
 
-function validateCredentialDraft(keyName: 'GROQ_API_KEY' | 'HF_API_TOKEN' | 'SUPABASE_SERVICE_ROLE_KEY', value: string): string | null {
+function validateCredentialDraft(keyName: 'ANTHROPIC_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY', value: string): string | null {
   const normalized = value.trim();
   if (!normalized) return 'Insira a chave API.';
   if (/\{\{|\$env|=\{|^=/.test(normalized)) return 'Use o valor bruto da chave, sem =, {{ }} ou $env.';
@@ -63,12 +63,8 @@ function validateCredentialDraft(keyName: 'GROQ_API_KEY' | 'HF_API_TOKEN' | 'SUP
     }
   }
 
-  if (keyName === 'GROQ_API_KEY' && !normalized.startsWith('gsk_')) {
-    return 'GROQ_API_KEY deve começar com gsk_.';
-  }
-
-  if (keyName === 'HF_API_TOKEN' && !normalized.startsWith('hf_')) {
-    return 'HF_API_TOKEN deve começar com hf_.';
+  if (keyName === 'ANTHROPIC_API_KEY' && !normalized.startsWith('sk-ant-')) {
+    return 'ANTHROPIC_API_KEY deve começar com sk-ant-.';
   }
 
   return null;
@@ -90,7 +86,7 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
   const [credentialsError, setCredentialsError] = useState<string | null>(null);
 
   /* ── New key form ── */
-  const [newKeyName, setNewKeyName] = useState<'GROQ_API_KEY' | 'HF_API_TOKEN' | 'SUPABASE_SERVICE_ROLE_KEY'>('GROQ_API_KEY');
+  const [newKeyName, setNewKeyName] = useState<'ANTHROPIC_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY'>('ANTHROPIC_API_KEY');
   const [newKeyValue, setNewKeyValue] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -363,7 +359,7 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
     }
   };
 
-  const groqKey = credentials.find((c) => c.key_name === 'GROQ_API_KEY' && c.status === 'active');
+  const anthropicKey = credentials.find((c) => c.key_name === 'ANTHROPIC_API_KEY' && c.status === 'active');
   const n8nKey = credentials.find((c) => c.key_name === 'N8N_API_KEY' && c.status === 'active');
   const supabaseServiceKey = credentials.find((c) => c.key_name === 'SUPABASE_SERVICE_ROLE_KEY' && c.status === 'active');
   const credentialDraftError = validateCredentialDraft(newKeyName, newKeyValue);
@@ -419,19 +415,19 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
             <div className="space-y-2">
               <div className="grid gap-2 sm:grid-cols-3">
                 <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-background/70 p-2 text-xs">
-                  {groqKey ? (
+                  {anthropicKey ? (
                     <>
                       <CheckCircle2 className="w-3 h-3 text-primary" />
-                      <span className="text-primary">GROQ_API_KEY</span>
-                      <span className="text-muted-foreground">ativa · {new Date(groqKey.activated_at ?? groqKey.created_at).toLocaleDateString('pt-BR')}</span>
-                      <Button size="sm" variant="ghost" className="h-5 ml-auto px-1 text-red-400 hover:text-red-300" onClick={() => void handleDelete(groqKey.id)}>
+                      <span className="text-primary">ANTHROPIC_API_KEY</span>
+                      <span className="text-muted-foreground">ativa · {new Date(anthropicKey.activated_at ?? anthropicKey.created_at).toLocaleDateString('pt-BR')}</span>
+                      <Button size="sm" variant="ghost" className="h-5 ml-auto px-1 text-red-400 hover:text-red-300" onClick={() => void handleDelete(anthropicKey.id)}>
                         <Trash2 className="w-2.5 h-2.5" />
                       </Button>
                     </>
                   ) : (
                     <>
                       <AlertTriangle className="w-3 h-3 text-red-400" />
-                      <span className="text-red-400">GROQ_API_KEY — NÃO CONFIGURADA</span>
+                      <span className="text-red-400">ANTHROPIC_API_KEY — NÃO CONFIGURADA</span>
                     </>
                   )}
                 </div>
@@ -476,17 +472,16 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
               <select
                 className="h-8 rounded border border-border bg-muted px-2 text-xs text-foreground"
                 value={newKeyName}
-                onChange={(e) => setNewKeyName(e.target.value as 'GROQ_API_KEY' | 'HF_API_TOKEN' | 'SUPABASE_SERVICE_ROLE_KEY')}
+                onChange={(e) => setNewKeyName(e.target.value as 'ANTHROPIC_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY')}
               >
-                <option value="GROQ_API_KEY">GROQ_API_KEY (IA Groq)</option>
-                <option value="HF_API_TOKEN">HF_API_TOKEN (Hugging Face)</option>
+                <option value="ANTHROPIC_API_KEY">ANTHROPIC_API_KEY (Claude IA)</option>
                 <option value="SUPABASE_SERVICE_ROLE_KEY">SUPABASE_SERVICE_ROLE_KEY</option>
               </select>
             </div>
             <div className="flex gap-1.5">
               <Input
                 type="password"
-                placeholder={newKeyName === 'GROQ_API_KEY' ? 'gsk_...' : newKeyName === 'HF_API_TOKEN' ? 'hf_...' : 'sb_secret_...'}
+                placeholder={newKeyName === 'ANTHROPIC_API_KEY' ? 'sk-ant-...' : 'sb_secret_...'}
                 className="h-8 border-border bg-muted font-mono text-xs"
                 value={newKeyValue}
                 onChange={(e) => setNewKeyValue(e.target.value)}
@@ -505,11 +500,9 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
               <p className="text-[11px] text-red-300">{credentialDraftError}</p>
             )}
             <p className="text-[11px] text-muted-foreground">
-              {newKeyName === 'GROQ_API_KEY'
-                ? 'Obtenha em console.groq.com → API Keys. O WF-03 lê esta chave para gerar artigos com IA.'
-                : newKeyName === 'HF_API_TOKEN'
-                  ? 'Obtenha em huggingface.co/settings/tokens. Token Read gratuito para Inference API.'
-                  : 'Supabase → Settings → API → Secret keys. Use a chave sb_secret... do projeto. Não use a JWT service_role legada iniciada em eyJ...'}
+              {newKeyName === 'ANTHROPIC_API_KEY'
+                ? 'Obtenha em console.anthropic.com → API Keys. O WF-03 usa esta chave para gerar artigos com Claude Sonnet.'
+                : 'Supabase → Settings → API → Secret keys. Use a chave sb_secret... do projeto. Não use a JWT service_role legada iniciada em eyJ...'}
             </p>
           </div>
         </div>

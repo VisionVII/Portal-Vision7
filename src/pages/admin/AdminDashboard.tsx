@@ -7,6 +7,7 @@ import { VIEW_ACCESS_RULES } from '@/components/admin/dashboard-types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Post, usePosts } from '@/hooks/usePosts';
 import { MFAChallenge } from '@/components/admin/MFAChallenge';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 // Lazy-loaded views
 const OverviewView = lazy(() => import('@/components/admin/views/OverviewView'));
@@ -34,6 +35,7 @@ const AdminDashboard = () => {
   const [showPostForm, setShowPostForm] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [activeView, setActiveView] = useState<AdminView>('overview');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('admin-sidebar-collapsed');
     return saved === 'true';
@@ -137,17 +139,21 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader onNewPost={handleNewPost} />
+      <DashboardHeader onNewPost={handleNewPost} onMenuOpen={() => setMobileMenuOpen(true)} />
 
-      {/* Mobile nav — full width, no padding issues */}
-      <div className="px-3 pt-3 sm:px-4 lg:hidden">
-        <DashboardSidebar
-          activeView={activeView}
-          onViewChange={setActiveView}
-          allowedViews={allowedViews}
-          draftCount={draftCount}
-        />
-      </div>
+      {/* Mobile drawer */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-72 p-0 pt-4">
+          <div className="px-3">
+            <DashboardSidebar
+              activeView={activeView}
+              onViewChange={(view) => { setActiveView(view); setMobileMenuOpen(false); }}
+              allowedViews={allowedViews}
+              draftCount={draftCount}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         {/* Desktop sidebar — fixed left column */}

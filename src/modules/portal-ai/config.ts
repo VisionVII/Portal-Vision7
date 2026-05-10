@@ -34,8 +34,8 @@ export const portalAssistantSkills: PortalAssistantSkill[] = [
 ];
 
 export const portalAssistantConfig: PortalAssistantConfig = {
-  provider: 'groq-edge',
-  model: 'llama-3.1-8b-instant',
+  provider: 'claude-haiku',
+  model: 'claude-haiku-4-5-20251001',
   enabled: true,
   requiresApiKey: true,
   apiBaseUrl: '',

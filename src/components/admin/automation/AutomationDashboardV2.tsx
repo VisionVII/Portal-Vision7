@@ -2,31 +2,17 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   LayoutGrid, Plus, Clock, Zap,
-  PlayCircle, Settings2,
   Workflow, RefreshCw, Wrench,
   Layers3, ArrowRight, Activity, Radio, Sparkles,
-  Trash2, Loader2, CheckSquare, Pause, Play, Shield,
+  Trash2, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
-import { AutomationCard } from './AutomationCard';
-import { AutomationForm } from './AutomationForm';
-import { AutomationTemplateGallery } from './AutomationTemplateGallery';
-import { ExecutionTimeline } from './ExecutionTimeline';
-import { AuditLogViewer } from './AuditLogViewer';
-import { NewsPipelineCard } from './NewsPipelineCard';
-import { CuratedPostsReview } from './CuratedPostsReview';
-import { N8nWorkflowsPanel } from './N8nWorkflowsPanel';
-import { EmailTemplateCampaignPanel } from './EmailTemplateCampaignPanel';
+import { PipelineView } from './PipelineView';
+import { AutomationsView } from './AutomationsView';
+import { LogsView } from './LogsView';
+import { ToolsView } from './ToolsView';
 
 import { useAutomationsV2 } from '@/hooks/useAutomationsV2';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
@@ -64,66 +50,6 @@ interface AutomationDashboardV2Props {
 
 type DashboardView = 'pipeline' | 'automations' | 'logs' | 'tools';
 
-/* ── Cleanup thresholds ── */
-const CLEANUP_OPTIONS = [
-  { label: '24 h', hours: 24 },
-  { label: '3 dias', hours: 72 },
-  { label: '7 dias', hours: 168 },
-] as const;
-
-/* ─── Collapsible Section ─── */
-function Section({
-  title,
-  description,
-  icon,
-  children,
-  actions,
-  collapsible = false,
-  defaultExpanded = true,
-}: {
-  title: string;
-  description?: string;
-  icon?: React.ReactNode;
-  children: React.ReactNode;
-  actions?: React.ReactNode;
-  collapsible?: boolean;
-  defaultExpanded?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultExpanded);
-  return (
-    <section className="rounded-2xl border border-border/50 bg-card/70 p-4 shadow-sm backdrop-blur-sm sm:p-5">
-      <div
-        className={`flex items-center justify-between gap-3 ${collapsible ? 'cursor-pointer transition-opacity hover:opacity-80' : ''}`}
-        onClick={collapsible ? () => setOpen((v) => !v) : undefined}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          {icon}
-          <div className="min-w-0">
-            <h3 className="truncate text-sm font-semibold text-foreground">{title}</h3>
-            {description && <p className="truncate text-xs text-muted-foreground mt-0.5">{description}</p>}
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {actions}
-          {collapsible && (
-            <svg className={`w-4 h-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-          )}
-        </div>
-      </div>
-      {open && <div className="mt-4 border-t border-border/40 pt-4">{children}</div>}
-    </section>
-  );
-}
-
-/* ─── Small icon circle ─── */
-function Ic({ icon: Icon, className = '' }: { icon: React.ElementType; className?: string }) {
-  return (
-    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${className}`}>
-      <Icon className="h-4 w-4" />
-    </div>
-  );
-}
-
 function SummaryPill({
   label,
   value,
@@ -153,110 +79,12 @@ function SummaryPill({
   );
 }
 
-function PipelineRail({
-  stages,
-}: {
-  stages: Array<{
-    label: string;
-    value: number;
-    helper: string;
-    tone: 'success' | 'warning' | 'neutral';
-    icon: React.ElementType;
-  }>;
-}) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {stages.map((stage, index) => {
-        const Icon = stage.icon;
-        const toneClass = stage.tone === 'success'
-          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-          : stage.tone === 'warning'
-            ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-            : 'border-border/60 bg-muted/30 text-muted-foreground';
-
-        return (
-          <div key={stage.label} className="relative rounded-2xl border border-border/40 bg-card/80 p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-foreground">{stage.label}</p>
-                <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">{stage.value}</p>
-              </div>
-              <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${toneClass}`}>
-                <Icon className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span>{stage.helper}</span>
-              <span className={`rounded-full border px-2 py-0.5 font-medium ${toneClass}`}>
-                {stage.tone === 'warning' ? 'Atenção' : stage.value > 0 ? 'OK' : 'Aguardando'}
-              </span>
-            </div>
-            {index < stages.length - 1 && (
-              <div className="absolute right-[-0.75rem] top-1/2 hidden -translate-y-1/2 xl:block">
-                <ArrowRight className="h-4 w-4 text-muted-foreground/40" />
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function QueueBoard({
-  sections,
-}: {
-  sections: Array<{
-    label: string;
-    tone: 'success' | 'warning' | 'neutral';
-    items: Array<{ id: string; title: string; subtitle: string }>;
-  }>;
-}) {
-  return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {sections.map((section) => {
-        const toneClass = section.tone === 'success'
-          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-          : section.tone === 'warning'
-            ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-            : 'border-border/60 bg-muted/30 text-muted-foreground';
-
-        return (
-          <div key={section.label} className="rounded-2xl border border-border/40 bg-card/80 p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-foreground">{section.label}</h3>
-              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${toneClass}`}>
-                {section.items.length}
-              </span>
-            </div>
-            <div className="mt-3 space-y-2">
-              {section.items.length > 0 ? (
-                section.items.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-border/30 bg-muted/20 px-3 py-2.5">
-                    <p className="line-clamp-1 text-sm font-medium text-foreground">{item.title}</p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{item.subtitle}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-xl border border-dashed border-border/30 px-3 py-5 text-center text-sm text-muted-foreground">
-                  Sem itens nesta fila
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export function AutomationDashboardV2({
   showLabButton = true,
 }: AutomationDashboardV2Props) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  /* ── State ── */
   const [activeView, setActiveView] = useState<DashboardView>('pipeline');
   const [activeCategory, setActiveCategory] = useState<AutomationCategory | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
@@ -264,18 +92,15 @@ export function AutomationDashboardV2({
   const [selectedTemplate, setSelectedTemplate] = useState<AutomationTemplate | null>(null);
   const [executionStatusFilter, setExecutionStatusFilter] = useState<ExecutionStatus | 'all'>('all');
 
-  /* ── Bulk selection state ── */
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 
-  /* ── Cleanup state ── */
   const [cleanupHours, setCleanupHours] = useState(72);
   const [cleaning, setCleaning] = useState(false);
 
   const [isConnected, setIsConnected] = useState(false);
   const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
 
-  /* ── Hooks ── */
   const {
     automations,
     total: totalAutomations,
@@ -336,7 +161,6 @@ export function AutomationDashboardV2({
 
   useEffect(() => { void refreshN8n(); }, [refreshN8n]);
 
-  /* ── Derived data ── */
   const activeAutomations = useMemo(() => automations.filter((a) => a.status === 'active').length, [automations]);
   const activeWorkflows = useMemo(() => workflows.filter((w) => w.active).length, [workflows]);
   const successRate = useMemo(() => {
@@ -344,7 +168,6 @@ export function AutomationDashboardV2({
     return Math.round((executionSummary.filter((entry) => entry.status === 'success').length / executionSummary.length) * 100);
   }, [executionSummary]);
   const pipelineErrors = useMemo(() => executionSummary.filter((execution) => execution.status === 'error').length, [executionSummary]);
-  const latestExecution = executionSummary[0] ?? null;
   const queueSections = useMemo(() => {
     const pending = curatedPosts.filter((post) => ['pending-review', 'draft', 'auto-draft'].includes(post.status));
     const ready = curatedPosts.filter((post) => post.status === 'ready');
@@ -410,9 +233,8 @@ export function AutomationDashboardV2({
       tone: (diagnostics?.curated.published ?? 0) > 0 ? 'success' : 'neutral',
       icon: Radio,
     },
-  ]), [diagnostics]);
+  ] as const), [diagnostics]);
 
-  /* ── Handlers ── */
   const handleSave = async (payload: CreateAutomationPayload) => {
     if (editingAutomation) {
       await updateAutomation({ id: editingAutomation.id, ...payload });
@@ -459,7 +281,6 @@ export function AutomationDashboardV2({
   const handleUseTemplate = (tpl: AutomationTemplate) => { setSelectedTemplate(tpl); setEditingAutomation(null); setShowForm(true); };
   const handleCancel = () => { setShowForm(false); setEditingAutomation(null); setSelectedTemplate(null); };
 
-  /* ── Bulk selection helpers ── */
   const toggleSelect = (id: string, checked: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -492,13 +313,11 @@ export function AutomationDashboardV2({
     }
   };
 
-  /* ── Cleanup pipeline data ── */
   const handleCleanup = async () => {
     if (!confirm(`Remover dados do pipeline com mais de ${cleanupHours}h?\n\nInclui staging antigo (processado e não processado), clusters órfãos e curados publicados/rejeitados.`)) return;
     setCleaning(true);
     const cutoff = new Date(Date.now() - cleanupHours * 60 * 60 * 1000).toISOString();
     try {
-      /* 1 ─ Delete ALL old staging (processed + stale unprocessed) */
       const { data: stg, error: stgErr } = await supabase
         .from('news_staging')
         .delete()
@@ -506,7 +325,6 @@ export function AutomationDashboardV2({
         .select('id');
       if (stgErr) throw stgErr;
 
-      /* 2 ─ Delete published/rejected curated posts older than cutoff */
       const { data: staleCurated, error: curFetchErr } = await supabase
         .from('curated_posts')
         .select('id, cluster_id')
@@ -526,7 +344,6 @@ export function AutomationDashboardV2({
         curatedCleaned = cur?.length ?? 0;
       }
 
-      /* 3 ─ Delete orphan clusters (no active curated_posts referencing them) */
       const { data: allOldClusters, error: clsFetchErr } = await supabase
         .from('news_clusters')
         .select('id')
@@ -559,7 +376,6 @@ export function AutomationDashboardV2({
       const stagingDeleted = stg?.length ?? 0;
       const total = stagingDeleted + clustersDeleted + curatedCleaned;
 
-      /* Refresh pipeline data immediately */
       void queryClient.invalidateQueries({ queryKey: ['pipeline_diagnostics'] });
       void queryClient.invalidateQueries({ queryKey: ['curated_posts'] });
 
@@ -620,253 +436,72 @@ export function AutomationDashboardV2({
       </Tabs>
 
       {activeView === 'pipeline' && (
-        <div className="space-y-5">
-          <Section
-            title="Pipeline visual"
-            description="Coleta → Cluster → IA Reescrita → Publicação"
-            icon={<Ic icon={Zap} className="text-primary bg-primary/10" />}
-          >
-            <PipelineRail stages={pipelineStages} />
-          </Section>
-
-          <Section
-            title="Fila de conteúdo"
-            description="Separação por estado para leitura rápida"
-            icon={<Ic icon={Activity} className="text-blue-500 bg-blue-500/10" />}
-          >
-            <QueueBoard sections={queueSections} />
-          </Section>
-
-          <Section
-            title="Revisão detalhada"
-            description="Curadoria e promoção dos itens com contexto completo"
-            icon={<Ic icon={PlayCircle} className="text-blue-500 bg-blue-500/10" />}
-            collapsible
-            defaultExpanded={false}
-          >
-            <CuratedPostsReview />
-          </Section>
-
-          {/* ── Cleanup Actions ── */}
-          <Section
-            title="Limpeza inteligente do pipeline"
-            description="Remove staging antigo, clusters órfãos e curados já publicados/rejeitados. Dados em rascunho e prontos são preservados."
-            icon={<Ic icon={Trash2} className="text-red-500 bg-red-500/10" />}
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground">
-                  Staging + Clusters órfãos + Curados pub/rej
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Mais antigos que:</span>
-                <div className="flex gap-1">
-                  {CLEANUP_OPTIONS.map((opt) => (
-                    <Button
-                      key={opt.hours}
-                      size="sm"
-                      variant={cleanupHours === opt.hours ? 'default' : 'outline'}
-                      className="h-7 px-2.5 text-xs"
-                      onClick={() => setCleanupHours(opt.hours)}
-                    >
-                      {opt.label}
-                    </Button>
-                  ))}
-                </div>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="h-7 px-3 text-xs gap-1.5"
-                  disabled={cleaning}
-                  onClick={() => void handleCleanup()}
-                >
-                  {cleaning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                  Limpar
-                </Button>
-              </div>
-            </div>
-          </Section>
-        </div>
+        <PipelineView
+          pipelineErrors={pipelineErrors}
+          queueSections={queueSections}
+          pipelineStages={pipelineStages}
+          showForm={showForm}
+          cleanupHours={cleanupHours}
+          cleaning={cleaning}
+          handleCleanup={() => void handleCleanup()}
+          setCleanupHours={setCleanupHours}
+        />
       )}
 
       {activeView === 'logs' && (
-        <div className="space-y-5">
-          <Section
-            title="Execuções recentes"
-            description="Histórico operacional do pipeline e das automações"
-            icon={<Ic icon={Clock} className="text-amber-500 bg-amber-500/10" />}
-            actions={
-              <Select value={executionStatusFilter} onValueChange={(v) => setExecutionStatusFilter(v as typeof executionStatusFilter)}>
-                <SelectTrigger className="h-7 w-28 text-[11px]"><SelectValue placeholder="Filtrar" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="success">Sucesso</SelectItem>
-                  <SelectItem value="error">Erro</SelectItem>
-                  <SelectItem value="running">Executando</SelectItem>
-                </SelectContent>
-              </Select>
-            }
-          >
-            <ExecutionTimeline
-              executions={executions}
-              total={totalExecutions}
-              isLoading={loadingExecutions}
-              error={null}
-              statusFilter={executionStatusFilter}
-              onStatusFilterChange={setExecutionStatusFilter}
-            />
-          </Section>
-
-          <Section
-            title="Audit Log"
-            description="Histórico de alterações com diff de campos"
-            icon={<Ic icon={Shield} className="text-purple-500 bg-purple-500/10" />}
-            collapsible
-            defaultExpanded={false}
-          >
-            <AuditLogViewer />
-          </Section>
-
-          <Section
-            title="Detalhe técnico"
-            description="Configuração avançada do pipeline e logs internos"
-            icon={<Ic icon={Settings2} className="text-muted-foreground bg-muted" />}
-            collapsible
-            defaultExpanded={false}
-          >
-            <NewsPipelineCard />
-          </Section>
-        </div>
+        <LogsView
+          executions={executions}
+          totalExecutions={totalExecutions}
+          loadingExecutions={loadingExecutions}
+          executionStatusFilter={executionStatusFilter}
+          setExecutionStatusFilter={setExecutionStatusFilter}
+        />
       )}
 
       {activeView === 'automations' && (
-        <div className="space-y-5">
-          <div className="flex items-center justify-between gap-3">
-            <Select value={activeCategory} onValueChange={(v) => setActiveCategory(v as typeof activeCategory)}>
-              <SelectTrigger className="h-8 w-48 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Categorias</SelectItem>
-                {AUTOMATION_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{CATEGORY_META[cat]?.label || cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button size="sm" className="h-8 text-xs" onClick={() => { setEditingAutomation(null); setSelectedTemplate(null); setShowForm(true); }}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" />Nova Automação
-            </Button>
-          </div>
-
-          {showForm && (
-            <Section
-              title={editingAutomation ? 'Editar Automação' : 'Nova Automação'}
-              icon={<Ic icon={Plus} className="text-primary bg-primary/10" />}
-            >
-              <AutomationForm
-                editing={editingAutomation}
-                template={selectedTemplate}
-                workflows={workflows}
-                onSave={handleSave}
-                onCancel={handleCancel}
-                isSaving={isSaving}
-              />
-            </Section>
-          )}
-
-          <Section
-            title="Galeria de Templates"
-            description="Templates pré-configurados"
-            icon={<Ic icon={LayoutGrid} className="text-blue-500 bg-blue-500/10" />}
-            collapsible
-            defaultExpanded={false}
-          >
-            <AutomationTemplateGallery
-              templates={templates}
-              isLoading={loadingTemplates}
-              onUseTemplate={handleUseTemplate}
-              activeCategory={activeCategory}
-            />
-          </Section>
-
-          {loadingAutomations ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">Carregando automações...</div>
-          ) : automations.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="mb-3 text-sm text-muted-foreground">Nenhuma automação encontrada</p>
-              <Button size="sm" onClick={() => setShowForm(true)}><Plus className="mr-1.5 h-3.5 w-3.5" />Criar Primeira Automação</Button>
-            </div>
-          ) : (
-            <>
-              {/* Bulk action bar */}
-              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/40 bg-muted/30 px-3 py-2">
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={toggleSelectAll}>
-                  <CheckSquare className="h-3.5 w-3.5" />
-                  {selectedIds.size === automations.length ? 'Desmarcar tudo' : 'Selecionar tudo'}
-                </Button>
-                {selectedIds.size > 0 && (
-                  <>
-                    <span className="text-xs text-muted-foreground">{selectedIds.size} selecionada{selectedIds.size > 1 ? 's' : ''}</span>
-                    <div className="flex-1" />
-                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1" disabled={bulkBusy} onClick={() => void handleBulkAction('activate')}>
-                      <Play className="h-3 w-3" />Ativar
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1" disabled={bulkBusy} onClick={() => void handleBulkAction('pause')}>
-                      <Pause className="h-3 w-3" />Pausar
-                    </Button>
-                    <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" disabled={bulkBusy} onClick={() => void handleBulkAction('delete')}>
-                      {bulkBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}Remover
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {automations.map((auto) => (
-                  <AutomationCard
-                    key={auto.id}
-                    automation={auto}
-                    selected={selectedIds.has(auto.id)}
-                    onSelect={(checked) => toggleSelect(auto.id, checked)}
-                    onToggle={() => void toggleStatus(auto.id, auto.status)}
-                    onEdit={() => handleEdit(auto)}
-                    onDelete={() => void handleDelete(auto.id)}
-                    onExecute={() => void handleExecute(auto)}
-                    onClone={() => handleClone(auto)}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+        <AutomationsView
+          automations={automations}
+          totalAutomations={totalAutomations}
+          loadingAutomations={loadingAutomations}
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+          showForm={showForm}
+          setShowForm={(show) => {
+            if (show) { setEditingAutomation(null); setSelectedTemplate(null); }
+            setShowForm(show);
+          }}
+          editingAutomation={editingAutomation}
+          setEditingAutomation={setEditingAutomation}
+          selectedTemplate={selectedTemplate}
+          setSelectedTemplate={setSelectedTemplate}
+          templates={templates}
+          loadingTemplates={loadingTemplates}
+          workflows={workflows}
+          isSaving={isSaving}
+          selectedIds={selectedIds}
+          bulkBusy={bulkBusy}
+          toggleSelect={toggleSelect}
+          toggleSelectAll={toggleSelectAll}
+          handleBulkAction={(action) => void handleBulkAction(action)}
+          handleSave={(payload) => void handleSave(payload)}
+          handleEdit={handleEdit}
+          handleClone={handleClone}
+          handleDelete={(id) => void handleDelete(id)}
+          handleExecute={(a) => void handleExecute(a)}
+          handleUseTemplate={handleUseTemplate}
+          handleCancel={handleCancel}
+          toggleStatus={toggleStatus}
+        />
       )}
 
       {activeView === 'tools' && (
-        <div className="space-y-5">
-          <Section
-            title="Workflows n8n"
-            description={`${activeWorkflows}/${workflows.length} ativos`}
-            icon={<Ic icon={Settings2} className="text-amber-500 bg-amber-500/10" />}
-            actions={
-              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => void refreshN8n()}>
-                <RefreshCw className="mr-1 h-3 w-3" />Atualizar
-              </Button>
-            }
-          >
-            <N8nWorkflowsPanel workflows={workflows} isConnected={isConnected} onRefresh={() => void refreshN8n()} />
-          </Section>
-
-          {showLabButton && (
-            <Section
-              title="Email Templates (Dev)"
-              description="Envio de templates para revisão"
-              icon={<Ic icon={Wrench} className="bg-muted text-muted-foreground" />}
-              collapsible
-              defaultExpanded={false}
-            >
-              <EmailTemplateCampaignPanel />
-            </Section>
-          )}
-        </div>
+        <ToolsView
+          workflows={workflows}
+          isConnected={isConnected}
+          activeWorkflows={activeWorkflows}
+          showLabButton={showLabButton}
+          onRefresh={() => void refreshN8n()}
+        />
       )}
     </div>
   );

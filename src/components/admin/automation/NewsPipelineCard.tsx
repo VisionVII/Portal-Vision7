@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Newspaper, Layers, Sparkles, Play, RefreshCw, CheckCircle2, Square,
-  Clock, Loader2, ChevronRight, Tag, X, Settings2, Zap,
+  Clock, Loader2, Tag, X, Settings2, Zap,
   Activity, ArrowUpRight, AlertTriangle, Radio, Eye, Database, Shield, Workflow,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useCuratedPostsStats, useAutoPromoteCurated, useAutoPromotePolling } from '@/hooks/useCuratedPosts';
 import { usePipelineConfig } from '@/hooks/usePipelineConfig';
@@ -32,6 +30,9 @@ import {
 import type { N8nWorkflow, N8nExecution } from '@/types/automation';
 import { setKeepAlivePipelineBusy } from '@/hooks/useN8nKeepAlive';
 import { PipelineSettingsPanel } from './PipelineSettingsPanel';
+import { PipelineActivityLog, type LogEntry } from './PipelineActivityLog';
+import { PipelineStepCard } from './PipelineStepCard';
+import { EditorialConfigForm } from './EditorialConfigForm';
 
 /* ── Pipeline step descriptor ── */
 interface PipelineStep {
@@ -54,7 +55,7 @@ const PIPELINE_STEPS: PipelineStep[] = [
     icon: Newspaper,
     nameMatch: 'WF-01',
     delayAfterMs: 60_000,
-    scheduleIntervalMs: 30 * 60_000, // 30min
+    scheduleIntervalMs: 30 * 60_000,
   },
   {
     key: 'wf02',
@@ -64,7 +65,7 @@ const PIPELINE_STEPS: PipelineStep[] = [
     icon: Layers,
     nameMatch: 'WF-02',
     delayAfterMs: 30_000,
-    scheduleIntervalMs: 20 * 60_000, // 20min
+    scheduleIntervalMs: 20 * 60_000,
   },
   {
     key: 'wf03',
@@ -74,24 +75,14 @@ const PIPELINE_STEPS: PipelineStep[] = [
     icon: Sparkles,
     nameMatch: 'WF-03',
     delayAfterMs: 0,
-    scheduleIntervalMs: 60 * 60_000, // 60min
+    scheduleIntervalMs: 60 * 60_000,
   },
 ];
-
-/* ── Activity log entry ── */
-interface LogEntry {
-  id: string;
-  timestamp: Date;
-  step: string;
-  message: string;
-  type: 'info' | 'success' | 'error' | 'warn' | 'running';
-}
 
 function matchWorkflow(workflows: N8nWorkflow[], nameMatch: string): N8nWorkflow | undefined {
   const matches = workflows.filter((w) => w.name?.includes(nameMatch));
   if (matches.length <= 1) return matches[0];
 
-  // Prefer active workflows, then the most recently updated one.
   return [...matches].sort((a, b) => {
     const activeDelta = Number(b.active === true) - Number(a.active === true);
     if (activeDelta !== 0) return activeDelta;
@@ -104,10 +95,6 @@ function matchWorkflow(workflows: N8nWorkflow[], nameMatch: string): N8nWorkflow
   })[0];
 }
 
-function formatTime(d: Date): string {
-  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
 function formatRelativeTime(iso: string | undefined): string {
   if (!iso) return '—';
   const diff = Date.now() - new Date(iso).getTime();
@@ -117,20 +104,6 @@ function formatRelativeTime(iso: string | undefined): string {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h`;
   return `${Math.floor(hours / 24)}d`;
-}
-
-function formatCountdown(ms: number): string {
-  if (ms <= 0) return '0:00';
-  const totalSec = Math.ceil(ms / 1000);
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
-
-function getCountdownMs(lastExecIso: string | undefined, intervalMs: number): number {
-  if (!lastExecIso || !intervalMs) return -1;
-  const nextRun = new Date(lastExecIso).getTime() + intervalMs;
-  return nextRun - Date.now();
 }
 
 /** Tick every second to drive countdown badges */
@@ -154,14 +127,6 @@ function getExecutionTimestamp(exec: N8nExecution): number {
   const numericId = Number(exec.id);
   return Number.isFinite(numericId) ? numericId : 0;
 }
-
-const LOG_TYPE_STYLES: Record<string, string> = {
-  info: 'text-muted-foreground',
-  success: 'text-primary',
-  error: 'text-red-400',
-  warn: 'text-amber-400',
-  running: 'text-blue-500',
-};
 
 export function NewsPipelineCard() {
   const { toast } = useToast();
@@ -239,9 +204,8 @@ export function NewsPipelineCard() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro desconhecido';
       const isInfra = /503|502|unreachable|timeout/i.test(msg);
-      
+
       if (attempt < 3) {
-        // Cold start — retry with exponential backoff (40s, 60s)
         const delaySec = attempt === 1 ? 40 : 60;
         if (attempt === 1) {
           addLogEntry('Sistema', `n8n a arrancar (cold start ${isInfra ? '502/503' : 'timeout'}) — aguarde ${delaySec}s...`, 'warn');
@@ -291,7 +255,6 @@ export function NewsPipelineCard() {
     };
   }, [fetchWorkflows, fetchRecentExecutions]);
 
-  // Poll executions every 15s while pipeline is running
   useEffect(() => {
     if (!pipelineRunning) return;
     const interval = setInterval(() => void fetchRecentExecutions(), 15_000);
@@ -360,7 +323,6 @@ export function NewsPipelineCard() {
       .sort((a, b) => getExecutionTimestamp(b) - getExecutionTimestamp(a));
   }, [latestExecutionByWorkflowId]);
 
-  // Check if any recent execution is still running
   const hasRunningExecution = recentExecutions.some((e) => e.status === 'running');
 
   /* ── Toggle all workflows ── */
@@ -402,7 +364,6 @@ export function NewsPipelineCard() {
 
     addLogEntry('Pipeline', 'Iniciando pipeline de notícias IA...', 'running');
 
-    // Auto-activate any inactive workflows so the webhook endpoints are registered in n8n
     const inactiveSteps = pipelineWorkflows.filter(({ wf }) => wf && wf.active === false);
     if (inactiveSteps.length > 0) {
       addLogEntry('Pipeline', `Ativando ${inactiveSteps.length} workflow(s) inativo(s)...`, 'running');
@@ -416,7 +377,6 @@ export function NewsPipelineCard() {
           addLogEntry(s.shortLabel, `Aviso: não foi possível ativar: ${msg}`, 'warn');
         }
       }
-      // Give n8n time to register webhook endpoints after activation
       addLogEntry('Pipeline', 'Aguardando registo de webhooks no n8n (3s)...', 'info');
       await new Promise((r) => setTimeout(r, 3000));
     }
@@ -438,7 +398,6 @@ export function NewsPipelineCard() {
         setCompletedSteps(new Set(completedStepKeys));
         addLogEntry(step.shortLabel, `✓ "${wf.name}" executado com sucesso (método: ${result.method})`, 'success');
 
-        // Add contextual detail per step
         if (step.key === 'wf01') {
           addLogEntry(step.shortLabel, 'Coleta RSS iniciada — feeds configurados serão processados', 'info');
         } else if (step.key === 'wf02') {
@@ -453,7 +412,6 @@ export function NewsPipelineCard() {
         }
       } catch (err) {
         if (err instanceof CronWorkflowError) {
-          // Webhook not reachable — workflow may still be starting up in n8n
           failedStepKeys.add(step.key);
           setFailedSteps(new Set(failedStepKeys));
           addLogEntry(step.shortLabel, 'Não foi possível disparar o workflow via webhook. Verifique que está ativo no n8n e tente novamente.', 'error');
@@ -491,7 +449,6 @@ export function NewsPipelineCard() {
       addLogEntry('Pipeline', `Pipeline concluído com ${failedCount} erro(s) após ${confirmedCount} confirmação(ões)`, 'warn');
     }
 
-    // Refresh executions after pipeline finishes
     void fetchRecentExecutions();
     void refetchDiagnostics();
   };
@@ -635,8 +592,8 @@ export function NewsPipelineCard() {
             {/* Title & Status */}
             <div className="flex items-start gap-4 min-w-0">
               <div className={`p-3.5 rounded-2xl shrink-0 bg-gradient-to-br transition-all duration-300 ${
-                pipelineRunning || hasRunningExecution 
-                  ? 'from-blue-500/20 via-blue-400/10 to-blue-500/20 animate-pulse' 
+                pipelineRunning || hasRunningExecution
+                  ? 'from-blue-500/20 via-blue-400/10 to-blue-500/20 animate-pulse'
                   : 'from-blue-500/15 via-blue-400/10 to-primary-500/15'
               }`}>
                 <Zap className={`w-6 h-6 ${pipelineRunning || hasRunningExecution ? 'text-blue-400' : 'text-blue-500'}`} />
@@ -653,7 +610,7 @@ export function NewsPipelineCard() {
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+                <div className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                   <span className="flex items-center gap-1.5">
                     <Workflow className="w-3.5 h-3.5" />
                     {pipelineWorkflows.length} workflow{pipelineWorkflows.length !== 1 ? 's' : ''}
@@ -662,7 +619,7 @@ export function NewsPipelineCard() {
                   <span>Coleta → Cluster → Reescrita</span>
                   {someActive && !allActive && <Badge variant="outline" className="border-amber-500/40 text-amber-400 text-[10px] px-1.5 py-0">Parcial</Badge>}
                   {allActive && <Badge variant="outline" className="border-primary/30 text-primary text-[10px] px-1.5 py-0">Todos ativos</Badge>}
-                </p>
+                </div>
               </div>
             </div>
 
@@ -776,154 +733,26 @@ export function NewsPipelineCard() {
 
         {/* ── Editorial Config Panel ── */}
         {showConfig && (
-          <div className="rounded-xl border border-border/40 bg-muted/30 backdrop-blur-xl p-5 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-blue-500/5">
-                  <Settings2 className="w-4 h-4 text-blue-500" />
-                </div>
-                <span className="text-sm font-semibold text-foreground">Configuração Editorial</span>
-              </div>
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30" onClick={() => setShowConfig(false)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div>
-                <span className="text-xs font-medium text-foreground/80 block mb-1.5">Nome editorial</span>
-                <Input
-                  value={editConfigLabel}
-                  onChange={(e) => setEditConfigLabel(e.target.value)}
-                  className="h-9 text-sm bg-muted/40 border-border/40 focus:border-primary/50"
-                  placeholder="Ex: Tecnologia Portugal"
-                />
-              </div>
-              <div>
-                <span className="text-xs font-medium text-foreground/80 block mb-1.5">Idioma</span>
-                <Input
-                  value={editLanguage}
-                  onChange={(e) => setEditLanguage(e.target.value)}
-                  className="h-9 text-sm bg-muted/40 border-border/40 focus:border-primary/50"
-                  placeholder="pt-PT"
-                />
-              </div>
-              <div>
-                <span className="text-xs font-medium text-foreground/80 block mb-1.5">Região</span>
-                <Input
-                  value={editRegion}
-                  onChange={(e) => setEditRegion(e.target.value)}
-                  className="mt-1 h-8 text-xs bg-muted border-border"
-                  placeholder="PT"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Tags finais dos posts</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {editDefaultPostTags.map((tag) => (
-                  <Badge
-                    key={`default-${tag}`}
-                    variant="outline"
-                    className="text-xs px-2 py-0.5 border-primary/25 text-primary gap-1 cursor-pointer hover:border-red-500/30 hover:text-red-400"
-                    onClick={() => removeDefaultPostTag(tag)}
-                  >
-                    {tag} <X className="w-2.5 h-2.5" />
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex gap-1.5">
-                <Input
-                  placeholder="Ex: portal, tecnologia, portugal"
-                  className="h-7 text-xs bg-muted border-border"
-                  value={newDefaultPostTag}
-                  onChange={(e) => setNewDefaultPostTag(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ',' || e.key === ';') {
-                      e.preventDefault();
-                      addDefaultPostTag();
-                    }
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Temas editoriais</span>
-                <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-blue-500 hover:text-blue-400" onClick={addThemeRule}>
-                  Novo tema
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {editThemeRules.map((theme, index) => (
-                  <div key={theme.id} className="rounded-lg border border-border/50 bg-muted/20 p-2.5 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-muted-foreground">Tema {index + 1}</span>
-                      <Button size="sm" variant="ghost" className="h-5 px-1 text-[10px] text-red-400 hover:text-red-300" onClick={() => removeThemeRule(theme.id)}>
-                        Remover
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      <div>
-                        <span className="text-[10px] text-muted-foreground">Nome visível</span>
-                        <Input
-                          value={theme.label}
-                          onChange={(e) => updateThemeRule(theme.id, { label: e.target.value })}
-                          className="mt-1 h-7 text-xs bg-muted border-border"
-                          placeholder="Ex: Inteligência Artificial"
-                        />
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground">Slug do tema</span>
-                        <Input
-                          value={theme.slug}
-                          onChange={(e) => updateThemeRule(theme.id, { slug: e.target.value })}
-                          className="mt-1 h-7 text-xs bg-muted border-border"
-                          placeholder="Ex: ia"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-muted-foreground">Termos de pesquisa</span>
-                      <Input
-                        value={theme.searchTerms.join(', ')}
-                        onChange={(e) => updateThemeRule(theme.id, { searchTerms: parseListInput(e.target.value) })}
-                        className="mt-1 h-7 text-xs bg-muted border-border"
-                        placeholder="Ex: inteligência artificial, openai, agentes IA"
-                      />
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-muted-foreground">Tags finais desse tema</span>
-                      <Input
-                        value={theme.postTags.join(', ')}
-                        onChange={(e) => updateThemeRule(theme.id, { postTags: parseListInput(e.target.value) })}
-                        className="mt-1 h-7 text-xs bg-muted border-border"
-                        placeholder="Ex: ia, inteligência artificial, agentes"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <p className="text-[10px] text-muted-foreground">
-              Cada tema controla os termos usados na coleta e as tags finais aplicadas aos posts promovidos para o portal.
-            </p>
-
-            <div className="flex justify-end gap-1.5">
-              <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setShowConfig(false)}>
-                Cancelar
-              </Button>
-              <Button size="sm" className="h-6 text-xs bg-cyan-600 hover:bg-cyan-700" disabled={isSaving} onClick={() => void saveEditorialConfig()}>
-                {isSaving ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
-                Guardar
-              </Button>
-            </div>
-          </div>
+          <EditorialConfigForm
+            editConfigLabel={editConfigLabel}
+            setEditConfigLabel={setEditConfigLabel}
+            editLanguage={editLanguage}
+            setEditLanguage={setEditLanguage}
+            editRegion={editRegion}
+            setEditRegion={setEditRegion}
+            editDefaultPostTags={editDefaultPostTags}
+            newDefaultPostTag={newDefaultPostTag}
+            setNewDefaultPostTag={setNewDefaultPostTag}
+            editThemeRules={editThemeRules}
+            isSaving={isSaving}
+            onAddDefaultPostTag={addDefaultPostTag}
+            onRemoveDefaultPostTag={removeDefaultPostTag}
+            onAddThemeRule={addThemeRule}
+            onUpdateThemeRule={updateThemeRule}
+            onRemoveThemeRule={removeThemeRule}
+            onSave={() => void saveEditorialConfig()}
+            onCancel={() => setShowConfig(false)}
+          />
         )}
 
         {/* ── Pipeline Settings Panel ── */}
@@ -989,7 +818,6 @@ export function NewsPipelineCard() {
                 ))}
               </div>
             )}
-            {/* Tag sync warning */}
             {diagnostics.configTags.length > 0 && activeConfig && (
               (() => {
                 const dbTags = [...diagnostics.configTags].sort().join(',');
@@ -1014,7 +842,6 @@ export function NewsPipelineCard() {
                 Nenhuma config ativa no DB — n8n usará tags padrão (IA, cibersegurança, automação)
               </div>
             )}
-            {/* Bottleneck detection */}
             {diagnostics.staging.total > 0 && diagnostics.clusters.total === 0 && (
               <div className="text-[10px] text-amber-400">
                 ⚠ {diagnostics.staging.total} artigos em staging mas 0 clusters — WF-02 ainda não processou ou falhou
@@ -1048,7 +875,6 @@ export function NewsPipelineCard() {
 
               const isActive = wf.active === true;
               const isRunning = currentStep === step.key;
-              const StepIcon = step.icon;
               const wfExec = latestExecutionByStepKey.get(step.key) ?? latestExecutionByWorkflowId.get(String(wf.id));
               const workflowUpdatedAt = wf.updatedAt ? Date.parse(String(wf.updatedAt)) : 0;
               const executionAt = wfExec ? getExecutionTimestamp(wfExec) : 0;
@@ -1059,138 +885,21 @@ export function NewsPipelineCard() {
               const isCompleted = hasExecutionSuccess || (completedSteps.has(step.key) && !hasExecutionError);
 
               return (
-                <div key={step.key} className="relative group">
-                  {/* Connecting arrow for lg+ screens */}
-                  {idx < PIPELINE_STEPS.length - 1 && (
-                    <div className="hidden lg:block absolute top-1/2 -right-[18px] -translate-y-1/2 z-10">
-                      <ChevronRight className="w-5 h-5 text-blue-500/50" />
-                    </div>
-                  )}
-
-                  {/* Step Card */}
-                  <div className={`relative overflow-hidden rounded-xl p-5 transition-all duration-300 ${
-                    isRunning
-                      ? 'bg-gradient-to-br from-cyan-500/20 via-cyan-400/10 to-blue-500/20 ring-2 ring-cyan-400/50 shadow-xl shadow-cyan-500/30'
-                      : isFailed
-                      ? 'bg-gradient-to-br from-red-500/10 via-red-400/5 to-red-500/10 ring-1 ring-red-500/30'
-                      : isCompleted
-                      ? 'bg-primary/10 ring-1 ring-primary/30'
-                      : isActive
-                      ? 'bg-muted/40 ring-1 ring-border/40 hover:ring-primary/30'
-                      : 'bg-muted/20 ring-1 ring-border/20 opacity-60'
-                  }`}>
-                    {/* Decorative gradient */}
-                    {isRunning && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-transparent to-blue-500/10 animate-pulse pointer-events-none" />
-                    )}
-
-                    <div className="relative space-y-4">
-                      {/* Icon & Title */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2.5 rounded-xl shrink-0 ${
-                            isRunning
-                              ? 'bg-cyan-500/20 ring-2 ring-cyan-400/50'
-                              : isFailed
-                              ? 'bg-red-500/20 ring-1 ring-red-500/30'
-                              : isCompleted
-                              ? 'bg-primary/15 ring-1 ring-primary/30'
-                              : isActive
-                              ? 'bg-gradient-to-br from-cyan-500/10 to-primary-500/10'
-                              : 'bg-muted/30'
-                          }`}>
-                            {isRunning ? (
-                              <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
-                            ) : isFailed ? (
-                              <AlertTriangle className="w-5 h-5 text-red-400" />
-                            ) : isCompleted ? (
-                              <CheckCircle2 className="w-5 h-5 text-primary" />
-                            ) : (
-                              <StepIcon className={`w-5 h-5 ${isActive ? 'text-blue-500' : 'text-muted-foreground/60'}`} />
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-semibold text-foreground">{step.label}</h3>
-                            <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
-                          </div>
-                        </div>
-                        {isActive && (
-                          <div className="w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/30 animate-pulse" title="Workflow ativo" />
-                        )}
-                      </div>
-
-                      {/* Status Badge */}
-                      <div className="flex items-center gap-2">
-                        <Badge className={`text-xs px-2.5 py-0.5 ${
-                          isRunning
-                            ? 'bg-cyan-500/20 text-blue-400 border-blue-500/30'
-                            : isFailed
-                            ? 'bg-red-500/20 text-red-300 border-red-400/40'
-                            : isCompleted
-                            ? 'bg-primary/15 text-primary/80 border-primary/30'
-                            : isActive
-                            ? 'bg-primary/10 text-primary border-primary/25'
-                            : 'bg-muted text-muted-foreground border-border'
-                        }`}>
-                          {isRunning ? (
-                            <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Executando...</>
-                          ) : isFailed ? (
-                            <><AlertTriangle className="w-3 h-3 mr-1" />Erro</>
-                          ) : isCompleted ? (
-                            <><CheckCircle2 className="w-3 h-3 mr-1" />{wfExec?.status === 'success' ? 'Sucesso' : 'Concluído'}</>
-                          ) : isActive ? (
-                            'Ativo'
-                          ) : (
-                            'Inativo'
-                          )}
-                        </Badge>
-                        {(() => {
-                          const remaining = getCountdownMs(wfExec?.startedAt, step.scheduleIntervalMs);
-                          if (isRunning) return null;
-                          if (!wfExec || !isActive) return null;
-                          if (remaining > 0) {
-                            return (
-                              <Badge variant="outline" className="text-xs px-2 py-0.5 border-blue-500/25 text-blue-400 font-mono tabular-nums">
-                                <Clock className="w-3 h-3 mr-1" />
-                                {formatCountdown(remaining)}
-                              </Badge>
-                            );
-                          }
-                          return (
-                            <Badge variant="outline" className="text-xs px-2 py-0.5 border-primary/25 text-primary">
-                              iminente
-                            </Badge>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Workflow Meta */}
-                      <div className="pt-3 border-t border-border/30 space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">Workflow ID</span>
-                          <span className="font-mono text-muted-foreground">{wf.id}</span>
-                        </div>
-                        {wfExec && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Última exec.</span>
-                            <span className={`font-medium ${
-                              hasExecutionSuccess ? 'text-primary' :
-                              hasExecutionError ? 'text-red-400' :
-                              wfExec.status === 'running' ? 'text-blue-500' :
-                              !isExecutionCurrent ? 'text-amber-400' : 'text-muted-foreground'
-                            }`}>
-                              {wfExec.status === 'running'
-                                ? 'A correr'
-                                : !isExecutionCurrent
-                                  ? 'Aguardando nova execução'
-                                  : wfExec.status}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <PipelineStepCard
+                  key={step.key}
+                  step={step}
+                  wf={wf}
+                  idx={idx}
+                  totalSteps={PIPELINE_STEPS.length}
+                  isRunning={isRunning}
+                  isFailed={isFailed}
+                  isCompleted={isCompleted}
+                  isActive={isActive}
+                  isExecutionCurrent={isExecutionCurrent}
+                  hasExecutionSuccess={hasExecutionSuccess}
+                  hasExecutionError={hasExecutionError}
+                  wfExec={wfExec}
+                />
               );
             })}
           </div>
@@ -1198,71 +907,11 @@ export function NewsPipelineCard() {
 
         {/* ── Activity Log ── */}
         {showLog && (
-          <div className="rounded-lg border border-border/40 bg-muted/60">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border/30">
-              <div className="flex items-center gap-2">
-                <Activity className="w-3.5 h-3.5 text-blue-500" />
-                <span className="text-xs font-medium text-foreground">Log da Sessão</span>
-                <Badge variant="outline" className="text-[9px] px-1 py-0 border-blue-500/30 text-blue-400">
-                  Sessão
-                </Badge>
-                <Badge variant="outline" className="text-[9px] px-1 py-0 border-border text-muted-foreground">
-                  {activityLog.length}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-1">
-                {activityLog.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-foreground"
-                    onClick={() => setActivityLog([])}
-                  >
-                    Limpar
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowLog(false)}
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-            <ScrollArea className="h-[180px]">
-              <div className="p-2 space-y-0.5">
-                {activityLog.length === 0 ? (
-                  <p className="text-xs text-muted-foreground/60 text-center py-4">Nenhuma atividade nesta sessão. O estado real continua disponível via n8n e banco.</p>
-                ) : (
-                  activityLog.map((entry) => (
-                    <div key={entry.id} className="flex items-start gap-2 py-0.5 hover:bg-muted/20 px-1 rounded">
-                      <span className="text-[9px] text-muted-foreground/60 font-mono shrink-0 mt-0.5 tabular-nums">
-                        {formatTime(entry.timestamp)}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className={`text-[8px] px-1 py-0 shrink-0 mt-0.5 ${
-                          entry.type === 'running' ? 'border-blue-500/30 text-blue-500' :
-                          entry.type === 'success' ? 'border-primary/25 text-primary' :
-                          entry.type === 'error' ? 'border-red-500/30 text-red-400' :
-                          entry.type === 'warn' ? 'border-amber-500/30 text-amber-400' :
-                          'border-border text-muted-foreground'
-                        }`}
-                      >
-                        {entry.step}
-                      </Badge>
-                      <span className={`text-[10px] ${LOG_TYPE_STYLES[entry.type] ?? 'text-muted-foreground'}`}>
-                        {entry.type === 'running' && <Loader2 className="w-2.5 h-2.5 inline animate-spin mr-1" />}
-                        {entry.message}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </div>
+          <PipelineActivityLog
+            activityLog={activityLog}
+            onClear={() => setActivityLog([])}
+            onClose={() => setShowLog(false)}
+          />
         )}
 
         {/* ── Recent n8n Executions ── */}
@@ -1303,8 +952,8 @@ export function NewsPipelineCard() {
                 <Button
                   size="lg"
                   className={`h-11 px-6 text-sm font-medium gap-2 shadow-lg transition-all duration-300 ${
-                    pipelineRunning 
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-500/30' 
+                    pipelineRunning
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-500/30'
                       : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-cyan-500/30'
                   }`}
                   disabled={pipelineRunning}
@@ -1350,10 +999,10 @@ export function NewsPipelineCard() {
               )}
 
               {pipelineRunning && (
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="h-11 px-6 text-sm font-medium text-red-400 border-red-500/40 hover:bg-red-500/10 hover:text-red-300 gap-2" 
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-11 px-6 text-sm font-medium text-red-400 border-red-500/40 hover:bg-red-500/10 hover:text-red-300 gap-2"
                   onClick={() => { abortRef.current = true; }}
                 >
                   <Square className="w-4 h-4" />

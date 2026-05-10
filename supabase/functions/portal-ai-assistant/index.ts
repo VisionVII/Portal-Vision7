@@ -6,10 +6,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY') ?? '';
-const HF_API_TOKEN = Deno.env.get('HF_API_TOKEN') ?? '';
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const N8N_CREDENTIALS_ENCRYPTION_KEY = Deno.env.get('N8N_CREDENTIALS_ENCRYPTION_KEY') ?? '';
-const DEFAULT_MODEL = Deno.env.get('PORTAL_ASSISTANT_MODEL') ?? 'llama-3.1-8b-instant';
+const DEFAULT_MODEL = Deno.env.get('PORTAL_ASSISTANT_MODEL') ?? 'claude-haiku-4-5-20251001';
 const SDD_PATH = new URL('../../../sdd/modules/portal-assistant.json', import.meta.url);
 
 const DEFAULT_ASSISTANT_SDD = {
@@ -48,6 +47,8 @@ const ALLOWED_ORIGINS = ALLOWED_ORIGINS_ENV
 const DEV_ORIGINS = new Set([
   'http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080',
   'https://localhost:3000', 'https://localhost:5173', 'https://localhost:8080',
+  'http://127.0.0.1:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:8080',
+  'https://127.0.0.1:3000', 'https://127.0.0.1:5173', 'https://127.0.0.1:8080',
 ]);
 
 function isOriginAllowed(origin: string | null): boolean {
@@ -251,43 +252,25 @@ async function loadAssistantSdd() {
   }
 }
 
-async function loadApiKey(adminClient: ReturnType<typeof createClient>): Promise<{ key: string; provider: 'huggingface' | 'groq' }> {
-  // 1. Try Groq env var first — fastest, most reliable for real-time chat
-  if (GROQ_API_KEY) return { key: GROQ_API_KEY, provider: 'groq' };
-  // 2. Try HF env var
-  if (HF_API_TOKEN) return { key: HF_API_TOKEN, provider: 'huggingface' };
+async function loadApiKey(adminClient: ReturnType<typeof createClient>): Promise<string> {
+  if (ANTHROPIC_API_KEY) return ANTHROPIC_API_KEY;
 
-  // 3. Try HF_API_TOKEN from DB
-  const { data: hfCred } = await adminClient
+  // Fallback: try ANTHROPIC_API_KEY from encrypted DB credentials
+  const { data: cred } = await adminClient
     .from('n8n_credentials')
     .select('encrypted_value')
-    .eq('key_name', 'HF_API_TOKEN')
+    .eq('key_name', 'ANTHROPIC_API_KEY')
     .eq('status', 'active')
     .maybeSingle();
 
-  if (hfCred?.encrypted_value && N8N_CREDENTIALS_ENCRYPTION_KEY) {
+  if (cred?.encrypted_value && N8N_CREDENTIALS_ENCRYPTION_KEY) {
     try {
-      const key = await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, hfCred.encrypted_value);
-      if (key) return { key, provider: 'huggingface' };
+      const key = await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, cred.encrypted_value);
+      if (key) return key;
     } catch { /* fall through */ }
   }
 
-  // 4. Try GROQ_API_KEY from DB
-  const { data: groqCred } = await adminClient
-    .from('n8n_credentials')
-    .select('encrypted_value')
-    .eq('key_name', 'GROQ_API_KEY')
-    .eq('status', 'active')
-    .maybeSingle();
-
-  if (groqCred?.encrypted_value && N8N_CREDENTIALS_ENCRYPTION_KEY) {
-    try {
-      const key = await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, groqCred.encrypted_value);
-      if (key) return { key, provider: 'groq' };
-    } catch { /* fall through */ }
-  }
-
-  return { key: '', provider: 'groq' };
+  return '';
 }
 
 function buildSystemPrompt(sdd: Record<string, unknown>, viewerContext: Record<string, unknown>) {
@@ -501,13 +484,13 @@ Deno.serve(async (req: Request) => {
     const userFingerprint = String(body?.fingerprint || clientIp || '').slice(0, 128);
     const sdd = await loadAssistantSdd();
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const [{ key: apiKey, provider: llmProvider }, userPrefs] = await Promise.all([
+    const [apiKey, userPrefs] = await Promise.all([
       loadApiKey(adminClient),
       loadUserPrefs(adminClient, userFingerprint),
     ]);
 
     if (!apiKey) {
-      return jsonResponse({ error: 'Nenhuma chave de IA configurada (HF_API_TOKEN ou GROQ_API_KEY). Configure via dashboard em Automação > Configurações.' }, 503, cors);
+      return jsonResponse({ error: 'ANTHROPIC_API_KEY não configurada. Configure em Supabase > Edge Functions > Environment Variables.' }, 503, cors);
     }
 
     // Build system prompt with viewer context and user learning
@@ -519,78 +502,37 @@ Deno.serve(async (req: Request) => {
       assistant_id: String(body?.assistantId || 'vision7-assistant-core'),
     });
 
-    // Resolve the model name: ensure it matches the resolved provider
-    const GROQ_DEFAULT_MODEL = 'llama-3.1-8b-instant';
-    const requestedModel = String(body?.model || DEFAULT_MODEL || '');
-    // If using Groq but the model looks like an HF model/token, force the Groq default
-    const resolvedModel = llmProvider === 'groq' && (requestedModel.includes('/') || requestedModel.startsWith('hf_') || !requestedModel)
-      ? GROQ_DEFAULT_MODEL
-      : (requestedModel || GROQ_DEFAULT_MODEL);
+    const requestedModel = String(body?.model || DEFAULT_MODEL || 'claude-haiku-4-5-20251001');
 
-    let content = '';
-    let usedProvider = llmProvider;
+    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
+      },
+      body: JSON.stringify({
+        model: requestedModel,
+        max_tokens: 900,
+        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+        messages: [
+          ...conversation.map((turn) => ({
+            role: turn.role,
+            content: turn.text,
+          })),
+          { role: 'user', content: userPayload },
+        ],
+      }),
+    });
 
-    if (llmProvider === 'huggingface') {
-      const hfPrompt = systemPrompt + '\n\n' +
-        conversation.map((turn) => (turn.role === 'user' ? '[INST] ' + turn.text + ' [/INST]' : turn.text)).join('\n') +
-        '\n[INST] ' + userPayload + ' [/INST]';
-
-      const hfResponse = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          inputs: '<s>' + hfPrompt,
-          parameters: {
-            max_new_tokens: 900,
-            temperature: 0.45,
-            return_full_text: false,
-          },
-        }),
-      });
-
-      const hfData = await hfResponse.json();
-      if (!hfResponse.ok) {
-        const errMsg = hfData?.error || hfData?.message || 'HuggingFace request failed';
-        return jsonResponse({ error: errMsg }, hfResponse.status, cors);
-      }
-
-      content = Array.isArray(hfData) ? (hfData[0]?.generated_text ?? '') : (hfData?.generated_text ?? '');
-      usedProvider = 'huggingface';
-    } else {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: resolvedModel,
-          temperature: 0.5,
-          top_p: 0.92,
-          max_tokens: 900,
-          response_format: { type: 'json_object' },
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...conversation.map((turn) => ({
-              role: turn.role,
-              content: turn.text,
-            })),
-            { role: 'user', content: userPayload },
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        return jsonResponse({ error: data?.error?.message || data?.message || 'Groq request failed' }, response.status, cors);
-      }
-
-      content = data?.choices?.[0]?.message?.content ?? '';
-      usedProvider = 'groq';
+    const anthropicData = await anthropicResponse.json();
+    if (!anthropicResponse.ok) {
+      return jsonResponse({ error: anthropicData?.error?.message || 'Anthropic API error' }, anthropicResponse.status, cors);
     }
+
+    const content = anthropicData?.content?.[0]?.text ?? '';
+    const usedProvider = 'claude-edge';
 
     const parsed = parseAssistantResponse(String(content));
     if (!parsed) {
@@ -605,7 +547,7 @@ Deno.serve(async (req: Request) => {
         summary: fallbacks[Math.floor(Math.random() * fallbacks.length)],
         suggestions: ['Quais são as últimas notícias?', 'Que cursos estão disponíveis?', 'Explorar categorias'],
         links: [{ label: 'Ver notícias', href: '/#noticias', type: 'action' }, { label: 'Explorar categorias', href: '/', type: 'action' }],
-        provider: usedProvider === 'huggingface' ? 'hf-edge' : 'groq-edge',
+        provider: usedProvider,
         assistantId: String(body?.assistantId || 'vision7-assistant-core'),
         sddVersion: String(sdd.version ?? '0.1.0'),
         sddModule: String(sdd.module ?? 'Portal Assistant'),
@@ -625,7 +567,7 @@ Deno.serve(async (req: Request) => {
         summary: fallbackSummary,
         suggestions: ['Quais são as últimas notícias?', 'Que cursos estão disponíveis?', 'Explorar categorias'],
         links: [{ label: 'Ver notícias', href: '/#noticias', type: 'action' }, { label: 'Explorar categorias', href: '/', type: 'action' }],
-        provider: usedProvider === 'huggingface' ? 'hf-edge' : 'groq-edge',
+        provider: usedProvider,
         assistantId: String(body?.assistantId || 'vision7-assistant-core'),
         sddVersion: String(sdd.version ?? '0.1.0'),
         sddModule: String(sdd.module ?? 'Portal Assistant'),
@@ -641,7 +583,7 @@ Deno.serve(async (req: Request) => {
         ? parsed.suggestions.map((value: unknown) => String(value ?? '').trim()).filter(Boolean).slice(0, 4)
         : [],
       links: sanitizeLinks(parsed.links),
-      provider: usedProvider === 'huggingface' ? 'hf-edge' : 'groq-edge',
+      provider: usedProvider,
       assistantId: String(body?.assistantId || 'vision7-assistant-core'),
       sddVersion: String(sdd.version ?? '0.1.0'),
       sddModule: String(sdd.module ?? 'Portal Assistant'),

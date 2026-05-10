@@ -17,10 +17,16 @@ interface AISettings {
 }
 
 const PROVIDERS = [
-  { value: 'hf-edge', label: 'HuggingFace (Edge)' },
-  { value: 'groq-edge', label: 'Groq (Edge)' },
+  { value: 'claude-haiku', label: 'Claude Haiku (Rápido, económico)' },
+  { value: 'claude-sonnet', label: 'Claude Sonnet (Qualidade editorial)' },
   { value: 'local-preview', label: 'Local Preview (Offline)' },
 ] as const;
+
+const MODEL_BY_PROVIDER: Record<string, string> = {
+  'claude-haiku': 'claude-haiku-4-5-20251001',
+  'claude-sonnet': 'claude-sonnet-4-6',
+  'local-preview': '',
+};
 
 export default function AISettingsPanel() {
   const { toast } = useToast();
@@ -77,9 +83,12 @@ export default function AISettingsPanel() {
   };
 
   const update = (patch: Partial<AISettings>) => {
-    const updated = { ...settings, ...patch };
-    setSettings(updated);
-    void save(updated);
+    const merged = { ...settings, ...patch };
+    if (patch.provider && patch.provider in MODEL_BY_PROVIDER && !patch.model) {
+      merged.model = MODEL_BY_PROVIDER[patch.provider];
+    }
+    setSettings(merged);
+    void save(merged);
   };
 
   const toggleSkill = (skillId: string) => {

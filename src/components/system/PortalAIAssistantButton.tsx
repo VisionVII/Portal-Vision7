@@ -85,7 +85,7 @@ interface ChatMessage {
   suggestions?: string[];
   links?: Array<{ label: string; href: string; type: string }>;
   cards?: AssistantMessageCard[];
-  provider?: 'groq-edge' | 'hf-edge' | 'local-preview';
+  provider?: 'claude-edge' | 'local-preview';
 }
 
 interface PortalAIAssistantButtonProps {
@@ -157,7 +157,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
             setAiConfig((prev) => ({
               ...prev,
               enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : prev.enabled,
-              provider: (parsed.provider === 'groq-edge' || parsed.provider === 'hf-edge' || parsed.provider === 'local-preview')
+              provider: (parsed.provider === 'claude-haiku' || parsed.provider === 'claude-sonnet' || parsed.provider === 'local-preview')
                 ? parsed.provider
                 : prev.provider,
               model: typeof parsed.model === 'string' && parsed.model ? parsed.model : prev.model,
@@ -175,8 +175,8 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     return () => controller.abort();
   }, [isOpen]);
 
-  const [activeProvider, setActiveProvider] = useState<'groq-edge' | 'hf-edge' | 'local-preview'>(
-    portalAssistantConfig.provider === 'groq-edge' ? 'groq-edge' : portalAssistantConfig.provider === 'hf-edge' ? 'hf-edge' : 'local-preview'
+  const [activeProvider, setActiveProvider] = useState<'claude-edge' | 'local-preview'>(
+    portalAssistantConfig.provider === 'claude-haiku' || portalAssistantConfig.provider === 'claude-sonnet' ? 'claude-edge' : 'local-preview'
   );
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -313,7 +313,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
     summary: string;
     suggestions?: string[];
     links?: Array<{ label: string; href: string; type: string }>;
-    provider?: 'groq-edge' | 'hf-edge' | 'local-preview';
+    provider?: 'claude-edge' | 'local-preview';
   }, cards: AssistantMessageCard[] = []): ChatMessage => ({
     id: `a-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     role: 'assistant',
@@ -413,7 +413,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
 
       if (
         aiConfig.enabled &&
-        (aiConfig.provider === 'groq-edge' || aiConfig.provider === 'hf-edge') &&
+        (aiConfig.provider === 'claude-haiku' || aiConfig.provider === 'claude-sonnet') &&
         aiConfig.edgeFunctionName
       ) {
         try {

@@ -37,7 +37,7 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
             alt={`${brandName} logo`}
             width={400}
             height={267}
-            fetchPriority="high"
+            fetchpriority="high"
             className={cn(
               'w-auto object-contain drop-shadow-[0_4px_14px_rgba(34,211,238,0.18)]',
               compact

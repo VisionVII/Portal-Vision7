@@ -348,13 +348,9 @@ export const normalizePortalAssistantReply = (payload: unknown): PortalAssistant
     summary,
     suggestions,
     links,
-    provider: value.provider === 'groq-edge' || value.provider === 'hf-edge' || value.provider === 'local-preview'
+    provider: value.provider === 'claude-edge' || value.provider === 'local-preview'
       ? value.provider
-      : value.provider === 'groq'
-        ? 'groq-edge'
-        : value.provider === 'huggingface'
-          ? 'hf-edge'
-          : undefined,
+      : undefined,
     assistantId: typeof value.assistantId === 'string' ? value.assistantId : undefined,
     sddVersion: typeof value.sddVersion === 'string' ? value.sddVersion : undefined,
   };

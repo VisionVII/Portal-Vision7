@@ -135,7 +135,7 @@ const CredentialVault: React.FC = () => {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
             <Shield className="h-5 w-5 text-primary" />
@@ -176,7 +176,7 @@ const CredentialVault: React.FC = () => {
               <div>
                 <Label className="text-xs">Nome da chave *</Label>
                 <Input
-                  placeholder="Ex: GROQ_API_KEY"
+                  placeholder="Ex: ANTHROPIC_API_KEY"
                   value={formKey}
                   onChange={(e) => setFormKey(e.target.value)}
                   className="mt-1"

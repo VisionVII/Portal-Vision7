@@ -600,7 +600,7 @@ const AdminAccessManager: React.FC = () => {
         <InviteForm />
 
         {/* Stats summary */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <div className="rounded-xl border border-border/60 bg-card p-3 text-center shadow-sm">
             <p className="text-lg font-bold text-foreground">{stats.active}</p>
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Ativos</p>
