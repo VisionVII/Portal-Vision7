@@ -345,15 +345,47 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
   const handleFullReset = async () => {
     if (!confirm('ATENÇÃO: Isto apaga TODOS os dados do pipeline (staging, clusters, curados não publicados). Continuar?')) return;
     setCleaning(true);
+    setCleanupResult(null);
     try {
-      await supabase.from('news_staging').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('news_clusters').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('curated_posts').delete().in('status', ['draft', 'ready', 'rejected']);
+      const { data: stgData, error: stgErr } = await supabase
+        .from('news_staging')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000')
+        .select('id');
+      if (stgErr) throw new Error('Staging: ' + stgErr.message);
 
-      toast({ title: 'Pipeline limpo', description: 'Todos os dados intermediários foram removidos. O pipeline pode recomeçar limpo.' });
-      setCleanupResult('Reset completo — pipeline limpo para recomeçar');
+      const { data: clsData, error: clsErr } = await supabase
+        .from('news_clusters')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000')
+        .select('id');
+      if (clsErr) throw new Error('Clusters: ' + clsErr.message);
+
+      const { data: curData, error: curErr } = await supabase
+        .from('curated_posts')
+        .delete()
+        .in('status', ['draft', 'ready', 'auto-draft', 'pending-review', 'rejected'])
+        .select('id');
+      if (curErr) throw new Error('Curados: ' + curErr.message);
+
+      const stagingCount = stgData?.length ?? 0;
+      const clusterCount = clsData?.length ?? 0;
+      const curatedCount = curData?.length ?? 0;
+      const total = stagingCount + clusterCount + curatedCount;
+
+      const msg = total > 0
+        ? `Reset completo: ${stagingCount} staging, ${clusterCount} clusters, ${curatedCount} curados removidos`
+        : 'Nenhum registo encontrado para apagar (pode haver restrições de RLS)';
+      setCleanupResult(msg);
+      toast({
+        title: total > 0 ? `${total} registos removidos` : 'Nada apagado',
+        description: msg,
+        variant: total > 0 ? 'default' : 'destructive',
+      });
     } catch (err) {
-      toast({ title: 'Erro no reset', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      setCleanupResult('Erro: ' + msg);
+      toast({ title: 'Erro no reset', description: msg, variant: 'destructive' });
     } finally {
       setCleaning(false);
     }
