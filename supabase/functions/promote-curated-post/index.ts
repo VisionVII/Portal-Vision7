@@ -474,7 +474,7 @@ Deno.serve(async (req) => {
 
     const { data: curated, error: curatedError } = await adminClient
       .from('curated_posts')
-      .select('id, cluster_id, title, subtitle, slug, excerpt, body_markdown, body_html, status')
+      .select('id, cluster_id, title, subtitle, slug, excerpt, body_markdown, body_html, status, meta_description, seo_keywords, cover_image_prompt, cover_image_accent, quality_score, quality_details, editorial_metadata, workflow_metadata')
       .eq('id', curatedPostId)
       .maybeSingle();
 
@@ -524,7 +524,9 @@ Deno.serve(async (req) => {
 
     const slugBase = buildSlugBase(curated.slug || curated.title);
     const slug = `${slugBase}-${Date.now().toString(36)}`;
-    const readTime = `${Math.max(1, Math.ceil((curated.body_markdown?.length ?? 0) / 1200))} min`;
+    const wordCount = (curated.body_markdown ?? '').split(/\s+/).filter(Boolean).length;
+    const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 200));
+    const readTime = `${readingTimeMinutes} min`;
 
     const rawContent = curated.body_html || curated.body_markdown || '';
     // Convert markdown to HTML if content is not already HTML
@@ -543,6 +545,16 @@ Deno.serve(async (req) => {
         tags: postTags,
         read_time: readTime,
         author_name: 'Vision7 IA',
+        meta_description: curated.meta_description ?? null,
+        seo_keywords: curated.seo_keywords ?? {},
+        cover_image_prompt: curated.cover_image_prompt ?? null,
+        cover_image_accent: curated.cover_image_accent ?? null,
+        quality_score: curated.quality_score ?? 0,
+        quality_details: curated.quality_details ?? {},
+        editorial_metadata: curated.editorial_metadata ?? {},
+        workflow_metadata: curated.workflow_metadata ?? {},
+        word_count: wordCount,
+        reading_time_minutes: readingTimeMinutes,
       })
       .select('id, slug')
       .single();
@@ -579,12 +591,32 @@ Deno.serve(async (req) => {
     await cleanupPipelineArtifacts(adminClient, curated.cluster_id, cluster?.fingerprint ?? null);
     await upsertQueueStatus(adminClient, curatedPostId, 'completed');
 
+    // Resolve pending links that reference this newly published article
+    let resolvedLinksCount = 0;
+    try {
+      const { data: resolvedData } = await adminClient.rpc('resolve_pending_links', {
+        p_slug: createdPost.slug,
+        p_post_id: createdPost.id,
+      });
+      resolvedLinksCount = Number(resolvedData ?? 0);
+
+      // Also link the new post's own link_graph records to their post IDs
+      await adminClient
+        .from('article_link_graph')
+        .update({ source_post_id: createdPost.id })
+        .eq('source_curated_id', curatedPostId)
+        .is('source_post_id', null);
+    } catch {
+      // non-fatal — link graph resolves on next cycle
+    }
+
     return jsonResponse({
       promoted: true,
       status: 'promoted',
       postId: createdPost.id,
       slug: createdPost.slug,
       tags: postTags,
+      resolved_pending_links: resolvedLinksCount,
     }, 200, cors);
   } catch (error) {
     if (curatedPostId) {

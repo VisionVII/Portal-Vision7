@@ -104,21 +104,30 @@ BEGIN
 
 END $$;
 
--- Step 4: Add metadata tracking for migrated posts
--- Mark in curated_posts that these have been promoted to posts table
-UPDATE public.curated_posts
-SET metadata = jsonb_set(
-  COALESCE(metadata, '{}'::jsonb),
-  '{promoted_to_posts}',
-  'true'::jsonb
-)
-WHERE status IN ('ready', 'approved', 'promoted')
-  AND slug IS NOT NULL
-  AND (metadata->>'promoted_to_posts' IS NULL OR metadata->>'promoted_to_posts' = 'false')
-  AND EXISTS (
-    SELECT 1 FROM public.posts p
-    WHERE p.slug = curated_posts.slug
-  );
+-- Step 4: Add metadata tracking for migrated posts (only if column exists)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name   = 'curated_posts'
+      AND column_name  = 'metadata'
+  ) THEN
+    UPDATE public.curated_posts
+    SET metadata = jsonb_set(
+      COALESCE(metadata, '{}'::jsonb),
+      '{promoted_to_posts}',
+      'true'::jsonb
+    )
+    WHERE status IN ('ready', 'approved', 'promoted')
+      AND slug IS NOT NULL
+      AND (metadata->>'promoted_to_posts' IS NULL OR metadata->>'promoted_to_posts' = 'false')
+      AND EXISTS (
+        SELECT 1 FROM public.posts p
+        WHERE p.slug = curated_posts.slug
+      );
+  END IF;
+END $$;
 
 -- Step 5: Optional - Add a comment documenting the migration
 COMMENT ON TABLE public.posts IS 'Posts table - now includes promoted curated_posts with proper multi-category support. See migration 20260503100000.';
