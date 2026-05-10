@@ -139,12 +139,14 @@ export function AutomationDashboardV2({
     refreshingRef.current = true;
     try {
       const health = await checkN8nHealth();
+      // 'error' means n8n IS responding (just with a non-ok status) — treat as online
+      const n8nResponding = health.status === 'connected' || health.status === 'error';
       try {
         const raw = await getWorkflows();
         setWorkflows(deduplicateN8nWorkflows(raw));
         setIsConnected(true);
       } catch {
-        if (health.status === 'connected') {
+        if (n8nResponding) {
           setIsConnected(true);
         } else {
           setIsConnected(false);
