@@ -58,7 +58,7 @@ function buildN8nUrl(baseUrl: string, requestPath: string, query?: Record<string
 }
 
 function shouldRetryOnStatus(status: number): boolean {
-  return [404, 405, 501, 502, 503].includes(status);
+  return [404, 405, 500, 501, 502, 503].includes(status);
 }
 
 async function fetchN8nWithFallback(
@@ -475,12 +475,14 @@ Deno.serve(async (req: Request) => {
 
     const responseData = await n8nResponse.text();
 
-    // For 503 (cold-start), wrap in 200 OK to avoid browser network errors
-    if (n8nResponse.status === 503) {
+    // For 500/503, wrap in 200 OK to avoid browser network errors
+    if (n8nResponse.status === 503 || n8nResponse.status === 500) {
       return jsonResponse(
         {
-          error: 'n8n Service Unavailable (cold start)',
-          httpStatus: 503,
+          error: n8nResponse.status === 503
+            ? 'n8n Service Unavailable (cold start)'
+            : 'n8n Internal Server Error',
+          httpStatus: n8nResponse.status,
           detail: responseData.slice(0, 200),
         },
         200,

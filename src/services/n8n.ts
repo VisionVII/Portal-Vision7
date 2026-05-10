@@ -152,9 +152,9 @@ async function callN8nProxy(payload: unknown, options: Pick<N8nRequestOptions, '
     ? `${proxyErrorStr} — ${proxyMsgStr}`
     : proxyErrorStr || proxyMsgStr;
 
-  // Edge function now wraps 502/503 in 200 OK — check body for actual status
-  if (proxyData?.error && (httpStatus === 503 || httpStatus === 502)) {
-    // Cold-start / unreachable wrapped in 200 — suppress console spam, just throw for retry
+  // Edge function wraps 500/502/503 in 200 OK — check body for actual status
+  if (proxyData?.error && (httpStatus === 503 || httpStatus === 502 || httpStatus === 500)) {
+    // Cold-start / internal error wrapped in 200 — suppress console spam, just throw for retry
     throw new Error(withStatusPrefix(httpStatus, proxyMessage || 'n8n Service Unavailable'));
   }
 
@@ -429,10 +429,10 @@ export const deactivateWorkflow = async (id: string) => {
 export const executeWorkflow = async (workflowOrId: N8nWorkflow | string): Promise<{ executed: boolean; method: string }> => {
   const workflow = await ensureWorkflowDetails(workflowOrId, { requireNodes: true });
   const id = getWorkflowId(workflow);
-  // 502 added: Render free tier returns 502 on cold start — treat as fallback, not fatal
-  const expectedExecutionFallbackStatuses = [400, 404, 405, 422, 501, 502, 503];
+  // 500/502 added: Render returns 502 on cold start, n8n returns 500 for internal errors — treat as fallback, not fatal
+  const expectedExecutionFallbackStatuses = [400, 404, 405, 422, 500, 501, 502, 503];
   const COLD_START_RE = /\[(502|503)\]|timeout|cold.?start|unreachable/i;
-  const FALLBACK_RE = /\[(400|404|405|422|501|502|503)\]/;
+  const FALLBACK_RE = /\[(400|404|405|422|500|501|502|503)\]/;
 
   if (isScheduleOnlyWorkflow(workflow)) {
     const detail = workflow.active
@@ -478,7 +478,7 @@ export const executeWorkflow = async (workflowOrId: N8nWorkflow | string): Promi
   ];
 
   let lastError = '';
-  const NON_FATAL_RE = /\[(404|405|501|502|503)\]/;
+  const NON_FATAL_RE = /\[(404|405|500|501|502|503)\]/;
 
   for (const path of apiAttempts) {
     try {
