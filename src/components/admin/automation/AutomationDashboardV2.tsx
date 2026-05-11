@@ -177,10 +177,18 @@ export function AutomationDashboardV2({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keepAlive.lastPing]);
 
-  const activeAutomations = useMemo(() => automations.filter((a) => a.status === 'active').length, [automations]);
   const activeWorkflows = useMemo(() => workflows.filter((w) => w.active).length, [workflows]);
-  const successRate = useMemo(() => {
-    if (executionSummary.length === 0) return 0;
+
+  // If automations_v2 table has no records yet, fall back to n8n workflow counts so the pill shows real state
+  const effectiveTotalAutomations = totalAutomations > 0 ? totalAutomations : workflows.length;
+  const activeAutomations = useMemo(() => {
+    if (automations.length === 0 && workflows.length > 0) return activeWorkflows;
+    return automations.filter((a) => a.status === 'active').length;
+  }, [automations, workflows, activeWorkflows]);
+
+  // null = no data yet → show "N/D" instead of a misleading 0%
+  const successRate = useMemo((): number | null => {
+    if (executionSummary.length === 0) return null;
     return Math.round((executionSummary.filter((entry) => entry.status === 'success').length / executionSummary.length) * 100);
   }, [executionSummary]);
   const pipelineErrors = useMemo(() => executionSummary.filter((execution) => execution.status === 'error').length, [executionSummary]);
@@ -281,9 +289,21 @@ export function AutomationDashboardV2({
       toast({ title: 'Sem workflow', description: 'Esta automação não tem workflow associado.', variant: 'destructive' });
       return;
     }
+    const startedAt = new Date().toISOString();
     try {
       const result = await executeWorkflow(a.workflowId);
       toast({ title: 'Workflow executado', description: `${a.name} disparado com sucesso (${result.method}).` });
+      const finishedAt = new Date().toISOString();
+      await supabase.from('automation_executions').insert({
+        automation_id: a.id,
+        status: 'success',
+        trigger_mode: 'manual',
+        started_at: startedAt,
+        finished_at: finishedAt,
+        duration_ms: new Date(finishedAt).getTime() - new Date(startedAt).getTime(),
+        metadata: { method: result.method, workflowId: a.workflowId },
+      });
+      void queryClient.invalidateQueries({ queryKey: ['automation_executions'] });
     } catch (err: unknown) {
       if (err instanceof CronWorkflowError) {
         toast({ title: `${a.name} — Automático (cron)`, description: 'Este workflow executa automaticamente por cronograma no n8n.' });
@@ -291,6 +311,16 @@ export function AutomationDashboardV2({
       }
       const msg = err instanceof Error ? err.message : 'Erro desconhecido';
       toast({ title: 'Erro na execução', description: msg, variant: 'destructive' });
+      await supabase.from('automation_executions').insert({
+        automation_id: a.id,
+        status: 'error',
+        trigger_mode: 'manual',
+        started_at: startedAt,
+        finished_at: new Date().toISOString(),
+        error_message: msg,
+        metadata: { workflowId: a.workflowId },
+      });
+      void queryClient.invalidateQueries({ queryKey: ['automation_executions'] });
     }
   };
 
@@ -437,9 +467,9 @@ export function AutomationDashboardV2({
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryPill label="Workflows" value={`${activeWorkflows}/${workflows.length}`} icon={Workflow} tone={isConnected ? 'success' : 'warning'} />
-        <SummaryPill label="Automações" value={`${activeAutomations}/${totalAutomations} ativas`} icon={LayoutGrid} tone="success" />
+        <SummaryPill label="Automações" value={`${activeAutomations}/${effectiveTotalAutomations} ativas`} icon={LayoutGrid} tone="success" />
         <SummaryPill label="Erros" value={String(pipelineErrors)} icon={Clock} tone={pipelineErrors > 0 ? 'warning' : 'neutral'} />
-        <SummaryPill label="Sucesso" value={`${successRate}%`} icon={Zap} tone={successRate >= 90 ? 'success' : 'warning'} />
+        <SummaryPill label="Sucesso" value={successRate === null ? 'N/D' : `${successRate}%`} icon={Zap} tone={successRate === null ? 'neutral' : successRate >= 90 ? 'success' : 'warning'} />
       </div>
 
       <Tabs value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>

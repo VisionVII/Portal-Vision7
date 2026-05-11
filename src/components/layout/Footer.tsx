@@ -46,11 +46,12 @@ const Footer = () => {
 
           {/* Links Úteis */}
           <div>
-            <h4 className="mb-4 font-editorial text-xl text-foreground dark:text-white">Links Úteis</h4>
+            <h4 className="mb-4 font-editorial text-xl text-foreground dark:text-white">Portal</h4>
             <ul className="space-y-2 text-muted-foreground">
               <li><Link to="/" className="transition-colors hover:text-foreground dark:hover:text-white">Início</Link></li>
               <li><Link to="/audiocasts" className="transition-colors hover:text-foreground dark:hover:text-white">Audiocasts</Link></li>
-              <li><Link to="/admin/dashboard" className="transition-colors hover:text-foreground dark:hover:text-white">Dashboard</Link></li>
+              <li><Link to="/sobre" className="transition-colors hover:text-foreground dark:hover:text-white">Sobre</Link></li>
+              <li><Link to="/contacto" className="transition-colors hover:text-foreground dark:hover:text-white">Contacto</Link></li>
               <li><Link to="/politica-privacidade" className="transition-colors hover:text-foreground dark:hover:text-white">Política de Privacidade</Link></li>
               <li><button onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-preferences'))} className="transition-colors hover:text-foreground dark:hover:text-white">Gerir Cookies</button></li>
             </ul>

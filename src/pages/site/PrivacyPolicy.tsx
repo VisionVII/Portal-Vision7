@@ -53,10 +53,10 @@ const PrivacyPolicy = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p>
-                  Bem-vindo ao Lusitânia Digital Pulse ("nós", "our", or "nosso"). Somos comprometidos em proteger a sua privacidade e garantir que compreenda a nossa Política de Privacidade. Esta política descreve como recolhemos, utilizamos, divulgamos e protegemos as suas informações pessoais.
+                  Bem-vindo ao Vision7 ("nós", "nosso"). Estamos comprometidos em proteger a sua privacidade e garantir transparência sobre como tratamos os seus dados. Esta política descreve como recolhemos, utilizamos, divulgamos e protegemos as suas informações pessoais.
                 </p>
                 <p>
-                  Conformamo-nos com o Regulamento Geral de Proteção de Dados (RGPD) da União Europeia e com a Lei Geral de Proteção de Dados (LGPD) do Brasil.
+                  Conformamo-nos com o Regulamento Geral de Proteção de Dados (RGPD) da União Europeia (UE 2016/679) e com a Lei Geral de Proteção de Dados (LGPD) do Brasil (Lei 13.709/2018), uma vez que o portal serve utilizadores em Portugal e no Brasil.
                 </p>
               </CardContent>
             </Card>
@@ -172,6 +172,13 @@ const PrivacyPolicy = () => {
                       Utilizados para rastrear anúncios e entender a eficácia das campanhas de marketing.
                     </p>
                   </div>
+
+                  <div>
+                    <h5 className="font-semibold text-sm">Cookies de Publicidade (Google AdSense)</h5>
+                    <p className="text-sm text-muted-foreground">
+                      O Vision7 utiliza o Google AdSense para apresentar publicidade. O Google pode utilizar cookies de terceiros (incluindo o cookie DoubleClick) para exibir anúncios personalizados com base nas suas visitas a este e outros sites. Pode desativar a publicidade personalizada em <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer nofollow" className="underline hover:text-foreground">google.com/settings/ads</a>.
+                    </p>
+                  </div>
                 </div>
 
                 <p className="text-sm text-muted-foreground mt-4">
@@ -268,11 +275,12 @@ const PrivacyPolicy = () => {
                   Se tem perguntas sobre esta Política de Privacidade ou sobre como processamos os seus dados, por favor contacte-nos:
                 </p>
                 <div className="bg-muted p-4 rounded-lg text-sm space-y-2">
-                  <p><strong>Email:</strong> privacy@lusitaniadigitalpulse.pt</p>
-                  <p><strong>Morada:</strong> Portugal</p>
+                  <p><strong>Email:</strong> privacidade@vision7.pt</p>
+                  <p><strong>Website:</strong> vision7.pt</p>
+                  <p><strong>País:</strong> Portugal</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Pode também apresentar uma reclamação junto da autoridade de proteção de dados competente.
+                  Pode apresentar uma reclamação junto da autoridade de proteção de dados competente: <strong>CNPD</strong> (Portugal) ou <strong>ANPD</strong> (Brasil).
                 </p>
               </CardContent>
             </Card>
@@ -292,7 +300,7 @@ const PrivacyPolicy = () => {
 
           <div className="mt-12 rounded-lg border border-primary-200 bg-primary-50 p-6 dark:border-primary-800 dark:bg-primary-900/30">
             <p className="text-sm text-primary-900 dark:text-primary-100">
-              <strong>Conformidade:</strong> Esta política está em conformidade com o Regulamento Geral de Proteção de Dados (RGPD) UE 2016/679 e com a Lei Geral de Proteção de Dados (LGPD) do Brasil (Lei 13.709/2018).
+              <strong>Conformidade:</strong> Esta política está em conformidade com o RGPD (UE 2016/679), a LGPD brasileira (Lei 13.709/2018) e as Políticas do Programa Google AdSense.
             </p>
           </div>
         </div>

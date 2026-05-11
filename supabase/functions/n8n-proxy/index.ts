@@ -229,36 +229,11 @@ async function decryptValue(secret: string, payload: string): Promise<string> {
   return new TextDecoder().decode(plaintext);
 }
 
-async function getEffectiveN8nApiKey(supabaseAdmin: ReturnType<typeof createClient>) {
-  if (!N8N_CREDENTIALS_ENCRYPTION_KEY) return N8N_API_KEY;
-
-  const { count, error: countError } = await supabaseAdmin
-    .from('n8n_credentials')
-    .select('id', { count: 'exact', head: true });
-
-  if (countError) return N8N_API_KEY;
-
-  const { data } = await supabaseAdmin
-    .from('n8n_credentials')
-    .select('encrypted_value,expires_at')
-    .eq('key_name', 'N8N_API_KEY')
-    .eq('status', 'active')
-    .gt('expires_at', new Date().toISOString())
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!data?.encrypted_value) {
-    // No valid encrypted credential — fallback to env var
-    return N8N_API_KEY;
-  }
-
-  try {
-    return await decryptValue(N8N_CREDENTIALS_ENCRYPTION_KEY, data.encrypted_value);
-  } catch {
-    // Decryption failed — fallback to env var
-    return N8N_API_KEY;
-  }
+async function getEffectiveN8nApiKey(_supabaseAdmin: ReturnType<typeof createClient>) {
+  // Usar sempre o segredo N8N_API_KEY das variáveis de ambiente Supabase.
+  // A lookup na tabela n8n_credentials foi removida para evitar conflitos com
+  // registos desatualizados que causavam 401 no n8n.
+  return N8N_API_KEY;
 }
 
 // ─── Main handler ────────────────────────────────────────────────────────────
@@ -314,7 +289,8 @@ Deno.serve(async (req: Request) => {
     if (rolesError) {
       console.error('[n8n-proxy] Roles query error:', rolesError.message, 'userId:', userId);
       console.error('[n8n-proxy] Full error:', JSON.stringify(rolesError));
-      return jsonResponse({ error: 'Internal error checking roles' }, 500, cors);
+      // Wrap in 200 OK — browser console should stay clean even on server errors
+      return jsonResponse({ error: 'Internal error checking roles', httpStatus: 500 }, 200, cors);
     }
 
     if (!roles?.length) {
@@ -470,22 +446,33 @@ Deno.serve(async (req: Request) => {
 
     const responseData = await n8nResponse.text();
 
-    // Wrap 500/502/503 in 200 OK to avoid browser Network tab errors.
-    // Render cold starts return 502 or 503; n8n internal errors return 500.
-    if (n8nResponse.status >= 500) {
-      return jsonResponse(
-        {
-          error: n8nResponse.status === 503
-            ? 'n8n Service Unavailable (cold start)'
-            : n8nResponse.status === 502
-            ? 'n8n Gateway Error (cold start)'
-            : 'n8n Internal Server Error',
-          httpStatus: n8nResponse.status,
-          detail: responseData.slice(0, 200),
-        },
-        200,
-        cors,
-      );
+    // Wrap ALL non-2xx responses from n8n in 200 OK so the browser Network tab
+    // stays clean.  Cold starts produce HTML 404s ("Cannot GET /api/v1/…"),
+    // startup produces JSON 503 ("Database is not ready!"), and internal
+    // errors produce 500.  The actual status is forwarded as `httpStatus` in
+    // the JSON body so the client can still act on it.
+    if (!n8nResponse.ok) {
+      const isHtml = responseData.trim().startsWith('<');
+      const detail = responseData.slice(0, 200);
+      let error: string;
+
+      if (n8nResponse.status >= 500) {
+        error = n8nResponse.status === 503
+          ? 'n8n Service Unavailable (cold start)'
+          : n8nResponse.status === 502
+          ? 'n8n Gateway Error (cold start)'
+          : 'n8n Internal Server Error';
+      } else if (n8nResponse.status === 404) {
+        error = isHtml
+          ? 'n8n API not ready (cold start)'
+          : 'n8n resource not found';
+      } else if (n8nResponse.status === 401) {
+        error = 'n8n Unauthorized — check API key';
+      } else {
+        error = `n8n responded with ${n8nResponse.status}`;
+      }
+
+      return jsonResponse({ error, httpStatus: n8nResponse.status, detail }, 200, cors);
     }
 
     return new Response(responseData, {
@@ -527,6 +514,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    return jsonResponse({ error: `Proxy error: ${message}`, httpStatus: 500 }, 500, cors);
+    return jsonResponse({ error: `Proxy error: ${message}`, httpStatus: 500 }, 200, cors);
   }
 });

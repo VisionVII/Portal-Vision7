@@ -1,4 +1,18 @@
 import DOMPurify from 'dompurify';
+import { marked } from 'marked';
+
+// Configure marked: GFM (tabelas, code fences, strikethrough) + quebras de linha suaves
+marked.setOptions({ gfm: true, breaks: false });
+
+function isMarkdown(content: string): boolean {
+  // Detects markdown by presence of common markdown patterns
+  return /^#{1,6}\s|^\s*[-*+]\s|\*\*|__|\[.+\]\(.+\)|^\|.+\|/m.test(content);
+}
+
+function markdownToHtml(content: string): string {
+  const result = marked(content);
+  return typeof result === 'string' ? result : content;
+}
 
 const ALLOWED_TAGS = [
   'p', 'br', 'strong', 'em', 'u', 's',
@@ -63,7 +77,10 @@ function getSafeInlineStyle(styleValue: string) {
 }
 
 export function sanitizeRichContent(content: string) {
-  const sanitized = DOMPurify.sanitize(content || '', {
+  const raw = content || '';
+  // Auto-convert Markdown → HTML before sanitizing
+  const html = isMarkdown(raw) ? markdownToHtml(raw) : raw;
+  const sanitized = DOMPurify.sanitize(html, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.-]*(?:[^a-z+.-:]|$))/i,
