@@ -214,32 +214,29 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: `Invalid keyName. Allowed: ${[...ALLOWED_KEY_NAMES].join(', ')}` }, 400, cors);
   }
 
-  if (!CREDENTIALS_ENCRYPTION_KEY) {
-    return jsonResponse({ error: 'Encryption key not configured on server' }, 500, cors);
+  // Try DB first (n8n_credentials table), fall back to Supabase env secret
+  if (CREDENTIALS_ENCRYPTION_KEY) {
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: cred, error } = await adminClient
+      .from('n8n_credentials')
+      .select('encrypted_value')
+      .eq('key_name', keyName)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!error && cred?.encrypted_value) {
+      try {
+        const value = await decryptValue(CREDENTIALS_ENCRYPTION_KEY, cred.encrypted_value);
+        if (value) return jsonResponse({ value, source: 'db' }, 200, cors);
+      } catch { /* fall through to env fallback */ }
+    }
   }
 
-  // Fetch active credential
-  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const { data: cred, error } = await adminClient
-    .from('n8n_credentials')
-    .select('encrypted_value')
-    .eq('key_name', keyName)
-    .eq('status', 'active')
-    .maybeSingle();
-
-  if (error) {
-    return jsonResponse({ error: 'DB error: ' + error.message }, 500, cors);
+  // Fallback: use Supabase secret directly (always up-to-date)
+  const envValue = Deno.env.get(keyName) ?? '';
+  if (envValue) {
+    return jsonResponse({ value: envValue, source: 'env' }, 200, cors);
   }
 
-  if (!cred) {
-    return jsonResponse({ error: `No active credential found for ${keyName}` }, 404, cors);
-  }
-
-  // Decrypt
-  try {
-    const value = await decryptValue(CREDENTIALS_ENCRYPTION_KEY, cred.encrypted_value);
-    return jsonResponse({ value }, 200, cors);
-  } catch (err) {
-    return jsonResponse({ error: 'Decryption failed: ' + (err.message ?? 'unknown') }, 500, cors);
-  }
+  return jsonResponse({ error: `No active credential found for ${keyName}` }, 404, cors);
 });

@@ -7,7 +7,7 @@
           "interval": [
             {
               "field": "minutes",
-              "minutesInterval": 60
+              "minutesInterval": 15
             }
           ]
         }
