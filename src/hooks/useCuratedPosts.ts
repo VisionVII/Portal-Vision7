@@ -310,6 +310,13 @@ export function useAutoPromotePolling() {
   const [lastCheck, setLastCheck] = useState<string | null>(null);
   const [totalPromoted, setTotalPromoted] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isRunningRef = useRef(false);
+
+  // Stable refs — avoids recreating checkAndPromote on every render
+  const toastRef = useRef(toast);
+  const queryClientRef = useRef(queryClient);
+  useEffect(() => { toastRef.current = toast; }, [toast]);
+  useEffect(() => { queryClientRef.current = queryClient; }, [queryClient]);
 
   // Persist active state
   useEffect(() => {
@@ -317,6 +324,9 @@ export function useAutoPromotePolling() {
   }, [isActive]);
 
   const checkAndPromote = useCallback(async () => {
+    // Guard against concurrent executions
+    if (isRunningRef.current) return;
+    isRunningRef.current = true;
     try {
       const { data, error } = await supabase
         .from('curated_posts')
@@ -326,7 +336,10 @@ export function useAutoPromotePolling() {
         .limit(50);
 
       if (error) {
-        console.warn('[AutoPromote] Query error:', error.message);
+        // Network errors are transient — log only in dev to avoid console spam
+        if (import.meta.env.DEV) {
+          console.warn('[AutoPromote] Query error:', error.message);
+        }
         return;
       }
 
@@ -347,15 +360,17 @@ export function useAutoPromotePolling() {
             duplicates++;
           }
         } catch (err) {
-          console.warn(`[AutoPromote] Failed: "${curated.title}"`, err instanceof Error ? err.message : 'unknown');
+          if (import.meta.env.DEV) {
+            console.warn(`[AutoPromote] Failed: "${curated.title}"`, err instanceof Error ? err.message : 'unknown');
+          }
         }
       }
 
       if (promoted > 0 || duplicates > 0) {
         setTotalPromoted((prev) => prev + promoted);
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-        queryClient.invalidateQueries({ queryKey: ['posts'] });
-        toast({
+        queryClientRef.current.invalidateQueries({ queryKey: QUERY_KEY });
+        queryClientRef.current.invalidateQueries({ queryKey: ['posts'] });
+        toastRef.current({
           title: 'Verificação automática concluída',
           description:
             promoted > 0
@@ -363,12 +378,14 @@ export function useAutoPromotePolling() {
               : `${duplicates} duplicado(s) encerrado(s) sem criar rascunho novo`,
         });
       }
-    } catch (err) {
-      console.warn('[AutoPromote] Unexpected error:', err instanceof Error ? err.message : 'unknown');
+    } catch {
+      // Swallow unexpected errors silently in production
+    } finally {
+      isRunningRef.current = false;
     }
-  }, [queryClient, toast]);
+  }, []); // stable — uses refs internally
 
-  // Start/stop polling
+  // Start/stop polling — only depends on isActive (checkAndPromote is now stable)
   useEffect(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -376,7 +393,6 @@ export function useAutoPromotePolling() {
     }
 
     if (isActive) {
-      // Run immediately on activation
       void checkAndPromote();
       intervalRef.current = setInterval(() => void checkAndPromote(), POLLING_INTERVAL_MS);
     }
