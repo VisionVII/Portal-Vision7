@@ -499,7 +499,11 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
           )}
 
           {/* Add new key form */}
-          <div className="space-y-2 rounded-lg border border-border bg-background/70 p-3">
+          <form
+            className="space-y-2 rounded-lg border border-border bg-background/70 p-3"
+            onSubmit={(e) => { e.preventDefault(); void handleSaveKey(); }}
+            autoComplete="off"
+          >
             <div className="flex items-center gap-2">
               <select
                 className="h-8 rounded border border-border bg-muted px-2 text-xs text-foreground"
@@ -517,13 +521,13 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
                 className="h-8 border-border bg-muted font-mono text-xs"
                 value={newKeyValue}
                 onChange={(e) => setNewKeyValue(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') void handleSaveKey(); }}
+                autoComplete="new-password"
               />
               <Button
+                type="submit"
                 size="sm"
                 className="h-8 shrink-0 bg-cyan-600 text-xs hover:bg-cyan-700"
                 disabled={saving || Boolean(credentialDraftError)}
-                onClick={() => void handleSaveKey()}
               >
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Salvar'}
               </Button>
@@ -536,7 +540,7 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
                 ? 'Obtenha em console.anthropic.com → API Keys. O WF-03 usa esta chave para gerar artigos com Claude Sonnet.'
                 : 'Supabase → Settings → API → Secret keys. Use a chave sb_secret... do projeto. Não use a JWT service_role legada iniciada em eyJ...'}
             </p>
-          </div>
+          </form>
         </div>
 
         {/* ── Timing Explanation ── */}
