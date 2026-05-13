@@ -206,9 +206,6 @@ const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
           {/* Header */}
           <div>
             <h3 className="text-lg font-semibold">{podcast.title}</h3>
-            {podcast.description && (
-              <p className="text-sm text-muted-foreground mt-1">{podcast.description}</p>
-            )}
           </div>
 
           {/* Progress Bar */}

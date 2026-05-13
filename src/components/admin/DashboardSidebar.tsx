@@ -172,16 +172,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                       key={item.id}
                       type="button"
                       onClick={() => onViewChange(item.id)}
-                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-150 active:scale-[0.98] ${
+                      className={`flex w-full items-center rounded-lg py-2 text-left transition-all duration-150 active:scale-[0.98] ${
+                        collapsed ? 'justify-center px-1.5' : 'gap-3 px-3'
+                      } ${
                         isActive
-                          ? 'bg-primary/8 text-primary-700 shadow-sm ring-1 ring-primary/15 dark:bg-primary/12 dark:text-primary-300'
+                          ? 'bg-primary/8 text-primary-700 shadow-sm dark:bg-primary/12 dark:text-primary-300'
                           : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                       }`}
                     >
                       <div
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors duration-150 ${
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors duration-150 ${
                           isActive
-                            ? 'bg-primary/15 text-primary-600 dark:bg-primary/20 dark:text-primary-400'
+                            ? 'bg-primary/15 text-primary ring-1 ring-primary/30 dark:bg-primary/20'
                             : 'text-muted-foreground'
                         }`}
                       >
