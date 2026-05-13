@@ -41,6 +41,7 @@ interface DashboardSidebarProps {
   draftCount?: number;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  forceVertical?: boolean;
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
@@ -50,6 +51,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   draftCount,
   collapsed = false,
   onToggleCollapse,
+  forceVertical = false,
 }) => {
   const allItems: NavItem[] = [
     { id: 'overview', label: 'Visão geral', icon: LayoutDashboard, hint: 'KPIs e atalhos' },
@@ -87,7 +89,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   return (
     <>
       {/* ─── Mobile: horizontal scrollable pills with group dots ─── */}
-      <div className="lg:hidden">
+      <div className={forceVertical ? 'hidden' : 'lg:hidden'}>
         <div className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {groups.flatMap((group, gi) => {
             const buttons = group.items.map((item) => {
@@ -128,7 +130,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       </div>
 
       {/* ─── Desktop: grouped sidebar nav with collapse ─── */}
-      <nav className="hidden lg:block">
+      <nav className={forceVertical ? 'block' : 'hidden lg:block'}>
         {/* Toggle button */}
         {onToggleCollapse && (
           <div className="mb-4 flex justify-end">

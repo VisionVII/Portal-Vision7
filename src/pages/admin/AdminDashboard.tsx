@@ -145,32 +145,21 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background">
       <DashboardHeader onNewPost={handleNewPost} onMenuOpen={() => setMobileMenuOpen(true)} />
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer — vertical sidebar */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="w-72 p-0 pt-4">
+        <SheetContent side="left" className="flex w-72 flex-col gap-0 p-0">
           <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
-          <div className="px-3">
+          <div className="overflow-y-auto px-3 py-4">
             <DashboardSidebar
               activeView={activeView}
               onViewChange={(view) => { setActiveView(view); setMobileMenuOpen(false); }}
               allowedViews={allowedViews}
               draftCount={draftCount}
+              forceVertical
             />
           </div>
         </SheetContent>
       </Sheet>
-
-      {/* Mobile inline nav — horizontal pills, below header, only on < lg */}
-      <div className="sticky top-14 z-40 border-b border-border/30 bg-background lg:hidden">
-        <div className="overflow-x-auto px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <DashboardSidebar
-            activeView={activeView}
-            onViewChange={setActiveView}
-            allowedViews={allowedViews}
-            draftCount={draftCount}
-          />
-        </div>
-      </div>
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         {/* Desktop sidebar */}

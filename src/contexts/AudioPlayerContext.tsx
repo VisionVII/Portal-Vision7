@@ -63,16 +63,16 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const audio = audioRef.current;
     if (!audio) return;
 
-    // If same track, just resume
+    // Same track already loaded — just resume
     if (state.track?.id === track.id && audio.src) {
       audio.play().catch(() => {});
       setState(s => ({ ...s, isPlaying: true, isMinimized: true }));
       return;
     }
 
+    // New track: set src (triggers load automatically), skip explicit load()
+    // to avoid AbortError on the immediate play() call
     audio.src = track.audio_url;
-    audio.load();
-    audio.play().catch(() => {});
     setState(s => ({
       ...s,
       track,
@@ -81,6 +81,11 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       isMinimized: true,
       isLoading: true,
     }));
+    audio.play().catch((err) => {
+      if (err.name !== 'AbortError') {
+        setState(s => ({ ...s, isPlaying: false, isLoading: false }));
+      }
+    });
   }, [state.track?.id]);
 
   const pause = useCallback(() => {
