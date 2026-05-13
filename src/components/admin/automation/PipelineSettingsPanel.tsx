@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Key, Trash2, RefreshCw, Loader2, CheckCircle2, AlertTriangle, Clock, Shield } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Key, Trash2, RefreshCw, Loader2, CheckCircle2, AlertTriangle, Clock, Shield,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAutomationsV2 } from '@/hooks/useAutomationsV2';
@@ -17,9 +19,8 @@ import {
   type N8nCredentialRow,
 } from '@/services/n8nSettings';
 
-/* ── Cleanup thresholds ── */
 const CLEANUP_OPTIONS = [
-  { label: '24 horas', hours: 24 },
+  { label: '24 h', hours: 24 },
   { label: '3 dias', hours: 72 },
   { label: '7 dias', hours: 168 },
   { label: '30 dias', hours: 720 },
@@ -32,7 +33,7 @@ const WF03_BATCH_SIZE = 10;
 const WF03_CAPACITY_PER_HOUR = (60 / WF03_INTERVAL_MINUTES) * WF03_BATCH_SIZE;
 
 function uniqueIds(values: Array<string | null | undefined>): string[] {
-  return [...new Set(values.filter((value): value is string => Boolean(value)))];
+  return [...new Set(values.filter((v): v is string => Boolean(v)))];
 }
 
 function formatDurationMs(value: number | null): string {
@@ -50,23 +51,17 @@ function formatHours(value: number): string {
 }
 
 function validateCredentialDraft(keyName: 'ANTHROPIC_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY', value: string): string | null {
-  const normalized = value.trim();
-  if (!normalized) return 'Insira a chave API.';
-  if (/\{\{|\$env|=\{|^=/.test(normalized)) return 'Use o valor bruto da chave, sem =, {{ }} ou $env.';
-
+  const v = value.trim();
+  if (!v) return 'Insira a chave API.';
+  if (/\{\{|\$env|=\{|^=/.test(v)) return 'Use o valor bruto da chave, sem =, {{ }} ou $env.';
   if (keyName === 'SUPABASE_SERVICE_ROLE_KEY') {
-    if (normalized.startsWith('eyJ') || normalized.split('.').length === 3) {
-      return 'Use a secret key sb_secret..., não a JWT legada service_role.';
-    }
-    if (!normalized.startsWith('sb_secret')) {
-      return 'A chave Supabase do pipeline deve começar com sb_secret.';
-    }
+    if (v.startsWith('eyJ') || v.split('.').length === 3)
+      return 'Use a secret key sb_secret..., não a JWT service_role.';
+    if (!v.startsWith('sb_secret'))
+      return 'A chave Supabase deve começar com sb_secret.';
   }
-
-  if (keyName === 'ANTHROPIC_API_KEY' && !normalized.startsWith('sk-ant-')) {
+  if (keyName === 'ANTHROPIC_API_KEY' && !v.startsWith('sk-ant-'))
     return 'ANTHROPIC_API_KEY deve começar com sk-ant-.';
-  }
-
   return null;
 }
 
@@ -80,74 +75,54 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
   const { automations: contentAutomations } = useAutomationsV2({ category: 'content_pipeline', pageSize: 100 });
   const { executions: recentExecutions } = useAutomationExecutions({ pageSize: 100 });
 
-  /* ── Credentials state ── */
   const [credentials, setCredentials] = useState<N8nCredentialRow[]>([]);
   const [loadingCreds, setLoadingCreds] = useState(true);
   const [credentialsError, setCredentialsError] = useState<string | null>(null);
 
-  /* ── New key form ── */
   const [newKeyName, setNewKeyName] = useState<'ANTHROPIC_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY'>('ANTHROPIC_API_KEY');
   const [newKeyValue, setNewKeyValue] = useState('');
   const [saving, setSaving] = useState(false);
 
-  /* ── Cleanup state ── */
   const [cleanupHours, setCleanupHours] = useState(72);
   const [cleaning, setCleaning] = useState(false);
   const [cleanupResult, setCleanupResult] = useState<string | null>(null);
 
   const executionSummaries = useMemo(() => {
-    const contentAutomationIds = new Set(contentAutomations.map((automation) => automation.id));
-    const successfulExecutions = recentExecutions.filter((execution) => (
-      contentAutomationIds.has(execution.automationId)
-      && execution.status === 'success'
-      && typeof execution.durationMs === 'number'
-      && execution.durationMs > 0
-    ));
-
+    const ids = new Set(contentAutomations.map((a) => a.id));
+    const successful = recentExecutions.filter(
+      (e) => ids.has(e.automationId) && e.status === 'success' && typeof e.durationMs === 'number' && e.durationMs > 0,
+    );
     return contentAutomations
-      .map((automation) => {
-        const samples = successfulExecutions.filter((execution) => execution.automationId === automation.id).slice(0, 20);
-        if (samples.length === 0) return null;
-
-        const avgDurationMs = Math.round(samples.reduce((sum, execution) => sum + (execution.durationMs ?? 0), 0) / samples.length);
-        const avgItemsProcessed = samples.reduce((sum, execution) => sum + execution.itemsProcessed, 0) / samples.length;
-        const avgItemsCreated = samples.reduce((sum, execution) => sum + execution.itemsCreated, 0) / samples.length;
-
+      .map((a) => {
+        const samples = successful.filter((e) => e.automationId === a.id).slice(0, 20);
+        if (!samples.length) return null;
+        const avgDurationMs = Math.round(samples.reduce((s, e) => s + (e.durationMs ?? 0), 0) / samples.length);
         return {
-          id: automation.id,
-          name: automation.name,
-          avgDurationMs,
-          avgItemsProcessed,
-          avgItemsCreated,
+          id: a.id, name: a.name, avgDurationMs,
+          avgItemsProcessed: samples.reduce((s, e) => s + e.itemsProcessed, 0) / samples.length,
+          avgItemsCreated: samples.reduce((s, e) => s + e.itemsCreated, 0) / samples.length,
           sampleCount: samples.length,
         };
       })
-      .filter((summary): summary is NonNullable<typeof summary> => summary !== null);
+      .filter((s): s is NonNullable<typeof s> => s !== null);
   }, [contentAutomations, recentExecutions]);
 
-  const avgCronWaitMinutes = (WF01_INTERVAL_MINUTES / 2) + (WF02_INTERVAL_MINUTES / 2) + (WF03_INTERVAL_MINUTES / 2);
-  const worstCaseCronWaitMinutes = WF01_INTERVAL_MINUTES + WF02_INTERVAL_MINUTES + WF03_INTERVAL_MINUTES;
-  const cadencePerCuratedMinutes = Math.round(WF03_INTERVAL_MINUTES / WF03_BATCH_SIZE);
-  const backlogDrainHours = diagnostics ? diagnostics.clusters.highConfidence / WF03_CAPACITY_PER_HOUR : null;
-  const estimatedNewReadyHours = backlogDrainHours === null ? null : backlogDrainHours + (avgCronWaitMinutes / 60);
-  const estimatedBacklogAverageWaitHours = backlogDrainHours === null ? null : backlogDrainHours / 2;
+  const avgCronWait = (WF01_INTERVAL_MINUTES / 2) + (WF02_INTERVAL_MINUTES / 2) + (WF03_INTERVAL_MINUTES / 2);
+  const worstCaseCronWait = WF01_INTERVAL_MINUTES + WF02_INTERVAL_MINUTES + WF03_INTERVAL_MINUTES;
+  const cadencePerCurated = Math.round(WF03_INTERVAL_MINUTES / WF03_BATCH_SIZE);
+  const backlogDrainH = diagnostics ? diagnostics.clusters.highConfidence / WF03_CAPACITY_PER_HOUR : null;
+  const estimatedReadyH = backlogDrainH === null ? null : backlogDrainH + (avgCronWait / 60);
+  const estimatedBacklogWaitH = backlogDrainH === null ? null : backlogDrainH / 2;
 
-  /* ── Load credentials ── */
   const loadCredentials = useCallback(async () => {
     setLoadingCreds(true);
     setCredentialsError(null);
     try {
-      const list = await listN8nCredentials();
-      setCredentials(list);
+      setCredentials(await listN8nCredentials());
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao carregar chaves';
-      setCredentialsError(message);
-      console.warn('[Settings] Failed to load credentials:', message);
-      toast({
-        title: 'Falha ao carregar chaves',
-        description: message,
-        variant: 'destructive',
-      });
+      const msg = err instanceof Error ? err.message : 'Erro ao carregar chaves';
+      setCredentialsError(msg);
+      toast({ title: 'Falha ao carregar chaves', description: msg, variant: 'destructive' });
     } finally {
       setLoadingCreds(false);
     }
@@ -155,39 +130,29 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
 
   useEffect(() => { void loadCredentials(); }, [loadCredentials]);
 
-  /* ── Save new API key ── */
   const handleSaveKey = async () => {
-    if (credentialDraftError) {
-      toast({ title: 'Chave inválida', description: credentialDraftError, variant: 'destructive' });
-      return;
-    }
+    const err = validateCredentialDraft(newKeyName, newKeyValue);
+    if (err) { toast({ title: 'Chave inválida', description: err, variant: 'destructive' }); return; }
     setSaving(true);
     try {
-      // Expiry: 1 year from now
       const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
       const cred = await createN8nCredential({
-        keyName: newKeyName,
-        value: newKeyValue.trim(),
-        expiresAt,
-        notes: `Adicionada via dashboard em ${new Date().toLocaleDateString('pt-BR')}`,
+        keyName: newKeyName, value: newKeyValue.trim(), expiresAt,
+        notes: `Adicionada via dashboard em ${new Date().toLocaleDateString('pt-PT')}`,
         remindDaysBefore: 30,
       });
-
-      // Auto-activate with force (skip n8n API test for non-n8n keys)
       await activateN8nCredential(cred.id, true);
-
-      toast({ title: `${newKeyName} salva e ativada`, description: 'A chave está disponível para os workflows.' });
+      toast({ title: `${newKeyName} guardada`, description: 'Chave ativa e disponível para os workflows.' });
       setNewKeyValue('');
       void loadCredentials();
     } catch (err) {
-      toast({ title: 'Erro ao salvar chave', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
+      toast({ title: 'Erro ao guardar', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
-  /* ── Delete credential ── */
-  const handleDelete = async (id: string) => {
+  const handleDeleteKey = async (id: string) => {
     if (!confirm('Remover esta chave permanentemente?')) return;
     try {
       await deleteN8nCredential(id);
@@ -198,469 +163,346 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
     }
   };
 
-  /* ── Cleanup old pipeline data ── */
   const handleCleanup = async () => {
-    setCleaning(true);
-    setCleanupResult(null);
-    const cutoff = new Date(Date.now() - cleanupHours * 60 * 60 * 1000).toISOString();
-    let stagingDeleted = 0;
-    let clustersDeleted = 0;
-    let curatedCleaned = 0;
-
+    setCleaning(true); setCleanupResult(null);
+    const cutoff = new Date(Date.now() - cleanupHours * 3_600_000).toISOString();
+    let stagingDeleted = 0, clustersDeleted = 0, curatedCleaned = 0;
     try {
-      const { data: stg, error: stgError } = await supabase
-        .from('news_staging')
-        .delete()
-        .eq('processed', true)
-        .lt('collected_at', cutoff)
-        .select('id');
-      if (stgError) throw new Error(stgError.message);
+      const { data: stg, error: stgErr } = await supabase.from('news_staging').delete().eq('processed', true).lt('collected_at', cutoff).select('id');
+      if (stgErr) throw new Error(stgErr.message);
       stagingDeleted = stg?.length ?? 0;
 
-      const { data: staleCuratedRows, error: staleCuratedError } = await supabase
-        .from('curated_posts')
-        .select('id, cluster_id')
-        .in('status', ['published', 'rejected'])
-        .lt('created_at', cutoff);
-      if (staleCuratedError) throw new Error(staleCuratedError.message);
+      const { data: staleCurated, error: scErr } = await supabase.from('curated_posts').select('id, cluster_id').in('status', ['published', 'rejected']).lt('created_at', cutoff);
+      if (scErr) throw new Error(scErr.message);
 
-      const curatedIds = staleCuratedRows?.map((row) => row.id) ?? [];
-      const candidateClusterIds = uniqueIds(staleCuratedRows?.map((row) => row.cluster_id) ?? []);
-
-      if (curatedIds.length > 0) {
-        const { data: cur, error: curError } = await supabase
-          .from('curated_posts')
-          .delete()
-          .in('id', curatedIds)
-          .select('id');
-        if (curError) throw new Error(curError.message);
-        curatedCleaned = cur?.length ?? 0;
+      const curIds = staleCurated?.map((r) => r.id) ?? [];
+      const clsCandidates = uniqueIds(staleCurated?.map((r) => r.cluster_id) ?? []);
+      if (curIds.length > 0) {
+        const { data: c, error: cErr } = await supabase.from('curated_posts').delete().in('id', curIds).select('id');
+        if (cErr) throw new Error(cErr.message);
+        curatedCleaned = c?.length ?? 0;
       }
 
-      if (candidateClusterIds.length > 0) {
-        const { data: protectedRefs, error: protectedRefsError } = await supabase
-          .from('curated_posts')
-          .select('cluster_id')
-          .in('cluster_id', candidateClusterIds)
-          .in('status', ['draft', 'ready']);
-        if (protectedRefsError) throw new Error(protectedRefsError.message);
-
-        const protectedClusterIds = new Set(uniqueIds(protectedRefs?.map((row) => row.cluster_id) ?? []));
-        const clusterIdsToDelete = candidateClusterIds.filter((clusterId) => !protectedClusterIds.has(clusterId));
-
-        if (clusterIdsToDelete.length > 0) {
-          const { data: cls, error: clsError } = await supabase
-            .from('news_clusters')
-            .delete()
-            .in('id', clusterIdsToDelete)
-            .lt('created_at', cutoff)
-            .select('id');
-          if (clsError) throw new Error(clsError.message);
+      if (clsCandidates.length > 0) {
+        const { data: prot } = await supabase.from('curated_posts').select('cluster_id').in('cluster_id', clsCandidates).in('status', ['draft', 'ready']);
+        const protIds = new Set(uniqueIds(prot?.map((r) => r.cluster_id) ?? []));
+        const toDelete = clsCandidates.filter((id) => !protIds.has(id));
+        if (toDelete.length > 0) {
+          const { data: cls, error: clsErr } = await supabase.from('news_clusters').delete().in('id', toDelete).lt('created_at', cutoff).select('id');
+          if (clsErr) throw new Error(clsErr.message);
           clustersDeleted = cls?.length ?? 0;
         }
       }
 
       const total = stagingDeleted + clustersDeleted + curatedCleaned;
-      setCleanupResult(
-        total > 0
-          ? `Limpeza segura: ${stagingDeleted} staging processado, ${clustersDeleted} clusters publicados, ${curatedCleaned} curados encerrados`
-          : 'Nenhum dado seguro para limpar foi encontrado neste corte'
-      );
-      toast({
-        title: total > 0 ? `${total} registos removidos` : 'Nada para limpar',
-        description: `Limpeza segura · Staging: ${stagingDeleted}, Clusters: ${clustersDeleted}, Curados: ${curatedCleaned}`,
-      });
+      setCleanupResult(total > 0 ? `${stagingDeleted} staging · ${clustersDeleted} clusters · ${curatedCleaned} curados` : 'Nada para limpar neste corte');
+      toast({ title: total > 0 ? `${total} registos removidos` : 'Nada para limpar', description: `Staging: ${stagingDeleted} · Clusters: ${clustersDeleted} · Curados: ${curatedCleaned}` });
     } catch (err) {
       toast({ title: 'Erro na limpeza', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
-    } finally {
-      setCleaning(false);
-    }
+    } finally { setCleaning(false); }
   };
 
   const handleBacklogPurge = async () => {
-    if (!confirm('Isto remove backlog bruto antigo: staging não processado e clusters órfãos mais antigos que o corte. Não afeta curados em draft/ready. Continuar?')) return;
-
-    setCleaning(true);
-    setCleanupResult(null);
-    const cutoff = new Date(Date.now() - cleanupHours * 60 * 60 * 1000).toISOString();
-    let staleUnprocessedDeleted = 0;
-    let orphanClustersDeleted = 0;
-
+    if (!confirm('Remove staging não processado e clusters órfãos antigos. Não afeta curados draft/ready. Continuar?')) return;
+    setCleaning(true); setCleanupResult(null);
+    const cutoff = new Date(Date.now() - cleanupHours * 3_600_000).toISOString();
+    let staleUnprocessed = 0, orphanClusters = 0;
     try {
-      const { data: staleUnprocessed, error: staleUnprocessedError } = await supabase
-        .from('news_staging')
-        .delete()
-        .eq('processed', false)
-        .lt('collected_at', cutoff)
-        .select('id');
-      if (staleUnprocessedError) throw new Error(staleUnprocessedError.message);
-      staleUnprocessedDeleted = staleUnprocessed?.length ?? 0;
+      const { data: su, error: suErr } = await supabase.from('news_staging').delete().eq('processed', false).lt('collected_at', cutoff).select('id');
+      if (suErr) throw new Error(suErr.message);
+      staleUnprocessed = su?.length ?? 0;
 
-      const { data: oldClusters, error: oldClustersError } = await supabase
-        .from('news_clusters')
-        .select('id')
-        .lt('created_at', cutoff);
-      if (oldClustersError) throw new Error(oldClustersError.message);
-
-      const candidateClusterIds = oldClusters?.map((cluster) => cluster.id) ?? [];
-      if (candidateClusterIds.length > 0) {
-        const { data: clusterRefs, error: clusterRefsError } = await supabase
-          .from('curated_posts')
-          .select('cluster_id')
-          .in('cluster_id', candidateClusterIds);
-        if (clusterRefsError) throw new Error(clusterRefsError.message);
-
-        const referencedClusterIds = new Set(uniqueIds(clusterRefs?.map((row) => row.cluster_id) ?? []));
-        const orphanIds = candidateClusterIds.filter((clusterId) => !referencedClusterIds.has(clusterId));
-
-        if (orphanIds.length > 0) {
-          const { data: deletedOrphans, error: deletedOrphansError } = await supabase
-            .from('news_clusters')
-            .delete()
-            .in('id', orphanIds)
-            .select('id');
-          if (deletedOrphansError) throw new Error(deletedOrphansError.message);
-          orphanClustersDeleted = deletedOrphans?.length ?? 0;
+      const { data: old, error: oldErr } = await supabase.from('news_clusters').select('id').lt('created_at', cutoff);
+      if (oldErr) throw new Error(oldErr.message);
+      const candidates = old?.map((r) => r.id) ?? [];
+      if (candidates.length > 0) {
+        const { data: refs } = await supabase.from('curated_posts').select('cluster_id').in('cluster_id', candidates);
+        const referenced = new Set(uniqueIds(refs?.map((r) => r.cluster_id) ?? []));
+        const orphans = candidates.filter((id) => !referenced.has(id));
+        if (orphans.length > 0) {
+          const { data: del, error: delErr } = await supabase.from('news_clusters').delete().in('id', orphans).select('id');
+          if (delErr) throw new Error(delErr.message);
+          orphanClusters = del?.length ?? 0;
         }
       }
-
-      const total = staleUnprocessedDeleted + orphanClustersDeleted;
-      setCleanupResult(
-        total > 0
-          ? `Purge de backlog: ${staleUnprocessedDeleted} staging bruto, ${orphanClustersDeleted} clusters órfãos`
-          : 'Nenhum backlog bruto antigo foi encontrado neste corte'
-      );
-      toast({
-        title: total > 0 ? `${total} registos removidos` : 'Nada para limpar',
-        description: `Backlog bruto · Staging não processado: ${staleUnprocessedDeleted}, Clusters órfãos: ${orphanClustersDeleted}`,
-      });
+      const total = staleUnprocessed + orphanClusters;
+      setCleanupResult(total > 0 ? `${staleUnprocessed} staging bruto · ${orphanClusters} clusters órfãos` : 'Nenhum backlog bruto encontrado');
+      toast({ title: total > 0 ? `${total} registos removidos` : 'Nada para limpar' });
     } catch (err) {
-      toast({ title: 'Erro no purge de backlog', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
-    } finally {
-      setCleaning(false);
-    }
+      toast({ title: 'Erro no purge', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
+    } finally { setCleaning(false); }
   };
 
-  /* ── Full reset — delete ALL pipeline data ── */
   const handleFullReset = async () => {
-    if (!confirm('ATENÇÃO: Isto apaga TODOS os dados do pipeline (staging, clusters, curados não publicados). Continuar?')) return;
-    setCleaning(true);
-    setCleanupResult(null);
+    if (!confirm('ATENÇÃO: Apaga TODOS os dados do pipeline (staging, clusters, curados não publicados). Continuar?')) return;
+    setCleaning(true); setCleanupResult(null);
     try {
-      const { data: stgData, error: stgErr } = await supabase
-        .from('news_staging')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000')
-        .select('id');
-      if (stgErr) throw new Error('Staging: ' + stgErr.message);
-
-      const { data: clsData, error: clsErr } = await supabase
-        .from('news_clusters')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000')
-        .select('id');
-      if (clsErr) throw new Error('Clusters: ' + clsErr.message);
-
-      const { data: curData, error: curErr } = await supabase
-        .from('curated_posts')
-        .delete()
-        .in('status', ['draft', 'ready', 'auto-draft', 'pending-review', 'rejected'])
-        .select('id');
-      if (curErr) throw new Error('Curados: ' + curErr.message);
-
-      const stagingCount = stgData?.length ?? 0;
-      const clusterCount = clsData?.length ?? 0;
-      const curatedCount = curData?.length ?? 0;
-      const total = stagingCount + clusterCount + curatedCount;
-
-      const msg = total > 0
-        ? `Reset completo: ${stagingCount} staging, ${clusterCount} clusters, ${curatedCount} curados removidos`
-        : 'Nenhum registo encontrado para apagar (pode haver restrições de RLS)';
-      setCleanupResult(msg);
-      toast({
-        title: total > 0 ? `${total} registos removidos` : 'Nada apagado',
-        description: msg,
-        variant: total > 0 ? 'default' : 'destructive',
-      });
+      const { data: stg, error: s1 } = await supabase.from('news_staging').delete().neq('id', '00000000-0000-0000-0000-000000000000').select('id');
+      if (s1) throw new Error('Staging: ' + s1.message);
+      const { data: cls, error: s2 } = await supabase.from('news_clusters').delete().neq('id', '00000000-0000-0000-0000-000000000000').select('id');
+      if (s2) throw new Error('Clusters: ' + s2.message);
+      const { data: cur, error: s3 } = await supabase.from('curated_posts').delete().in('status', ['draft', 'ready', 'auto-draft', 'pending-review', 'rejected']).select('id');
+      if (s3) throw new Error('Curados: ' + s3.message);
+      const total = (stg?.length ?? 0) + (cls?.length ?? 0) + (cur?.length ?? 0);
+      setCleanupResult(total > 0 ? `Reset: ${stg?.length} staging · ${cls?.length} clusters · ${cur?.length} curados` : 'Nenhum registo encontrado');
+      toast({ title: total > 0 ? `${total} registos removidos` : 'Nada apagado' });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      const msg = err instanceof Error ? err.message : 'Erro';
       setCleanupResult('Erro: ' + msg);
       toast({ title: 'Erro no reset', description: msg, variant: 'destructive' });
-    } finally {
-      setCleaning(false);
-    }
+    } finally { setCleaning(false); }
   };
 
   const anthropicKey = credentials.find((c) => c.key_name === 'ANTHROPIC_API_KEY' && c.status === 'active');
   const n8nKey = credentials.find((c) => c.key_name === 'N8N_API_KEY' && c.status === 'active');
-  const supabaseServiceKey = credentials.find((c) => c.key_name === 'SUPABASE_SERVICE_ROLE_KEY' && c.status === 'active');
+  const supabaseKey = credentials.find((c) => c.key_name === 'SUPABASE_SERVICE_ROLE_KEY' && c.status === 'active');
   const credentialDraftError = validateCredentialDraft(newKeyName, newKeyValue);
 
   return (
-    <Card className="border-border/60 bg-card/90 shadow-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-blue-500" />
-            <CardTitle className="text-base text-foreground">Configurações do Pipeline</CardTitle>
-          </div>
-          <Button size="sm" variant="ghost" className="h-6 text-xs text-muted-foreground" onClick={onClose}>
-            Fechar
-          </Button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="h-4 w-4 text-blue-500" />
+          <h3 className="text-sm font-semibold text-foreground">Configurações do Pipeline</h3>
         </div>
-      </CardHeader>
+        <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={onClose}>
+          Fechar
+        </Button>
+      </div>
 
-      <CardContent className="space-y-5">
-        {/* ── API Keys Section ── */}
-        <div className="space-y-3 rounded-xl border border-border/50 bg-muted/20 p-4">
-          <h4 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-            <Key className="w-3 h-3 text-amber-400" />
-            Chaves API (encriptadas)
-          </h4>
+      <Tabs defaultValue="keys">
+        <TabsList className="h-8 w-full gap-0.5 rounded-lg border border-border/40 bg-muted/40 p-0.5">
+          <TabsTrigger value="keys" className="flex-1 rounded-md text-xs">
+            <Key className="mr-1.5 h-3.5 w-3.5" />Chaves API
+          </TabsTrigger>
+          <TabsTrigger value="schedules" className="flex-1 rounded-md text-xs">
+            <Clock className="mr-1.5 h-3.5 w-3.5" />Schedules
+          </TabsTrigger>
+          <TabsTrigger value="cleanup" className="flex-1 rounded-md text-xs">
+            <Trash2 className="mr-1.5 h-3.5 w-3.5" />Limpeza
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ── TAB: API Keys ── */}
+        <TabsContent value="keys" className="mt-4 space-y-4">
           <p className="text-xs text-muted-foreground">
-            As chaves são armazenadas com encriptação AES-GCM. Os workflows leem do Supabase em runtime.
+            Chaves encriptadas com AES-GCM. Os workflows leem do Supabase em runtime.
           </p>
 
           {loadingCreds && (
-            <div className="flex items-center gap-2 rounded border border-border/40 bg-muted/20 px-2.5 py-2 text-[11px] text-foreground/80">
-              <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
-              <span>A carregar chaves do pipeline...</span>
+            <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />A carregar chaves…
             </div>
           )}
 
           {!loadingCreds && credentialsError && (
-            <div className="rounded border border-red-500/30 bg-red-500/5 p-2 text-[10px] text-red-200">
-              <p>Falha ao carregar credenciais: {credentialsError}</p>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="mt-2 h-6 px-2 text-[10px] text-red-200 hover:bg-red-500/10 hover:text-foreground"
-                onClick={() => void loadCredentials()}
-              >
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <p className="text-xs text-destructive">{credentialsError}</p>
+              <Button size="sm" variant="ghost" className="mt-2 h-7 text-xs" onClick={() => void loadCredentials()}>
                 Tentar novamente
               </Button>
             </div>
           )}
 
-          {/* Current keys status */}
           {!loadingCreds && !credentialsError && (
             <div className="space-y-2">
-              <div className="grid gap-2 sm:grid-cols-3">
-                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-background/70 p-2 text-xs">
-                  {anthropicKey ? (
-                    <>
-                      <CheckCircle2 className="w-3 h-3 text-primary" />
-                      <span className="text-primary">ANTHROPIC_API_KEY</span>
-                      <span className="text-muted-foreground">ativa · {new Date(anthropicKey.activated_at ?? anthropicKey.created_at).toLocaleDateString('pt-BR')}</span>
-                      <Button size="sm" variant="ghost" className="h-5 ml-auto px-1 text-red-400 hover:text-red-300" onClick={() => void handleDelete(anthropicKey.id)}>
-                        <Trash2 className="w-2.5 h-2.5" />
+              {/* Keys status */}
+              <div className="divide-y divide-border/40 rounded-xl border border-border/40 bg-muted/20">
+                {[
+                  { key: anthropicKey, label: 'ANTHROPIC_API_KEY', warn: false },
+                  { key: supabaseKey, label: 'SUPABASE_SERVICE_ROLE_KEY', warn: false },
+                  { key: n8nKey, label: 'N8N_API_KEY', warn: true },
+                ].map(({ key, label, warn }) => (
+                  <div key={label} className="flex min-w-0 items-center gap-2 px-3 py-2.5">
+                    {key ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                    ) : (
+                      <AlertTriangle className={`h-3.5 w-3.5 shrink-0 ${warn ? 'text-amber-500' : 'text-destructive'}`} />
+                    )}
+                    <span className={`min-w-0 truncate text-xs font-mono font-medium ${key ? 'text-foreground' : warn ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'}`}>
+                      {label}
+                    </span>
+                    {key && (
+                      <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">
+                        ativa · {new Date(key.activated_at ?? key.created_at).toLocaleDateString('pt-PT')}
+                      </span>
+                    )}
+                    {!key && warn && (
+                      <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">env var (fallback)</span>
+                    )}
+                    {key && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => void handleDeleteKey(key.id)}>
+                        <Trash2 className="h-3 w-3" />
                       </Button>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="w-3 h-3 text-red-400" />
-                      <span className="text-red-400">ANTHROPIC_API_KEY — NÃO CONFIGURADA</span>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-background/70 p-2 text-xs">
-                  {supabaseServiceKey ? (
-                    <>
-                      <CheckCircle2 className="w-3 h-3 text-primary" />
-                      <span className="text-primary">SUPABASE_SERVICE_ROLE_KEY</span>
-                      <span className="text-muted-foreground">ativa</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="w-3 h-3 text-red-400" />
-                      <span className="text-red-400">SUPABASE_SERVICE_ROLE_KEY — NÃO CONFIGURADA</span>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-background/70 p-2 text-xs">
-                  {n8nKey ? (
-                    <>
-                      <CheckCircle2 className="w-3 h-3 text-primary" />
-                      <span className="text-primary">N8N_API_KEY</span>
-                      <span className="text-muted-foreground">ativa</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="w-3 h-3 text-amber-400" />
-                      <span className="text-amber-400">N8N_API_KEY — usando env var (fallback)</span>
-                    </>
-                  )}
-                </div>
+                    )}
+                  </div>
+                ))}
               </div>
-              <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2 text-[11px] text-amber-200">
-                Guardar SUPABASE_SERVICE_ROLE_KEY aqui ativa o vault do portal, mas não altera automaticamente a variável de ambiente do serviço n8n. WF-01 e WF-02 usam $env.SUPABASE_SERVICE_ROLE_KEY no runtime do n8n; se o Render continuar com valor antigo ou vazio, os workflows seguem a falhar.
-              </div>
+
+              {/* Warning about Supabase env */}
+              {supabaseKey && (
+                <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400">
+                  Guardar a chave aqui ativa o vault do portal, mas não altera a variável de ambiente do n8n. WF-01 e WF-02 leem <code className="font-mono">$env.SUPABASE_SERVICE_ROLE_KEY</code> no runtime do n8n.
+                </p>
+              )}
             </div>
           )}
 
-          {/* Add new key form */}
+          {/* Add key form */}
           <form
-            className="space-y-2 rounded-lg border border-border bg-background/70 p-3"
+            className="space-y-2 rounded-xl border border-border/50 bg-card p-3"
             onSubmit={(e) => { e.preventDefault(); void handleSaveKey(); }}
             autoComplete="off"
           >
-            <div className="flex items-center gap-2">
-              <select
-                className="h-8 rounded border border-border bg-muted px-2 text-xs text-foreground"
-                value={newKeyName}
-                onChange={(e) => setNewKeyName(e.target.value as 'ANTHROPIC_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY')}
-              >
-                <option value="ANTHROPIC_API_KEY">ANTHROPIC_API_KEY (Claude IA)</option>
-                <option value="SUPABASE_SERVICE_ROLE_KEY">SUPABASE_SERVICE_ROLE_KEY</option>
-              </select>
-            </div>
-            <div className="flex gap-1.5">
+            <p className="text-xs font-medium text-foreground">Adicionar / atualizar chave</p>
+            <select
+              className="h-8 w-full rounded-lg border border-border bg-muted px-2 text-xs text-foreground"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value as 'ANTHROPIC_API_KEY' | 'SUPABASE_SERVICE_ROLE_KEY')}
+            >
+              <option value="ANTHROPIC_API_KEY">ANTHROPIC_API_KEY (Claude IA)</option>
+              <option value="SUPABASE_SERVICE_ROLE_KEY">SUPABASE_SERVICE_ROLE_KEY</option>
+            </select>
+            <div className="flex gap-2">
               <Input
                 type="password"
                 placeholder={newKeyName === 'ANTHROPIC_API_KEY' ? 'sk-ant-...' : 'sb_secret_...'}
-                className="h-8 border-border bg-muted font-mono text-xs"
+                className="h-8 flex-1 font-mono text-xs"
                 value={newKeyValue}
                 onChange={(e) => setNewKeyValue(e.target.value)}
                 autoComplete="new-password"
               />
-              <Button
-                type="submit"
-                size="sm"
-                className="h-8 shrink-0 bg-cyan-600 text-xs hover:bg-cyan-700"
-                disabled={saving || Boolean(credentialDraftError)}
-              >
-                {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Salvar'}
+              <Button type="submit" size="sm" className="h-8 shrink-0 text-xs" disabled={saving || Boolean(credentialDraftError)}>
+                {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Guardar'}
               </Button>
             </div>
-            {credentialDraftError && (
-              <p className="text-[11px] text-red-300">{credentialDraftError}</p>
+            {credentialDraftError && newKeyValue && (
+              <p className="text-[11px] text-destructive">{credentialDraftError}</p>
             )}
             <p className="text-[11px] text-muted-foreground">
               {newKeyName === 'ANTHROPIC_API_KEY'
-                ? 'Obtenha em console.anthropic.com → API Keys. O WF-03 usa esta chave para gerar artigos com Claude Sonnet.'
-                : 'Supabase → Settings → API → Secret keys. Use a chave sb_secret... do projeto. Não use a JWT service_role legada iniciada em eyJ...'}
+                ? 'console.anthropic.com → API Keys. Usado pelo WF-03 para gerar artigos.'
+                : 'Supabase → Settings → API → Secret keys. Use sb_secret..., não eyJ...'}
             </p>
           </form>
-        </div>
+        </TabsContent>
 
-        {/* ── Timing Explanation ── */}
-        <div className="space-y-3 rounded-xl border border-border/50 bg-muted/20 p-4">
-          <h4 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-            <Clock className="w-3 h-3 text-blue-500" />
-            Temporização dos Workflows (cron)
-          </h4>
+        {/* ── TAB: Schedules ── */}
+        <TabsContent value="schedules" className="mt-4 space-y-4">
           <div className="grid gap-2 sm:grid-cols-3">
-            <div className="rounded-lg border border-border/40 bg-background/70 p-3">
-              <Badge variant="outline" className="border-cyan-500/30 text-[10px] text-blue-500">WF-01</Badge>
-              <p className="mt-2 text-xs text-foreground">Coleta RSS</p>
-              <p className="text-xs text-muted-foreground">A cada 30 min</p>
-            </div>
-            <div className="rounded-lg border border-border/40 bg-background/70 p-3">
-              <Badge variant="outline" className="border-cyan-500/30 text-[10px] text-blue-500">WF-02</Badge>
-              <p className="mt-2 text-xs text-foreground">Cluster & Dedup</p>
-              <p className="text-xs text-muted-foreground">A cada 20 min</p>
-            </div>
-            <div className="rounded-lg border border-border/40 bg-background/70 p-3">
-              <Badge variant="outline" className="border-cyan-500/30 text-[10px] text-blue-500">WF-03</Badge>
-              <p className="mt-2 text-xs text-foreground">IA Reescrita</p>
-              <p className="text-xs text-muted-foreground">A cada 60 min · até 10 artigos/ciclo</p>
-            </div>
-          </div>
-          <div className="rounded-lg border border-border/40 bg-background/70 p-3 text-xs text-muted-foreground">
-              <p>Cadência teórica do WF-03: ~1 artigo curado a cada {cadencePerCuratedMinutes} min.</p>
-              <p>Lead time médio estimado: ~{Math.round(avgCronWaitMinutes)} min · pior caso: ~{Math.round(worstCaseCronWaitMinutes)} min.</p>
-              <p>Capacidade máxima atual: {WF03_CAPACITY_PER_HOUR.toFixed(0)} curados/hora (~{Math.round(WF03_CAPACITY_PER_HOUR * 24)} por dia).</p>
-              {backlogDrainHours !== null && (
-                <>
-                  <p>Backlog atual: {diagnostics?.clusters.highConfidence ?? 0} clusters elegíveis ⇒ ~{formatHours(backlogDrainHours)} para drenar tudo na capacidade atual.</p>
-                  <p>Novo artigo elegível agora: tende a ficar pronto em ~{formatHours(estimatedNewReadyHours ?? 0)} se a fila atual se mantiver.</p>
-                  <p>Cluster já dentro do backlog atual: espera média aproximada ~{formatHours(estimatedBacklogAverageWaitHours ?? 0)}.</p>
-                </>
-              )}
-            </div>
-
-          <div className="space-y-1 rounded-lg border border-border/40 bg-background/70 p-3 text-xs text-muted-foreground">
-            <p className="font-medium text-foreground/90">Execução média real recente</p>
-            {executionSummaries.length > 0 ? executionSummaries.map((summary) => (
-              <div key={summary.id} className="flex items-center gap-2">
-                <span className="truncate text-foreground">{summary.name}</span>
-                <span className="ml-auto">{formatDurationMs(summary.avgDurationMs)}</span>
-                <span className="text-muted-foreground/60">{summary.sampleCount} exec.</span>
-                {(summary.avgItemsProcessed > 0 || summary.avgItemsCreated > 0) && (
-                  <span className="text-muted-foreground/60">
-                    proc. {summary.avgItemsProcessed.toFixed(1)} · criados {summary.avgItemsCreated.toFixed(1)}
-                  </span>
-                )}
+            {[
+              { wf: 'WF-01', label: 'Coleta RSS', schedule: 'A cada 30 min' },
+              { wf: 'WF-02', label: 'Cluster & Dedup', schedule: 'A cada 20 min' },
+              { wf: 'WF-03', label: 'IA Reescrita', schedule: 'A cada 60 min · até 10 artigos/ciclo' },
+            ].map(({ wf, label, schedule }) => (
+              <div key={wf} className="rounded-xl border border-border/40 bg-muted/20 p-3">
+                <Badge variant="outline" className="mb-2 border-blue-500/30 text-[10px] text-blue-600 dark:text-blue-400">
+                  {wf}
+                </Badge>
+                <p className="text-xs font-medium text-foreground">{label}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{schedule}</p>
               </div>
-            )) : (
-              <p>Sem histórico suficiente em automation_executions; a estimativa acima usa cron e capacidade do pipeline.</p>
+            ))}
+          </div>
+
+          <div className="rounded-xl border border-border/40 bg-muted/20 p-3 space-y-1 text-[11px] text-muted-foreground">
+            <p>Cadência WF-03: ~1 artigo a cada {cadencePerCurated} min.</p>
+            <p>Lead time: ~{Math.round(avgCronWait)} min (avg) · ~{Math.round(worstCaseCronWait)} min (pior caso).</p>
+            <p>Capacidade: {WF03_CAPACITY_PER_HOUR.toFixed(0)} curados/hora (~{Math.round(WF03_CAPACITY_PER_HOUR * 24)}/dia).</p>
+            {backlogDrainH !== null && (
+              <>
+                <p>Backlog: {diagnostics?.clusters.highConfidence ?? 0} clusters elegíveis ⇒ ~{formatHours(backlogDrainH)} para drenar.</p>
+                <p>Próximo artigo: pronto em ~{formatHours(estimatedReadyH ?? 0)} se a fila se mantiver.</p>
+              </>
             )}
           </div>
-        </div>
 
-        {/* ── Data Cleanup ── */}
-        <div className="space-y-3 rounded-xl border border-border/50 bg-muted/20 p-4">
-          <h4 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-            <Trash2 className="w-3 h-3 text-amber-400" />
-            Limpeza de Dados
-          </h4>
-          <p className="text-xs text-muted-foreground">
-            O fluxo atual só limpa staging/clusters automaticamente na promoção final para published/duplicate. Não limpa quando o artigo entra em curated_posts.
-          </p>
-          {diagnostics && (
-            <div className="space-y-1 rounded-lg border border-border/40 bg-background/70 p-3 text-xs text-muted-foreground">
-              <p>Backlog observado agora: {diagnostics.staging.unprocessed} staging não processados · {diagnostics.clusters.highConfidence} clusters ≥60% · {diagnostics.curated.ready} curados prontos.</p>
-              <p>Limpeza segura: remove apenas processados/publicados/rejeitados antigos.</p>
-              <p>Purge de backlog: remove staging bruto antigo e clusters órfãos antigos, sem tocar em curados draft/ready.</p>
+          {executionSummaries.length > 0 && (
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-3">
+              <p className="mb-2 text-xs font-medium text-foreground">Execução real recente</p>
+              <div className="space-y-1.5">
+                {executionSummaries.map((s) => (
+                  <div key={s.id} className="flex min-w-0 items-center gap-2 text-[11px]">
+                    <span className="min-w-0 truncate text-foreground">{s.name}</span>
+                    <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">{formatDurationMs(s.avgDurationMs)}</span>
+                    <span className="shrink-0 text-muted-foreground/60">{s.sampleCount} exec.</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Mais antigos que:</span>
-            <select
-              className="h-8 rounded border border-border bg-background px-2 text-xs text-foreground"
-              value={cleanupHours}
-              onChange={(e) => setCleanupHours(Number(e.target.value))}
-            >
+        </TabsContent>
+
+        {/* ── TAB: Cleanup ── */}
+        <TabsContent value="cleanup" className="mt-4 space-y-4">
+          {diagnostics && (
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-3 text-[11px] text-muted-foreground space-y-0.5">
+              <p className="font-medium text-foreground text-xs">Estado atual</p>
+              <p>{diagnostics.staging.unprocessed} staging não processados · {diagnostics.clusters.highConfidence} clusters ≥60% · {diagnostics.curated.ready} curados prontos</p>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-foreground">Corte de tempo</label>
+            <div className="flex flex-wrap gap-1.5">
               {CLEANUP_OPTIONS.map((opt) => (
-                <option key={opt.hours} value={opt.hours}>{opt.label}</option>
+                <Button
+                  key={opt.hours}
+                  size="sm"
+                  variant={cleanupHours === opt.hours ? 'default' : 'outline'}
+                  className="h-7 px-3 text-xs"
+                  onClick={() => setCleanupHours(opt.hours)}
+                >
+                  {opt.label}
+                </Button>
               ))}
-            </select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               variant="outline"
-              className="h-8 border-amber-600/50 text-xs text-amber-400 hover:bg-amber-600/10"
+              className="h-8 gap-1.5 border-amber-500/40 text-xs text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
               disabled={cleaning}
               onClick={() => void handleCleanup()}
             >
-              {cleaning ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Trash2 className="w-3 h-3 mr-1" />}
+              {cleaning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
               Limpeza segura
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="h-8 border-red-600/40 text-xs text-red-400 hover:bg-red-600/10"
+              className="h-8 gap-1.5 border-destructive/40 text-xs text-destructive hover:bg-destructive/10"
               disabled={cleaning}
               onClick={() => void handleBacklogPurge()}
             >
-              {cleaning ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+              {cleaning ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
               Purgar backlog
             </Button>
           </div>
+
           {cleanupResult && (
-            <p className="text-xs text-primary">{cleanupResult}</p>
+            <p className="text-xs text-foreground">{cleanupResult}</p>
           )}
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300"
-            disabled={cleaning}
-            onClick={() => void handleFullReset()}
-          >
-            <Trash2 className="w-2.5 h-2.5 mr-1" />
-            Reset completo do pipeline (recomeçar limpo)
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+
+          <div className="border-t border-border/40 pt-3">
+            <p className="mb-2 text-[11px] text-muted-foreground">
+              Reset completo: apaga <strong>todos</strong> os dados do pipeline (staging, clusters, curados não publicados).
+            </p>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1.5 text-xs text-destructive hover:bg-destructive/10"
+              disabled={cleaning}
+              onClick={() => void handleFullReset()}
+            >
+              <Trash2 className="h-3 w-3" />
+              Reset completo do pipeline
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

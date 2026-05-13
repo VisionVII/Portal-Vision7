@@ -441,7 +441,7 @@ const AudiocastsView: React.FC = () => {
                 <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-5 text-center">
                   <FileAudio className="mx-auto h-8 w-8 text-muted-foreground/60" />
                   <p className="text-sm text-muted-foreground">
-                    Arraste ou clique para selecionar (.mp3, .wav, .ogg — máx 100 MB)
+                    Arraste ou clique para selecionar (.mp3, .m4a, .opus, .ogg, .wav — máx 100 MB)
                   </p>
                   <input
                     type="file"

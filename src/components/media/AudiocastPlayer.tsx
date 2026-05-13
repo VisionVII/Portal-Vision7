@@ -117,7 +117,8 @@ const AudiocastPlayer: React.FC<AudiocastPlayerProps> = ({
 
       const link = document.createElement('a');
       link.href = podcast.audio_url;
-      link.download = `${podcast.title}.mp3`;
+      const ext = podcast.audio_url.split('?')[0].split('.').pop() || 'mp3';
+      link.download = `${podcast.title}.${ext}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

@@ -7,7 +7,7 @@ import { VIEW_ACCESS_RULES } from '@/components/admin/dashboard-types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Post, usePosts } from '@/hooks/usePosts';
 import { MFAChallenge } from '@/components/admin/MFAChallenge';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 
 // Lazy-loaded views
 const OverviewView = lazy(() => import('@/components/admin/views/OverviewView'));
@@ -148,6 +148,7 @@ const AdminDashboard = () => {
       {/* Mobile drawer */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="w-72 p-0 pt-4">
+          <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
           <div className="px-3">
             <DashboardSidebar
               activeView={activeView}
@@ -158,6 +159,18 @@ const AdminDashboard = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Mobile inline nav — horizontal pills, below header, only on < lg */}
+      <div className="sticky top-14 z-40 border-b border-border/30 bg-background lg:hidden">
+        <div className="overflow-x-auto px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <DashboardSidebar
+            activeView={activeView}
+            onViewChange={setActiveView}
+            allowedViews={allowedViews}
+            draftCount={draftCount}
+          />
+        </div>
+      </div>
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         {/* Desktop sidebar */}

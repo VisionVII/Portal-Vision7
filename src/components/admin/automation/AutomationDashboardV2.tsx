@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { PipelineView } from './PipelineView';
 import { AutomationsView } from './AutomationsView';
@@ -50,31 +51,29 @@ interface AutomationDashboardV2Props {
 
 type DashboardView = 'pipeline' | 'automations' | 'logs' | 'tools';
 
-function SummaryPill({
-  label,
-  value,
-  icon,
-  tone,
+function StatBar({
+  stats,
 }: {
-  label: string;
-  value: string;
-  icon: React.ElementType;
-  tone: 'success' | 'warning' | 'neutral';
+  stats: Array<{ label: string; value: string; tone: 'success' | 'warning' | 'neutral' }>;
 }) {
-  const Icon = icon;
-  const toneClass = tone === 'success'
-    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-    : tone === 'warning'
-      ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-      : 'border-border/60 bg-muted/30 text-muted-foreground';
-
   return (
-    <div className={`rounded-2xl border px-3 py-3 ${toneClass}`}>
-      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide">
-        <Icon className="h-4 w-4 shrink-0" />
-        <span className="truncate">{label}</span>
-      </div>
-      <p className="mt-2 text-lg font-bold text-foreground">{value}</p>
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/40 bg-border/30 sm:grid-cols-4">
+      {stats.map((stat) => (
+        <div key={stat.label} className="flex flex-col gap-0.5 bg-card px-4 py-3">
+          <span className="truncate text-[11px] font-medium text-muted-foreground">{stat.label}</span>
+          <span
+            className={`text-xl font-bold tabular-nums ${
+              stat.tone === 'success'
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : stat.tone === 'warning'
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-foreground'
+            }`}
+          >
+            {stat.value}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -437,47 +436,93 @@ export function AutomationDashboardV2({
   };
 
   return (
-    <div className="space-y-6 rounded-3xl border border-border/40 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.08),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.08),transparent_25%)] p-4 sm:p-6">
-      <div className="flex flex-col gap-4 rounded-2xl border border-border/50 bg-card/80 p-4 shadow-sm sm:p-5 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Centro de Automação</h1>
-          <p className="text-sm text-muted-foreground">Pipeline editorial por IA, fluxos n8n e monitoramento operacional</p>
+    <div className="space-y-5">
+      {/* ── Page header ── */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            Centro de Automação
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Pipeline editorial por IA, fluxos n8n e monitoramento
+          </p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
-            <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-400'}`} />
-            n8n {isConnected ? 'Online' : 'Offline'}
-          </div>
-          <Button
-            variant={keepAlive.isActive ? 'default' : 'outline'}
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => (keepAlive.isActive ? keepAlive.stop() : keepAlive.start())}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span
+            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
+              isConnected
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                : 'border-red-400/30 bg-red-400/10 text-red-600 dark:text-red-400'
+            }`}
           >
-            <Zap className={`mr-1 h-3 w-3 ${keepAlive.isActive ? 'animate-pulse' : ''}`} />
-            Keep-Alive
-          </Button>
-          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => void refreshN8n()}>
-            <RefreshCw className={`mr-1 h-3 w-3 ${loadingAutomations ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
+            <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-400'}`} />
+            n8n {isConnected ? 'Online' : 'Offline'}
+          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={keepAlive.isActive ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => (keepAlive.isActive ? keepAlive.stop() : keepAlive.start())}
+              >
+                <Zap className={`h-3.5 w-3.5 ${keepAlive.isActive ? 'animate-pulse text-primary' : ''}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{keepAlive.isActive ? 'Desativar Keep-Alive' : 'Ativar Keep-Alive'}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void refreshN8n()}>
+                <RefreshCw className={`h-3.5 w-3.5 ${loadingAutomations ? 'animate-spin' : ''}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Atualizar</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryPill label="Workflows" value={`${activeWorkflows}/${workflows.length}`} icon={Workflow} tone={isConnected ? 'success' : 'warning'} />
-        <SummaryPill label="Automações" value={`${activeAutomations}/${effectiveTotalAutomations} ativas`} icon={LayoutGrid} tone="success" />
-        <SummaryPill label="Erros" value={String(pipelineErrors)} icon={Clock} tone={pipelineErrors > 0 ? 'warning' : 'neutral'} />
-        <SummaryPill label="Sucesso" value={successRate === null ? 'N/D' : `${successRate}%`} icon={Zap} tone={successRate === null ? 'neutral' : successRate >= 90 ? 'success' : 'warning'} />
-      </div>
+      {/* ── Stats bar ── */}
+      <StatBar
+        stats={[
+          {
+            label: 'Workflows',
+            value: `${activeWorkflows}/${workflows.length}`,
+            tone: isConnected ? 'success' : 'warning',
+          },
+          {
+            label: 'Automações ativas',
+            value: `${activeAutomations}/${effectiveTotalAutomations}`,
+            tone: 'success',
+          },
+          {
+            label: 'Erros',
+            value: String(pipelineErrors),
+            tone: pipelineErrors > 0 ? 'warning' : 'neutral',
+          },
+          {
+            label: 'Taxa de sucesso',
+            value: successRate === null ? 'N/D' : `${successRate}%`,
+            tone: successRate === null ? 'neutral' : successRate >= 90 ? 'success' : 'warning',
+          },
+        ]}
+      />
 
+      {/* ── Tab navigation ── */}
       <Tabs value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
-        <TabsList className="h-auto w-full gap-1 overflow-x-auto rounded-2xl border border-border/50 bg-muted/40 p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsTrigger value="pipeline" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Zap className="h-3.5 w-3.5" />Pipeline</TabsTrigger>
-          <TabsTrigger value="automations" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Workflow className="h-3.5 w-3.5" />Automações</TabsTrigger>
-          <TabsTrigger value="logs" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Clock className="h-3.5 w-3.5" />Logs</TabsTrigger>
-          <TabsTrigger value="tools" className="gap-1.5 rounded-xl px-3 py-2 text-xs"><Wrench className="h-3.5 w-3.5" />Ferramentas</TabsTrigger>
+        <TabsList className="h-auto w-full gap-1 overflow-x-auto rounded-xl border border-border/40 bg-muted/40 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger value="pipeline" className="gap-1.5 rounded-lg px-3 py-2 text-xs">
+            <Zap className="h-3.5 w-3.5" />Pipeline
+          </TabsTrigger>
+          <TabsTrigger value="automations" className="gap-1.5 rounded-lg px-3 py-2 text-xs">
+            <Workflow className="h-3.5 w-3.5" />Automações
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="gap-1.5 rounded-lg px-3 py-2 text-xs">
+            <Clock className="h-3.5 w-3.5" />Logs
+          </TabsTrigger>
+          <TabsTrigger value="tools" className="gap-1.5 rounded-lg px-3 py-2 text-xs">
+            <Wrench className="h-3.5 w-3.5" />Ferramentas
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -552,3 +597,4 @@ export function AutomationDashboardV2({
     </div>
   );
 }
+
