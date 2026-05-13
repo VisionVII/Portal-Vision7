@@ -147,10 +147,11 @@ const MiniPlayerV2: React.FC = () => {
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-6 sm:px-6 sm:py-8">
-                <div className="w-full max-w-2xl space-y-6 sm:space-y-8">
+              <div className="flex-1 overflow-y-auto">
+                <div className="mx-auto flex min-h-full w-full max-w-lg flex-col items-center justify-center px-4 py-5 sm:px-6 sm:py-8">
+                <div className="w-full space-y-5 sm:space-y-6">
                   {/* Cover Art */}
-                  <div className="mx-auto w-full max-w-sm">
+                  <div className="mx-auto w-full max-w-[min(280px,55vw)] sm:max-w-sm">
                     <div className="relative aspect-square w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10">
                       {track.cover_url ? (
                         <img 
@@ -296,6 +297,7 @@ const MiniPlayerV2: React.FC = () => {
                       Download
                     </Button>
                   </div>
+                </div>
                 </div>
               </div>
             </div>
