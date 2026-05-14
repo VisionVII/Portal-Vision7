@@ -72,7 +72,8 @@ const MiniPlayerV2: React.FC = () => {
     if (!track.audio_url) return;
     const link = document.createElement('a');
     link.href = track.audio_url;
-    link.download = `${track.title}.mp3`;
+    const ext = track.audio_url.split('?')[0].split('.').pop() || 'mp3';
+    link.download = `${track.title}.${ext}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

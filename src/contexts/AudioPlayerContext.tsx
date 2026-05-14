@@ -70,9 +70,15 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return;
     }
 
-    // New track: set src (triggers load automatically), skip explicit load()
-    // to avoid AbortError on the immediate play() call
+    // 1. Pause first — prevents AbortError on mobile when changing src mid-play
+    audio.pause();
+    // 2. Set new source
     audio.src = track.audio_url;
+    // 3. Explicit load — required on some Android WebView/Chrome Mobile to start
+    //    buffering after a programmatic src change; does NOT break iOS user-gesture
+    //    context because pause() + load() + play() run in the same call stack
+    audio.load();
+
     setState(s => ({
       ...s,
       track,
@@ -81,7 +87,11 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       isMinimized: true,
       isLoading: true,
     }));
+
     audio.play().catch((err) => {
+      // AbortError: load() interrupted a previous play — treat as transient,
+      // canplay event will fire and isLoading clears; isPlaying stays true so
+      // the browser resumes once buffered (expected on slow mobile connections)
       if (err.name !== 'AbortError') {
         setState(s => ({ ...s, isPlaying: false, isLoading: false }));
       }
