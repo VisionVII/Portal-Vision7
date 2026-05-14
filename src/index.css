@@ -315,6 +315,31 @@
     overflow-x: auto;
   }
 
+  /* ── Code blocks: tema fixo independente do prose-invert ── */
+  /* Light mode: fundo escuro + texto claro */
+  .prose pre,
+  .prose-invert pre {
+    background-color: rgb(3 7 18) !important;   /* neutral-950 */
+    color: rgb(244 244 245) !important;          /* neutral-100 */
+  }
+  .prose pre code,
+  .prose-invert pre code {
+    background-color: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+  }
+  /* Dark mode: fundo branco + texto escuro */
+  .dark .prose pre,
+  .dark .prose-invert pre {
+    background-color: #ffffff !important;
+    color: rgb(17 24 39) !important;             /* neutral-900 */
+  }
+  .dark .prose pre code,
+  .dark .prose-invert pre code {
+    background-color: transparent !important;
+    color: rgb(17 24 39) !important;
+  }
+
   /* Scroll behavior */
   ::-webkit-scrollbar {
     @apply w-2;
