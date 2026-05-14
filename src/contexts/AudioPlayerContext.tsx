@@ -70,11 +70,9 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return;
     }
 
-    // 1. Pause — stop any ongoing playback cleanly
+    // Stop current playback before changing source
     audio.pause();
-    // 2. Set source + explicit load (needed on Android WebView/Chrome Mobile)
     audio.src = track.audio_url;
-    audio.load();
 
     setState(s => ({
       ...s,
@@ -85,18 +83,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       isLoading: true,
     }));
 
+    // Call play() immediately — no explicit load() before this.
+    // Calling load() before play() causes an AbortError on iOS/Android which
+    // prevents the audio element from being "unlocked" in the user-gesture
+    // context; subsequent retries from async events (canplay) are then blocked.
+    // play() after src= implicitly starts loading AND "unlocks" the element.
     audio.play().catch((err) => {
-      if (err.name === 'AbortError') {
-        // load() cancelled the immediate play() — this is expected on mobile.
-        // The first play() call already "unlocked" the audio element in the
-        // user-gesture context, so a retry from canplay() will succeed on iOS too.
-        const retryOnCanPlay = () => {
-          audio.play().catch(() => {
-            setState(s => ({ ...s, isPlaying: false, isLoading: false }));
-          });
-        };
-        audio.addEventListener('canplay', retryOnCanPlay, { once: true });
-      } else {
+      if (err.name !== 'AbortError') {
         setState(s => ({ ...s, isPlaying: false, isLoading: false }));
       }
     });
