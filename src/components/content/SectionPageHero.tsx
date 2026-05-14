@@ -59,7 +59,7 @@ const SectionPageHero: React.FC<SectionPageHeroProps> = ({
             height={480}
             className="absolute inset-0 h-full w-full object-cover object-center"
             loading="eager"
-            fetchPriority="high"
+            fetchpriority="high"
             decoding="async"
             onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />

@@ -183,10 +183,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     audio.pause();
+    audio.currentTime = 0;
     audio.src = track.audio_url;
-    // explicit load() required on Android Chrome to start buffering after src change;
-    // on iOS this is also required — without it, iOS ignores the src change
-    audio.load();
+    // Do NOT call audio.load() — it causes an AbortError race:
+    // load() → play() immediately → AbortError → canplay retry added, but canplay
+    // may already have fired on fast CDN (Supabase), so the retry never runs.
+    // play() alone starts buffering AND playing; the browser queues play until
+    // readyState >= HAVE_FUTURE_DATA without the competing load() abort.
 
     setState(s => ({
       ...s,
@@ -199,20 +202,20 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     setMediaSessionMetadata(track);
 
-    // play() immediately: serves as the iOS user-gesture unlock call AND
-    // signals Android to start buffering. If load() causes AbortError
-    // (load in progress), retry from canplay — safe because:
-    // (a) this play() already registered the gesture with iOS, and
-    // (b) the pre-unlock on first touchstart ensures the element is already
-    //     activated before the user ever taps the play button.
+    const tryPlay = () =>
+      audio.play().catch(() => setState(s => ({ ...s, isPlaying: false, isLoading: false })));
+
     audio.play().catch((err) => {
       if (err.name === 'AbortError') {
-        audio.addEventListener('canplay', () => {
-          audio.play().catch(() => {
-            setState(s => ({ ...s, isPlaying: false, isLoading: false }));
-          });
-        }, { once: true });
+        // Rare: a previous load() from pause/src-change is still in flight.
+        // readyState check avoids missing canplay if it already fired.
+        if (audio.readyState >= 3) {
+          tryPlay();
+        } else {
+          audio.addEventListener('canplay', tryPlay, { once: true });
+        }
       } else {
+        console.error('[AudioPlayer] play() rejected:', err.name, err.message);
         setState(s => ({ ...s, isPlaying: false, isLoading: false }));
       }
     });
