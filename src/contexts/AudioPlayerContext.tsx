@@ -70,13 +70,10 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return;
     }
 
-    // 1. Pause first — prevents AbortError on mobile when changing src mid-play
+    // 1. Pause — stop any ongoing playback cleanly
     audio.pause();
-    // 2. Set new source
+    // 2. Set source + explicit load (needed on Android WebView/Chrome Mobile)
     audio.src = track.audio_url;
-    // 3. Explicit load — required on some Android WebView/Chrome Mobile to start
-    //    buffering after a programmatic src change; does NOT break iOS user-gesture
-    //    context because pause() + load() + play() run in the same call stack
     audio.load();
 
     setState(s => ({
@@ -89,10 +86,17 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }));
 
     audio.play().catch((err) => {
-      // AbortError: load() interrupted a previous play — treat as transient,
-      // canplay event will fire and isLoading clears; isPlaying stays true so
-      // the browser resumes once buffered (expected on slow mobile connections)
-      if (err.name !== 'AbortError') {
+      if (err.name === 'AbortError') {
+        // load() cancelled the immediate play() — this is expected on mobile.
+        // The first play() call already "unlocked" the audio element in the
+        // user-gesture context, so a retry from canplay() will succeed on iOS too.
+        const retryOnCanPlay = () => {
+          audio.play().catch(() => {
+            setState(s => ({ ...s, isPlaying: false, isLoading: false }));
+          });
+        };
+        audio.addEventListener('canplay', retryOnCanPlay, { once: true });
+      } else {
         setState(s => ({ ...s, isPlaying: false, isLoading: false }));
       }
     });
