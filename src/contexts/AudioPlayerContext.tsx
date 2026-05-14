@@ -16,16 +16,20 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     playbackRate: 1,
   });
 
-  // Lazy init the audio element once
+  // Init audio element once and attach to DOM (required by some Android browsers)
   useEffect(() => {
     if (!audioRef.current) {
-      audioRef.current = new Audio();
-      audioRef.current.volume = 0.8;
-      audioRef.current.preload = 'metadata';
+      const audio = new Audio();
+      audio.volume = 0.8;
+      audio.preload = 'metadata';
+      // Attach to DOM — some Android WebView/Chrome versions require this
+      // for HTMLAudioElement to actually produce sound
+      audio.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none;';
+      document.body.appendChild(audio);
+      audioRef.current = audio;
     }
     const audio = audioRef.current;
 
-    // Throttled time update via RAF — fires at most once per second instead of 4x/s
     let lastReported = 0;
     const onTimeUpdate = () => {
       const now = audio.currentTime;
@@ -41,12 +45,19 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const onEnded = () => setState(s => ({ ...s, isPlaying: false, currentTime: 0 }));
     const onWaiting = () => setState(s => ({ ...s, isLoading: true }));
     const onCanPlay = () => setState(s => ({ ...s, isLoading: false }));
+    const onError = () => {
+      const code = audio.error?.code ?? 0;
+      // MediaError codes: 1=ABORTED 2=NETWORK 3=DECODE 4=SRC_NOT_SUPPORTED
+      console.error('[AudioPlayer] error code:', code, audio.error?.message);
+      setState(s => ({ ...s, isPlaying: false, isLoading: false }));
+    };
 
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('loadedmetadata', onLoadedMetadata);
     audio.addEventListener('ended', onEnded);
     audio.addEventListener('waiting', onWaiting);
     audio.addEventListener('canplay', onCanPlay);
+    audio.addEventListener('error', onError);
 
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate);
@@ -54,8 +65,10 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       audio.removeEventListener('ended', onEnded);
       audio.removeEventListener('waiting', onWaiting);
       audio.removeEventListener('canplay', onCanPlay);
+      audio.removeEventListener('error', onError);
       audio.pause();
       audio.src = '';
+      audio.remove();
     };
   }, []);
 
