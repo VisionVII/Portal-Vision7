@@ -219,7 +219,7 @@ const CrmContactsTable: React.FC = () => {
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Pesquisar por email, nome ou empresa..."
@@ -228,23 +228,25 @@ const CrmContactsTable: React.FC = () => {
             className="pl-9"
           />
         </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            {(Object.keys(CONTACT_TYPE_LABELS) as CrmContactType[]).map((t) => (
-              <SelectItem key={t} value={t}>{CONTACT_TYPE_LABELS[t]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button size="sm" variant="outline" onClick={exportCSV}>
-          <Download className="h-4 w-4 mr-1" /> CSV
-        </Button>
-        <Button size="sm" onClick={openNew}>
-          <UserPlus className="h-4 w-4 mr-1" /> Novo Contacto
-        </Button>
+        <div className="flex flex-1 items-center gap-2 sm:flex-none">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="flex-1 sm:w-[160px]">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {(Object.keys(CONTACT_TYPE_LABELS) as CrmContactType[]).map((t) => (
+                <SelectItem key={t} value={t}>{CONTACT_TYPE_LABELS[t]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button size="sm" variant="outline" onClick={exportCSV}>
+            <Download className="h-4 w-4 mr-1" /> CSV
+          </Button>
+          <Button size="sm" onClick={openNew}>
+            <UserPlus className="h-4 w-4 mr-1" /> Novo Contacto
+          </Button>
+        </div>
       </div>
 
       {/* Table */}

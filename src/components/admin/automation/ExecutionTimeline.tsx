@@ -203,7 +203,7 @@ export function ExecutionTimeline({
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-base font-semibold text-foreground">
           Timeline de Execuções
           <span className="text-xs text-muted-foreground font-normal ml-2">({total})</span>
@@ -212,7 +212,7 @@ export function ExecutionTimeline({
           value={statusFilter || '__all__'}
           onValueChange={(v) => onStatusFilterChange((v === '__all__' ? '' : v) as ExecutionStatus | '')}
         >
-          <SelectTrigger className="w-[140px] bg-muted/30 border-border h-8 text-xs">
+          <SelectTrigger className="w-[110px] sm:w-[140px] bg-muted/30 border-border h-8 text-xs">
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
