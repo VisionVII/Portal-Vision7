@@ -1,14 +1,16 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, X, Image as ImageIcon, Link2 } from 'lucide-react';
+import { Link2 } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { usePostCategories, useSetPostCategories } from '@/hooks/usePostCategories';
 import PostCategorySelector from './PostCategorySelector';
-import RichTextEditor from './RichTextEditor';
+import PostImageUploadField from './PostImageUploadField';
+
+const RichTextEditor = React.lazy(() => import('./RichTextEditor'));
 import { useCreatePost, useUpdatePost, CreatePostData, Post } from '@/hooks/usePosts';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -447,122 +449,33 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Imagem do Post</Label>
-            <div className="space-y-3">
-              {imagePreview ? (
-                <div className="relative inline-block">
-                  <img src={imagePreview} alt="Preview" className="w-full max-w-md h-48 object-cover rounded-lg border" />
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary-600 dark:hover:border-primary-400 transition-colors"
-                >
-                  <ImageIcon className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-foreground">
-                    {isUploading ? 'A carregar...' : 'Clique para carregar uma imagem'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">PNG, JPG até 5MB</p>
-                </div>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {isUploading ? 'A carregar...' : 'Carregar Imagem'}
-                </Button>
-                <span className="text-xs text-muted-foreground">ou</span>
-                <Input
-                  value={formData.image_url}
-                  onChange={(e) => {
-                    setFormData({...formData, image_url: e.target.value});
-                    setImagePreview(e.target.value || null);
-                  }}
-                  placeholder="Cole o URL de uma imagem"
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          </div>
+          <PostImageUploadField
+            label="Imagem do Post"
+            preview={imagePreview}
+            url={formData.image_url}
+            isUploading={isUploading}
+            inputRef={fileInputRef}
+            onFileChange={handleImageUpload}
+            onUrlChange={(url) => { setFormData({ ...formData, image_url: url }); setImagePreview(url || null); }}
+            onRemove={removeImage}
+            uploadLabel="Imagem"
+            urlPlaceholder="Cole o URL de uma imagem"
+          />
 
-          <div className="space-y-2">
-            <Label>Banner do Post (fundo do card)</Label>
-            <p className="text-xs text-muted-foreground">Imagem panorâmica usada como fundo do card e hero da página. Recomendado: 1200×400px.</p>
-            <div className="space-y-3">
-              {bannerPreview ? (
-                <div className="relative inline-block w-full">
-                  <img src={bannerPreview} alt="Banner preview" className="w-full max-w-lg h-32 object-cover rounded-lg border" />
-                  <button
-                    type="button"
-                    onClick={removeBanner}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => bannerInputRef.current?.click()}
-                  className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary-600 dark:hover:border-primary-400 transition-colors"
-                >
-                  <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-foreground">
-                    {isBannerUploading ? 'A carregar...' : 'Clique para carregar um banner'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">PNG, JPG até 5MB — formato panorâmico</p>
-                </div>
-              )}
-              <input
-                ref={bannerInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleBannerUpload}
-                className="hidden"
-              />
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => bannerInputRef.current?.click()}
-                  disabled={isBannerUploading}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {isBannerUploading ? 'A carregar...' : 'Carregar Banner'}
-                </Button>
-                <span className="text-xs text-muted-foreground">ou</span>
-                <Input
-                  value={formData.banner_url}
-                  onChange={(e) => {
-                    setFormData({...formData, banner_url: e.target.value});
-                    setBannerPreview(e.target.value || null);
-                  }}
-                  placeholder="Cole o URL de um banner"
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          </div>
+          <PostImageUploadField
+            label="Banner do Post (fundo do card)"
+            hint="Imagem panorâmica usada como fundo do card e hero da página. Recomendado: 1200×400px."
+            preview={bannerPreview}
+            url={formData.banner_url}
+            isUploading={isBannerUploading}
+            inputRef={bannerInputRef}
+            onFileChange={handleBannerUpload}
+            onUrlChange={(url) => { setFormData({ ...formData, banner_url: url }); setBannerPreview(url || null); }}
+            onRemove={removeBanner}
+            uploadLabel="Banner"
+            urlPlaceholder="Cole o URL de um banner"
+            previewClass="h-32"
+          />
 
           <div className="space-y-2">
             <Label htmlFor="tags">Tags (separadas por vírgula)</Label>
@@ -579,16 +492,18 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
             <p className="text-xs text-muted-foreground">
               O editor aplica hierarquia visual em H1, H2, H3 e H4, reforca negrito, listas, citacoes, imagens e mantem o texto encaixado no padrao editorial selecionado.
             </p>
-            <RichTextEditor
-              content={formData.content}
-              onChange={(html) => setFormData((current) => ({
-                ...current,
-                content: html,
-                read_time: estimateReadTimeFromHtml(html),
-              }))}
-              placeholder="Escreva o conteúdo completo do artigo..."
-              featuredImageUrl={formData.image_url || formData.banner_url || null}
-            />
+            <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted/50" />}>
+              <RichTextEditor
+                content={formData.content}
+                onChange={(html) => setFormData((current) => ({
+                  ...current,
+                  content: html,
+                  read_time: estimateReadTimeFromHtml(html),
+                }))}
+                placeholder="Escreva o conteúdo completo do artigo..."
+                featuredImageUrl={formData.image_url || formData.banner_url || null}
+              />
+            </Suspense>
           </div>
 
           <div className="flex items-center space-x-2">
