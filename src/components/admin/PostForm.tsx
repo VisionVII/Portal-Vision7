@@ -4,10 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, X, Image as ImageIcon, Plus, Link2 } from 'lucide-react';
-import { useCategories, useCreateCategory } from '@/hooks/useCategories';
+import { Upload, X, Image as ImageIcon, Link2 } from 'lucide-react';
+import { useCategories } from '@/hooks/useCategories';
 import { usePostCategories, useSetPostCategories } from '@/hooks/usePostCategories';
+import PostCategorySelector from './PostCategorySelector';
 import RichTextEditor from './RichTextEditor';
 import { useCreatePost, useUpdatePost, CreatePostData, Post } from '@/hooks/usePosts';
 import { useToast } from '@/hooks/use-toast';
@@ -131,15 +131,12 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
     );
   }, []);
 
-  const [showNewCategory, setShowNewCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categories } = useCategories();
   const createPost = useCreatePost();
   const updatePost = useUpdatePost();
-  const createCategory = useCreateCategory();
   const { toast } = useToast();
   const { user, hasRole } = useAuth();
   const canPublish = hasRole('super_admin') || hasRole('admin') || hasRole('editor');
@@ -408,66 +405,13 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
               />
             </div>
             
-            <div className="space-y-2">
-              <Label>Categorias</Label>
-              <div className="rounded-md border border-input bg-background p-3 space-y-2 max-h-40 overflow-y-auto">
-                {categories?.length ? (
-                  categories.map((cat) => (
-                    <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox
-                        checked={selectedCategoryIds.includes(cat.id)}
-                        onCheckedChange={() => toggleCategoryId(cat.id)}
-                      />
-                      <span className="text-sm">{cat.name}</span>
-                    </label>
-                  ))
-                ) : (
-                  <p className="text-xs text-muted-foreground">Nenhuma categoria disponível</p>
-                )}
-              </div>
-              {selectedCategoryIds.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {selectedCategoryIds.length} categoria{selectedCategoryIds.length > 1 ? 's' : ''} selecionada{selectedCategoryIds.length > 1 ? 's' : ''}
-                </p>
-              )}
-              <div className="flex gap-2 items-center">
-                <Button type="button" variant="outline" size="sm" className="h-8 gap-1" onClick={() => setShowNewCategory(!showNewCategory)} title="Nova categoria">
-                  <Plus className="h-3.5 w-3.5" /> Nova
-                </Button>
-              </div>
-              {showNewCategory && (
-                <div className="flex gap-2">
-                  <Input
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    placeholder="Nome da nova categoria"
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={!newCategoryName.trim() || createCategory.isPending}
-                    onClick={async () => {
-                      const name = newCategoryName.trim();
-                      if (!name) return;
-                      try {
-                        const slug = generateSlug(name);
-                        const result = await createCategory.mutateAsync({ name, slug, color: 'bg-blue-600' });
-                        setSelectedCategoryIds((prev) => [...prev, result.id]);
-                        setNewCategoryName('');
-                        setShowNewCategory(false);
-                        toast({ title: 'Categoria criada', description: `"${name}" adicionada.` });
-                      } catch (err) {
-                        const message = err instanceof Error ? err.message : 'Erro ao criar categoria.';
-                        toast({ title: 'Erro', description: message, variant: 'destructive' });
-                      }
-                    }}
-                  >
-                    {createCategory.isPending ? 'A criar...' : 'Criar'}
-                  </Button>
-                </div>
-              )}
-            </div>
+            <PostCategorySelector
+              categories={categories}
+              selectedIds={selectedCategoryIds}
+              onToggle={toggleCategoryId}
+              onCreated={(catId) => setSelectedCategoryIds((prev) => [...prev, catId])}
+              generateSlug={generateSlug}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

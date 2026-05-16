@@ -34,6 +34,8 @@ import { PipelineSettingsPanel } from './PipelineSettingsPanel';
 import { PipelineActivityLog, type LogEntry } from './PipelineActivityLog';
 import { PipelineStepCard } from './PipelineStepCard';
 import { EditorialConfigForm } from './EditorialConfigForm';
+import { PipelineDiagnosticsPanel } from './PipelineDiagnosticsPanel';
+import { PipelineActionsBar } from './PipelineActionsBar';
 
 /* ── Pipeline step descriptor ── */
 interface PipelineStep {
@@ -785,104 +787,12 @@ export function NewsPipelineCard() {
         )}
 
         {/* ── Pipeline DB Diagnostics ── */}
-        {diagnosticsError instanceof Error && (
-          <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-2.5 text-xs text-red-300">
-            Falha ao consultar o estado real do pipeline no banco: {diagnosticsError.message}
-          </div>
-        )}
-
-        {diagnostics && (
-          <div className="rounded-lg border border-border/40 bg-muted/20 p-2.5 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Database className="w-3 h-3 text-blue-500" />
-                <span className="text-[10px] font-medium text-foreground/80">Estado do Pipeline (DB)</span>
-              </div>
-              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground" onClick={() => void refetchDiagnostics()}>
-                <RefreshCw className="w-2.5 h-2.5" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px]">
-              <span className="text-muted-foreground">
-                Staging: <span className={diagnostics.staging.total > 0 ? 'text-blue-500 font-medium' : 'text-muted-foreground'}>{diagnostics.staging.total}</span>
-                {diagnostics.staging.unprocessed > 0 && (
-                  <span className="text-amber-400 ml-1">({diagnostics.staging.unprocessed} não processados)</span>
-                )}
-              </span>
-              <span className="text-muted-foreground">
-                Clusters: <span className={diagnostics.clusters.total > 0 ? 'text-blue-500 font-medium' : 'text-muted-foreground'}>{diagnostics.clusters.total}</span>
-                {diagnostics.clusters.highConfidence > 0 && (
-                  <span className="text-primary ml-1">({diagnostics.clusters.highConfidence} ≥60%)</span>
-                )}
-              </span>
-              <span className="text-muted-foreground">
-                Curados: <span className={diagnostics.curated.total > 0 ? 'text-primary font-medium' : 'text-red-400 font-medium'}>{diagnostics.curated.total}</span>
-                {diagnostics.curated.ready > 0 && <span className="text-primary ml-1">({diagnostics.curated.ready} prontos)</span>}
-                {diagnostics.curated.draft > 0 && <span className="text-amber-400 ml-1">({diagnostics.curated.draft} rascunho)</span>}
-              </span>
-              {diagnostics.configLabel && (
-                <span className="text-muted-foreground">
-                  Editorial: <span className="text-foreground/80">{diagnostics.configLabel}</span>
-                  {diagnostics.themeRuleCount > 0 && <span className="text-blue-500 ml-1">({diagnostics.themeRuleCount} tema(s))</span>}
-                </span>
-              )}
-              {diagnostics.configLanguage && diagnostics.configRegion && (
-                <span className="text-muted-foreground">
-                  Locale: <span className="text-foreground/80">{diagnostics.configLanguage} / {diagnostics.configRegion}</span>
-                </span>
-              )}
-            </div>
-            {diagnostics.defaultPostTags.length > 0 && (
-              <div className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
-                <span>Tags finais:</span>
-                {diagnostics.defaultPostTags.map((tag) => (
-                  <Badge key={`diag-${tag}`} variant="outline" className="px-1 py-0 text-[9px] border-primary/25 text-primary">
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            {diagnostics.configTags.length > 0 && activeConfig && (
-              (() => {
-                const dbTags = [...diagnostics.configTags].sort().join(',');
-                const dashTags = [...activeConfig.tags].sort().join(',');
-                const synced = dbTags === dashTags;
-                return synced ? (
-                  <div className="flex items-center gap-1 text-[10px] text-primary">
-                    <CheckCircle2 className="w-2.5 h-2.5" />
-                    Tags sincronizadas: {diagnostics.configTags.join(', ')}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-[10px] text-amber-400">
-                    <AlertTriangle className="w-2.5 h-2.5" />
-                    Tags no DB diferem da dashboard! DB: [{diagnostics.configTags.join(', ')}] · Dashboard: [{activeConfig.tags.join(', ')}]
-                  </div>
-                );
-              })()
-            )}
-            {diagnostics.configTags.length === 0 && (
-              <div className="flex items-center gap-1 text-[10px] text-amber-400">
-                <AlertTriangle className="w-2.5 h-2.5" />
-                Nenhuma config ativa no DB — n8n usará tags padrão (IA, cibersegurança, automação)
-              </div>
-            )}
-            {diagnostics.staging.total > 0 && diagnostics.clusters.total === 0 && (
-              <div className="text-[10px] text-amber-400">
-                ⚠ {diagnostics.staging.total} artigos em staging mas 0 clusters — WF-02 ainda não processou ou falhou
-              </div>
-            )}
-            {diagnostics.clusters.highConfidence > 0 && diagnostics.curated.total === 0 && (
-              <div className="text-[10px] text-red-400">
-                ⚠ {diagnostics.clusters.highConfidence} cluster(s) com confiança ≥60% mas 0 curados — WF-03 (IA) ainda não executou ou a ANTHROPIC_API_KEY não está configurada no n8n
-              </div>
-            )}
-            {diagnostics.staging.total === 0 && diagnostics.clusters.total === 0 && diagnostics.curated.total === 0 && (
-              <div className="text-[10px] text-muted-foreground">
-                Pipeline vazio — execute os workflows ou aguarde os crons automáticos
-              </div>
-            )}
-          </div>
-        )}
+        <PipelineDiagnosticsPanel
+          diagnostics={diagnostics}
+          diagnosticsError={diagnosticsError}
+          activeConfig={activeConfig}
+          onRefetch={() => void refetchDiagnostics()}
+        />
 
         {/* ── Pipeline Steps Visual ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -930,163 +840,20 @@ export function NewsPipelineCard() {
           />
         )}
 
-        {/* ── Actions & Stats ── */}
-        <div className="space-y-4">
-          <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-3">
-              {pipelineFound && (
-                <Button
-                  size="lg"
-                  className={`h-11 px-6 text-sm font-medium gap-2 shadow-lg transition-all duration-300 ${
-                    pipelineRunning
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-500/30'
-                      : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-cyan-500/30'
-                  }`}
-                  disabled={pipelineRunning}
-                  onClick={() => void handleRunPipeline()}
-                >
-                  {pipelineRunning ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Pipeline a correr...
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4" />
-                      Executar Pipeline
-                    </>
-                  )}
-                </Button>
-              )}
-
-              {(stats?.ready ?? 0) > 0 && (
-                <Button
-                  size="lg"
-                  className={`h-11 px-6 text-sm font-medium gap-2 shadow-lg transition-all duration-300 ${
-                    pipelineFound
-                      ? 'bg-gradient-to-r from-primary/15 to-primary/10 hover:from-primary/25 hover:to-primary/15 text-primary/80 border-2 border-primary/40 hover:border-primary/50'
-                      : 'bg-gradient-to-r from-primary to-primary/90 hover:bg-primary/80 shadow-primary/20'
-                  }`}
-                  disabled={promoting}
-                  onClick={() => void handlePromoteOnly()}
-                >
-                  {promoting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      A promover...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowUpRight className="w-4 h-4" />
-                      Promover ({stats?.ready})
-                    </>
-                  )}
-                </Button>
-              )}
-
-              {pipelineRunning && (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-11 px-6 text-sm font-medium text-red-400 border-red-500/40 hover:bg-red-500/10 hover:text-red-300 gap-2"
-                  onClick={() => { abortRef.current = true; }}
-                >
-                  <Square className="w-4 h-4" />
-                  Parar
-                </Button>
-              )}
-            </div>
-
-            {/* Stats */}
-            {stats && (
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/30 border border-border/30">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground/80">{stats.total} curados</span>
-                </div>
-                {stats.ready > 0 && (
-                  <Badge className="bg-gradient-to-r from-primary/15 to-primary/10 text-primary/80 border-primary/30 px-3 py-1.5 text-sm animate-pulse shadow-lg shadow-primary/15">
-                    {stats.ready} prontos
-                  </Badge>
-                )}
-                {stats.draft > 0 && (
-                  <Badge variant="outline" className="border-amber-500/40 text-amber-300 px-3 py-1.5 text-sm">
-                    {stats.draft} rascunhos
-                  </Badge>
-                )}
-                {stats.published > 0 && (
-                  <Badge variant="outline" className="border-blue-500/40 text-blue-300 px-3 py-1.5 text-sm">
-                    {stats.published} promovidos
-                  </Badge>
-                )}
-                {stats.avgScore > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1.5">
-                    <span className="text-xs text-muted-foreground">Score</span>
-                    <span className="text-sm font-semibold text-blue-500">{stats.avgScore}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Cron schedule info + auto-promote toggle ── */}
-        {pipelineFound && allActive && (
-          <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10 p-5 space-y-3 shadow-lg shadow-primary/10">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/15 shrink-0">
-                <Clock className="w-4 h-4 text-primary/80" />
-              </div>
-              <p className="text-sm text-primary/80">
-                <span className="font-semibold">Pipeline automático ativo</span>
-                <span className="hidden sm:inline text-primary/80/80"> — o n8n gera curadoria mesmo sem login no portal; a promoção final passa pela Edge Function do portal.</span>
-              </p>
-            </div>
-            <div className="flex items-center justify-between gap-3 pt-2 border-t border-primary/20">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`p-2 rounded-lg shrink-0 ${polling.isActive ? 'bg-primary/15' : 'bg-muted/30'}`}>
-                  <Zap className={`w-4 h-4 ${polling.isActive ? 'text-primary/80' : 'text-muted-foreground'}`} />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm text-foreground font-medium flex items-center gap-2 flex-wrap">
-                    Auto-promoção local
-                    {polling.isActive && (
-                      <Badge className="bg-primary/15 text-primary/80 border-primary/30 text-xs px-2 py-0.5 animate-pulse shadow-lg shadow-primary/15">
-                        ATIVO
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-primary/70 mt-0.5">
-                    {polling.isActive
-                      ? `A cada 2 min nesta sessão · ${polling.totalPromoted} promovido(s)${polling.lastCheck ? ` · ${formatRelativeTime(polling.lastCheck)}` : ''}`
-                      : 'Fallback local: curated → rascunhos via backend central; exige dashboard aberta e utilizador autenticado'}
-                  </p>
-                </div>
-              </div>
-              <Switch
-                checked={polling.isActive}
-                onCheckedChange={(checked) => checked ? polling.start() : polling.stop()}
-                className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-primary data-[state=checked]:to-primary/90 shrink-0"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* ── No workflows warning ── */}
-        {!loading && !pipelineFound && (
-          <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/10 p-5 text-center shadow-lg shadow-amber-500/10">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <AlertTriangle className="w-5 h-5 text-amber-400" />
-              <p className="text-sm font-medium text-amber-300">Workflows não encontrados</p>
-            </div>
-            <p className="text-xs text-amber-200/80">
-              n8n offline ou nenhum workflow do pipeline encontrado. Use "Promover Curados para Rascunhos" para mover artigos curados existentes.
-            </p>
-          </div>
-        )}
+        {/* ── Actions, Stats & Cron Info ── */}
+        <PipelineActionsBar
+          pipelineFound={pipelineFound}
+          pipelineRunning={pipelineRunning}
+          promoting={promoting}
+          allActive={allActive}
+          loading={loading}
+          stats={stats}
+          polling={polling}
+          onRunPipeline={() => void handleRunPipeline()}
+          onPromoteOnly={() => void handlePromoteOnly()}
+          onAbort={() => { abortRef.current = true; }}
+          formatRelativeTime={formatRelativeTime}
+        />
       </div>
     </div>
   );

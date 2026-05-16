@@ -6,20 +6,13 @@ import {
   Plus,
   Search,
   Trash2,
-  Upload,
-  X,
-  Image as ImageIcon,
-  FileAudio,
   Eye,
   Download,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   useAudiocasts,
   useCreateAudiocast,
@@ -34,23 +27,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatDuration } from '@/lib/utils';
+import { AudiocastFormCard, type AudiocastFormState } from './AudiocastFormCard';
 
-// ─── Form state ──────────────────────────────────────────────────────────────
-interface AudiocastForm {
-  title: string;
-  slug: string;
-  description: string;
-  category_id: string;
-  tags: string;
-  status: string;
-  audioFile: File | null;
-  coverFile: File | null;
-  audioPreview: string;
-  coverPreview: string;
-  duration: number;
-}
-
-const EMPTY_FORM: AudiocastForm = {
+const EMPTY_FORM: AudiocastFormState = {
   title: '',
   slug: '',
   description: '',
@@ -68,12 +47,11 @@ function slugify(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-+|-+$)/g, '');
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
 const AudiocastsView: React.FC = () => {
   const { data: audiocasts = [], isLoading } = useAudiocasts(true);
   const { data: stats } = useAudiocastStats();
@@ -87,11 +65,10 @@ const AudiocastsView: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState<AudiocastForm>(EMPTY_FORM);
+  const [form, setForm] = useState<AudiocastFormState>(EMPTY_FORM);
   const [uploading, setUploading] = useState(false);
   const isSubmitting = uploading || createMutation.isPending || updateMutation.isPending;
 
-  // Filter
   const filtered = useMemo(() => {
     if (!search.trim()) return audiocasts;
     const q = search.toLowerCase();
@@ -103,7 +80,6 @@ const AudiocastsView: React.FC = () => {
     );
   }, [audiocasts, search]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
   const resetForm = useCallback(() => {
     setForm(EMPTY_FORM);
     setEditingId(null);
@@ -116,26 +92,23 @@ const AudiocastsView: React.FC = () => {
     setShowForm(true);
   }, []);
 
-  const openEdit = useCallback(
-    (ac: Audiocast) => {
-      setForm({
-        title: ac.title,
-        slug: ac.slug,
-        description: ac.description ?? '',
-        category_id: ac.category_id ?? '',
-        tags: ac.tags?.join(', ') ?? '',
-        status: ac.status,
-        audioFile: null,
-        coverFile: null,
-        audioPreview: ac.audio_url ?? '',
-        coverPreview: ac.cover_url ?? '',
-        duration: ac.duration ?? 0,
-      });
-      setEditingId(ac.id);
-      setShowForm(true);
-    },
-    [],
-  );
+  const openEdit = useCallback((ac: Audiocast) => {
+    setForm({
+      title: ac.title,
+      slug: ac.slug,
+      description: ac.description ?? '',
+      category_id: ac.category_id ?? '',
+      tags: ac.tags?.join(', ') ?? '',
+      status: ac.status,
+      audioFile: null,
+      coverFile: null,
+      audioPreview: ac.audio_url ?? '',
+      coverPreview: ac.cover_url ?? '',
+      duration: ac.duration ?? 0,
+    });
+    setEditingId(ac.id);
+    setShowForm(true);
+  }, []);
 
   const handleTitleChange = useCallback((title: string) => {
     setForm((prev) => ({
@@ -156,7 +129,6 @@ const AudiocastsView: React.FC = () => {
       toast({ title: 'Ficheiro demasiado grande', description: 'Máximo 100 MB', variant: 'destructive' });
       return;
     }
-    // Get duration from audio
     const url = URL.createObjectURL(file);
     const audio = new Audio(url);
     audio.addEventListener('loadedmetadata', () => {
@@ -184,14 +156,11 @@ const AudiocastsView: React.FC = () => {
   const uploadFile = async (file: File, bucket: string, folder: string): Promise<string> => {
     const ext = file.name.split('.').pop();
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from(bucket).upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
+    const { error } = await supabase.storage.from(bucket).upload(path, file, { cacheControl: '3600', upsert: false });
     if (error) {
       const msg = error.message || '';
       if (msg.includes('not found') || msg.includes('Bucket')) {
-        throw new Error(`Bucket "${bucket}" não existe. Aplica a migration SQL no Supabase (SQL Editor → colar o ficheiro 20260407120000_add_audiocast_covers_bucket.sql).`);
+        throw new Error(`Bucket "${bucket}" não existe. Aplica a migration SQL no Supabase.`);
       }
       throw error;
     }
@@ -205,19 +174,12 @@ const AudiocastsView: React.FC = () => {
       toast({ title: 'Campos obrigatórios', description: 'Título e slug são obrigatórios.', variant: 'destructive' });
       return;
     }
-
     setUploading(true);
     try {
       let audioUrl = form.audioPreview;
       let coverUrl = form.coverPreview;
-      // Upload audio if new file selected
-      if (form.audioFile) {
-        audioUrl = await uploadFile(form.audioFile, 'podcasts', 'audiocasts');
-      }
-      // Upload cover image if new file selected
-      if (form.coverFile) {
-        coverUrl = await uploadFile(form.coverFile, 'audiocast-covers', 'covers');
-      }
+      if (form.audioFile) audioUrl = await uploadFile(form.audioFile, 'podcasts', 'audiocasts');
+      if (form.coverFile) coverUrl = await uploadFile(form.coverFile, 'audiocast-covers', 'covers');
 
       const payload: CreateAudiocastData = {
         title: form.title.trim(),
@@ -227,10 +189,7 @@ const AudiocastsView: React.FC = () => {
         cover_url: coverUrl || undefined,
         duration: form.duration || undefined,
         category_id: form.category_id || undefined,
-        tags: form.tags
-          .split(',')
-          .map((t) => t.trim())
-          .filter(Boolean),
+        tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
         status: form.status,
         author_id: user?.id,
       };
@@ -250,46 +209,32 @@ const AudiocastsView: React.FC = () => {
     }
   };
 
-  const handleDelete = useCallback(
-    async (id: string, title: string) => {
-      if (!window.confirm(`Eliminar "${title}"? Esta ação é irreversível.`)) return;
-      try {
-        await deleteMutation.mutateAsync(id);
-        toast({ title: 'Audiocast eliminado' });
-      } catch (err) {
-        toast({ title: 'Erro ao eliminar', description: (err as Error).message, variant: 'destructive' });
-      }
-    },
-    [deleteMutation, toast],
-  );
+  const handleDelete = useCallback(async (id: string, title: string) => {
+    if (!window.confirm(`Eliminar "${title}"? Esta ação é irreversível.`)) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast({ title: 'Audiocast eliminado' });
+    } catch (err) {
+      toast({ title: 'Erro ao eliminar', description: (err as Error).message, variant: 'destructive' });
+    }
+  }, [deleteMutation, toast]);
 
-  const handleQuickPublish = useCallback(
-    async (ac: Audiocast) => {
-      try {
-        await updateMutation.mutateAsync({ id: ac.id, status: 'published' });
-        toast({
-          title: 'Audiocast publicado',
-          description: 'Agora ele ficará visível na página pública de audiocasts.',
-        });
-      } catch (err) {
-        toast({ title: 'Erro ao publicar', description: (err as Error).message, variant: 'destructive' });
-      }
-    },
-    [toast, updateMutation],
-  );
+  const handleQuickPublish = useCallback(async (ac: Audiocast) => {
+    try {
+      await updateMutation.mutateAsync({ id: ac.id, status: 'published' });
+      toast({ title: 'Audiocast publicado', description: 'Agora ficará visível na página pública.' });
+    } catch (err) {
+      toast({ title: 'Erro ao publicar', description: (err as Error).message, variant: 'destructive' });
+    }
+  }, [toast, updateMutation]);
 
   const submitLabel = editingId
-    ? form.status === 'published'
-      ? 'Guardar e publicar'
-      : 'Guardar como rascunho'
-    : form.status === 'published'
-      ? 'Publicar audiocast'
-      : 'Salvar rascunho';
+    ? form.status === 'published' ? 'Guardar e publicar' : 'Guardar como rascunho'
+    : form.status === 'published' ? 'Publicar audiocast' : 'Salvar rascunho';
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      {/* Stats cards */}
+      {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: 'Total', value: stats?.total ?? 0, icon: Headphones },
@@ -330,176 +275,19 @@ const AudiocastsView: React.FC = () => {
 
       {/* Form */}
       {showForm && (
-        <Card className="border-primary/30 shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <div>
-              <CardTitle className="text-lg">
-                {editingId ? 'Editar Audiocast' : 'Novo Audiocast'}
-              </CardTitle>
-              <CardDescription>
-                {editingId ? 'Atualize os detalhes do audiocast.' : 'Preencha os campos e faça upload do áudio.'}
-              </CardDescription>
-            </div>
-            <Button variant="ghost" size="icon" onClick={resetForm}>
-              <X className="h-4 w-4" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {/* Title */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="ac-title">Título *</Label>
-                  <Input
-                    id="ac-title"
-                    value={form.title}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    placeholder="Ex: Inovação Digital em Portugal"
-                    required
-                  />
-                </div>
-
-                {/* Slug */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="ac-slug">Slug *</Label>
-                  <Input
-                    id="ac-slug"
-                    value={form.slug}
-                    onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))}
-                    placeholder="inovacao-digital-portugal"
-                    required
-                  />
-                </div>
-
-                {/* Category */}
-                <div className="space-y-1.5">
-                  <Label>Categoria</Label>
-                  <Select
-                    value={form.category_id}
-                    onValueChange={(v) => setForm((p) => ({ ...p, category_id: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Status */}
-                <div className="space-y-1.5">
-                  <Label>Estado de publicação</Label>
-                  <Select
-                    value={form.status}
-                    onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Rascunho</SelectItem>
-                      <SelectItem value="published">Publicado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Só audiocasts com estado <strong>Publicado</strong> aparecem na página pública e na home.
-                  </p>
-                </div>
-
-                {/* Tags */}
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="ac-tags">Tags (separadas por vírgula)</Label>
-                  <Input
-                    id="ac-tags"
-                    value={form.tags}
-                    onChange={(e) => setForm((p) => ({ ...p, tags: e.target.value }))}
-                    placeholder="tecnologia, ia, portugal"
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-1.5">
-                <Label htmlFor="ac-desc">Descrição</Label>
-                <Textarea
-                  id="ac-desc"
-                  value={form.description}
-                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                  rows={3}
-                  placeholder="Breve descrição do episódio…"
-                />
-              </div>
-
-              {/* Audio upload */}
-              <div className="space-y-2">
-                <Label>Ficheiro de Áudio</Label>
-                <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-5 text-center">
-                  <FileAudio className="mx-auto h-8 w-8 text-muted-foreground/60" />
-                  <p className="text-sm text-muted-foreground">
-                    Arraste ou clique para selecionar (.mp3, .m4a, .opus, .ogg, .wav — máx 100 MB)
-                  </p>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleAudioChange}
-                    className="mx-auto block w-full max-w-xs cursor-pointer text-sm file:mr-3 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary hover:file:bg-primary/20"
-                  />
-                  {form.audioPreview && (
-                    <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                      <p>Duração: {formatDuration(form.duration)}</p>
-                      {form.audioFile && <p className="max-w-xs truncate">Ficheiro: {form.audioFile.name}</p>}
-                      <audio controls src={form.audioPreview} className="mx-auto mt-2 w-full max-w-md" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Cover image upload */}
-              <div className="space-y-2">
-                <Label>Imagem de Capa</Label>
-                <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-5 text-center">
-                  <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground/60" />
-                  <p className="text-sm text-muted-foreground">
-                    Imagem de capa do episódio (.png, .jpg, .webp — máx 5 MB)
-                  </p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCoverChange}
-                    className="mx-auto block w-full max-w-xs cursor-pointer text-sm file:mr-3 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary hover:file:bg-primary/20"
-                  />
-                  {form.coverPreview && (
-                    <img
-                      src={form.coverPreview}
-                      alt="Capa"
-                      className="mx-auto mt-2 h-32 w-32 rounded-xl object-cover shadow"
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Submit */}
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isSubmitting} className="gap-2">
-                  {isSubmitting ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  ) : (
-                    <Upload className="h-4 w-4" />
-                  )}
-                  {submitLabel}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <AudiocastFormCard
+          form={form}
+          editingId={editingId}
+          categories={categories}
+          isSubmitting={isSubmitting}
+          submitLabel={submitLabel}
+          onSubmit={handleSubmit}
+          onPatch={(patch) => setForm((prev) => ({ ...prev, ...patch }))}
+          onTitleChange={handleTitleChange}
+          onAudioChange={handleAudioChange}
+          onCoverChange={handleCoverChange}
+          onClose={resetForm}
+        />
       )}
 
       {/* List */}
@@ -516,9 +304,7 @@ const AudiocastsView: React.FC = () => {
         <CardContent>
           {isLoading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 animate-pulse rounded-xl bg-muted/50" />
-              ))}
+              {[1, 2, 3].map((i) => <div key={i} className="h-20 animate-pulse rounded-xl bg-muted/50" />)}
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
@@ -542,54 +328,38 @@ const AudiocastsView: React.FC = () => {
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="truncate text-sm font-semibold">{ac.title}</h4>
-                      <Badge
-                        variant={ac.status === 'published' ? 'default' : 'secondary'}
-                        className="text-[10px]"
-                      >
-                        {ac.status === 'published' ? 'Publicado' : 'Rascunho'}
-                      </Badge>
-                      {ac.categories && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px]"
-                          style={{ borderColor: ac.categories.color, color: ac.categories.color }}
-                        >
-                          {ac.categories.name}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="truncate text-sm font-semibold">{ac.title}</h4>
+                        <Badge variant={ac.status === 'published' ? 'default' : 'secondary'} className="text-[10px]">
+                          {ac.status === 'published' ? 'Publicado' : 'Rascunho'}
                         </Badge>
+                        {ac.categories && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px]"
+                            style={{ borderColor: ac.categories.color, color: ac.categories.color }}
+                          >
+                            {ac.categories.name}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        <span>{formatDuration(ac.duration ?? 0)}</span>
+                        <span>{ac.views.toLocaleString()} plays</span>
+                        <span>{ac.downloads.toLocaleString()} downloads</span>
+                        <span>{new Date(ac.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      </div>
+                      {ac.status !== 'published' && (
+                        <p className="mt-1 text-[11px] text-amber-500">Este audiocast está em rascunho e não aparece na área pública.</p>
+                      )}
+                      {ac.tags && ac.tags.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {ac.tags.map((t: string) => (
+                            <span key={t} className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">{t}</span>
+                          ))}
+                        </div>
                       )}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      <span>{formatDuration(ac.duration ?? 0)}</span>
-                      <span>{ac.views.toLocaleString()} plays</span>
-                      <span>{ac.downloads.toLocaleString()} downloads</span>
-                      <span>
-                        {new Date(ac.created_at).toLocaleDateString('pt-PT', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </span>
-                    </div>
-                    {ac.status !== 'published' && (
-                      <p className="mt-1 text-[11px] text-amber-500">
-                        Este audiocast está em rascunho e não aparece na área pública.
-                      </p>
-                    )}
-                    {ac.tags && ac.tags.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        {ac.tags.map((t: string) => (
-                          <span
-                            key={t}
-                            className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     {ac.status !== 'published' && (

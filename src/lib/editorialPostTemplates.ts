@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 export type EditorialPostTemplateId = 'noticia-padrao' | 'analise-executiva' | 'guia-pratico';
 
 interface EditorialTemplateContext {
@@ -274,7 +276,18 @@ function buildIntroHtml(templateId: EditorialPostTemplateId, introBlocks: Editor
 
   if (root && first?.tagName.toLowerCase() === 'p') {
     const innerHtml = stripIntroLabel(first.innerHTML);
-    first.innerHTML = `<strong>${escapeHtml(blueprint.introLabel)}:</strong> ${innerHtml || escapeHtml(blueprint.introFallback)}`;
+    // Build via DOM methods + DOMPurify to prevent XSS from editor-generated HTML
+    while (first.firstChild) first.removeChild(first.firstChild);
+    const label = first.ownerDocument.createElement('strong');
+    label.textContent = `${blueprint.introLabel}:`;
+    first.appendChild(label);
+    first.append(' ');
+    if (innerHtml) {
+      const safe = DOMPurify.sanitize(innerHtml, { RETURN_DOM_FRAGMENT: true });
+      first.appendChild(safe);
+    } else {
+      first.append(escapeHtml(blueprint.introFallback));
+    }
     return root.innerHTML;
   }
 

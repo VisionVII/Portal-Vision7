@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { cleanupProcessedData, purgeBacklog, fullPipelineReset } from '@/services/pipelineCleanup';
 import { useAutomationsV2 } from '@/hooks/useAutomationsV2';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import type { PipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
@@ -32,9 +32,6 @@ const WF03_INTERVAL_MINUTES = 60;
 const WF03_BATCH_SIZE = 10;
 const WF03_CAPACITY_PER_HOUR = (60 / WF03_INTERVAL_MINUTES) * WF03_BATCH_SIZE;
 
-function uniqueIds(values: Array<string | null | undefined>): string[] {
-  return [...new Set(values.filter((v): v is string => Boolean(v)))];
-}
 
 function formatDurationMs(value: number | null): string {
   if (!value) return '—';
@@ -165,71 +162,31 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
 
   const handleCleanup = async () => {
     setCleaning(true); setCleanupResult(null);
-    const cutoff = new Date(Date.now() - cleanupHours * 3_600_000).toISOString();
-    let stagingDeleted = 0, clustersDeleted = 0, curatedCleaned = 0;
     try {
-      const { data: stg, error: stgErr } = await supabase.from('news_staging').delete().eq('processed', true).lt('collected_at', cutoff).select('id');
-      if (stgErr) throw new Error(stgErr.message);
-      stagingDeleted = stg?.length ?? 0;
-
-      const { data: staleCurated, error: scErr } = await supabase.from('curated_posts').select('id, cluster_id').in('status', ['published', 'rejected']).lt('created_at', cutoff);
-      if (scErr) throw new Error(scErr.message);
-
-      const curIds = staleCurated?.map((r) => r.id) ?? [];
-      const clsCandidates = uniqueIds(staleCurated?.map((r) => r.cluster_id) ?? []);
-      if (curIds.length > 0) {
-        const { data: c, error: cErr } = await supabase.from('curated_posts').delete().in('id', curIds).select('id');
-        if (cErr) throw new Error(cErr.message);
-        curatedCleaned = c?.length ?? 0;
-      }
-
-      if (clsCandidates.length > 0) {
-        const { data: prot } = await supabase.from('curated_posts').select('cluster_id').in('cluster_id', clsCandidates).in('status', ['draft', 'ready']);
-        const protIds = new Set(uniqueIds(prot?.map((r) => r.cluster_id) ?? []));
-        const toDelete = clsCandidates.filter((id) => !protIds.has(id));
-        if (toDelete.length > 0) {
-          const { data: cls, error: clsErr } = await supabase.from('news_clusters').delete().in('id', toDelete).lt('created_at', cutoff).select('id');
-          if (clsErr) throw new Error(clsErr.message);
-          clustersDeleted = cls?.length ?? 0;
-        }
-      }
-
-      const total = stagingDeleted + clustersDeleted + curatedCleaned;
-      setCleanupResult(total > 0 ? `${stagingDeleted} staging · ${clustersDeleted} clusters · ${curatedCleaned} curados` : 'Nada para limpar neste corte');
-      toast({ title: total > 0 ? `${total} registos removidos` : 'Nada para limpar', description: `Staging: ${stagingDeleted} · Clusters: ${clustersDeleted} · Curados: ${curatedCleaned}` });
+      const result = await cleanupProcessedData(cleanupHours);
+      setCleanupResult(result.summary);
+      toast({
+        title: result.total > 0 ? `${result.total} registos removidos` : 'Nada para limpar',
+        description: `Staging: ${result.stagingDeleted} · Clusters: ${result.clustersDeleted} · Curados: ${result.curatedCleaned}`,
+      });
     } catch (err) {
-      toast({ title: 'Erro na limpeza', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
+      const msg = err instanceof Error ? err.message : 'Erro';
+      setCleanupResult('Erro: ' + msg);
+      toast({ title: 'Erro na limpeza', description: msg, variant: 'destructive' });
     } finally { setCleaning(false); }
   };
 
   const handleBacklogPurge = async () => {
     if (!confirm('Remove staging não processado e clusters órfãos antigos. Não afeta curados draft/ready. Continuar?')) return;
     setCleaning(true); setCleanupResult(null);
-    const cutoff = new Date(Date.now() - cleanupHours * 3_600_000).toISOString();
-    let staleUnprocessed = 0, orphanClusters = 0;
     try {
-      const { data: su, error: suErr } = await supabase.from('news_staging').delete().eq('processed', false).lt('collected_at', cutoff).select('id');
-      if (suErr) throw new Error(suErr.message);
-      staleUnprocessed = su?.length ?? 0;
-
-      const { data: old, error: oldErr } = await supabase.from('news_clusters').select('id').lt('created_at', cutoff);
-      if (oldErr) throw new Error(oldErr.message);
-      const candidates = old?.map((r) => r.id) ?? [];
-      if (candidates.length > 0) {
-        const { data: refs } = await supabase.from('curated_posts').select('cluster_id').in('cluster_id', candidates);
-        const referenced = new Set(uniqueIds(refs?.map((r) => r.cluster_id) ?? []));
-        const orphans = candidates.filter((id) => !referenced.has(id));
-        if (orphans.length > 0) {
-          const { data: del, error: delErr } = await supabase.from('news_clusters').delete().in('id', orphans).select('id');
-          if (delErr) throw new Error(delErr.message);
-          orphanClusters = del?.length ?? 0;
-        }
-      }
-      const total = staleUnprocessed + orphanClusters;
-      setCleanupResult(total > 0 ? `${staleUnprocessed} staging bruto · ${orphanClusters} clusters órfãos` : 'Nenhum backlog bruto encontrado');
-      toast({ title: total > 0 ? `${total} registos removidos` : 'Nada para limpar' });
+      const result = await purgeBacklog(cleanupHours);
+      setCleanupResult(result.summary);
+      toast({ title: result.total > 0 ? `${result.total} registos removidos` : 'Nada para limpar' });
     } catch (err) {
-      toast({ title: 'Erro no purge', description: err instanceof Error ? err.message : 'Erro', variant: 'destructive' });
+      const msg = err instanceof Error ? err.message : 'Erro';
+      setCleanupResult('Erro: ' + msg);
+      toast({ title: 'Erro no purge', description: msg, variant: 'destructive' });
     } finally { setCleaning(false); }
   };
 
@@ -237,15 +194,9 @@ export function PipelineSettingsPanel({ onClose, diagnostics }: PipelineSettings
     if (!confirm('ATENÇÃO: Apaga TODOS os dados do pipeline (staging, clusters, curados não publicados). Continuar?')) return;
     setCleaning(true); setCleanupResult(null);
     try {
-      const { data: stg, error: s1 } = await supabase.from('news_staging').delete().neq('id', '00000000-0000-0000-0000-000000000000').select('id');
-      if (s1) throw new Error('Staging: ' + s1.message);
-      const { data: cls, error: s2 } = await supabase.from('news_clusters').delete().neq('id', '00000000-0000-0000-0000-000000000000').select('id');
-      if (s2) throw new Error('Clusters: ' + s2.message);
-      const { data: cur, error: s3 } = await supabase.from('curated_posts').delete().in('status', ['draft', 'ready', 'auto-draft', 'pending-review', 'rejected']).select('id');
-      if (s3) throw new Error('Curados: ' + s3.message);
-      const total = (stg?.length ?? 0) + (cls?.length ?? 0) + (cur?.length ?? 0);
-      setCleanupResult(total > 0 ? `Reset: ${stg?.length} staging · ${cls?.length} clusters · ${cur?.length} curados` : 'Nenhum registo encontrado');
-      toast({ title: total > 0 ? `${total} registos removidos` : 'Nada apagado' });
+      const result = await fullPipelineReset();
+      setCleanupResult(result.summary);
+      toast({ title: result.total > 0 ? `${result.total} registos removidos` : 'Nada apagado' });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro';
       setCleanupResult('Erro: ' + msg);
