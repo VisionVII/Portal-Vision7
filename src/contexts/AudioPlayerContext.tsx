@@ -27,8 +27,12 @@ function clearMediaSession() {
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const audioRef  = useRef<HTMLAudioElement | null>(null);
+  // audioRef points to the <audio> element rendered in JSX below.
+  // React-rendered element is more reliable on Android WebView than new Audio().
+  const audioRef    = useRef<HTMLAudioElement | null>(null);
   const unlockedRef = useRef(false);
+  // Tracks the pending canplay handler so we can cancel it on rapid track switches
+  const pendingCanplayRef = useRef<(() => void) | null>(null);
 
   const [state, setState] = useState<Omit<AudioPlayerContextType,
     | 'play' | 'pause' | 'resume' | 'toggle' | 'seek'
@@ -46,25 +50,17 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     playbackRate: 1,
   });
 
-  // ── Init audio element + all event listeners ──────────────────────────────
+  // ── Attach event listeners once the <audio> ref is available ─────────────
   useEffect(() => {
-    if (!audioRef.current) {
-      const audio = new Audio();
-      audio.volume   = 0.8;
-      audio.preload  = 'metadata';
-      // Attach to DOM — required by some Android WebView/Chrome for audio output
-      audio.style.cssText =
-        'position:absolute;width:0;height:0;opacity:0;pointer-events:none;';
-      document.body.appendChild(audio);
-      audioRef.current = audio;
-    }
     const audio = audioRef.current;
+    if (!audio) return;
 
-    // ── Pre-unlock on first user gesture (iOS + Android) ──────────────────
-    // iOS Safari: the audio element must be "activated" by a play() call
-    // that originates from a user gesture BEFORE the real play() occurs.
-    // We silently unlock on the very first touch/click anywhere on the page,
-    // so subsequent play() calls (even from canplay event) always succeed.
+    audio.volume = 0.8;
+
+    // ── Pre-unlock on first user gesture (iOS + Android) ─────────────────
+    // Calling play() in a user-gesture context activates the element so that
+    // later play() calls (e.g. from the canplay handler) are never blocked by
+    // the autoplay policy, even when outside gesture context.
     const unlock = () => {
       if (unlockedRef.current) return;
       unlockedRef.current = true;
@@ -74,7 +70,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     document.addEventListener('touchstart', unlock, { once: true, passive: true });
     document.addEventListener('click',      unlock, { once: true });
 
-    // ── Throttled time update (1 s resolution) ─────────────────────────────
+    // ── Throttled time update (1 s resolution) ────────────────────────────
     let lastReported = 0;
     const onTimeUpdate = () => {
       const now = audio.currentTime;
@@ -94,12 +90,12 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
 
     const onWaiting  = () => setState(s => ({ ...s, isLoading: true  }));
-    const onCanPlay  = () => setState(s => ({ ...s, isLoading: false }));
+    const onCanPlayState = () => setState(s => ({ ...s, isLoading: false }));
 
-    // Sync React state with real audio state (handles external interruptions
-    // like phone calls, headphone unplug, OS media controls)
+    // Sync React state with real audio state (handles phone calls, headphone
+    // unplug, OS media controls interrupting playback)
     const onPlay  = () => {
-      setState(s => ({ ...s, isPlaying: true,  isLoading: false }));
+      setState(s => ({ ...s, isPlaying: true, isLoading: false }));
       if ('mediaSession' in navigator)
         navigator.mediaSession.playbackState = 'playing';
     };
@@ -109,19 +105,18 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         navigator.mediaSession.playbackState = 'paused';
     };
 
-    // ── Error handler — surfaces MediaError codes for debugging ───────────
+    // MediaError codes: 1=ABORTED 2=NETWORK 3=DECODE 4=SRC_NOT_SUPPORTED
     const onError = () => {
       const code = audio.error?.code ?? 0;
-      // MediaError codes: 1=ABORTED 2=NETWORK 3=DECODE 4=SRC_NOT_SUPPORTED
       console.error('[AudioPlayer] MediaError', code, audio.error?.message ?? '');
       setState(s => ({ ...s, isPlaying: false, isLoading: false }));
     };
 
-    audio.addEventListener('timeupdate',    onTimeUpdate);
+    audio.addEventListener('timeupdate',     onTimeUpdate);
     audio.addEventListener('loadedmetadata', onLoadedMetadata);
     audio.addEventListener('ended',          onEnded);
     audio.addEventListener('waiting',        onWaiting);
-    audio.addEventListener('canplay',        onCanPlay);
+    audio.addEventListener('canplay',        onCanPlayState);
     audio.addEventListener('play',           onPlay);
     audio.addEventListener('pause',          onPause);
     audio.addEventListener('error',          onError);
@@ -129,33 +124,28 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return () => {
       document.removeEventListener('touchstart', unlock);
       document.removeEventListener('click',      unlock);
-      audio.removeEventListener('timeupdate',    onTimeUpdate);
+      audio.removeEventListener('timeupdate',     onTimeUpdate);
       audio.removeEventListener('loadedmetadata', onLoadedMetadata);
       audio.removeEventListener('ended',          onEnded);
       audio.removeEventListener('waiting',        onWaiting);
-      audio.removeEventListener('canplay',        onCanPlay);
+      audio.removeEventListener('canplay',        onCanPlayState);
       audio.removeEventListener('play',           onPlay);
       audio.removeEventListener('pause',          onPause);
       audio.removeEventListener('error',          onError);
       audio.pause();
       audio.src = '';
-      audio.remove();
     };
   }, []);
 
-  // ── MediaSession action handlers (lock screen, headphones, notifications) ─
+  // ── MediaSession action handlers ──────────────────────────────────────────
   useEffect(() => {
     if (!('mediaSession' in navigator) || !state.track) return;
 
     const audio = audioRef.current;
     if (!audio) return;
 
-    navigator.mediaSession.setActionHandler('play',  () => {
-      audio.play().catch(() => {});
-    });
-    navigator.mediaSession.setActionHandler('pause', () => {
-      audio.pause();
-    });
+    navigator.mediaSession.setActionHandler('play',  () => { audio.play().catch(() => {}); });
+    navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); });
     navigator.mediaSession.setActionHandler('seekbackward', (details) => {
       audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset ?? 15));
     });
@@ -178,23 +168,23 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Same track already loaded — just resume
     if (state.track?.id === track.id && audio.src) {
       audio.play().catch(() => {});
-      setState(s => ({ ...s, isPlaying: true, isMinimized: true }));
+      setState(s => ({ ...s, isMinimized: true }));
       return;
+    }
+
+    // Cancel any pending canplay listener from a previous in-flight load
+    if (pendingCanplayRef.current) {
+      audio.removeEventListener('canplay', pendingCanplayRef.current);
+      pendingCanplayRef.current = null;
     }
 
     audio.pause();
     audio.currentTime = 0;
-    audio.src = track.audio_url;
-    // Do NOT call audio.load() — it causes an AbortError race:
-    // load() → play() immediately → AbortError → canplay retry added, but canplay
-    // may already have fired on fast CDN (Supabase), so the retry never runs.
-    // play() alone starts buffering AND playing; the browser queues play until
-    // readyState >= HAVE_FUTURE_DATA without the competing load() abort.
 
     setState(s => ({
       ...s,
       track,
-      isPlaying: true,
+      isPlaying: false,   // onPlay event drives this to true
       currentTime: 0,
       isMinimized: true,
       isLoading: true,
@@ -202,22 +192,33 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     setMediaSessionMetadata(track);
 
-    const tryPlay = () =>
-      audio.play().catch(() => setState(s => ({ ...s, isPlaying: false, isLoading: false })));
+    // Register canplay listener BEFORE changing src so we never miss the event,
+    // even on fast CDN connections where canplay fires almost immediately.
+    const onReady = () => {
+      pendingCanplayRef.current = null;
+      audio.play().catch(err => {
+        console.error('[AudioPlayer] play() from canplay:', err.name, err.message);
+        setState(s => ({ ...s, isPlaying: false, isLoading: false }));
+      });
+    };
+    pendingCanplayRef.current = onReady;
+    audio.addEventListener('canplay', onReady, { once: true });
 
-    audio.play().catch((err) => {
-      if (err.name === 'AbortError') {
-        // Rare: a previous load() from pause/src-change is still in flight.
-        // readyState check avoids missing canplay if it already fired.
-        if (audio.readyState >= 3) {
-          tryPlay();
-        } else {
-          audio.addEventListener('canplay', tryPlay, { once: true });
-        }
-      } else {
-        console.error('[AudioPlayer] play() rejected:', err.name, err.message);
+    audio.src = track.audio_url;
+    audio.load(); // Explicitly start buffering — required on some Android WebViews
+
+    // Also call play() immediately (in user-gesture context) as iOS activation
+    // insurance. Almost always throws AbortError (load in progress) — that's
+    // expected and ignored; the canplay handler above handles actual playback.
+    audio.play().catch(err => {
+      if (err.name !== 'AbortError') {
+        // Unexpected error (e.g. NotAllowedError, NotSupportedError) — abort
+        audio.removeEventListener('canplay', onReady);
+        pendingCanplayRef.current = null;
+        console.error('[AudioPlayer] immediate play():', err.name, err.message);
         setState(s => ({ ...s, isPlaying: false, isLoading: false }));
       }
+      // AbortError is expected when load() is in progress — ignore
     });
   }, [state.track?.id]);
 
@@ -312,6 +313,18 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   return (
     <AudioPlayerContext.Provider value={value}>
       {children}
+      {/*
+        Hidden <audio> element rendered by React — more reliable than new Audio()
+        on Android WebView. React guarantees it is in the real DOM tree before
+        any effect runs, so audioRef.current is always valid in useEffect.
+        preload="auto" starts buffering immediately when src is set, reducing
+        the delay before the first sound on slow mobile connections.
+      */}
+      <audio
+        ref={audioRef}
+        preload="auto"
+        style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+      />
     </AudioPlayerContext.Provider>
   );
 };
