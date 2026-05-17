@@ -27,14 +27,14 @@ const hasIntent = (normalizedQuestion: string, patterns: RegExp[]) => patterns.s
 const pickRandom = <T>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
 
 const GREETING_SUMMARIES = [
-  'Olá! Sou o assistente do Vision7. Diga-me o que procura — posso sugerir notícias, cursos, audiocasts ou ajudar a navegar pelo portal.',
+  'Olá! Sou o assistente do Vision7. Diga-me o que procura — posso sugerir notícias, cursos ou ajudar a navegar pelo portal.',
   'Bem-vindo ao Vision7! Estou aqui para o ajudar a encontrar o que precisa — desde as últimas notícias até cursos e ferramentas do portal.',
   'Oi! Pronto para explorar o Vision7? Pergunte-me qualquer coisa sobre os nossos conteúdos, categorias ou cursos.',
 ];
 
 const GREETING_SUGGESTIONS = [
-  ['Que notícias há de novo?', 'Quais cursos recomendam?', 'Que categorias existem?', 'Fale-me dos audiocasts'],
-  ['Mostre as novidades do portal', 'Quero explorar as categorias', 'Há cursos sobre IA?', 'O que são audiocasts?'],
+  ['Que notícias há de novo?', 'Quais cursos recomendam?', 'Que categorias existem?', 'O que está em destaque?'],
+  ['Mostre as novidades do portal', 'Quero explorar as categorias', 'Há cursos sobre IA?', 'Como funciona o portal?'],
   ['O que está em destaque hoje?', 'Recomende-me algo para ler', 'Quais os temas mais populares?', 'Como funciona o portal?'],
 ];
 
@@ -132,7 +132,7 @@ export const buildPortalAssistantReply = (
       suggestions: suggestionSet,
       links: [
         { label: 'Ver página inicial', href: '/', type: 'action' },
-        { label: 'Explorar audiocasts', href: '/audiocasts', type: 'action' },
+        { label: 'Explorar categorias', href: '/', type: 'action' },
       ],
       provider: 'local-preview',
     };
@@ -142,7 +142,6 @@ export const buildPortalAssistantReply = (
   const wantsRecent = hasIntent(normalizedQuestion, [/recen/, /ultim/, /hoje/, /agora/, /tendenc/, /destaq/]);
   const wantsCourses = hasIntent(normalizedQuestion, [/curso/, /aprend/, /formac/, /certific/, /parcer/]);
   const wantsCategories = hasIntent(normalizedQuestion, [/categoria/, /secao/, /seccao/, /tema/, /area/]);
-  const wantsAudiocasts = hasIntent(normalizedQuestion, [/audiocast/, /podcast/, /episod/, /audio/]);
 
   const matchedPosts = knowledge.posts
     .filter((post) => matchesQuestion(`${post.title} ${post.excerpt} ${post.category ?? ''}`, terms))
@@ -218,10 +217,6 @@ export const buildPortalAssistantReply = (
     );
   }
 
-  if (wantsAudiocasts) {
-    addUniqueLinks(links, [{ label: 'Abrir audiocasts', href: '/audiocasts', type: 'action' }]);
-  }
-
   if (!links.length) {
     const suggestionSet = pickRandom(NO_MATCH_SUGGESTIONS);
     return {
@@ -258,7 +253,7 @@ export const buildPortalAssistantReply = (
         links.length > 1 ? 'Veja todos os links sugeridos abaixo' : '',
         matchedCourses.length || wantsCourses
           ? pickRandom(['Posso detalhar mais sobre os cursos', 'Quer saber mais sobre algum curso?', 'Explore os cursos sugeridos'])
-          : pickRandom(['Quer saber sobre outros formatos de conteúdo?', 'Posso buscar em outras categorias', 'Quer explorar audiocasts ou cursos?']),
+          : pickRandom(['Quer saber sobre outros formatos de conteúdo?', 'Posso buscar em outras categorias', 'Quer explorar cursos ou parceiros?']),
         pickRandom([
           'Quer que eu refine a busca por categoria?',
           'Precisa de mais informações sobre algum destes?',

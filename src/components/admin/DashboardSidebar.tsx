@@ -5,7 +5,6 @@ import {
   FileText,
   Globe,
   Handshake,
-  Headphones,
   Image,
   LayoutDashboard,
   LayoutTemplate,
@@ -56,7 +55,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const allItems: NavItem[] = [
     { id: 'overview', label: 'Visão geral', icon: LayoutDashboard, hint: 'KPIs e atalhos' },
     { id: 'content', label: 'Conteúdo', icon: FileText, hint: 'Posts e editorial', badge: draftCount || undefined },
-    { id: 'audiocasts', label: 'Audiocasts', icon: Headphones, hint: 'Áudio e episódios' },
     { id: 'builder', label: 'Homepage', icon: LayoutTemplate, hint: 'Builder visual' },
     { id: 'media', label: 'Galeria', icon: Image, hint: 'Imagens do portal' },
     { id: 'automations', label: 'Automações', icon: Bot, hint: 'N8N e workflows' },
@@ -74,7 +72,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const groups: NavGroup[] = [
     {
       title: 'Conteúdo',
-      items: navigationItems.filter((i) => ['overview', 'content', 'audiocasts', 'builder', 'media'].includes(i.id)),
+      items: navigationItems.filter((i) => ['overview', 'content', 'builder', 'media'].includes(i.id)),
     },
     {
       title: 'Marketing',

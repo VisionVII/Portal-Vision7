@@ -14,7 +14,6 @@ const OverviewView = lazy(() => import('@/components/admin/views/OverviewView'))
 const ContentView = lazy(() => import('@/components/admin/views/ContentView'));
 const BuilderView = lazy(() => import('@/components/admin/views/BuilderView'));
 const AutomationsView = lazy(() => import('@/components/admin/views/AutomationsView'));
-const AudiocastsView = lazy(() => import('@/components/admin/views/AudiocastsView'));
 const CoursesView = lazy(() => import('@/components/admin/views/CoursesView'));
 const CrmView = lazy(() => import('@/components/admin/views/CrmView'));
 const AccessView = lazy(() => import('@/components/admin/views/AccessView'));
@@ -192,7 +191,6 @@ const AdminDashboard = () => {
               <Panel view="builder"><BuilderView /></Panel>
               <Panel view="media"><MediaGalleryView /></Panel>
               <Panel view="automations"><AutomationsView isActive={activeView === 'automations'} /></Panel>
-              <Panel view="audiocasts"><AudiocastsView /></Panel>
               <Panel view="courses"><CoursesView /></Panel>
               <Panel view="crm"><CrmView /></Panel>
               <Panel view="analytics"><AnalyticsView /></Panel>

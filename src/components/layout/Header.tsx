@@ -76,7 +76,6 @@ const Header = () => {
   const primaryNavItems = useMemo(
     () => [
       { name: 'Início', path: '/' },
-      { name: 'Audiocasts', path: '/audiocasts' },
       ...navigationCategories,
     ],
     [navigationCategories]

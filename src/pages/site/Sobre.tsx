@@ -51,7 +51,7 @@ const Sobre = () => {
                 dados quantitativos e perspectiva estratégica.
               </p>
               <p className="mt-4 text-muted-foreground leading-relaxed">
-                Cobrimos as áreas que moldam o futuro — tecnologia, mundo, saúde, música, desporto e audiocasts —
+                Cobrimos as áreas que moldam o futuro — tecnologia, mundo, saúde, música e desporto —
                 sempre com um olhar atento ao contexto português e europeu.
               </p>
             </section>
@@ -98,7 +98,6 @@ const Sobre = () => {
                   { label: 'Saúde', href: '/saude' },
                   { label: 'Música', href: '/musica' },
                   { label: 'Desporto', href: '/desporto' },
-                  { label: 'Audiocasts', href: '/audiocasts' },
                 ].map((cat) => (
                   <li key={cat.href}>
                     <Link

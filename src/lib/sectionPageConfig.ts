@@ -1,4 +1,4 @@
-export type SectionPageId = 'audiocasts' | 'tecnologia' | 'mundo' | 'musica' | 'saude' | 'desporto' | 'courses' | 'privacy';
+export type SectionPageId = 'tecnologia' | 'mundo' | 'musica' | 'saude' | 'desporto' | 'courses' | 'privacy';
 export type SectionPageBannerVariant = 'desktop' | 'mobile';
 
 export interface SectionPageBannerEntry {
@@ -16,11 +16,6 @@ export const ALLOWED_SECTION_PAGE_BANNER_TYPES = ['image/png', 'image/jpeg', 'im
 export const MAX_SECTION_PAGE_BANNER_SIZE_BYTES = 5 * 1024 * 1024;
 
 const SECTION_PAGE_BANNER_CATALOG: Array<Omit<SectionPageBannerEntry, 'bannerUrl' | 'mobileBannerUrl'>> = [
-  {
-    id: 'audiocasts',
-    label: 'Audiocasts',
-    description: 'Biblioteca pública de episódios e conteúdo em áudio.',
-  },
   {
     id: 'tecnologia',
     label: 'Tecnologia',

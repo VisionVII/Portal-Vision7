@@ -4,16 +4,12 @@ import { Link } from 'react-router-dom';
 const NewsletterForm = React.lazy(() => import('@/components/content/NewsletterForm'));
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import BrandLogo from '@/components/system/BrandLogo';
-import { useAudioPlayerOptional } from '@/contexts/audio-player';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const { data: siteSettings } = useSiteSettings();
-  const player = useAudioPlayerOptional();
-  const hasMiniPlayer = !!player?.track;
 
   return (
-    <>
     <footer className="border-t border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.96))] text-foreground dark:bg-[linear-gradient(180deg,rgba(3,13,31,0.96),rgba(2,8,23,0.98))] dark:text-white">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -49,7 +45,6 @@ const Footer = () => {
             <h4 className="mb-4 font-editorial text-xl text-foreground dark:text-white">Portal</h4>
             <ul className="space-y-2 text-muted-foreground">
               <li><Link to="/" className="transition-colors hover:text-foreground dark:hover:text-white">Início</Link></li>
-              <li><Link to="/audiocasts" className="transition-colors hover:text-foreground dark:hover:text-white">Audiocasts</Link></li>
               <li><Link to="/sobre" className="transition-colors hover:text-foreground dark:hover:text-white">Sobre</Link></li>
               <li><Link to="/contacto" className="transition-colors hover:text-foreground dark:hover:text-white">Contacto</Link></li>
               <li><Link to="/politica-privacidade" className="transition-colors hover:text-foreground dark:hover:text-white">Política de Privacidade</Link></li>
@@ -81,9 +76,6 @@ const Footer = () => {
         </div>
       </div>
     </footer>
-    {/* Spacer when mini-player is active */}
-    {hasMiniPlayer && <div className="h-16 sm:h-[72px]" />}
-    </>
   );
 };
 

@@ -5,8 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
-const MiniPlayer = lazy(() => import("@/components/media/MiniPlayerV2"));
 import DynamicFavicon from "@/components/system/DynamicFavicon";
 import ErrorBoundary from "@/components/system/ErrorBoundary";
 import ScrollToTop from "@/components/system/ScrollToTop";
@@ -23,8 +21,6 @@ const Musica = lazy(() => import("@/pages/site/Musica"));
 const Saude = lazy(() => import("@/pages/site/Saude"));
 const Mundo = lazy(() => import("@/pages/site/Mundo"));
 const Post = lazy(() => import("@/pages/site/Post"));
-const Audiocast = lazy(() => import("@/pages/site/Audiocast"));
-const Audiocasts = lazy(() => import("@/pages/site/Audiocasts"));
 const Course = lazy(() => import("@/pages/site/Course"));
 const PrivacyPolicy = lazy(() => import("@/pages/site/PrivacyPolicy"));
 const Sobre = lazy(() => import("@/pages/site/Sobre"));
@@ -72,8 +68,6 @@ const AnimatedRoutes = () => {
       <Route path="/musica" element={<Musica />} />
       <Route path="/saude" element={<Saude />} />
       <Route path="/mundo" element={<Mundo />} />
-      <Route path="/audiocasts" element={<Audiocasts />} />
-      <Route path="/audiocast/:id" element={<Audiocast />} />
       <Route path="/post/:slug" element={<Post />} />
       <Route path="/curso/:slug" element={<Course />} />
       <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
@@ -86,8 +80,10 @@ const AnimatedRoutes = () => {
         <Route path="/acesso/equipa" element={<UserLogin />} />
 
         {/* ── Legacy redirects ── */}
-        <Route path="/podcasts" element={<Navigate to="/audiocasts" replace />} />
-        <Route path="/podcast/:id" element={<Navigate to="/audiocasts" replace />} />
+        <Route path="/podcasts" element={<Navigate to="/" replace />} />
+        <Route path="/podcast/:id" element={<Navigate to="/" replace />} />
+        <Route path="/audiocasts" element={<Navigate to="/" replace />} />
+        <Route path="/audiocast/:id" element={<Navigate to="/" replace />} />
         <Route path="/validar/entrada/tipodeuser" element={<RedirectWithParams to="/acesso/equipa" />} />
         <Route path="/acesso/admin/controlado" element={<Navigate to="/admin/login" replace />} />
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -146,7 +142,6 @@ const App = () => (
           <DynamicFavicon />
           <Toaster />
           <Sonner />
-          <AudioPlayerProvider>
           <ErrorBoundary>
             <BrowserRouter>
               <ScrollToTop />
@@ -154,13 +149,9 @@ const App = () => (
               <Suspense fallback={<RouteFallback />}>
                 <AnimatedRoutes />
               </Suspense>
-              <Suspense fallback={null}>
-                <MiniPlayer />
-              </Suspense>
               <PublicPrivacyControls />
             </BrowserRouter>
           </ErrorBoundary>
-          </AudioPlayerProvider>
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>
