@@ -144,6 +144,15 @@ export function sanitizeRichContent(content: string) {
     }
   });
 
+  // Wrap tables in a scrollable container for mobile
+  root.querySelectorAll('table').forEach((table) => {
+    if (table.parentElement?.classList.contains('table-scroll')) return;
+    const wrapper = parsed.createElement('div');
+    wrapper.setAttribute('class', 'table-scroll');
+    table.parentNode?.insertBefore(wrapper, table);
+    wrapper.appendChild(table);
+  });
+
   return root.innerHTML;
 }
 
