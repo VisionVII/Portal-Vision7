@@ -107,13 +107,18 @@ export function sanitizeRichContent(content: string) {
     element.setAttribute('style', safeStyle);
   });
 
-  // Handle links:
-  // - Links pendentes (artigo ainda não publicado): converter para <span> não clicável
-  // - Links externos: abrir em nova tab com rel correcto
-  // - Links internos válidos: manter como <a> sem _blank (navegação SPA via href)
+  // Handle links
   root.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((anchor) => {
     const href = anchor.getAttribute('href') || '';
     const linkStatus = anchor.getAttribute('data-link-status');
+
+    // Newsletter links → intercept with popup
+    if (/\/newsletter|#newsletter|#subscribe/i.test(href) || /assine|subscreva|newsletter/i.test(anchor.textContent ?? '')) {
+      anchor.setAttribute('href', '#newsletter');
+      anchor.setAttribute('class', (anchor.getAttribute('class') ?? '') + ' newsletter-trigger');
+      anchor.removeAttribute('target');
+      return;
+    }
 
     if (linkStatus === 'pending') {
       // Converter link pendente num <span> visual com tooltip — nunca navega

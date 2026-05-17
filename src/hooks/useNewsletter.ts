@@ -12,24 +12,29 @@ export const useSubscribeNewsletter = () => {
   return useMutation({
     mutationFn: async (email: string) => {
       const normalizedEmail = email.trim().toLowerCase();
-      const { error } = await supabase
-        .from('newsletter_subscribers')
-        .insert([{ email: normalizedEmail }]);
-      
-      if (error) {
-        if (error.code === '23505') {
-          throw new Error('Este email já está subscrito na newsletter.');
-        }
-        throw error;
-      }
 
-      // Dynamic import: keeps email templates out of the main bundle
-      const { sendNewsletterWelcome } = await import('@/services/email');
-      const { error: welcomeError } = await sendNewsletterWelcome(normalizedEmail);
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY
+        ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '') as string;
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/subscribe-newsletter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: anonKey,
+          Authorization: `Bearer ${session?.access_token ?? anonKey}`,
+        },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Erro ao processar inscrição');
 
       return {
         email: normalizedEmail,
-        welcomeEmailSent: !welcomeError,
+        alreadySubscribed: json.status === 'already_subscribed',
+        welcomeEmailSent: json.status === 'subscribed',
       };
     },
   });

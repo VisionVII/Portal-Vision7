@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AdSpace from '@/components/content/AdSpace';
 import RelatedPosts from '@/components/content/RelatedPosts';
+import NewsletterModal from '@/components/content/NewsletterModal';
 import { usePost, useRelatedPosts, useTrackPostView } from '@/hooks/usePosts';
 import { Calendar, User, ArrowLeft, Share2, Check, Clock, Tag, MessageCircle, Send, Link2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -74,7 +75,9 @@ const Post = () => {
   const trackedPostIdRef = useRef<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [newsletterOpen, setNewsletterOpen] = useState(false);
   const shareRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const postUrl = `${SITE_URL}/post/${slug ?? ''}`;
 
@@ -94,6 +97,15 @@ const Post = () => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Intercept newsletter-trigger links inside article content
+  const handleContentClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const anchor = (e.target as HTMLElement).closest('a.newsletter-trigger');
+    if (anchor) {
+      e.preventDefault();
+      setNewsletterOpen(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -360,8 +372,11 @@ const Post = () => {
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-8">
             <div className="min-w-0">
               <div className="rounded-2xl border border-border bg-card p-4 shadow-md sm:p-6 lg:p-8">
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
-                  className="prose prose-base max-w-none break-words text-foreground dark:prose-invert dark:text-gray-300 sm:prose-lg [&_h1:first-child]:mt-0 [&_h1]:mt-10 [&_h1]:mb-4 [&_h1]:text-3xl [&_h1]:font-bold sm:[&_h1]:text-4xl [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold sm:[&_h2]:text-3xl [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold sm:[&_h3]:text-2xl [&_h4]:mt-5 [&_h4]:mb-2 [&_h4]:text-lg [&_h4]:font-semibold [&_p]:my-4 [&_p]:leading-8 [&_ul]:my-4 [&_ol]:my-4 [&_li]:my-1 [&_blockquote]:my-6 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/35 [&_blockquote]:pl-4 [&_blockquote]:italic [&_img]:my-6 [&_img]:w-full [&_img]:rounded-2xl [&_img]:border [&_img]:border-border [&_img]:shadow-lg [&_figure]:my-8 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-muted-foreground [&_hr]:my-8 [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary/80 [&_code]:rounded-md [&_code]:bg-neutral-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-neutral-800 dark:[&_code]:bg-neutral-800 dark:[&_code]:text-neutral-200 [&_pre]:overflow-x-auto [&_pre]:rounded-2xl [&_pre]:bg-neutral-950 dark:[&_pre]:bg-white [&_pre]:p-4 [&_pre]:text-neutral-100 dark:[&_pre]:text-neutral-900 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-neutral-100 dark:[&_pre_code]:text-neutral-900 [&_.internal-link-pending]:cursor-default [&_.internal-link-pending]:border-b [&_.internal-link-pending]:border-dashed [&_.internal-link-pending]:border-muted-foreground/50 [&_.internal-link-pending]:text-muted-foreground [&_.internal-link-pending]:no-underline [&_nav]:not-prose [&_.toc-block_a]:no-underline [&_.toc-block_a]:font-normal [&_.toc-block_li]:my-0 [&_.toc-block_ul]:my-0 [&_.table-scroll]:overflow-x-auto [&_.table-scroll]:-mx-4 [&_.table-scroll]:px-4 [&_.table-scroll]:sm:mx-0 [&_.table-scroll]:sm:px-0 [&_.table-scroll]:pb-1 [&_table]:min-w-[480px] [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-sm [&_th]:font-semibold [&_th]:whitespace-nowrap [&_td]:border [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_td]:text-sm [&_td]:align-top"
+                  ref={contentRef}
+                  onClick={handleContentClick}
+                  className="prose prose-base max-w-none break-words text-foreground dark:prose-invert dark:text-gray-300 sm:prose-lg [&_h1:first-child]:mt-0 [&_h1]:mt-10 [&_h1]:mb-4 [&_h1]:text-3xl [&_h1]:font-bold sm:[&_h1]:text-4xl [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold sm:[&_h2]:text-3xl [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold sm:[&_h3]:text-2xl [&_h4]:mt-5 [&_h4]:mb-2 [&_h4]:text-lg [&_h4]:font-semibold [&_p]:my-4 [&_p]:leading-8 [&_ul]:my-4 [&_ol]:my-4 [&_li]:my-1 [&_blockquote]:my-6 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/35 [&_blockquote]:pl-4 [&_blockquote]:italic [&_img]:my-6 [&_img]:w-full [&_img]:rounded-2xl [&_img]:border [&_img]:border-border [&_img]:shadow-lg [&_figure]:my-8 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-muted-foreground [&_hr]:my-8 [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary/80 [&_code]:rounded-md [&_code]:bg-neutral-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-neutral-800 dark:[&_code]:bg-neutral-800 dark:[&_code]:text-neutral-200 [&_pre]:overflow-x-auto [&_pre]:rounded-2xl [&_pre]:bg-neutral-950 dark:[&_pre]:bg-white [&_pre]:p-4 [&_pre]:text-neutral-100 dark:[&_pre]:text-neutral-900 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-neutral-100 dark:[&_pre_code]:text-neutral-900 [&_.internal-link-pending]:cursor-default [&_.internal-link-pending]:border-b [&_.internal-link-pending]:border-dashed [&_.internal-link-pending]:border-muted-foreground/50 [&_.internal-link-pending]:text-muted-foreground [&_.internal-link-pending]:no-underline [&_nav]:not-prose [&_.toc-block_a]:no-underline [&_.toc-block_a]:font-normal [&_.toc-block_li]:my-0 [&_.toc-block_ul]:my-0 [&_.table-scroll]:overflow-x-auto [&_.table-scroll]:-mx-4 [&_.table-scroll]:px-4 [&_.table-scroll]:sm:mx-0 [&_.table-scroll]:sm:px-0 [&_.table-scroll]:pb-1 [&_table]:min-w-[480px] [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-sm [&_th]:font-semibold [&_th]:whitespace-nowrap [&_td]:border [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_td]:text-sm [&_td]:align-top [&_.newsletter-trigger]:cursor-pointer"
                   dangerouslySetInnerHTML={{
                     __html: sanitizedContent,
                   }}
@@ -398,6 +413,8 @@ const Post = () => {
       </article>
 
       <Footer />
+
+      <NewsletterModal open={newsletterOpen} onClose={() => setNewsletterOpen(false)} />
     </div>
   );
 };
