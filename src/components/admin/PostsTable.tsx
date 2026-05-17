@@ -184,19 +184,19 @@ const PostsTable = ({
                         </Button>
                       </Link>
                     ) : (
-                      <Button variant="outline" size="sm" onClick={() => onEdit(post)} className="flex-1 gap-1.5 rounded-lg text-xs">
-                        <Edit className="h-3.5 w-3.5" />
-                        Editar
+                      <Button variant="outline" size="sm" disabled className="flex-1 gap-1.5 rounded-lg text-xs opacity-40" title="Disponível após publicação">
+                        <Eye className="h-3.5 w-3.5" />
+                        Ver
                       </Button>
                     )}
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => onEdit(post)}
-                      className="rounded-lg px-2.5 text-muted-foreground hover:text-foreground"
-                      title="Editar post"
+                      className="flex-1 gap-1.5 rounded-lg text-xs"
                     >
                       <Edit className="h-3.5 w-3.5" />
+                      Editar
                     </Button>
                     <Button
                       variant="ghost"
