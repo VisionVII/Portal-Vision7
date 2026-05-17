@@ -146,3 +146,93 @@ export function sanitizeRichContent(content: string) {
 
   return root.innerHTML;
 }
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 64);
+}
+
+export function processArticleToc(html: string): string {
+  if (typeof window === 'undefined' || typeof DOMParser === 'undefined') return html;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+  const root = doc.body.firstElementChild;
+  if (!root) return html;
+
+  // Find <h2>Neste Artigo</h2>
+  let tocH2: Element | null = null;
+  for (const h2 of root.querySelectorAll('h2')) {
+    if (/^neste artigo$/i.test(h2.textContent?.trim() ?? '')) {
+      tocH2 = h2;
+      break;
+    }
+  }
+  if (!tocH2) return html;
+
+  // Collect ToC items from following <p> elements (until <hr> or non-<p>)
+  const tocItems: string[] = [];
+  const nodesToRemove: Element[] = [tocH2];
+  let sibling = tocH2.nextElementSibling;
+
+  while (sibling && sibling.tagName === 'P') {
+    const text = sibling.textContent ?? '';
+    if (text.includes('→')) {
+      // Single <p> with newline-separated items OR each on its own <p>
+      text.split(/\n/).forEach((line) => {
+        const clean = line.replace(/^→\s*/, '').trim();
+        if (clean) tocItems.push(clean);
+      });
+    } else if (text.trim()) {
+      tocItems.push(text.trim()); // subtitle line without arrow
+    }
+    nodesToRemove.push(sibling);
+    sibling = sibling.nextElementSibling;
+  }
+
+  if (tocItems.length === 0) return html;
+
+  // Add id to all body <h2> except the ToC header itself
+  root.querySelectorAll('h2').forEach((h2) => {
+    if (/^neste artigo$/i.test(h2.textContent?.trim() ?? '')) return;
+    const id = slugify(h2.textContent?.trim() ?? '');
+    if (id) h2.setAttribute('id', id);
+  });
+
+  // Build <nav>
+  const nav = doc.createElement('nav');
+  nav.setAttribute('class', 'toc-block not-prose mb-6 rounded-2xl border border-border/40 bg-muted/30 px-5 py-4');
+
+  const titleEl = doc.createElement('p');
+  titleEl.setAttribute('class', 'mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground');
+  titleEl.textContent = 'Neste Artigo';
+  nav.appendChild(titleEl);
+
+  const ul = doc.createElement('ul');
+  ul.setAttribute('class', 'space-y-2');
+
+  tocItems.forEach((item) => {
+    const slug = slugify(item);
+    const li = doc.createElement('li');
+    const a = doc.createElement('a');
+    a.setAttribute('href', `#${slug}`);
+    a.setAttribute('class', 'toc-link group flex items-start gap-2 text-sm text-foreground/75 no-underline transition-colors hover:text-primary');
+    a.innerHTML = `<span class="mt-0.5 shrink-0 text-primary/50 transition-colors group-hover:text-primary">→</span><span>${item}</span>`;
+    li.appendChild(a);
+    ul.appendChild(li);
+  });
+
+  nav.appendChild(ul);
+
+  // Insert nav before the old ToC block, then remove old elements
+  nodesToRemove[0].parentNode?.insertBefore(nav, nodesToRemove[0]);
+  nodesToRemove.forEach((n) => n.remove());
+
+  return root.innerHTML;
+}

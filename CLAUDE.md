@@ -7,7 +7,7 @@
 
 ## Identidade do Projecto
 
-**Vision7** é um portal editorial full-stack em português europeu, com foco em
+**Vision7** é um portal editorial full-stack em português brasileiro (PT-BR), com foco em
 Tecnologia, Mundo, Saúde, Música e Desporto. Tem dashboard admin
 completo, automações n8n, motor IA e monetização integrada.
 

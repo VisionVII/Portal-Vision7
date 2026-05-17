@@ -57,7 +57,7 @@ function rowToPipelineConfig(row: PipelineSearchConfigRow): PipelineSearchConfig
     id: row.id,
     label: row.label,
     tags: flattenThemeSearchTerms(themeRules),
-    language: row.language ?? 'pt-PT',
+    language: row.language ?? 'pt-BR',
     region: row.region ?? 'PT',
     defaultPostTags: sanitizeStringList(row.default_post_tags, DEFAULT_PIPELINE_POST_TAGS),
     themeRules,
@@ -93,7 +93,7 @@ function buildExtendedPayload(input: SavePipelineConfigInput) {
 
   return {
     label: input.label.trim() || 'Padrão',
-    language: (input.language || 'pt-PT').trim() || 'pt-PT',
+    language: (input.language || 'pt-BR').trim() || 'pt-BR',
     region: (input.region || 'PT').trim() || 'PT',
     tags: normalizedTags,
     theme_rules: normalizedThemeRules as unknown as Json,
@@ -110,7 +110,7 @@ function buildLegacyPayload(input: SavePipelineConfigInput) {
 
   return {
     label: input.label.trim() || 'Padrão',
-    language: (input.language || 'pt-PT').trim() || 'pt-PT',
+    language: (input.language || 'pt-BR').trim() || 'pt-BR',
     region: (input.region || 'PT').trim() || 'PT',
     tags: sanitizeStringList(input.tags, flattenThemeSearchTerms(normalizedThemeRules)),
     updated_at: new Date().toISOString(),
@@ -212,7 +212,7 @@ export function usePipelineConfig() {
       return persistConfigWithSchemaFallback({
         id,
         label: currentConfig?.label ?? 'Padrão',
-        language: currentConfig?.language ?? 'pt-PT',
+        language: currentConfig?.language ?? 'pt-BR',
         region: currentConfig?.region ?? 'PT',
         tags,
         themeRules: buildThemeRulesFromTags(tags),
