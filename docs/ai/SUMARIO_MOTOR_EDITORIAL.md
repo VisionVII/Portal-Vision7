@@ -75,7 +75,7 @@ Automatizar produção de artigos de qualidade editorial em escala, com estrutur
     "title": "string (55–65 chars, SEO keyword início)",
     "slug": "string (6 palabras max, sem acentos)",
     "meta_description": "string (145–155 chars EXACTOS)",
-    "category": "tecnologia|mundo|saude|musica|desporto|audiocasts",
+    "category": "tecnologia|mundo|saude|musica|desporto",
     "content": {
       "lead": "string (≤60 palavras)",
       "body": "string (≥1400 words, ≥5 secções H2, HTML/Markdown)",
@@ -140,11 +140,6 @@ Automatizar produção de artigos de qualidade editorial em escala, com estrutur
 - Entidades: Clubes, federações, ligas (Liga Portugal, Selecção)
 - Foco: PSI-20, transferências, receitas de clubes
 - Ton: Factual para resultados, analítico para tática/economia
-
-### Audiocasts
-- Estrutura: Diferente — título + convidado + 3 pontos principais
-- Sem secção Portugal obrigatória
-- Sem previsão datada obrigatória
 
 ---
 

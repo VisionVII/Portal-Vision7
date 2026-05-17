@@ -4,7 +4,7 @@
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
   "last_updated": "2026-04-08",
-  "objective": "Sistema de gestão de conteúdo completo para administração do portal: posts, cursos, podcasts, categorias, newsletter, site settings, media uploads e developer tools.",
+  "objective": "Sistema de gestão de conteúdo completo para administração do portal: posts, cursos, categorias, newsletter, site settings, media uploads e developer tools.",
   "functional_requirements": [
     {
       "id": "FR-001",
@@ -21,12 +21,6 @@
     {
       "id": "FR-003",
       "description": "Gestão de cursos com criação, edição e listagem",
-      "priority": "Alta",
-      "status": "Finalizado"
-    },
-    {
-      "id": "FR-004",
-      "description": "Gestão de podcasts com upload de áudio e transcrições",
       "priority": "Alta",
       "status": "Finalizado"
     },
@@ -115,7 +109,6 @@
       "posts",
       "categories",
       "courses",
-      "podcasts",
       "newsletter_subscribers",
       "site_settings",
       "user_roles",
@@ -126,8 +119,7 @@
       "supabase.from('posts')",
       "supabase.from('courses')",
       "supabase.from('site_settings')",
-      "supabase.storage.from('post-images')",
-      "supabase.storage.from('podcasts')"
+      "supabase.storage.from('post-images')"
     ]
   },
   "files": {

@@ -17,7 +17,7 @@ Skill especializada em criar experiências de curadoria inteligente para o Visio
 ### Pipeline Automática Ativa ✅
 - **WF-01**: Coleta RSS a cada 30min → `news_staging` (300+ artigos)
 - **WF-02**: Dedup/clustering a cada 20min → `news_clusters` (199 clusters)
-- **WF-03**: Curadoria AI via Groq llama-3.1-8b-instant a cada 60min → `curated_posts`
+- **WF-03**: Curadoria AI via Claude Sonnet a cada 60min → `curated_posts`
 - Posts curados recebem `editorial_score` (0-100), `editorial_tone`, `key_topics`
 - Pipeline produzindo posts automaticamente com scores 86-100
 
@@ -26,12 +26,12 @@ Skill especializada em criar experiências de curadoria inteligente para o Visio
 - Artigos coletados: 300+ por ciclo
 - Clusters gerados: ~200 por ciclo
 - Posts curados: com score editorial automático
-- Modelo AI: Groq llama-3.1-8b-instant (baixa latência, gratuito)
+- Modelo AI: Claude Sonnet (via Anthropic API)
 
 ## Capacidades
 
 - **Curadoria contextual**: organiza conteúdos por relevância, timing e ligação temática
-- **Descoberta guiada**: conduz o utilizador entre notícias, podcasts, cursos e categorias
+- **Descoberta guiada**: conduz o utilizador entre notícias, cursos e categorias
 - **Prioridade editorial**: favorece clareza, profundidade e utilidade prática
 - **Escopo fechado**: evita sair do contexto do Vision7 e das fontes internas aprovadas
 - **Avaliação de qualidade**: analisa editorial_score e sugere melhorias no prompt AI
@@ -42,7 +42,6 @@ Skill especializada em criar experiências de curadoria inteligente para o Visio
 - posts curados pela pipeline (tabela `curated_posts`)
 - categorias e destaques da homepage
 - cursos e parcerias ativas
-- podcasts e conteúdos em evidência
 - configurações em `site_settings`
 
 ## Guardrails
@@ -58,7 +57,7 @@ Skill especializada em criar experiências de curadoria inteligente para o Visio
 - `src/modules/portal-ai/config.ts`
 - `src/modules/portal-ai/service.ts`
 - `src/modules/portal-ai/types.ts`
-- n8n WF-03: curadoria AI (Groq)
+- n8n WF-03: curadoria AI (Claude Sonnet)
 - SDD: `sdd/modules/automation-engine.json` (category: content_pipeline)
 
 ## Resultado esperado

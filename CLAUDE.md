@@ -8,7 +8,7 @@
 ## Identidade do Projecto
 
 **Vision7** é um portal editorial full-stack em português europeu, com foco em
-Tecnologia, Mundo, Saúde, Música, Desporto e Audiocasts. Tem dashboard admin
+Tecnologia, Mundo, Saúde, Música e Desporto. Tem dashboard admin
 completo, automações n8n, motor IA e monetização integrada.
 
 ---
@@ -54,7 +54,7 @@ completo, automações n8n, motor IA e monetização integrada.
 
 ### Páginas Públicas
 ```
-Index, Tecnologia, Mundo, Saude, Musica, Desporto, Audiocasts
+Index, Tecnologia, Mundo, Saude, Musica, Desporto
 Post (detalhe), Course, PrivacyPolicy, NewsletterUnsubscribe
 ```
 
@@ -69,51 +69,40 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 
 ---
 
-## Ficheiros a NÃO tocar (eliminar quando possível)
-
-| Ficheiro | Razão |
-|---|---|
-| `OverviewView.backup.tsx` | 511 linhas mortas — apagar |
-| `MiniPlayer.tsx` | Duplicado por `MiniPlayerV2` — apagar |
-| `.github/copilot-instructions.md` | Substituído por este ficheiro |
-
----
-
-## Ficheiros a Refactorizar
-
-| Ficheiro | Problema | Solução |
-|---|---|---|
-| `AutomationDashboardV2.tsx` (873L) | Demasiado grande | Dividir em 3 tabs |
-| `NewsPipelineCard.tsx` (1455L) | Monolítico | Decompor em sub-componentes |
-| `PipelineSettingsPanel.tsx` (637L) | Demasiado grande | Extrair painéis |
-
 ---
 
 ## Roadmap Activo
 
-### F1 — Limpeza ✅ (este ficheiro faz parte desta fase)
-- [x] Apagar `OverviewView.backup.tsx`
-- [x] Apagar `MiniPlayer.tsx`
-- [x] Apagar `.github/copilot-instructions.md`
+### F1 — Limpeza ✅
+- [x] Remover dead code e ficheiros duplicados
 - [x] Criar `CLAUDE.md`
 
 ### F2 — Migração IA ✅
 - [x] Edge Function `portal-ai-assistant` → Claude Haiku (com prompt caching)
 - [x] WF-03 n8n → Claude Sonnet (claude-sonnet-4-6, com prompt caching)
-- [x] `AISettingsPanel` com selector Haiku/Sonnet
-- [x] Remover referências a Groq e HuggingFace
+- [x] Remover providers Groq e HuggingFace
 
 ### F3 — Refactorização Automações ✅
-
-- [x] Simplificar `AutomationDashboardV2` (873L → 508L, 4 views extraídas)
-- [x] Remover providers Groq/HF do código
-- [x] Decompor `NewsPipelineCard` (1455L → 1104L, 3 sub-componentes extraídos)
+- [x] `AutomationDashboardV2` decomposto (873L → 508L)
+- [x] `NewsPipelineCard` decomposto (1455L → sub-componentes)
 
 ### F4 — Responsividade ✅
+- [x] Drawer mobile para sidebar
+- [x] Grids `sm/md/lg` corrigidos em todo o admin
+- [x] Toolbar CRM e ExecutionTimeline a 375px
 
-- [x] Drawer mobile para sidebar (Sheet com hamburger no header)
-- [x] Grids `sm/md/lg` corrigidos (CredentialVault, AdminAccessManager, AdsSection)
-- [ ] Testar nos breakpoints: 375px / 768px / 1280px (validação manual)
+### F5 — Decomposição de componentes ✅
+- [x] `PipelineSettingsPanel` (459L → 54L + 3 tabs)
+- [x] `PostForm` com `PostImageUploadField` extraído
+- [x] `RichTextEditor` lazy-loaded (TipTap 582kB deferido)
+
+### F6 — Bundle / lazy loading ✅
+- [x] `vendor-data-viz` (Recharts) já lazy via `AnalyticsView`
+- [x] `vendor-editor` (TipTap) deferido com `React.lazy`
+
+### Remoção Audiocast ✅
+- [x] Feature audiocast removida por completo (código + docs + rotas)
+- [x] URLs legados `/audiocasts` e `/audiocast/:id` redirecionam para `/`
 
 ---
 
@@ -173,7 +162,6 @@ Artigos devem ter:
   - Saúde → verde esmeralda
   - Música → violeta / roxo
   - Desporto → vermelho / laranja
-  - Audiocasts → índigo / ondas sonoras
 
 ---
 

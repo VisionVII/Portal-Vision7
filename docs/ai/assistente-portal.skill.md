@@ -6,7 +6,7 @@ Skill especializada para o botão de IA do portal. Foi desenhada para funcionar 
 ## Capacidades
 - **Busca editorial**: encontra notícias, destaques e categorias relacionadas
 - **Roteamento interno**: leva o utilizador para páginas relevantes do portal
-- **Guia de ecossistema**: explica secções, podcasts, cursos e parcerias
+- **Guia de ecossistema**: explica secções, cursos e parcerias
 - **Escopo controlado**: evita respostas fora do contexto do Vision7
 
 ## Fontes de contexto

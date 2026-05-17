@@ -18,7 +18,7 @@
 
 1. Abrir o **SQL Editor** do novo projeto Supabase.
 2. Executar `supabase/bootstrap_new_project.sql`.
-3. Confirmar as tabelas base: `categories`, `posts`, `user_roles`, `site_settings`, `newsletter_subscribers`, `podcasts`, `courses`.
+3. Confirmar as tabelas base: `categories`, `posts`, `user_roles`, `site_settings`, `newsletter_subscribers`, `courses`.
 4. Confirmar que o primeiro login autenticado consegue acionar `public.bootstrap_first_admin()`.
 
 ### Validação do passo 1
@@ -87,14 +87,10 @@ Antes do cutover final:
 3. Abrir o **projeto novo** (`xhpfxvoonpclonjyfimt`).
 4. Confirmar os buckets:
    - `post-images`
-   - `podcasts`
    - `transcripts`
-   - `audiocast-covers`
 5. Fazer upload preservando os caminhos internos, por exemplo:
    - `post-images/site/banners/...`
    - `post-images/posts/...`
-   - `podcasts/audiocasts/...`
-   - `audiocast-covers/covers/...`
 
 #### Opção B — via CLI (recomendado se houver muitos arquivos)
 
@@ -108,9 +104,7 @@ cat supabase/.temp/project-ref
 supabase link --project-ref <OLD_PROJECT_REF>
 mkdir -p tmp/storage-export
 supabase --experimental storage cp -r ss:///post-images tmp/storage-export/post-images
-supabase --experimental storage cp -r ss:///podcasts tmp/storage-export/podcasts
 supabase --experimental storage cp -r ss:///transcripts tmp/storage-export/transcripts || true
-supabase --experimental storage cp -r ss:///audiocast-covers tmp/storage-export/audiocast-covers
 
 # 2) Enviar para o projeto novo (copiar SUBPASTAS, não a pasta do bucket inteira)
 supabase link --project-ref xhpfxvoonpclonjyfimt
@@ -118,8 +112,6 @@ supabase --experimental storage cp -r tmp/storage-export/post-images/site ss:///
 supabase --experimental storage cp -r tmp/storage-export/post-images/posts ss:///post-images/posts
 supabase --experimental storage cp -r tmp/storage-export/post-images/gallery ss:///post-images/gallery
 supabase --experimental storage cp -r tmp/storage-export/post-images/banners ss:///post-images/banners || true
-supabase --experimental storage cp -r tmp/storage-export/podcasts/audiocasts ss:///podcasts/audiocasts
-supabase --experimental storage cp -r tmp/storage-export/audiocast-covers/covers ss:///audiocast-covers/covers
 ```
 
 > **Importante:** se `supabase link --project-ref <OLD_PROJECT_REF>` falhar por permissão, os comandos seguintes continuam a usar o **último projeto ligado**. Verifique sempre `cat supabase/.temp/project-ref` antes de copiar.

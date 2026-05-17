@@ -80,7 +80,6 @@ src/
 │   ├── use2FA.ts                       ✨ NOVO (2FA support)
 │   ├── usePosts.ts                     ✏️ Modify (add role checks)
 │   ├── useNewsletter.ts                ✏️ Modify (add rate limiting)
-│   └── usePodcasts.ts                  ✏️ Modify (add role checks)
 │
 ├── lib/
 │   ├── utils.ts                        ✏️ Modify (add helpers)

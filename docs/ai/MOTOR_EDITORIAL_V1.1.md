@@ -3,7 +3,7 @@
 ### Versão 1.1 — Uso Interno / Workflows n8n
 > Actualizado: Maio 2026
 > Alterações v1.1: modelo IA clarificado (actual vs. alvo) · mapeamento de 6 WFs reais ·
-> compatibilidade de escalas de scoring (0-10 vs 0-100) · audiocasts como content_type ·
+> compatibilidade de escalas de scoring (0-10 vs 0-100) ·
 > tabelas Supabase actuais vs. futuras · referências de ecossistema e infraestrutura adicionadas
 
 ---
@@ -69,8 +69,6 @@
 | Artigo Padrão | 1.400–1.800 | 5–7 | Maioria dos artigos |
 | Artigo Long-Form | 2.000–2.800 | 7–10 | Temas complexos, análises de fundo |
 | Artigo Notícia | 600–900 | 3–4 | Breaking news, actualidade imediata |
-| Audiocast Summary | 400–600 | 2–3 | Resumo de episódio de podcast |
-
 ### 2.3 Lead Paragraph
 
 - Máximo 60 palavras
@@ -246,12 +244,6 @@ Pelo menos 2 H2 ou H3 devem estar em formato de pergunta:
 /musica/
 /desporto/
 ```
-
-**Para conteúdo de tipo audiocast** (independente da categoria):
-```
-/[categoria]/audiocast/[slug-do-episodio]
-```
-Exemplo: `/tecnologia/audiocast/ia-portugal-2025-ep12`
 
 ### 4.2 Links Externos
 
@@ -470,8 +462,6 @@ Posicionar entidades ou conceitos num quadrante (ex: Risco vs Oportunidade, Cust
 | Saúde | Verde esmeralda | #10b981 / #059669 | Vital, científico |
 | Música | Violeta / Púrpura | #8b5cf6 / #7c3aed | Criativo, emocional |
 | Desporto | Vermelho / Laranja | #ef4444 / #f97316 | Energia, intensidade |
-| Audiocasts | Índigo / Ondas | #6366f1 / #4f46e5 | Profundo, sonoro |
-
 ### 6.4 Prompt Template para Geração de Imagem
 
 ```
@@ -518,18 +508,6 @@ no text, no logos, no faces,
 - **Ângulo Portugal:** Liga Portugal, selecção nacional, atletas portugueses no estrangeiro
 - **Tom:** Factual para resultados; analítico para contexto táctico/económico
 
-> **Nota de arquitectura:** `audiocasts` não é uma categoria CMS do portal público.
-> As 5 categorias do portal são: `tecnologia`, `mundo`, `saude`, `musica`, `desporto`.
-> Audiocasts é um **tipo de conteúdo** (`content_type: 'audiocast'`) que pode existir
-> dentro de qualquer categoria. O padrão editorial abaixo aplica-se à escrita de
-> resumos e show notes de episódios de podcast.
-
-### AUDIOCASTS
-- **Estrutura diferente:** Título do episódio + Convidado(s) + Duração + 3 pontos principais
-- **Formato resumo:** Lead → 3 Insights Principais → Citação do Episódio → Onde Ouvir (CTA)
-- **Sem secção Portugal obrigatória** (a menos que seja o tema do episódio)
-- **Sem previsão datada obrigatória**
-
 ---
 
 ## 8. CHECKLIST DE QUALIDADE — SCORE 9.5+
@@ -564,7 +542,7 @@ O motor deve verificar estes critérios antes de entregar o artigo:
 ### Estrutura (obrigatório — peso 30%)
 - [ ] H1 único, entre 55–65 caracteres
 - [ ] ToC presente com âncoras funcionais
-- [ ] 5+ secções H2 (excepto Notícia e Audiocast)
+- [ ] 5+ secções H2 (excepto Notícia)
 - [ ] Secção Portugal com 3 cenários
 - [ ] Lead de máximo 60 palavras
 - [ ] Pelo menos 1 previsão datada
@@ -656,7 +634,7 @@ O motor deve devolver o artigo neste formato JSON para ingestão pelo portal:
     "title": "string (H1, 55–65 chars)",
     "slug": "string (máx 6 palavras, sem acentos, hífens)",
     "meta_description": "string (145–155 chars)",
-    "category": "tecnologia | mundo | saude | musica | desporto | audiocasts",
+    "category": "tecnologia | mundo | saude | musica | desporto",
     "author": "string (nome do autor ou 'Motor Vision7')",
     "published_at": "ISO8601 datetime",
     "reading_time_minutes": "number",

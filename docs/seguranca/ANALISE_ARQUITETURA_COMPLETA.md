@@ -153,26 +153,7 @@ CREATE TABLE public.user_profiles (
 );
 ```
 
-#### 2.6 `podcasts` (Áudio)
-```sql
-CREATE TABLE public.podcasts (
-  id UUID PRIMARY KEY,
-  title TEXT NOT NULL,
-  slug TEXT NOT NULL UNIQUE,
-  description TEXT,
-  audio_url TEXT,
-  duration INTEGER,
-  transcript TEXT,
-  status TEXT CHECK (status IN ('draft', 'processing', 'published', 'archived')),
-  category_id UUID,
-  post_id UUID REFERENCES posts(id),
-  tags TEXT[],
-  views, downloads INTEGER,
-  created_at, updated_at TIMESTAMP
-);
-```
-
-#### 2.7 `courses` (Cursos)
+#### 2.6 `courses` (Cursos)
 ```sql
 CREATE TABLE public.courses (
   id UUID PRIMARY KEY,
@@ -204,7 +185,6 @@ CREATE TABLE public.courses (
 | **newsletter** | Admin vê lista | `has_role(admin)` | ✅ |
 | **site_settings** | Todos leem | `true` | ✅ |
 | **site_settings** | Admin gerencia | `has_role(admin)` | ✅ |
-| **podcasts** | Published ou owned | `status='published' OR admin` | ✅ |
 | **courses** | Published ou owned | `status='published' OR admin` | ✅ |
 | **push_subscriptions** | Qualquer um subscreve | `true` | ⚠️ No validation |
 | **user_profiles** | Public profiles | `is_public=true OR auth.uid()=id` | ✅ |
@@ -239,7 +219,6 @@ CREATE TRIGGER on_auth_user_created_assign_admin
 ### Storage Buckets
 ```
 post-images/        ✅ RLS: Público ler, Admin upload
-podcasts/           ✅ RLS: Público ler, Admin upload
 transcripts/        ✅ RLS: Admin only
 ```
 

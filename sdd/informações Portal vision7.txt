@@ -137,7 +137,6 @@ O painel interno ja esta completo com areas praticas para operacao diaria.
 10.1 Area de conteudo
 - Visao geral com indicadores e atalhos.
 - Gestao de posts e fluxo editorial.
-- Gestao de audiocasts e episodios.
 - Organizador da homepage.
 - Galeria de imagens e midias.
 

@@ -8,7 +8,7 @@
   "functional_requirements": [
     {
       "id": "FR-001",
-      "description": "Schema com 20+ tabelas: posts, categories, courses, podcasts, newsletter_subscribers, site_settings, user_profiles, user_roles, permissions_matrix, registration_invites, audit_logs, analytics_events, monetization_settings, automations, security_codes, partner_access_requests, automations_v2, automation_executions, automation_templates, automation_audit_log, news_staging, news_clusters, curated_posts, posting_queue, editorial_feedback",
+      "description": "Schema com 20+ tabelas: posts, categories, courses, newsletter_subscribers, site_settings, user_profiles, user_roles, permissions_matrix, registration_invites, audit_logs, analytics_events, monetization_settings, automations, security_codes, partner_access_requests, automations_v2, automation_executions, automation_templates, automation_audit_log, news_staging, news_clusters, curated_posts, posting_queue, editorial_feedback",
       "priority": "Crítica",
       "status": "Finalizado"
     },
@@ -26,7 +26,7 @@
     },
     {
       "id": "FR-004",
-      "description": "Storage buckets: post-images (public), podcasts (public), transcripts (admin)",
+      "description": "Storage buckets: post-images (public), transcripts (admin)",
       "priority": "Alta",
       "status": "Finalizado"
     },

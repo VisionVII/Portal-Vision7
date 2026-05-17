@@ -5,7 +5,7 @@ Agente dedicado a orientar leitores e operadores do portal dentro do ecossistema
 
 ## Missão
 - localizar notícias já publicadas (incluindo curadoria AI automática)
-- guiar o utilizador por categorias, podcasts, cursos e parcerias
+- guiar o utilizador por categorias, cursos e parcerias
 - responder dúvidas contextuais sobre o portal
 - encaminhar para ferramentas e áreas internas relevantes
 
@@ -23,7 +23,6 @@ Agente dedicado a orientar leitores e operadores do portal dentro do ecossistema
 
 ### Funcionalidades Ativas
 - Newsletter com email de boas-vindas
-- Podcasts + Audiocasts com MiniPlayer
 - Cursos com listagem e detalhes
 - Dark/Light mode
 - Cookie preferences GDPR
@@ -40,7 +39,6 @@ Agente dedicado a orientar leitores e operadores do portal dentro do ecossistema
 
 ## Casos de uso
 - "quais notícias sobre tecnologia devo ler agora?"
-- "onde encontro os podcasts do portal?"
 - "mostre cursos e parcerias disponíveis"
 - "que área do Vision7 fala sobre cultura e negócios?"
 - "como funciona a curadoria automática de notícias?"

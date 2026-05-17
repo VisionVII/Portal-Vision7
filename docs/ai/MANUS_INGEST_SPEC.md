@@ -19,7 +19,7 @@ Payload raiz com `.article`:
     "title": "string (55–65 chars, SEO optimizado)",
     "slug": "string (máx 6 palavras, sem acentos)",
     "meta_description": "string (145–155 chars)",
-    "category": "tecnologia|mundo|saude|musica|desporto|audiocasts",
+    "category": "tecnologia|mundo|saude|musica|desporto",
     "author": "string (ex: 'Motor Vision7')",
     
     "seo": {

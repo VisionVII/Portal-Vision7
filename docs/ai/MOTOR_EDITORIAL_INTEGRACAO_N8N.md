@@ -83,7 +83,7 @@ O Motor Editorial gera um JSON conforme [MOTOR_EDITORIAL_V1.0.md](../MOTOR_EDITO
     "meta_description": "string (145–155 chars)",
     
     // ─── Categorização ────────────────────────────
-    "category": "tecnologia|mundo|saude|musica|desporto|audiocasts",
+    "category": "tecnologia|mundo|saude|musica|desporto",
     "author": "string",
     
     // ─── SEO/AEO ──────────────────────────────────

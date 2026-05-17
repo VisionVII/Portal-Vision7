@@ -11,7 +11,7 @@ Use este checklist antes de enviar qualquer artigo via ingest-manus-post.
 - [ ] H1 único (55–65 caracteres)
 - [ ] Lead ≤ 60 palavras
 - [ ] ToC presente com âncoras funcionais
-- [ ] 5+ secções H2 (3+ para Notícia/Audiocast)
+- [ ] 5+ secções H2 (3+ para Notícia)
 - [ ] Secção Portugal com 3 cenários
 - [ ] Pelo menos 1 previsão datada
 - [ ] CTA final com valor
@@ -227,7 +227,7 @@ A: SIM. A Edge Function valida o range exacto. Fora disso = erro 422.
 A: NÃO. Apenas PT-PT. A Edge Function detecta e rejeita PT-BR.
 
 **P: E se a categoria não existir no dropdown?**
-A: Use apenas: tecnologia | mundo | saude | musica | desporto | audiocasts
+A: Use apenas: tecnologia | mundo | saude | musica | desporto
 
 **P: Quantas vezes posso re-gerar um artigo?**
 A: Não há limite. A Edge Function aceita qualquer qual versão que cumpra os critérios.

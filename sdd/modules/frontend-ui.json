@@ -50,7 +50,7 @@
     },
     {
       "id": "FR-008",
-      "description": "Páginas de podcast com player de áudio e listagem",
+      "description": "Página de cursos com listagem e detalhes (actualizado — audiocast removido)",
       "priority": "Média",
       "status": "Finalizado"
     },
@@ -82,7 +82,7 @@
   "non_functional_requirements": [
     {
       "id": "NFR-001",
-      "description": "Primeira carga sob 3s em 3G, Lighthouse Performance > 80. Bundle otimizado: code-splitting, lazy MiniPlayer, fonts deferred, DNS prefetch Supabase",
+      "description": "Primeira carga sob 3s em 3G, Lighthouse Performance > 80. Bundle otimizado: code-splitting, RichTextEditor lazy-loaded (TipTap 582kB), Recharts lazy via AnalyticsView, fonts deferred, DNS prefetch Supabase",
       "category": "Performance",
       "status": "Finalizado"
     },
@@ -144,7 +144,6 @@
       "posts",
       "categories",
       "courses",
-      "podcasts",
       "site_settings",
       "newsletter_subscribers",
       "analytics_events"
@@ -172,8 +171,6 @@
       "src/components/system/ScrollToTop.tsx",
       "src/components/system/ThemeProvider.tsx",
       "src/components/system/ThemeToggle.tsx",
-      "src/components/media/AudiocastCard.tsx",
-      "src/components/media/AudiocastPlayer.tsx"
     ],
     "hooks": [
       "src/hooks/useTheme.ts",
@@ -182,8 +179,6 @@
       "src/hooks/useUserLocation.ts"
     ],
     "pages": [
-      "src/pages/site/Audiocast.tsx",
-      "src/pages/site/Audiocasts.tsx",
       "src/pages/site/Course.tsx",
       "src/pages/site/Desporto.tsx",
       "src/pages/site/Index.tsx",
@@ -324,7 +319,7 @@
       "date": "2026-04-12",
       "version": "1.3.0",
       "author": "Vision7 Team",
-      "description": "Auditoria completa de performance: MiniPlayer lazy-loaded, framer-motion em chunk separado, DOMPurify isolado, route key removido (parava remount), AuthContext memoizado + idle throttle 10s, fonts secundárias deferred, DNS prefetch Supabase, email templates dynamic import, dead code removido (PageTransition.tsx, MiniPlayerExpanded.tsx, App.css). Imagens pesadas removidas (-9.5MB). Bundle first-load -52KB gzip."
+      "description": "Auditoria completa de performance: RichTextEditor lazy-loaded (TipTap 582kB deferido), Recharts lazy via AnalyticsView, framer-motion em chunk separado, DOMPurify isolado, fonts secundárias deferred, DNS prefetch Supabase. Feature audiocast removida por completo (10 ficheiros eliminados, 2728 linhas). Bundle first-load optimizado."
     }
   ]
 }

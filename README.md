@@ -11,7 +11,7 @@ Este repositório contém o portal digital premium Vision.
 - `src/` — aplicação React/Vite organizada por domínio:
   - `components/layout/` — cabeçalho, rodapé e estrutura visual
   - `components/content/` — cards, paginação, newsletter e blocos editoriais
-  - `components/media/` — componentes de podcast e mídia
+  - `components/media/` — componentes de mídia
   - `components/system/` — favicon, erros e preferências globais
   - `pages/site/` e `pages/admin/` — rotas públicas e administrativas
 - `public/` — assets públicos e arquivos estáticos.
