@@ -40,7 +40,6 @@ const ALLOWED_TEXT_ALIGNMENTS = new Set(['left', 'center', 'right', 'justify']);
 // Domínio público do portal — links para este domínio são internos
 const PORTAL_HOSTS = new Set([
   'vision7.pt',
-  'www.vision7.pt',
   'portal.vision7.pt',
   'localhost',
   '127.0.0.1',

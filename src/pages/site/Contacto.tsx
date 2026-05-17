@@ -65,7 +65,7 @@ const Contacto = () => {
                     <Globe className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                     <div>
                       <p className="font-semibold text-sm">Website</p>
-                      <span className="text-sm text-muted-foreground">vision7.pt</span>
+                      <span className="text-sm text-muted-foreground">portal.vision7.pt</span>
                     </div>
                   </CardContent>
                 </Card>

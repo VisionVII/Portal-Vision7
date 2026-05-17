@@ -13,7 +13,7 @@ UPDATE public.posts SET content = '<h2>Neste Artigo</h2>
 <p>Este artigo é uma comparação directa baseada em testes reais em cenários de negócio: escrita editorial, análise de dados, código, atendimento a clientes e raciocínio complexo. Sem marketing — só resultados.</p>
 <p><strong>A nossa previsão:</strong> em 2027, a maioria das organizações europeias vai usar os três modelos em paralelo, cada um especializado para um tipo de tarefa. A guerra do &quot;modelo único&quot; já acabou.</p>
 <blockquote>
-<p>📌 <strong>Contexto:</strong> <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>📌 <strong>Contexto:</strong> <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <hr>
 <h2>O Estado dos Três Modelos em 2026</h2>
@@ -109,7 +109,7 @@ UPDATE public.posts SET content = '<h2>Neste Artigo</h2>
 <h3>Para Investigação e Análise de Documentos Longos</h3>
 <p><strong>Vencedor: Gemini</strong> (com contexto de 1M tokens). Processar livros inteiros, repositórios de documentos ou bases de dados textuais é o caso de uso donde o Gemini é insuperável.</p>
 <blockquote>
-<p>🔗 <a href="https://www.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude para Automatizar o Teu Trabalho</a></p>
+<p>🔗 <a href="https://portal.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude para Automatizar o Teu Trabalho</a></p>
 </blockquote>
 <hr>
 <h2>O Framework de Decisão Vision7</h2>
@@ -150,7 +150,7 @@ CASO GERAL → CLAUDE (melhor raciocínio base)
 <h2>Conclusão</h2>
 <p>Não existe um &quot;melhor modelo&quot; — existe o melhor modelo para a tua tarefa. Claude para escrita e análise, ChatGPT para criatividade e ecossistema Microsoft, Gemini para integração Google e contexto longo. As organizações que entendem esta distinção e usam os três em paralelo vão ter uma vantagem competitiva clara sobre as que escolhem &quot;um ou outro&quot; por razões de simplicidade.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a> · <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a> · <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>
@@ -177,7 +177,7 @@ UPDATE public.posts SET content = '<h2>Neste Artigo</h2>
 <p>Em 2026, os agentes de IA são ferramentas em uso real em empresas reais, a resolver problemas reais. Segundo o <strong>Gartner</strong> (<em>AI Agents in the Enterprise</em>, Março de 2026), <strong>30% dos processos repetitivos de back-office</strong> nas empresas europeias vão ser executados por agentes de IA sem supervisão humana directa até ao final de 2027.</p>
 <p><strong>A nossa previsão:</strong> o perfil profissional mais valorizado em 2027 não será o especialista em IA — será o profissional de qualquer área que sabe configurar, supervisionar e extrair valor dos agentes de IA no seu domínio. O &quot;prompt engineer&quot; já ficou para trás; vem aí o &quot;agent orchestrator&quot;.</p>
 <blockquote>
-<p>📌 <strong>Leitura relacionada:</strong> <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://www.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
+<p>📌 <strong>Leitura relacionada:</strong> <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://portal.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
 </blockquote>
 <hr>
 <h2>O Que É Um Agente de IA?</h2>
@@ -222,7 +222,7 @@ OBSERVAÇÃO
 <li>WF-05: Publica e distribui pelas redes sociais</li>
 </ul>
 <blockquote>
-<p>🔗 <a href="https://www.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude para Automatizar o Teu Trabalho</a></p>
+<p>🔗 <a href="https://portal.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude para Automatizar o Teu Trabalho</a></p>
 </blockquote>
 <h3>Agentes com Memória Persistente</h3>
 <p>Retêm informação entre sessões, aprendem com cada interacção e adaptam-se ao utilizador específico. Em 2026, o <strong>Claude Projects</strong> e o <strong>ChatGPT Memory</strong> são as implementações mais acessíveis. Para empresas, a memória é tipicamente armazenada em vectorstores (Pinecone, Supabase pgvector) e recuperada por similaridade semântica.</p>
@@ -290,7 +290,7 @@ VOLUME &gt; 10x/SEMANA?        ──── Não ──→ Avaliar custo vs. tem
 <h2>Conclusão</h2>
 <p>Os agentes de IA não são o futuro — são o presente em produção. Em 2026, qualquer empresa que não esteja pelo menos a explorar agentes está a acumular uma desvantagem competitiva mensurável. O ponto de partida não é a tecnologia mais avançada: é identificar as três tarefas mais repetitivas da tua equipa e testar se um agente as consegue executar com qualidade suficiente.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude para Automatizar o Teu Trabalho</a> · <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude para Automatizar o Teu Trabalho</a> · <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>
@@ -316,7 +316,7 @@ UPDATE public.posts SET content = '<h2>Neste Artigo</h2>
 <p>Em Portugal, a realidade é mais modesta — mas está a mudar de forma estrutural. O SNS lançou em 2025 um programa-piloto de IA em radiologia em três hospitais centrais. A <strong>Luz Saúde</strong> e a <strong>CUF</strong> usam já ferramentas de triagem e apoio ao diagnóstico. E o <strong>Instituto Português de Oncologia (IPO)</strong> de Lisboa tem uma parceria activa com a <strong>IBM Health</strong> para análise de biomarcadores em oncologia de precisão.</p>
 <p><strong>A nossa previsão:</strong> em 2028, pelo menos <strong>40% dos hospitais portugueses com mais de 200 camas</strong> terão alguma forma de IA integrada no processo clínico. Os profissionais que não investirem na sua literacia digital de IA agora vão enfrentar uma lacuna de competências difícil de colmatar em tempo de pressão operacional.</p>
 <blockquote>
-<p>📌 <strong>Leitura relacionada:</strong> <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://www.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos</a></p>
+<p>📌 <strong>Leitura relacionada:</strong> <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://portal.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos</a></p>
 </blockquote>
 <hr>
 <h2>A IA na Saúde: O Estado da Arte em 2026</h2>
@@ -377,7 +377,7 @@ UPDATE public.posts SET content = '<h2>Neste Artigo</h2>
 <li><strong>Amboss AI</strong> — apoio à decisão clínica em tempo real, com alertas baseados em guidelines actualizadas</li>
 </ul>
 <blockquote>
-<p>🔗 <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>🔗 <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <h3>Ferramentas de Investigação e Revisão de Literatura</h3>
 <ul>
@@ -457,7 +457,7 @@ UPDATE public.posts SET content = '<h2>Neste Artigo</h2>
 <h2>Conclusão</h2>
 <p>A IA não vai substituir médicos. Vai substituir as tarefas administrativas que consomem 40% do tempo dos médicos, vai detectar padrões que o olho humano não consegue ver em volume, e vai tornar a medicina de precisão acessível a hospitais que antes não tinham recursos para isso. Os profissionais que entenderem esta distinção — e que começarem a aprender agora — vão ser mais eficazes, mais produtivos e mais valorizados do que os que esperaram.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA</a> · <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA</a> · <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>
@@ -483,7 +483,7 @@ UPDATE public.posts SET content = '<h2>Neste Artigo</h2>
 <p>Por debaixo dos números médios, há uma história mais complexa. Portugal tem <strong>três unicórnios de IA</strong> (Feedzai, Unbabel, Sword Health). Tem o INESC TEC — um dos melhores centros de investigação aplicada em IA da Península Ibérica. E tem uma língua partilhada com um mercado de <strong>250 milhões de falantes</strong> — o quarto maior mercado linguístico do mundo, onde os dados de treino e as ferramentas em português têm valor comercial crescente.</p>
 <p><strong>A nossa previsão:</strong> Portugal tem uma janela de <strong>24 a 36 meses</strong> para se posicionar como hub de IA em língua portuguesa. Depois disso, o Brasil — com 10x a população e crescimento económico em aceleração — vai dominar esse espaço. A janela fecha por volta de 2028.</p>
 <blockquote>
-<p>📌 <strong>Leitura relacionada:</strong> <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://www.vision7.pt/post/ia-na-saude-em-portugal-o-que-os-medicos-precisam-de-saber-em-2026">IA na Saúde em Portugal: O Que os Profissionais Precisam de Saber</a></p>
+<p>📌 <strong>Leitura relacionada:</strong> <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://portal.vision7.pt/post/ia-na-saude-em-portugal-o-que-os-medicos-precisam-de-saber-em-2026">IA na Saúde em Portugal: O Que os Profissionais Precisam de Saber</a></p>
 </blockquote>
 <hr>
 <h2>Onde Está Portugal no Mapa Global da IA</h2>
@@ -541,7 +541,7 @@ UPDATE public.posts SET content = '<h2>Neste Artigo</h2>
 <h3>Fragmentação do Financiamento</h3>
 <p>Portugal tem vários programas de apoio à IA: PRR, PT2030, Agenda Digital, FCT, COMPETE 2030. O problema é estrutural: estão fragmentados, têm processos burocráticos longos (tempo médio de aprovação: 14 meses) e não comunicam entre si. Uma startup pode candidatar-se ao mesmo projecto em três programas diferentes, com formulários diferentes, e esperar 18 meses por uma decisão.</p>
 <blockquote>
-<p>🔗 <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>🔗 <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <hr>
 <h2>Os Casos de Sucesso Portugueses</h2>
@@ -599,7 +599,7 @@ A combinação de fuga de talentos não controlada, financiamento insuficiente e
 <h2>Conclusão</h2>
 <p>Portugal não vai liderar a corrida global à IA. Mas pode — e deve — liderar a corrida da IA em língua portuguesa. Este é um nicho com 250 milhões de falantes, onde Portugal tem vantagens competitivas reais: talento académico, custo controlado, multilinguismo e uma reputação de qualidade de vida que atrai investigadores internacionais. A janela existe. A questão é se temos a capacidade de a reconhecer e aproveitar antes de fechar.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/ia-na-saude-em-portugal-o-que-os-medicos-precisam-de-saber-em-2026">IA na Saúde em Portugal</a> · <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/ia-na-saude-em-portugal-o-que-os-medicos-precisam-de-saber-em-2026">IA na Saúde em Portugal</a> · <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>
@@ -625,7 +625,7 @@ UPDATE public.posts SET content = '<h2>Neste Artigo</h2>
 <p>Este guia não é teórico. São 5 automações que podes implementar nos próximos 7 dias, com as ferramentas que provavelmente já tens ou que custam menos de €30/mês.</p>
 <p><strong>A nossa previsão:</strong> em 2027, as empresas que não tiverem pelo menos 3 automações de IA em produção vão ter custos operacionais entre 20 e 35% acima dos concorrentes que adoptaram mais cedo. Esta é a estimativa da <strong>McKinsey</strong> no relatório <em>The Competitive Advantage of AI Automation</em> (2025). A diferença vai ser especialmente visível nos sectores de serviços, consultoria e marketing.</p>
 <blockquote>
-<p>📌 <strong>Leitura relacionada:</strong> <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://www.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
+<p>📌 <strong>Leitura relacionada:</strong> <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://portal.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
 </blockquote>
 <hr>
 <h2>Por Que o Claude Para Automação?</h2>
@@ -682,7 +682,7 @@ Spam?         → Move para spam com log
 <strong>Tempo poupado:</strong> 6–10 horas/semana</p>
 <p>O workflow monitoriza feeds RSS, agrupa artigos por tema e similaridade, envia os clusters para o Claude Sonnet com prompt editorial completo (estrutura, tom, referências, SEO), e envia o artigo gerado para revisão antes de publicar.</p>
 <blockquote>
-<p>🔗 <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>🔗 <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <h3>Automação 3: Relatórios de Performance Semanais</h3>
 <p><strong>Ferramentas:</strong> Make + Claude Sonnet + Google Analytics + Gmail
@@ -758,7 +758,7 @@ PASSO 4 — ROI
 <p>Automatizar com o Claude não é um projecto de meses. É uma tarde de configuração para a primeira automação e 2–3 horas por automação adicional. O ROI é rápido, mensurável e acumula. O único erro é esperar pela &quot;ferramenta perfeita&quot; ou pelo &quot;momento certo&quot; — que nunca chegam.</p>
 <p>Começa pela automação mais simples do teu contexto: triagem de email, geração de relatórios ou análise de documentos. Mede o tempo que poupes durante duas semanas. Depois aplica o mesmo raciocínio à próxima tarefa repetitiva.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a> · <a href="https://www.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a> · <a href="https://portal.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>

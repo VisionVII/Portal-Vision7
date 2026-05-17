@@ -34,7 +34,7 @@ function parseRecipients(input: string): string[] {
 }
 
 function buildTemplateData(template: EmailTemplateType): EmailTemplateData[EmailTemplateType] {
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.vision7.pt';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://portal.vision7.pt';
   const now = new Date();
 
   switch (template) {

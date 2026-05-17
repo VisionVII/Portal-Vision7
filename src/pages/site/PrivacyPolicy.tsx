@@ -276,7 +276,7 @@ const PrivacyPolicy = () => {
                 </p>
                 <div className="bg-muted p-4 rounded-lg text-sm space-y-2">
                   <p><strong>Email:</strong> privacidade@vision7.pt</p>
-                  <p><strong>Website:</strong> vision7.pt</p>
+                  <p><strong>Website:</strong> portal.vision7.pt</p>
                   <p><strong>País:</strong> Portugal</p>
                 </div>
                 <p className="text-sm text-muted-foreground">

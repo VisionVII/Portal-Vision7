@@ -6,7 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-const DEFAULT_SITE_URL = Deno.env.get('SITE_URL') ?? 'https://www.vision7.pt';
+const DEFAULT_SITE_URL = Deno.env.get('SITE_URL') ?? 'https://portal.vision7.pt';
 const MAX_FAILED_ATTEMPTS = 10;
 const BLOCK_WINDOW_MINUTES = 15;
 
@@ -19,7 +19,7 @@ const fallbackAllowedOrigins = [
   'http://127.0.0.1:8080',
   'http://localhost:8080',
   DEFAULT_SITE_URL,
-  'https://www.vision7.pt',
+  'https://portal.vision7.pt',
 ];
 
 const ALLOWED_ORIGINS = new Set([...configuredOrigins, ...fallbackAllowedOrigins]);

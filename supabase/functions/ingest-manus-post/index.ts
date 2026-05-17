@@ -243,7 +243,7 @@ function processEditorialPayload(payload: EditorialPayload) {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const MANUS_INGEST_SECRET = Deno.env.get('MANUS_INGEST_SECRET') ?? '';
-const SITE_URL = (Deno.env.get('PUBLIC_SITE_URL') ?? Deno.env.get('SITE_URL') ?? 'https://www.vision7.pt').replace(/\/$/, '');
+const SITE_URL = (Deno.env.get('PUBLIC_SITE_URL') ?? Deno.env.get('SITE_URL') ?? 'https://portal.vision7.pt').replace(/\/$/, '');
 const STORAGE_BUCKET = 'post-images';
 const MANUS_STORAGE_PREFIX = 'manus';
 const MAX_BODY_BYTES = 10 * 1024 * 1024; // 10 MB

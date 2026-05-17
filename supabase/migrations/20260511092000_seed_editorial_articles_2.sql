@@ -31,7 +31,7 @@ INSERT INTO public.posts (
 <p>A pergunta já não é &quot;a IA vai matar a música?&quot; — é &quot;como é que os artistas que dominam estas ferramentas vão dominar os próximos dez anos?&quot;.</p>
 <p><strong>A nossa previsão datada:</strong> até ao final de 2027, pelo menos uma música nos top 10 globais do Spotify terá sido co-criada com IA generativa, com crédito explícito no lançamento. O momento de aprender é agora.</p>
 <blockquote>
-<p>📌 <strong>Leitura relacionada:</strong> <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://www.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
+<p>📌 <strong>Leitura relacionada:</strong> <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://portal.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
 </blockquote>
 <hr>
 <h2>O Estado da IA Musical em 2026</h2>
@@ -120,7 +120,7 @@ INSERT INTO public.posts (
 <p>Este é o campo de batalha legal de 2026. A <strong>Universal Music Group</strong> obteve uma decisão histórica nos EUA em Fevereiro de 2026: músicas geradas inteiramente por IA não têm protecção de copyright — apenas composições com &quot;contribuição criativa humana substancial&quot; são elegíveis.</p>
 <p>Na Europa, o <strong>AI Act</strong> da UE exige que plataformas de IA generativa divulguem os dados de treino — uma exigência que ainda está a ser implementada pelos grandes players.</p>
 <blockquote>
-<p>🔗 O impacto desta regulação em Portugal está detalhado em <a href="https://www.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a></p>
+<p>🔗 O impacto desta regulação em Portugal está detalhado em <a href="https://portal.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a></p>
 </blockquote>
 <p><strong>Modelo de royalties emergente:</strong> artistas que licenciam a sua voz e estilo para IA recebem royalties por utilização. A <strong>Sony Music</strong> lançou em 2026 um programa piloto com 50 artistas do catálogo — resultados esperados para Q4 2026.</p>
 <hr>
@@ -154,13 +154,13 @@ Fragmentação do mercado: músicas IA de baixo custo inundam plataformas de str
 <hr>
 <h2>→ Subscreve a Newsletter Vision7</h2>
 <p>Análises semanais sobre tecnologia, cultura e o futuro da criatividade em Portugal. Sem spam — só conteúdo que vale o teu tempo.</p>
-<p><strong><a href="https://www.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
+<p><strong><a href="https://portal.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
 <hr>
 <h2>Conclusão</h2>
 <p>A IA não está a matar a música — está a mudar quem consegue fazer música, com que velocidade e para que audiências. Os artistas e produtores que encaram estas ferramentas como aliadas — e não como ameaças — estão a posicionar-se para dominar os próximos anos.</p>
 <p>Em Portugal, a janela de oportunidade está aberta: a dimensão do mercado permite experimentação ágil, a riqueza cultural é um activo diferenciador, e os custos de adopção das ferramentas são acessíveis. O momento de agir é 2026.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/10-ferramentas-de-ia-gratuitas-que-toda-a-empresa-portuguesa-deve-conhecer">10 Ferramentas de IA Gratuitas Que Toda a Empresa Portuguesa Deve Conhecer</a> · <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/10-ferramentas-de-ia-gratuitas-que-toda-a-empresa-portuguesa-deve-conhecer">10 Ferramentas de IA Gratuitas Que Toda a Empresa Portuguesa Deve Conhecer</a> · <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>
@@ -209,7 +209,7 @@ INSERT INTO public.posts (
 <p>A IA no desporto não é ficção científica: é GPS nos treinos, visão computacional nas filmagens, modelos preditivos no mercado de transferências e sensores biométricos que antecipam lesões semanas antes de acontecerem.</p>
 <p><strong>A nossa previsão datada:</strong> até 2028, nenhum clube europeu de primeira divisão competirá sem um departamento dedicado a data science desportiva. Os clubes que não investirem agora vão pagar o dobro depois — em transferências falhadas e lesões evitáveis.</p>
 <blockquote>
-<p>📌 <strong>Leitura relacionada:</strong> <a href="https://www.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a> · <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>📌 <strong>Leitura relacionada:</strong> <a href="https://portal.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a> · <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <hr>
 <h2>A Revolução dos Dados no Desporto Profissional</h2>
@@ -307,7 +307,7 @@ INSERT INTO public.posts (
 <li><strong>Modelar o declínio</strong> de jogadores acima dos 30 anos com maior precisão</li>
 </ol>
 <blockquote>
-<p>🔗 Como os agentes de IA vão transformar este processo nos próximos anos: <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>🔗 Como os agentes de IA vão transformar este processo nos próximos anos: <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <hr>
 <h2>Framework Vision7: O Clube Inteligente</h2>
@@ -340,13 +340,13 @@ Investimento superficial: os clubes compram as ferramentas mas não constroem as
 <hr>
 <h2>→ Subscreve a Newsletter Vision7</h2>
 <p>Análises semanais sobre desporto, tecnologia e dados em Portugal. Directo ao ponto — sem jargão desnecessário.</p>
-<p><strong><a href="https://www.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
+<p><strong><a href="https://portal.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
 <hr>
 <h2>Conclusão</h2>
 <p>A IA no desporto não é uma tendência — é uma vantagem competitiva real e mensurável. A redução de lesões em 25-40%, o scouting mais preciso e as decisões de transferência mais fundamentadas representam milhões de euros em valor gerado ou poupado.</p>
 <p>Para Portugal, a janela de oportunidade é clara: os clubes que investirem agora em dados e competências analíticas vão competir em condições mais igualitárias com orçamentos muito superiores. A IA é o grande equalizador — mas só para quem a souber usar.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a> · <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a> · <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>
@@ -395,7 +395,7 @@ INSERT INTO public.posts (
 <p>Este guia é prático: apresenta as 10 ferramentas mais úteis para equipas portuguesas, com limites reais dos planos gratuitos, casos de uso concretos e a honestidade sobre quando vale a pena pagar.</p>
 <p><strong>A nossa previsão datada:</strong> até ao final de 2026, as empresas portuguesas que adoptarem pelo menos 3 destas ferramentas vão reportar uma redução de 20-30% no tempo gasto em tarefas repetitivas. As que não o fizerem vão sentir a pressão competitiva.</p>
 <blockquote>
-<p>📌 <strong>Leitura relacionada:</strong> <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://www.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
+<p>📌 <strong>Leitura relacionada:</strong> <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://portal.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
 </blockquote>
 <hr>
 <h2>Porquê Começar com Ferramentas Gratuitas</h2>
@@ -540,7 +540,7 @@ INSERT INTO public.posts (
 <h3>Fase 3 — Mês 2: Integração e Hábito</h3>
 <p>As ferramentas escolhidas entram nos processos formais. Criam-se templates e prompts standard. Mede-se o tempo poupado.</p>
 <blockquote>
-<p>🔗 Para um guia passo a passo de automação com Claude: <a href="https://www.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude Para Automatizar o Teu Trabalho</a></p>
+<p>🔗 Para um guia passo a passo de automação com Claude: <a href="https://portal.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude Para Automatizar o Teu Trabalho</a></p>
 </blockquote>
 <hr>
 <h2>Framework Vision7: Stack Gratuita de Arranque</h2>
@@ -580,13 +580,13 @@ A regulação europeia de dados cria incerteza que atrasa a adoptação. Vários
 <hr>
 <h2>→ Subscreve a Newsletter Vision7</h2>
 <p>Todas as semanas: as ferramentas, tendências e estratégias que as empresas portuguesas precisam de conhecer. Prático, directo, sem jargão.</p>
-<p><strong><a href="https://www.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
+<p><strong><a href="https://portal.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
 <hr>
 <h2>Conclusão</h2>
 <p>A era das desculpas terminou. Em 2026, há ferramentas de IA gratuitas, em português, para praticamente todas as funções de negócio — escrita, design, pesquisa, reuniões, apresentações e gestão de conhecimento. O custo de entrada é zero. O custo de não entrar é crescente.</p>
 <p>Começa com duas ou três ferramentas desta lista, integra-as nos processos diários durante um mês, e mede o impacto. Os resultados vão falar por si.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/5-formas-de-usar-ia-generativa-para-criar-conteudo-em-menos-tempo">5 Formas de Usar IA Generativa Para Criar Conteúdo em Menos Tempo</a> · <a href="https://www.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude Para Automatizar o Teu Trabalho</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/5-formas-de-usar-ia-generativa-para-criar-conteudo-em-menos-tempo">5 Formas de Usar IA Generativa Para Criar Conteúdo em Menos Tempo</a> · <a href="https://portal.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude Para Automatizar o Teu Trabalho</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>
@@ -637,7 +637,7 @@ INSERT INTO public.posts (
 <p>Os números são directos: equipas de conteúdo com fluxos IA integrados <strong>produzem 4x mais conteúdo a 60% menos custo</strong> (HubSpot, 2025). O <strong>Content Marketing Institute</strong> reporta que 72% dos marketers profissionais já usam IA no seu workflow. E o <strong>SEMrush 2026</strong> descobriu que artigos escritos com assistência de IA rankam em média 15% mais alto nos primeiros 90 dias — provavelmente porque permitem maior consistência na publicação e optimização SEO.</p>
 <p><strong>A nossa previsão datada:</strong> até ao final de 2026, as marcas portuguesas que não tiverem um sistema de conteúdo com IA integrada vão publicar, em média, 3x menos conteúdo do que os concorrentes que adoptaram — uma desvantagem competitiva concreta e mensurável.</p>
 <blockquote>
-<p>📌 <strong>Leitura relacionada:</strong> <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://www.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude Para Automatizar o Teu Trabalho</a></p>
+<p>📌 <strong>Leitura relacionada:</strong> <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a> · <a href="https://portal.vision7.pt/post/como-usar-o-claude-para-automatizar-o-teu-trabalho-guia-passo-a-passo">Como Usar o Claude Para Automatizar o Teu Trabalho</a></p>
 </blockquote>
 <hr>
 <h2>Porquê a Criação de Conteúdo com IA é Irreversível</h2>
@@ -669,7 +669,7 @@ INSERT INTO public.posts (
 <li>Verificar densidade de keywords sem keyword stuffing</li>
 </ul>
 <blockquote>
-<p>🔗 Para saber mais sobre como o Claude se compara ao ChatGPT nesta tarefa específica: <a href="https://www.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
+<p>🔗 Para saber mais sobre como o Claude se compara ao ChatGPT nesta tarefa específica: <a href="https://portal.vision7.pt/post/chatgpt-vs-claude-vs-gemini-qual-e-melhor-para-o-teu-negocio">ChatGPT vs Claude vs Gemini: Qual é Melhor Para o Teu Negócio</a></p>
 </blockquote>
 <hr>
 <h2>Forma 2: Redes Sociais — Volume sem Perder a Voz</h2>
@@ -815,13 +815,13 @@ Inundação de conteúdo de baixa qualidade gerado por IA sem curadoria humana. 
 <hr>
 <h2>→ Subscreve a Newsletter Vision7</h2>
 <p>Estratégias práticas de conteúdo, IA e marketing digital para o mercado português. Semanal — sem excesso, sem spam.</p>
-<p><strong><a href="https://www.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
+<p><strong><a href="https://portal.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
 <hr>
 <h2>Conclusão</h2>
 <p>A criação de conteúdo com IA não é uma tendência passageira — é uma vantagem estrutural que vai remodelar quem consegue competir no mercado digital. As 5 formas apresentadas neste artigo não exigem competências técnicas avançadas: exigem sistema, disciplina e a honestidade de reconhecer onde a supervisão humana é insubstituível.</p>
 <p>O caminho mais seguro: começa com um caso de uso, domina-o, mede os resultados, e escala. Em 6 meses, a diferença de produtividade vai ser evidente.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/10-ferramentas-de-ia-gratuitas-que-toda-a-empresa-portuguesa-deve-conhecer">10 Ferramentas de IA Gratuitas Que Toda a Empresa Portuguesa Deve Conhecer</a> · <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/10-ferramentas-de-ia-gratuitas-que-toda-a-empresa-portuguesa-deve-conhecer">10 Ferramentas de IA Gratuitas Que Toda a Empresa Portuguesa Deve Conhecer</a> · <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>
@@ -871,7 +871,7 @@ INSERT INTO public.posts (
 <p>A <strong>NVIDIA</strong> tem uma capitalização de mercado de $3,4 biliões (dados de 2025) — mais do que o PIB da França. A <strong>TSMC</strong> produz 90% de todos os chips de última geração que alimentam desde iPhones a servidores de IA. E a <strong>ASML</strong>, empresa holandesa quase desconhecida do público geral, é o único fabricante no mundo das máquinas que tornam tudo isto possível.</p>
 <p><strong>A nossa previsão datada:</strong> até 2028, a disponibilidade de chips avançados vai ser o principal factor limitante da expansão da IA a nível global — não os modelos, não os dados, não o talento. Quem controlar a cadeia de fornecimento de semicondutores vai controlar o ritmo da revolução da IA.</p>
 <blockquote>
-<p>📌 <strong>Leitura relacionada:</strong> <a href="https://www.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a> · <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>📌 <strong>Leitura relacionada:</strong> <a href="https://portal.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a> · <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <hr>
 <h2>Por Que as Chips São o Petróleo do Século XXI</h2>
@@ -891,7 +891,7 @@ INSERT INTO public.posts (
 <h3>Por Que a NVIDIA é Insubstituível (por Agora)</h3>
 <p>A vantagem da NVIDIA não é apenas o hardware — é o <strong>ecossistema CUDA</strong>: 20 anos de bibliotecas de software, frameworks e talento formado na sua plataforma. Mudar para chips alternativos não é apenas trocar peças — é reescrever código, retreinar equipas e aceitar performace inferior.</p>
 <blockquote>
-<p>🔗 Para compreender como estes chips alimentam os modelos de IA que usas no trabalho: <a href="https://www.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
+<p>🔗 Para compreender como estes chips alimentam os modelos de IA que usas no trabalho: <a href="https://portal.vision7.pt/post/guia-completo-de-ia-para-profissionais-em-2026">Guia Completo de IA Para Profissionais em 2026</a></p>
 </blockquote>
 <hr>
 <h2>TSMC: O Monopólio que o Mundo Depende e Teme</h2>
@@ -1019,13 +1019,13 @@ Tensão militar no estreito de Taiwan antes de 2028 perturba gravemente o fornec
 <hr>
 <h2>→ Subscreve a Newsletter Vision7</h2>
 <p>Geopolítica, tecnologia e o futuro — análise semanal para quem quer compreender o mundo que está a emergir.</p>
-<p><strong><a href="https://www.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
+<p><strong><a href="https://portal.vision7.pt/newsletter">Subscreve a newsletter Vision7</a></strong></p>
 <hr>
 <h2>Conclusão</h2>
 <p>A corrida às chips é o conflito geopolítico mais importante da nossa geração — mais silencioso do que uma guerra convencional, mas com implicações igualmente profundas. NVIDIA, TSMC e ASML são os três vértices de um triângulo de poder que define quem pode construir o futuro da IA e em que ritmo.</p>
 <p>Para Portugal e a Europa, o caminho não passa por tentar construir um TSMC europeu do zero — passa por fortalecer o que já existe (ASML, ecossistema de software, talento), atrair fabricação de nível intermédio, e reduzir progressivamente a dependência de uma única região para os componentes mais críticos da economia digital.</p>
 <blockquote>
-<p>📌 <strong>Leitura seguinte:</strong> <a href="https://www.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a> · <a href="https://www.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
+<p>📌 <strong>Leitura seguinte:</strong> <a href="https://portal.vision7.pt/post/portugal-na-corrida-global-a-ia-oportunidades-e-riscos-em-2026">Portugal na Corrida Global à IA: Oportunidades e Riscos em 2026</a> · <a href="https://portal.vision7.pt/post/o-que-sao-agentes-de-ia-e-por-que-vao-mudar-como-trabalhamos">O Que São Agentes de IA e Por Que Vão Mudar Como Trabalhamos</a></p>
 </blockquote>
 <hr>
 <h2>Referências</h2>

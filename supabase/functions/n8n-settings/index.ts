@@ -7,7 +7,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const CREDENTIALS_ENCRYPTION_KEY = Deno.env.get('N8N_CREDENTIALS_ENCRYPTION_KEY') ?? '';
 const N8N_BASE_URL = (Deno.env.get('N8N_BASE_URL') ?? '').replace(/\/$/, '');
-const SITE_URL = Deno.env.get('SITE_URL') ?? 'https://www.vision7.pt';
+const SITE_URL = Deno.env.get('SITE_URL') ?? 'https://portal.vision7.pt';
 
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? Deno.env.get('N8N_PROXY_ALLOWED_ORIGINS') ?? '')
   .split(',')
@@ -40,7 +40,7 @@ function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin') ?? '';
   const allow = isAllowedOrigin(origin) || origin.endsWith('.supabase.co');
   return {
-    'Access-Control-Allow-Origin': allow ? origin : (ALLOWED_ORIGINS[0] || 'https://www.vision7.pt'),
+    'Access-Control-Allow-Origin': allow ? origin : (ALLOWED_ORIGINS[0] || 'https://portal.vision7.pt'),
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Max-Age': '86400',

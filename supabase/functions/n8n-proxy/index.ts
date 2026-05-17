@@ -132,7 +132,7 @@ function isAllowedOrigin(origin: string) {
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin') ?? '';
   const allowed = isAllowedOrigin(origin) || origin.endsWith('.supabase.co');
-  const fallbackOrigin = ALLOWED_ORIGINS[0] || 'https://www.vision7.pt';
+  const fallbackOrigin = ALLOWED_ORIGINS[0] || 'https://portal.vision7.pt';
   return {
     'Access-Control-Allow-Origin': allowed ? origin : fallbackOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',

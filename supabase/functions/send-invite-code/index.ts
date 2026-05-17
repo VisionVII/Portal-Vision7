@@ -8,7 +8,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
 const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'Vision VII <noreply@vision7.pt>';
-const DEFAULT_SITE_URL = Deno.env.get('SITE_URL') ?? 'https://www.vision7.pt';
+const DEFAULT_SITE_URL = Deno.env.get('SITE_URL') ?? 'https://portal.vision7.pt';
 
 // Invite codes are valid for 48 hours
 const CODE_EXPIRY_HOURS = 48;
@@ -22,7 +22,7 @@ const fallbackAllowedOrigins = [
   'http://127.0.0.1:8080',
   'http://localhost:8080',
   DEFAULT_SITE_URL,
-  'https://www.vision7.pt',
+  'https://portal.vision7.pt',
 ];
 
 const ALLOWED_ORIGINS = new Set([...configuredOrigins, ...fallbackAllowedOrigins]);
