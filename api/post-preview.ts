@@ -1,4 +1,4 @@
-const SITE_URL = (process.env.VITE_SITE_URL || process.env.SITE_URL || 'https://www.vision7.pt').replace(/\/$/, '');
+const SITE_URL = (process.env.VITE_SITE_URL || process.env.SITE_URL || 'https://portal.vision7.pt').replace(/\/$/, '');
 const SUPABASE_URL = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').replace(/\/$/, '');
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
 const DEFAULT_TITLE = 'Vision7 - Mídia Tech';

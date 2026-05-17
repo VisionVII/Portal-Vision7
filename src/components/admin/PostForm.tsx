@@ -88,7 +88,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   const setPostCategories = useSetPostCategories();
   const categoriesInitRef = useRef(false);
 
-  const postUrl = post?.slug ? `https://www.vision7.pt/post/${post.slug}` : '';
+  const postUrl = post?.slug ? `https://portal.vision7.pt/post/${post.slug}` : '';
 
   const handleCopyPostLink = async () => {
     if (!postUrl) return;
@@ -380,7 +380,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
                   <p className="font-semibold text-foreground">Link do post</p>
-                  <p className="break-all text-sm text-foreground">https://www.vision7.pt/post/{post.slug}</p>
+                  <p className="break-all text-sm text-foreground">https://portal.vision7.pt/post/{post.slug}</p>
                   <p className="text-xs text-muted-foreground">
                     Este URL será o mesmo após publicação. Usuários finais verão o post apenas quando estiver publicado; admins autenticados podem usá-lo desde já.
                   </p>
