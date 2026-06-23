@@ -44,6 +44,6 @@
     }
   ],
   "technical_notes": "Ver design-system.md para documentação detalhada dos tokens, paletas e regras de uso. Nunca usar cores hardcoded (bg-white, text-black) — usar sempre tokens semânticos (bg-card, bg-background, text-foreground).",
-  "dependencies": [],
+  "dependencies": {},
   "tags": ["ui", "tokens", "theming", "css", "tailwind", "dark-mode"]
 }

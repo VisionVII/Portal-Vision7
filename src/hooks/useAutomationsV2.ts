@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logAutomationAction, diffAutomation } from '@/services/auditLog';
 import type { Json } from '@/integrations/supabase/types';
 import type {
   AutomationV2,
@@ -124,9 +125,10 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
       if (err) throw new Error(err.message);
       return rowToAutomation(row as unknown as AutomationV2Row);
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast({ title: 'Automação criada' });
+      void logAutomationAction('created', created.id, { name: created.name, category: created.category });
     },
     onError: (e: Error) => {
       toast({ title: 'Erro ao criar', description: e.message, variant: 'destructive' });
@@ -136,6 +138,8 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
   /* Update */
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...payload }: UpdateAutomationPayload & { id: string }) => {
+      const before = data?.automations.find((a) => a.id === id) ?? null;
+
       const row: Record<string, unknown> = {};
       if (payload.name !== undefined) row.name = payload.name;
       if (payload.description !== undefined) row.description = payload.description;
@@ -147,14 +151,20 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
       if (payload.config !== undefined) row.config = payload.config as Json;
       if (payload.status !== undefined) row.status = payload.status;
 
-      const { data: updated, error: err } = await supabase
+      const { data: updatedRow, error: err } = await supabase
         .from('automations_v2')
         .update(row as Record<string, Json>)
         .eq('id', id)
         .select()
         .single();
       if (err) throw new Error(err.message);
-      return rowToAutomation(updated as unknown as AutomationV2Row);
+      const updated = rowToAutomation(updatedRow as unknown as AutomationV2Row);
+
+      const isStatusOnlyChange = payload.status !== undefined && Object.keys(payload).length === 1;
+      const action = isStatusOnlyChange ? (payload.status === 'active' ? 'activated' : 'paused') : 'updated';
+      void logAutomationAction(action, updated.id, { name: updated.name, diff: diffAutomation(before, updated) });
+
+      return updated;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -171,9 +181,10 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
       const { error: err } = await supabase.from('automations_v2').delete().eq('id', id);
       if (err) throw new Error(err.message);
     },
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast({ title: 'Automação removida' });
+      void logAutomationAction('deleted', id);
     },
     onError: (e: Error) => {
       toast({ title: 'Erro ao remover', description: e.message, variant: 'destructive' });
@@ -195,6 +206,7 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
     if (err) throw new Error(err.message);
     void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     toast({ title: `${ids.length} automações → ${status === 'active' ? 'ativadas' : 'pausadas'}` });
+    void logAutomationAction(status === 'active' ? 'bulk_activated' : 'bulk_paused', null, { ids });
   };
 
   /* Bulk delete */
@@ -206,6 +218,7 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
     if (err) throw new Error(err.message);
     void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     toast({ title: `${ids.length} automações removidas` });
+    void logAutomationAction('bulk_deleted', null, { ids });
   };
 
   return {
@@ -222,4 +235,27 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
     isSaving: createMutation.isPending || updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
+}
+
+/**
+ * Lightweight counts (head:true, no rows fetched) for the KPI bar.
+ * Decoupled from useAutomationsV2's pagination so the StatBar stays
+ * accurate at any page size, even with 100+ automations (NFR-001).
+ */
+export function useAutomationStats() {
+  return useQuery({
+    queryKey: [...QUERY_KEY, 'stats'],
+    queryFn: async (): Promise<{ total: number; active: number }> => {
+      const [totalRes, activeRes] = await Promise.all([
+        supabase.from('automations_v2').select('*', { count: 'exact', head: true }),
+        supabase.from('automations_v2').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      ]);
+      if (totalRes.error && !/does not exist|PGRST/i.test(totalRes.error.message)) {
+        throw new Error(totalRes.error.message);
+      }
+      return { total: totalRes.count ?? 0, active: activeRes.count ?? 0 };
+    },
+    staleTime: 15_000,
+    retry: 1,
+  });
 }

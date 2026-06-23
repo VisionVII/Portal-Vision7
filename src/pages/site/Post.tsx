@@ -372,7 +372,6 @@ const Post = () => {
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-8">
             <div className="min-w-0">
               <div className="rounded-2xl border border-border bg-card p-4 shadow-md sm:p-6 lg:p-8">
-                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
                   ref={contentRef}
                   onClick={handleContentClick}

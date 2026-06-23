@@ -2,6 +2,7 @@
 // deno-lint-ignore-file
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkRateLimit } from '../_shared/rateLimit.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -317,6 +318,11 @@ Deno.serve(async (req: Request) => {
     if (rolesError) return jsonResponse({ error: 'Internal error checking roles' }, 500, cors);
     if (!roles?.some((r: { role: string }) => N8N_ADMIN_ROLES.has(r.role))) {
       return jsonResponse({ error: 'Forbidden — admin role required' }, 403, cors);
+    }
+
+    const { limited } = await checkRateLimit(supabaseAdmin, userId, 'n8n-settings', 60);
+    if (limited) {
+      return jsonResponse({ error: 'Too many requests — limite de 60/hora por utilizador' }, 429, { ...cors, 'Retry-After': '3600' });
     }
 
     const body = await req.json();

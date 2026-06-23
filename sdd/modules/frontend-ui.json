@@ -170,7 +170,7 @@
       "src/components/system/ProtectedRoute.tsx",
       "src/components/system/ScrollToTop.tsx",
       "src/components/system/ThemeProvider.tsx",
-      "src/components/system/ThemeToggle.tsx",
+      "src/components/system/ThemeToggle.tsx"
     ],
     "hooks": [
       "src/hooks/useTheme.ts",

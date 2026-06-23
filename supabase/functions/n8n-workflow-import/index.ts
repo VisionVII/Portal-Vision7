@@ -8,6 +8,7 @@
  * The `workflow` object should contain: name, nodes, connections, settings, versionId
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { checkRateLimit } from '../_shared/rateLimit.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -61,6 +62,11 @@ Deno.serve(async (req: Request) => {
   const isAdmin = userRoles.some((r: string) => r === 'super_admin' || r === 'admin');
   if (!isAdmin) {
     return jsonResponse({ error: 'Forbidden — admin role required' }, 403);
+  }
+
+  const { limited } = await checkRateLimit(supabaseAdmin, user.id, 'n8n-workflow-import', 30);
+  if (limited) {
+    return jsonResponse({ error: 'Too many requests — limite de 30/hora por utilizador' }, 429);
   }
 
   // ── Parse body — supports base64-encoded workflow to bypass WAF ──

@@ -1,0 +1,334 @@
+{
+  "name": "WF-ERROR-Callback",
+  "nodes": [
+    {
+      "id": "error_trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "position": [
+        -1200,
+        200
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "id": "build_base",
+      "name": "Build Base Payload",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -980,
+        200
+      ],
+      "parameters": {
+        "jsCode": "// Error Trigger payload shape: { execution: { id, url, error: { message, stack }, lastNodeExecuted, mode }, workflow: { id, name } }\nconst failed = $input.first().json;\nconst workflowId = failed.workflow?.id ? String(failed.workflow.id) : null;\nconst workflowName = failed.workflow?.name || 'desconhecido';\nconst errorMessage = failed.execution?.error?.message || failed.execution?.lastNodeExecuted || 'Erro desconhecido';\nconst executionUrl = failed.execution?.url || null;\n\nreturn [{\n  json: {\n    workflowId,\n    workflowName,\n    errorMessage,\n    executionUrl,\n    startedAt: new Date().toISOString(),\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "find_automation",
+      "name": "Find Automation",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -760,
+        200
+      ],
+      "parameters": {
+        "url": "={{ ($vars.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/automations_v2?workflow_id=eq.' + encodeURIComponent($json.workflowId) + '&select=id,name&limit=1' }}",
+        "method": "GET",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "typeVersion": 4.2,
+      "continueOnFail": true
+    },
+    {
+      "id": "merge_automation",
+      "name": "Merge Automation Id",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -540,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const base = $('Build Base Payload').first().json;\nconst found = $input.first().json;\nconst automationId = Array.isArray(found) && found.length > 0 ? found[0].id : null;\n\nreturn [{\n  json: {\n    ...base,\n    automationId,\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "insert_execution",
+      "name": "Insert Execution",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -320,
+        100
+      ],
+      "parameters": {
+        "url": "={{ ($vars.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/automation_executions' }}",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { automation_id: $json.automationId, status: 'error', trigger_mode: 'scheduled', started_at: $json.startedAt, finished_at: new Date().toISOString(), error_message: $json.errorMessage, metadata: { workflow_id: $json.workflowId, workflow_name: $json.workflowName, execution_url: $json.executionUrl, source: 'n8n_error_workflow' } } }}"
+      },
+      "typeVersion": 4.2,
+      "continueOnFail": true
+    },
+    {
+      "id": "insert_audit",
+      "name": "Insert Audit Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -320,
+        300
+      ],
+      "parameters": {
+        "url": "={{ ($vars.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/automation_audit_log' }}",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { automation_id: $json.automationId, action: 'executed', actor_id: null, actor_email: 'n8n-scheduler', details: { status: 'error', workflow_name: $json.workflowName, error: $json.errorMessage, source: 'n8n_error_workflow' } } }}"
+      },
+      "typeVersion": 4.2,
+      "continueOnFail": true
+    },
+    {
+      "id": "get_admins",
+      "name": "Get Admins",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -320,
+        500
+      ],
+      "parameters": {
+        "url": "={{ ($vars.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/user_roles?role=in.(super_admin,admin)&is_active=eq.true&select=user_id' }}",
+        "method": "GET",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "typeVersion": 4.2,
+      "continueOnFail": true
+    },
+    {
+      "id": "build_notifications",
+      "name": "Build Notifications",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -100,
+        500
+      ],
+      "parameters": {
+        "jsCode": "const base = $('Merge Automation Id').first().json;\nconst admins = $input.first().json;\nconst list = Array.isArray(admins) ? admins : [];\n\nconst rows = list.map((a) => ({\n  user_id: a.user_id,\n  title: 'Falha em workflow agendado',\n  message: `${base.workflowName} falhou: ${base.errorMessage}`,\n  type: 'error',\n  source: base.workflowId,\n  link: '/admin/dashboard',\n}));\n\nreturn rows.map((row) => ({ json: row }));"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "insert_notifications",
+      "name": "Insert Notifications",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        120,
+        500
+      ],
+      "parameters": {
+        "url": "={{ ($vars.SUPABASE_URL || 'https://xhpfxvoonpclonjyfimt.supabase.co') + '/rest/v1/admin_notifications' }}",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}"
+      },
+      "typeVersion": 4.2,
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Base Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Base Payload": {
+      "main": [
+        [
+          {
+            "node": "Find Automation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Automation": {
+      "main": [
+        [
+          {
+            "node": "Merge Automation Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Automation Id": {
+      "main": [
+        [
+          {
+            "node": "Insert Execution",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert Audit Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Admins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Admins": {
+      "main": [
+        [
+          {
+            "node": "Build Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Notifications": {
+      "main": [
+        [
+          {
+            "node": "Insert Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

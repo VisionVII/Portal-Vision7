@@ -1,5 +1,5 @@
 import {
-  Plus, LayoutGrid, CheckSquare, Play, Pause, Trash2, Loader2,
+  Plus, LayoutGrid, CheckSquare, Play, Pause, Trash2, Loader2, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +26,9 @@ import type {
 interface AutomationsViewProps {
   automations: AutomationV2[];
   totalAutomations: number;
+  page: number;
+  pageSize: number;
+  setPage: (page: number) => void;
   loadingAutomations: boolean;
   activeCategory: AutomationCategory | 'all';
   setActiveCategory: (value: AutomationCategory | 'all') => void;
@@ -56,6 +59,10 @@ interface AutomationsViewProps {
 
 export function AutomationsView({
   automations,
+  totalAutomations,
+  page,
+  pageSize,
+  setPage,
   loadingAutomations,
   activeCategory,
   setActiveCategory,
@@ -224,6 +231,36 @@ export function AutomationsView({
               />
             ))}
           </div>
+
+          {totalAutomations > pageSize && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-muted-foreground">
+              <span>
+                {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalAutomations)} de {totalAutomations}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  disabled={page <= 1}
+                  onClick={() => setPage(page - 1)}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  disabled={page * pageSize >= totalAutomations}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Próxima
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

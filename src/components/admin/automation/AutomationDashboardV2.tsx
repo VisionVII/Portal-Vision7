@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   LayoutGrid, Plus, Clock, Zap,
@@ -10,19 +10,32 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-import { PipelineView } from './PipelineView';
-import { AutomationsView } from './AutomationsView';
-import { LogsView } from './LogsView';
-import { ToolsView } from './ToolsView';
+// Each tab is its own chunk — opening "Centro de Automação" no longer pulls
+// in the other 3 tabs' code until the user actually clicks them (NFR-007).
+const PipelineView = lazy(() => import('./PipelineView').then((m) => ({ default: m.PipelineView })));
+const AutomationsView = lazy(() => import('./AutomationsView').then((m) => ({ default: m.AutomationsView })));
+const LogsView = lazy(() => import('./LogsView').then((m) => ({ default: m.LogsView })));
+const ToolsView = lazy(() => import('./ToolsView').then((m) => ({ default: m.ToolsView })));
 
-import { useAutomationsV2 } from '@/hooks/useAutomationsV2';
+function TabSkeleton() {
+  return (
+    <div className="flex items-center justify-center py-16">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+import { useAutomationsV2, useAutomationStats } from '@/hooks/useAutomationsV2';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import { useAutomationTemplates } from '@/hooks/useAutomationTemplates';
 import { useN8nKeepAlive } from '@/hooks/useN8nKeepAlive';
 import { useCuratedPosts } from '@/hooks/useCuratedPosts';
 import { usePipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { logAutomationAction } from '@/services/auditLog';
+import { notifyAdmin } from '@/services/adminNotifications';
 
 import {
   checkN8nHealth,
@@ -82,10 +95,12 @@ export function AutomationDashboardV2({
   showLabButton = true,
 }: AutomationDashboardV2Props) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const [activeView, setActiveView] = useState<DashboardView>('pipeline');
   const [activeCategory, setActiveCategory] = useState<AutomationCategory | 'all'>('all');
+  const [automationsPage, setAutomationsPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingAutomation, setEditingAutomation] = useState<AutomationV2 | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<AutomationTemplate | null>(null);
@@ -100,6 +115,10 @@ export function AutomationDashboardV2({
   const [isConnected, setIsConnected] = useState(false);
   const [workflows, setWorkflows] = useState<N8nWorkflow[]>([]);
 
+  // Grid stays on a fixed small page size regardless of category — KPI
+  // counts come from useAutomationStats() instead, so they stay accurate
+  // even past page 1 with 100+ automations (NFR-001).
+  const AUTOMATIONS_PAGE_SIZE = 24;
   const {
     automations,
     total: totalAutomations,
@@ -111,7 +130,14 @@ export function AutomationDashboardV2({
     bulkSetStatus,
     bulkDelete,
     isSaving,
-  } = useAutomationsV2(activeCategory !== 'all' ? { category: activeCategory } : { pageSize: 100 });
+  } = useAutomationsV2({
+    ...(activeCategory !== 'all' ? { category: activeCategory } : {}),
+    page: automationsPage,
+    pageSize: AUTOMATIONS_PAGE_SIZE,
+  });
+  const { data: automationStats } = useAutomationStats();
+
+  useEffect(() => { setAutomationsPage(1); }, [activeCategory]);
 
   const {
     executions,
@@ -178,12 +204,12 @@ export function AutomationDashboardV2({
 
   const activeWorkflows = useMemo(() => workflows.filter((w) => w.active).length, [workflows]);
 
-  // If automations_v2 table has no records yet, fall back to n8n workflow counts so the pill shows real state
-  const effectiveTotalAutomations = totalAutomations > 0 ? totalAutomations : workflows.length;
-  const activeAutomations = useMemo(() => {
-    if (automations.length === 0 && workflows.length > 0) return activeWorkflows;
-    return automations.filter((a) => a.status === 'active').length;
-  }, [automations, workflows, activeWorkflows]);
+  // If automations_v2 table has no records yet, fall back to n8n workflow counts so the pill shows real state.
+  // Counts come from useAutomationStats() (unpaginated head:true queries), not from the
+  // current page's `automations` array, so they stay correct past page 1 (NFR-001).
+  const statsTotal = automationStats?.total ?? 0;
+  const effectiveTotalAutomations = statsTotal > 0 ? statsTotal : workflows.length;
+  const activeAutomations = statsTotal > 0 ? (automationStats?.active ?? 0) : activeWorkflows;
 
   // null = no data yet → show "N/D" instead of a misleading 0%
   const successRate = useMemo((): number | null => {
@@ -303,6 +329,16 @@ export function AutomationDashboardV2({
         metadata: { method: result.method, workflowId: a.workflowId },
       });
       void queryClient.invalidateQueries({ queryKey: ['automation_executions'] });
+      void logAutomationAction('executed', a.id, { name: a.name, status: 'success', method: result.method });
+      if (user?.id) {
+        void notifyAdmin({
+          userId: user.id,
+          title: 'Automação executada',
+          message: `${a.name} foi disparada com sucesso (${result.method}).`,
+          type: 'success',
+          source: a.id,
+        });
+      }
     } catch (err: unknown) {
       if (err instanceof CronWorkflowError) {
         toast({ title: `${a.name} — Automático (cron)`, description: 'Este workflow executa automaticamente por cronograma no n8n.' });
@@ -320,6 +356,16 @@ export function AutomationDashboardV2({
         metadata: { workflowId: a.workflowId },
       });
       void queryClient.invalidateQueries({ queryKey: ['automation_executions'] });
+      void logAutomationAction('executed', a.id, { name: a.name, status: 'error', error: msg });
+      if (user?.id) {
+        void notifyAdmin({
+          userId: user.id,
+          title: 'Falha na execução',
+          message: `${a.name} falhou: ${msg}`,
+          type: 'error',
+          source: a.id,
+        });
+      }
     }
   };
 
@@ -526,74 +572,79 @@ export function AutomationDashboardV2({
         </TabsList>
       </Tabs>
 
-      {activeView === 'pipeline' && (
-        <PipelineView
-          pipelineErrors={pipelineErrors}
-          queueSections={queueSections}
-          pipelineStages={pipelineStages}
-          showForm={showForm}
-          cleanupHours={cleanupHours}
-          cleaning={cleaning}
-          handleCleanup={() => void handleCleanup()}
-          setCleanupHours={setCleanupHours}
-        />
-      )}
+      <Suspense fallback={<TabSkeleton />}>
+        {activeView === 'pipeline' && (
+          <PipelineView
+            pipelineErrors={pipelineErrors}
+            queueSections={queueSections}
+            pipelineStages={pipelineStages}
+            showForm={showForm}
+            cleanupHours={cleanupHours}
+            cleaning={cleaning}
+            handleCleanup={() => void handleCleanup()}
+            setCleanupHours={setCleanupHours}
+          />
+        )}
 
-      {activeView === 'logs' && (
-        <LogsView
-          executions={executions}
-          totalExecutions={totalExecutions}
-          loadingExecutions={loadingExecutions}
-          executionStatusFilter={executionStatusFilter}
-          setExecutionStatusFilter={setExecutionStatusFilter}
-        />
-      )}
+        {activeView === 'logs' && (
+          <LogsView
+            executions={executions}
+            totalExecutions={totalExecutions}
+            loadingExecutions={loadingExecutions}
+            executionStatusFilter={executionStatusFilter}
+            setExecutionStatusFilter={setExecutionStatusFilter}
+          />
+        )}
 
-      {activeView === 'automations' && (
-        <AutomationsView
-          automations={automations}
-          totalAutomations={totalAutomations}
-          loadingAutomations={loadingAutomations}
-          activeCategory={activeCategory}
-          setActiveCategory={setActiveCategory}
-          showForm={showForm}
-          setShowForm={(show) => {
-            if (show) { setEditingAutomation(null); setSelectedTemplate(null); }
-            setShowForm(show);
-          }}
-          editingAutomation={editingAutomation}
-          setEditingAutomation={setEditingAutomation}
-          selectedTemplate={selectedTemplate}
-          setSelectedTemplate={setSelectedTemplate}
-          templates={templates}
-          loadingTemplates={loadingTemplates}
-          workflows={workflows}
-          isSaving={isSaving}
-          selectedIds={selectedIds}
-          bulkBusy={bulkBusy}
-          toggleSelect={toggleSelect}
-          toggleSelectAll={toggleSelectAll}
-          handleBulkAction={(action) => void handleBulkAction(action)}
-          handleSave={(payload) => void handleSave(payload)}
-          handleEdit={handleEdit}
-          handleClone={handleClone}
-          handleDelete={(id) => void handleDelete(id)}
-          handleExecute={(a) => void handleExecute(a)}
-          handleUseTemplate={handleUseTemplate}
-          handleCancel={handleCancel}
-          toggleStatus={toggleStatus}
-        />
-      )}
+        {activeView === 'automations' && (
+          <AutomationsView
+            automations={automations}
+            totalAutomations={totalAutomations}
+            page={automationsPage}
+            pageSize={AUTOMATIONS_PAGE_SIZE}
+            setPage={setAutomationsPage}
+            loadingAutomations={loadingAutomations}
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
+            showForm={showForm}
+            setShowForm={(show) => {
+              if (show) { setEditingAutomation(null); setSelectedTemplate(null); }
+              setShowForm(show);
+            }}
+            editingAutomation={editingAutomation}
+            setEditingAutomation={setEditingAutomation}
+            selectedTemplate={selectedTemplate}
+            setSelectedTemplate={setSelectedTemplate}
+            templates={templates}
+            loadingTemplates={loadingTemplates}
+            workflows={workflows}
+            isSaving={isSaving}
+            selectedIds={selectedIds}
+            bulkBusy={bulkBusy}
+            toggleSelect={toggleSelect}
+            toggleSelectAll={toggleSelectAll}
+            handleBulkAction={(action) => void handleBulkAction(action)}
+            handleSave={(payload) => void handleSave(payload)}
+            handleEdit={handleEdit}
+            handleClone={handleClone}
+            handleDelete={(id) => void handleDelete(id)}
+            handleExecute={(a) => void handleExecute(a)}
+            handleUseTemplate={handleUseTemplate}
+            handleCancel={handleCancel}
+            toggleStatus={toggleStatus}
+          />
+        )}
 
-      {activeView === 'tools' && (
-        <ToolsView
-          workflows={workflows}
-          isConnected={isConnected}
-          activeWorkflows={activeWorkflows}
-          showLabButton={showLabButton}
-          onRefresh={() => void refreshN8n()}
-        />
-      )}
+        {activeView === 'tools' && (
+          <ToolsView
+            workflows={workflows}
+            isConnected={isConnected}
+            activeWorkflows={activeWorkflows}
+            showLabButton={showLabButton}
+            onRefresh={() => void refreshN8n()}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

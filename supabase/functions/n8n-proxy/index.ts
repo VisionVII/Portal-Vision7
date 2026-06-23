@@ -2,6 +2,7 @@
 // deno-lint-ignore-file
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkRateLimit } from '../_shared/rateLimit.ts';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const DEFAULT_N8N_BASE_URL = 'https://portal-vision7.onrender.com';
@@ -418,6 +419,18 @@ Deno.serve(async (req: Request) => {
           { error: 'Forbidden — write operations require super_admin or admin role' },
           403,
           cors,
+        );
+      }
+
+      // Persistent hourly cap on write/execute calls (NFR-005: 30/hour/user).
+      // Separate from the in-memory 30/min burst guard above, which resets
+      // per cold start and doesn't carry across instances.
+      const { limited } = await checkRateLimit(supabaseAdmin, userId, 'n8n-proxy-write', 30);
+      if (limited) {
+        return jsonResponse(
+          { error: 'Too many execuções — limite de 30/hora por utilizador' },
+          429,
+          { ...cors, 'Retry-After': '3600' },
         );
       }
     }
