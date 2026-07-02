@@ -570,8 +570,8 @@ export function NewsPipelineCard() {
     setEditThemeRules((prev) => prev.filter((rule) => rule.id !== ruleId));
   };
 
-  const saveEditorialConfig = async () => {
-    const cleanedRules = editThemeRules
+  const saveEditorialConfig = async (parsedRules: PipelineThemeRule[]) => {
+    const cleanedRules = parsedRules
       .map((rule) => ({
         ...rule,
         label: rule.label.trim(),
@@ -605,231 +605,285 @@ export function NewsPipelineCard() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-card backdrop-blur-sm">
-      {/* Decorative gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary-500/5 pointer-events-none" />
-      <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card shadow-xl">
+      {/* Ambient glow blobs */}
+      <div className="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-blue-500/5 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
 
-      {/* Header Section */}
-      <div className="relative border-b border-border/30 bg-muted/30 backdrop-blur-xl">
-        <div className="px-5 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            {/* Title & Status */}
-            <div className="flex items-start gap-4 min-w-0">
-              <div className={`p-3.5 rounded-2xl shrink-0 bg-gradient-to-br transition-all duration-300 ${
-                pipelineRunning || hasRunningExecution
-                  ? 'from-blue-500/20 via-blue-400/10 to-blue-500/20 animate-pulse'
-                  : 'from-blue-500/15 via-blue-400/10 to-primary-500/15'
-              }`}>
-                <Zap className={`w-6 h-6 ${pipelineRunning || hasRunningExecution ? 'text-blue-400' : 'text-blue-500'}`} />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-3 flex-wrap mb-1.5">
-                  <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-white via-foreground to-foreground/80 bg-clip-text text-transparent">
-                    {activeConfig?.label ? `${activeConfig.label} — Pipeline IA` : 'Pipeline de Notícias IA'}
-                  </h2>
-                  {(pipelineRunning || hasRunningExecution) && (
-                    <Badge className="bg-gradient-to-r from-blue-500/15 to-primary-500/15 text-blue-500 border-blue-500/30 text-xs px-2.5 py-0.5 animate-pulse">
-                      <Radio className="w-3 h-3 mr-1.5" />
-                      AO VIVO
-                    </Badge>
-                  )}
-                </div>
-                <div className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-                  <span className="flex items-center gap-1.5">
-                    <Workflow className="w-3.5 h-3.5" />
-                    {pipelineWorkflows.length} workflow{pipelineWorkflows.length !== 1 ? 's' : ''}
-                  </span>
-                  <span className="text-muted-foreground/60">•</span>
-                  <span>Coleta → Cluster → Reescrita</span>
-                  {someActive && !allActive && <Badge variant="outline" className="border-amber-500/40 text-amber-400 text-[10px] px-1.5 py-0">Parcial</Badge>}
-                  {allActive && <Badge variant="outline" className="border-primary/30 text-primary text-[10px] px-1.5 py-0">Todos ativos</Badge>}
-                </div>
-              </div>
+      {/* ══════════ HEADER ══════════ */}
+      <div className="relative border-b border-border/30 bg-gradient-to-r from-muted/60 via-muted/30 to-transparent px-5 py-4">
+        {/* Live pulse strip */}
+        {(pipelineRunning || hasRunningExecution) && (
+          <div className="absolute inset-x-0 top-0 h-0.5 animate-pulse bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
+        )}
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Left: icon + title */}
+          <div className="flex min-w-0 items-center gap-3.5">
+            <div className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition-all duration-300 ${
+              pipelineRunning || hasRunningExecution
+                ? 'border-blue-500/40 bg-blue-500/15 shadow-lg shadow-blue-500/20'
+                : 'border-border/40 bg-muted/40'
+            }`}>
+              <Zap className={`h-5 w-5 ${pipelineRunning || hasRunningExecution ? 'text-blue-400' : 'text-primary'}`} />
+              {(pipelineRunning || hasRunningExecution) && (
+                <span className="absolute inset-0 animate-ping rounded-2xl bg-blue-400/15" />
+              )}
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30" onClick={openConfig}>
-                    <Settings2 className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Configurar temas editoriais</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30" onClick={() => { void fetchWorkflows(); void fetchRecentExecutions(); }}>
-                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Atualizar</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className={`h-8 w-8 p-0 ${showSettings ? 'text-amber-400' : 'text-muted-foreground'} hover:text-foreground hover:bg-muted/30`}
-                    onClick={() => setShowSettings(!showSettings)}
-                  >
-                    <Shield className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Configurações & Chaves API</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className={`h-8 w-8 p-0 ${showLog ? 'text-blue-500' : 'text-muted-foreground'} hover:text-foreground hover:bg-muted/30`}
-                    onClick={() => setShowLog(!showLog)}
-                  >
-                    <Activity className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Log da sessão</TooltipContent>
-              </Tooltip>
-              <div className="flex items-center gap-2 ml-2 pl-3 border-l border-border/40">
-                <span className="text-xs text-muted-foreground hidden sm:inline">Auto</span>
-                <Switch
-                  checked={allActive}
-                  disabled={!pipelineFound}
-                  onCheckedChange={() => void handleToggleAll()}
-                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-600"
-                />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-bold text-foreground sm:text-lg">
+                  {activeConfig?.label ? `${activeConfig.label} — Pipeline IA` : 'Pipeline de Notícias IA'}
+                </h2>
+                {(pipelineRunning || hasRunningExecution) && (
+                  <Badge className="animate-pulse border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                    <Radio className="mr-1 h-2.5 w-2.5" />
+                    Ao Vivo
+                  </Badge>
+                )}
               </div>
+              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Workflow className="h-3 w-3" />
+                  {pipelineWorkflows.length} workflows
+                </span>
+                <span className="text-border">·</span>
+                <span>Coleta → Cluster → Reescrita</span>
+                {someActive && !allActive && (
+                  <Badge variant="outline" className="border-amber-500/30 px-1.5 py-0 text-[10px] text-amber-400">Parcial</Badge>
+                )}
+                {allActive && (
+                  <Badge variant="outline" className="border-emerald-500/30 px-1.5 py-0 text-[10px] text-emerald-400">Todos ativos</Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: action controls */}
+          <div className="flex items-center gap-0.5 self-end sm:self-auto">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm" variant="ghost"
+                  className={`h-8 w-8 rounded-lg p-0 ${showConfig ? 'bg-blue-500/10 text-blue-400' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                  onClick={openConfig}
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Configurar temas editoriais</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm" variant="ghost"
+                  className="h-8 w-8 rounded-lg p-0 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  onClick={() => { void fetchWorkflows(); void fetchRecentExecutions(); }}
+                >
+                  <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Sincronizar com n8n</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm" variant="ghost"
+                  className={`h-8 w-8 rounded-lg p-0 ${showSettings ? 'bg-amber-500/10 text-amber-400' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                  onClick={() => setShowSettings(!showSettings)}
+                >
+                  <Shield className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Chaves API & Agendamentos</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm" variant="ghost"
+                  className={`h-8 w-8 rounded-lg p-0 ${showLog ? 'bg-blue-500/10 text-blue-400' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                  onClick={() => setShowLog(!showLog)}
+                >
+                  <Activity className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Log de actividade da sessão</TooltipContent>
+            </Tooltip>
+
+            <div className="ml-1 flex items-center gap-2 border-l border-border/40 pl-2">
+              <span className="hidden text-[11px] font-medium text-muted-foreground sm:inline">Auto</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Switch
+                    checked={allActive}
+                    disabled={!pipelineFound}
+                    onCheckedChange={() => void handleToggleAll()}
+                    className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-600"
+                  />
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {allActive ? 'Desativar todos os workflows' : 'Ativar todos os workflows (execução automática por cron)'}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="relative px-5 py-6 space-y-6">
+      {/* ══════════ BODY ══════════ */}
+      <div className="relative space-y-5 p-5">
+
+        {/* Schema compat warning */}
         {editorialSchemaLegacy && (
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5 text-xs text-amber-200">
-            <div className="flex items-center gap-1.5 text-amber-300 font-medium">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              Modo compatibilidade do schema ativo
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+            <div>
+              <p className="font-semibold text-amber-300">Modo compatibilidade ativo</p>
+              <p className="mt-0.5 text-amber-200/80">
+                Supabase sem colunas <code className="rounded bg-amber-500/10 px-1">theme_rules</code> / <code className="rounded bg-amber-500/10 px-1">default_post_tags</code> — só tags de pesquisa e locale são persistidos.
+              </p>
             </div>
-            <p className="mt-1 text-[11px] text-amber-200/90">
-              O Supabase live ainda não tem as colunas `theme_rules` e `default_post_tags`. A dashboard continua funcional,
-              mas até aplicar a migration só as tags de pesquisa e o locale ficam persistidos.
-            </p>
           </div>
         )}
 
-        {/* ── Editorial Theme Summary ── */}
-        {activeConfig && !showConfig && (
-          <div className="rounded-xl bg-muted/20 border border-border/30 p-4 space-y-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="p-1.5 rounded-lg bg-blue-500/5">
-                <Tag className="w-3.5 h-3.5 text-blue-500" />
+        {/* ── Pipeline Steps flow ── */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {PIPELINE_STEPS.map((step, idx) => {
+            const wf = matchWorkflow(workflows, step.nameMatch);
+            if (!wf) return null;
+
+            const isActive = wf.active === true;
+            const isRunning = currentStep === step.key;
+            const wfExec = latestExecutionByStepKey.get(step.key) ?? latestExecutionByWorkflowId.get(String(wf.id));
+            const workflowUpdatedAt = wf.updatedAt ? Date.parse(String(wf.updatedAt)) : 0;
+            const executionAt = wfExec ? getExecutionTimestamp(wfExec) : 0;
+            const isExecutionCurrent = !wfExec || workflowUpdatedAt <= 0 || executionAt >= workflowUpdatedAt;
+            const hasExecutionSuccess = wfExec?.status === 'success' && isExecutionCurrent;
+            const hasExecutionError = wfExec?.status === 'error' && isExecutionCurrent;
+            const isFailed = failedSteps.has(step.key) || (!isRunning && hasExecutionError);
+            const isCompleted = hasExecutionSuccess || (completedSteps.has(step.key) && !hasExecutionError);
+
+            return (
+              <PipelineStepCard
+                key={step.key}
+                step={step}
+                wf={wf}
+                idx={idx}
+                totalSteps={PIPELINE_STEPS.length}
+                isRunning={isRunning}
+                isFailed={isFailed}
+                isCompleted={isCompleted}
+                isActive={isActive}
+                isExecutionCurrent={isExecutionCurrent}
+                hasExecutionSuccess={hasExecutionSuccess}
+                hasExecutionError={hasExecutionError}
+                wfExec={wfExec}
+              />
+            );
+          })}
+        </div>
+
+        {/* ── Diagnostics ── */}
+        <div className="rounded-2xl border border-border/30 bg-muted/10 p-4">
+          <PipelineDiagnosticsPanel
+            diagnostics={diagnostics}
+            diagnosticsError={diagnosticsError}
+            activeConfig={activeConfig}
+            onRefetch={() => void refetchDiagnostics()}
+            onOpenSettings={() => setShowSettings(true)}
+            onRepairTags={activeConfig ? async () => {
+              await saveConfig({
+                id: activeConfig.id,
+                label: activeConfig.label,
+                language: activeConfig.language,
+                region: activeConfig.region,
+                themeRules: activeConfig.themeRules,
+                defaultPostTags: activeConfig.defaultPostTags,
+              });
+              void refetchDiagnostics();
+            } : undefined}
+          />
+        </div>
+
+        {/* ── Editorial config summary / edit form ── */}
+        {!showConfig && activeConfig && (
+          <div className="rounded-2xl border border-border/30 bg-muted/10 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-500/10">
+                  <Tag className="h-3.5 w-3.5 text-blue-400" />
+                </div>
+                <span className="text-xs font-semibold text-foreground/80">Temas editoriais</span>
               </div>
-              <span className="text-xs font-medium text-foreground/80">Temas editoriais configurados</span>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {activeConfig.themeRules.map((theme) => (
-                <Badge key={theme.id} variant="outline" className="text-sm px-3 py-1 border-blue-500/30 text-blue-400 bg-blue-500/5">
-                  {theme.label}
-                </Badge>
-              ))}
-              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-blue-500 hover:text-blue-400 hover:bg-blue-500/5" onClick={openConfig}>
-                Editar temas
+              <Button
+                size="sm" variant="ghost"
+                className="h-6 gap-1.5 px-2 text-[11px] text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                onClick={openConfig}
+              >
+                <Settings2 className="h-3 w-3" />
+                Editar
               </Button>
             </div>
-            <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/30">
-              <Badge variant="outline" className="text-xs px-2.5 py-1 border-border text-foreground/80 bg-muted/30">
-                <span className="text-muted-foreground mr-1.5">Idioma:</span>{activeConfig.language}
-              </Badge>
-              <Badge variant="outline" className="text-xs px-2.5 py-1 border-border text-foreground/80 bg-muted/30">
-                <span className="text-muted-foreground mr-1.5">Região:</span>{activeConfig.region}
-              </Badge>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {activeConfig.themeRules.map((theme) => (
+                <span key={theme.id} className="rounded-full border border-blue-500/25 bg-blue-500/8 px-3 py-1 text-xs font-medium text-blue-400">
+                  {theme.label}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/30 pt-3">
+              <span className="rounded-md border border-border/40 bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground">
+                {activeConfig.language}
+              </span>
+              <span className="rounded-md border border-border/40 bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground">
+                {activeConfig.region}
+              </span>
               {activeConfig.defaultPostTags.map((tag) => (
-                <Badge key={`post-${tag}`} variant="outline" className="text-xs px-2.5 py-1 border-primary/30 text-primary/80 bg-primary/5">
+                <span key={`cfg-${tag}`} className="rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-[11px] text-primary/80">
                   #{tag}
-                </Badge>
+                </span>
               ))}
             </div>
           </div>
         )}
 
-        {/* ── Editorial Config Panel ── */}
         {showConfig && (
-          <EditorialConfigForm
-            editConfigLabel={editConfigLabel}
-            setEditConfigLabel={setEditConfigLabel}
-            editLanguage={editLanguage}
-            setEditLanguage={setEditLanguage}
-            editRegion={editRegion}
-            setEditRegion={setEditRegion}
-            editDefaultPostTags={editDefaultPostTags}
-            newDefaultPostTag={newDefaultPostTag}
-            setNewDefaultPostTag={setNewDefaultPostTag}
-            editThemeRules={editThemeRules}
-            isSaving={isSaving}
-            onAddDefaultPostTag={addDefaultPostTag}
-            onRemoveDefaultPostTag={removeDefaultPostTag}
-            onAddThemeRule={addThemeRule}
-            onUpdateThemeRule={updateThemeRule}
-            onRemoveThemeRule={removeThemeRule}
-            onSave={() => void saveEditorialConfig()}
-            onCancel={() => setShowConfig(false)}
-          />
+          <div className="rounded-2xl border border-border/30 bg-muted/10 p-4">
+            <EditorialConfigForm
+              editConfigLabel={editConfigLabel}
+              setEditConfigLabel={setEditConfigLabel}
+              editLanguage={editLanguage}
+              setEditLanguage={setEditLanguage}
+              editRegion={editRegion}
+              setEditRegion={setEditRegion}
+              editDefaultPostTags={editDefaultPostTags}
+              newDefaultPostTag={newDefaultPostTag}
+              setNewDefaultPostTag={setNewDefaultPostTag}
+              editThemeRules={editThemeRules}
+              isSaving={isSaving}
+              onAddDefaultPostTag={addDefaultPostTag}
+              onRemoveDefaultPostTag={removeDefaultPostTag}
+              onAddThemeRule={addThemeRule}
+              onUpdateThemeRule={updateThemeRule}
+              onRemoveThemeRule={removeThemeRule}
+              onSave={(parsedRules) => void saveEditorialConfig(parsedRules)}
+              onCancel={() => setShowConfig(false)}
+            />
+          </div>
         )}
 
-        {/* ── Pipeline Settings Panel ── */}
+        {/* ── Settings panel ── */}
         {showSettings && (
-          <PipelineSettingsPanel diagnostics={diagnostics} onClose={() => setShowSettings(false)} />
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/3 p-4">
+            <PipelineSettingsPanel diagnostics={diagnostics} onClose={() => setShowSettings(false)} />
+          </div>
         )}
-
-        {/* ── Pipeline DB Diagnostics ── */}
-        <PipelineDiagnosticsPanel
-          diagnostics={diagnostics}
-          diagnosticsError={diagnosticsError}
-          activeConfig={activeConfig}
-          onRefetch={() => void refetchDiagnostics()}
-        />
-
-        {/* ── Pipeline Steps Visual ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            {PIPELINE_STEPS.map((step, idx) => {
-              const wf = matchWorkflow(workflows, step.nameMatch);
-              if (!wf) return null;
-
-              const isActive = wf.active === true;
-              const isRunning = currentStep === step.key;
-              const wfExec = latestExecutionByStepKey.get(step.key) ?? latestExecutionByWorkflowId.get(String(wf.id));
-              const workflowUpdatedAt = wf.updatedAt ? Date.parse(String(wf.updatedAt)) : 0;
-              const executionAt = wfExec ? getExecutionTimestamp(wfExec) : 0;
-              const isExecutionCurrent = !wfExec || workflowUpdatedAt <= 0 || executionAt >= workflowUpdatedAt;
-              const hasExecutionSuccess = wfExec?.status === 'success' && isExecutionCurrent;
-              const hasExecutionError = wfExec?.status === 'error' && isExecutionCurrent;
-              const isFailed = failedSteps.has(step.key) || (!isRunning && hasExecutionError);
-              const isCompleted = hasExecutionSuccess || (completedSteps.has(step.key) && !hasExecutionError);
-
-              return (
-                <PipelineStepCard
-                  key={step.key}
-                  step={step}
-                  wf={wf}
-                  idx={idx}
-                  totalSteps={PIPELINE_STEPS.length}
-                  isRunning={isRunning}
-                  isFailed={isFailed}
-                  isCompleted={isCompleted}
-                  isActive={isActive}
-                  isExecutionCurrent={isExecutionCurrent}
-                  hasExecutionSuccess={hasExecutionSuccess}
-                  hasExecutionError={hasExecutionError}
-                  wfExec={wfExec}
-                />
-              );
-            })}
-        </div>
 
         {/* ── Activity Log ── */}
         {showLog && (
@@ -840,7 +894,7 @@ export function NewsPipelineCard() {
           />
         )}
 
-        {/* ── Actions, Stats & Cron Info ── */}
+        {/* ── Actions bar ── */}
         <PipelineActionsBar
           pipelineFound={pipelineFound}
           pipelineRunning={pipelineRunning}

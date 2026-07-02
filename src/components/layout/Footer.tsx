@@ -66,12 +66,12 @@ const Footer = () => {
 
         <div className="flex flex-col items-center justify-between border-t border-border pt-8 md:flex-row">
           <p className="text-sm text-muted-foreground">
-            © {currentYear} Vision. Todos os direitos reservados.
+            © {currentYear} Vision7. Todos os direitos reservados.
           </p>
           <div className="mt-4 flex space-x-6 md:mt-0">
-            <span className="text-sm text-muted-foreground">Instagram</span>
-            <span className="text-sm text-muted-foreground">LinkedIn</span>
-            <span className="text-sm text-muted-foreground">x</span>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white">Instagram</a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white">LinkedIn</a>
+            <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground transition-colors hover:text-foreground dark:hover:text-white">X</a>
           </div>
         </div>
       </div>

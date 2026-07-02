@@ -27,10 +27,10 @@ function formatRelativeTime(iso: string | undefined): string {
   if (!iso) return '—';
   const diff = Math.max(Math.floor((Date.now() - new Date(iso).getTime()) / 60_000), 0);
   if (diff < 1) return 'agora';
-  if (diff < 60) return `${diff} min atrás`;
+  if (diff < 60) return `${diff}min`;
   const h = Math.floor(diff / 60);
-  if (h < 24) return `${h} h atrás`;
-  return `${Math.floor(h / 24)} d atrás`;
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
 }
 
 interface PipelineStepCardProps {
@@ -48,6 +48,64 @@ interface PipelineStepCardProps {
   wfExec: N8nExecution | undefined;
 }
 
+type StepState = 'running' | 'failed' | 'success' | 'active' | 'inactive';
+
+const STATE_CONFIG: Record<StepState, {
+  border: string;
+  iconBg: string;
+  labelBg: string;
+  labelText: string;
+  dot: string;
+  glow: string;
+  label: string;
+}> = {
+  running: {
+    border: 'border-blue-500/50 ring-2 ring-blue-500/20 shadow-lg shadow-blue-500/10',
+    iconBg: 'bg-blue-500 text-white',
+    labelBg: 'bg-blue-500/10',
+    labelText: 'text-blue-400',
+    dot: 'bg-blue-400',
+    glow: '',
+    label: 'A executar',
+  },
+  failed: {
+    border: 'border-red-500/40 ring-1 ring-red-500/15',
+    iconBg: 'bg-red-500/10 text-red-400',
+    labelBg: 'bg-red-500/10',
+    labelText: 'text-red-400',
+    dot: 'bg-red-400',
+    glow: '',
+    label: 'Erro',
+  },
+  success: {
+    border: 'border-emerald-500/35',
+    iconBg: 'bg-emerald-500/10 text-emerald-400',
+    labelBg: 'bg-emerald-500/10',
+    labelText: 'text-emerald-400',
+    dot: 'bg-emerald-400',
+    glow: '',
+    label: 'Sucesso',
+  },
+  active: {
+    border: 'border-primary/25',
+    iconBg: 'bg-primary/10 text-primary',
+    labelBg: 'bg-primary/8',
+    labelText: 'text-primary/80',
+    dot: 'bg-primary/60',
+    glow: '',
+    label: 'Ativo',
+  },
+  inactive: {
+    border: 'border-border/30',
+    iconBg: 'bg-muted/60 text-muted-foreground/40',
+    labelBg: 'bg-muted/40',
+    labelText: 'text-muted-foreground/60',
+    dot: 'bg-muted-foreground/25',
+    glow: '',
+    label: 'Inativo',
+  },
+};
+
 export function PipelineStepCard({
   step,
   idx,
@@ -61,96 +119,70 @@ export function PipelineStepCard({
   const StepIcon = step.icon;
   const remaining = getCountdownMs(wfExec?.startedAt, step.scheduleIntervalMs);
 
-  const borderCls = isRunning
-    ? 'border-blue-500/40 ring-1 ring-blue-500/30'
-    : isFailed
-    ? 'border-red-500/30 ring-1 ring-red-500/20'
-    : isCompleted
-    ? 'border-emerald-500/30'
-    : 'border-border/40';
-
-  const bgCls = isRunning
-    ? 'bg-blue-500/5'
-    : isFailed
-    ? 'bg-red-500/5'
-    : isCompleted
-    ? 'bg-emerald-500/5'
-    : 'bg-card';
-
-  const iconBgCls = isRunning
-    ? 'bg-blue-500/10 text-blue-500'
-    : isFailed
-    ? 'bg-red-500/10 text-red-400'
-    : isCompleted
-    ? 'bg-emerald-500/10 text-emerald-500'
-    : isActive
-    ? 'bg-primary/10 text-primary'
-    : 'bg-muted/50 text-muted-foreground/60';
+  const state: StepState = isRunning ? 'running' : isFailed ? 'failed' : isCompleted ? 'success' : isActive ? 'active' : 'inactive';
+  const cfg = STATE_CONFIG[state];
 
   return (
-    <div className="relative">
-      {/* Connector arrow */}
+    <div className="relative flex flex-col">
+      {/* Connector between steps */}
       {idx < totalSteps - 1 && (
-        <div className="absolute right-[-14px] top-1/2 z-10 hidden -translate-y-1/2 lg:block">
-          <svg width="10" height="10" viewBox="0 0 10 10" className="text-border/60">
-            <path d="M1 5h8M6 2l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <div className="absolute -right-[18px] top-1/2 z-10 hidden -translate-y-1/2 items-center gap-0.5 lg:flex">
+          <div className={`h-px w-4 ${state === 'success' ? 'bg-emerald-500/50' : state === 'running' ? 'bg-blue-500/50 animate-pulse' : 'bg-border/40'}`} />
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+            className={state === 'success' ? 'text-emerald-500/60' : state === 'running' ? 'text-blue-500/60' : 'text-border/40'}>
+            <path d="M3 2l5 4-5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       )}
 
-      <div className={`rounded-xl border p-4 transition-all duration-200 ${borderCls} ${bgCls}`}>
-        {/* Header */}
-        <div className="flex items-start gap-3">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconBgCls}`}>
-            {isRunning ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : isFailed ? (
-              <AlertTriangle className="h-4 w-4" />
-            ) : isCompleted ? (
-              <CheckCircle2 className="h-4 w-4" />
-            ) : (
-              <StepIcon className="h-4 w-4" />
+      <div className={`relative overflow-hidden rounded-2xl border bg-card/70 p-4 backdrop-blur-sm transition-all duration-300 ${cfg.border} ${cfg.glow}`}>
+        {/* Step index watermark */}
+        <span className="absolute right-3 top-2.5 font-mono text-[11px] font-bold text-muted-foreground/20 select-none">
+          0{idx + 1}
+        </span>
+
+        {/* Subtle glow blob when running */}
+        {isRunning && (
+          <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-blue-500/10 blur-2xl" />
+        )}
+
+        {/* Icon + title */}
+        <div className="mb-3 flex items-start gap-3">
+          <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${cfg.iconBg}`}>
+            {isRunning
+              ? <Loader2 className="h-[18px] w-[18px] animate-spin" />
+              : isFailed
+              ? <AlertTriangle className="h-[18px] w-[18px]" />
+              : isCompleted
+              ? <CheckCircle2 className="h-[18px] w-[18px]" />
+              : <StepIcon className="h-[18px] w-[18px]" />
+            }
+            {isRunning && (
+              <span className="absolute inset-0 rounded-xl animate-ping bg-blue-400/30" />
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-foreground">{step.label}</p>
-              {isActive && !isRunning && (
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-              )}
-            </div>
-            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{step.description}</p>
+
+          <div className="min-w-0 flex-1 pt-0.5">
+            <p className="text-sm font-bold leading-tight text-foreground">{step.label}</p>
+            <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{step.description}</p>
           </div>
         </div>
 
-        {/* Status row */}
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-            isRunning
-              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-              : isFailed
-              ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-              : isCompleted
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-              : isActive
-              ? 'bg-muted text-muted-foreground'
-              : 'bg-muted/60 text-muted-foreground/60'
-          }`}>
-            {isRunning ? 'A executar' : isFailed ? 'Erro' : isCompleted ? 'Sucesso' : isActive ? 'Ativo' : 'Inativo'}
+        {/* Status pill + timing */}
+        <div className="flex items-center justify-between gap-2">
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${cfg.labelBg} ${cfg.labelText}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot} ${isRunning ? 'animate-pulse' : ''}`} />
+            {cfg.label}
           </span>
 
-          {/* Countdown or last run */}
           {isActive && wfExec && !isRunning && (
-            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1 font-mono text-[11px] tabular-nums text-muted-foreground">
               {remaining > 0 && step.scheduleIntervalMs > 0 ? (
-                <>
-                  <Clock className="h-3 w-3" />
-                  <span className="font-mono tabular-nums">{formatCountdown(remaining)}</span>
-                </>
+                <><Clock className="h-3 w-3" />{formatCountdown(remaining)}</>
               ) : step.scheduleIntervalMs > 0 ? (
-                <span className="text-primary font-medium">iminente</span>
+                <span className="font-sans font-medium text-primary/80">iminente</span>
               ) : (
-                <span>{formatRelativeTime(wfExec.startedAt)}</span>
+                formatRelativeTime(wfExec.startedAt)
               )}
             </span>
           )}

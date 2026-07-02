@@ -1,25 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
-  Activity,
-  ArrowRight,
   BarChart3,
   Bot,
-  Clock,
   ExternalLink,
-  Layers3,
   Plus,
-  Radio,
-  Sparkles,
   TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminStatsCards from '@/components/admin/AdminStatsCards';
 import { Post, usePosts } from '@/hooks/usePosts';
-import { useCategories } from '@/hooks/useCategories';
-import { usePipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
-import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import type { AdminView } from '@/components/admin/dashboard-types';
 
 interface OverviewViewProps {
@@ -29,49 +19,9 @@ interface OverviewViewProps {
   allowedViews: AdminView[];
 }
 
-type HealthTone = 'success' | 'warning' | 'neutral';
-
-function formatRelativeTime(iso: string | null | undefined) {
-  if (!iso) return '—';
-  const diff = Math.max(Math.floor((Date.now() - new Date(iso).getTime()) / 60_000), 0);
-  if (diff < 1) return 'agora';
-  if (diff < 60) return `${diff} min`;
-  const h = Math.floor(diff / 60);
-  if (h < 24) return `${h} h`;
-  return `${Math.floor(h / 24)} d`;
-}
-
 function formatDate(iso: string | null | undefined) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
-}
-
-function getHealthTone(value: number, threshold: number, emptyTone: HealthTone = 'neutral'): HealthTone {
-  if (value <= 0) return emptyTone;
-  return value >= threshold ? 'warning' : 'success';
-}
-
-function toneClasses(tone: HealthTone) {
-  if (tone === 'success') return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-  if (tone === 'warning') return 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400';
-  return 'border-border/60 bg-muted/40 text-muted-foreground';
-}
-
-const STAGE_INTERVALS: Record<string, number> = {
-  Coleta: 30 * 60_000,
-  Cluster: 20 * 60_000,
-  'IA Reescrita': 60 * 60_000,
-};
-
-function formatCountdown(ms: number) {
-  if (ms <= 0) return '0:00';
-  const s = Math.ceil(ms / 1000);
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-}
-
-function getCountdownMs(lastIso: string | null | undefined, intervalMs: number) {
-  if (!lastIso || !intervalMs) return -1;
-  return new Date(lastIso).getTime() + intervalMs - Date.now();
 }
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
@@ -82,18 +32,8 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
 
 const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEdit, allowedViews }) => {
   const { data: posts, isLoading: postsLoading } = usePosts(true);
-  const { data: categories = [] } = useCategories();
-  const { data: diagnostics } = usePipelineDiagnostics();
-  const { executions = [] } = useAutomationExecutions({ pageSize: 10 });
-
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);
-  const draftPosts = useMemo(() => posts?.filter((p) => p.status === 'draft') ?? [], [posts]);
 
   const recentPosts = useMemo(
     () => [...(posts ?? [])].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 8),
@@ -127,50 +67,6 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
     [publishedPosts],
   );
 
-  const clusterTone = getHealthTone(diagnostics?.clusters.lowConfidence ?? 0, 1, 'neutral');
-  const iaTone = getHealthTone((diagnostics?.curated.ready ?? 0) + (diagnostics?.curated.draft ?? 0), 1, 'neutral');
-
-  const pipelineStages = [
-    {
-      label: 'Coleta',
-      count: diagnostics?.staging.total ?? 0,
-      helper: `${diagnostics?.staging.unprocessed ?? 0} em fila`,
-      tone: getHealthTone(diagnostics?.staging.unprocessed ?? 0, 1, 'neutral'),
-      icon: Activity,
-      lastTimestamp: diagnostics?.lastStagingAt,
-      intervalMs: STAGE_INTERVALS['Coleta'],
-    },
-    {
-      label: 'Cluster',
-      count: diagnostics?.clusters.total ?? 0,
-      helper: `${diagnostics?.clusters.highConfidence ?? 0} confiáveis`,
-      tone: clusterTone,
-      icon: Layers3,
-      lastTimestamp: diagnostics?.lastClusterAt,
-      intervalMs: STAGE_INTERVALS['Cluster'],
-    },
-    {
-      label: 'IA Reescrita',
-      count: (diagnostics?.curated.ready ?? 0) + (diagnostics?.curated.draft ?? 0),
-      helper: `${diagnostics?.curated.ready ?? 0} prontos`,
-      tone: iaTone,
-      icon: Sparkles,
-      lastTimestamp: diagnostics?.lastCuratedAt,
-      intervalMs: STAGE_INTERVALS['IA Reescrita'],
-    },
-    {
-      label: 'Publicação',
-      count: diagnostics?.curated.published ?? 0,
-      helper: `${publishedPosts.length} publicados`,
-      tone: getHealthTone(diagnostics?.curated.published ?? 0, 1, 'neutral'),
-      icon: Radio,
-      lastTimestamp: null as string | null | undefined,
-      intervalMs: 0,
-    },
-  ] as const;
-
-  const latestExecution = executions[0] ?? null;
-
   return (
     <div className="space-y-6">
       {/* ── Page header ───────────────────────────────────────────── */}
@@ -201,73 +97,6 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
       {/* ── KPI stats ─────────────────────────────────────────────── */}
       <AdminStatsCards />
-
-      {/* ── Pipeline ──────────────────────────────────────────────── */}
-      <Card className="border-border/40 shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-              Pipeline editorial
-            </CardTitle>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              {latestExecution && (
-                <span>Última execução: {formatRelativeTime(latestExecution.startedAt)}</span>
-              )}
-              {allowedViews.includes('automations') && (
-                <button
-                  type="button"
-                  onClick={() => onNavigate('automations')}
-                  className="flex items-center gap-1 text-primary hover:underline"
-                >
-                  Ver detalhes <ExternalLink className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {pipelineStages.map((stage, i) => {
-              const Icon = stage.icon;
-              const remaining = getCountdownMs(stage.lastTimestamp, stage.intervalMs);
-              return (
-                <div key={stage.label} className="relative rounded-lg border border-border/40 bg-muted/20 p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-muted text-[9px] font-bold text-muted-foreground">
-                          {i + 1}
-                        </span>
-                        <p className="text-xs font-semibold text-foreground">{stage.label}</p>
-                      </div>
-                      <p className="mt-1.5 text-xl font-bold text-foreground">{stage.count}</p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">{stage.helper}</p>
-                    </div>
-                    <div className={`rounded-md border p-1.5 ${toneClasses(stage.tone)}`}>
-                      <Icon className="h-3.5 w-3.5" />
-                    </div>
-                  </div>
-                  {stage.intervalMs > 0 && stage.lastTimestamp && (
-                    <div className="mt-2.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {remaining > 0 ? (
-                        <span className="font-mono tabular-nums">{formatCountdown(remaining)}</span>
-                      ) : (
-                        <span className="text-primary font-medium">iminente</span>
-                      )}
-                    </div>
-                  )}
-                  {i < pipelineStages.length - 1 && (
-                    <div className="absolute right-[-0.65rem] top-1/2 z-10 hidden -translate-y-1/2 xl:block">
-                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40" />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* ── Recent posts + Charts ─────────────────────────────────── */}
       <div className="grid gap-4 lg:grid-cols-5">
@@ -308,10 +137,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                 {recentPosts.map((post) => {
                   const statusInfo = STATUS_LABEL[post.status] ?? { label: post.status, cls: 'bg-muted text-muted-foreground' };
                   return (
-                    <div
-                      key={post.id}
-                      className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
-                    >
+                    <div key={post.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
                       <div className="min-w-0 flex-1">
                         <button
                           type="button"

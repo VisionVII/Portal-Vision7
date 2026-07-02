@@ -484,46 +484,92 @@ export function AutomationDashboardV2({
   return (
     <div className="space-y-5">
       {/* ── Page header ── */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             Centro de Automação
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Pipeline editorial por IA, fluxos n8n e monitoramento
+            Pipeline IA · Workflows n8n · Monitoramento
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <span
-            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
-              isConnected
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                : 'border-red-400/30 bg-red-400/10 text-red-600 dark:text-red-400'
-            }`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-400'}`} />
-            n8n {isConnected ? 'Online' : 'Offline'}
-          </span>
+
+        {/* Status + actions */}
+        <div className="flex shrink-0 items-center gap-2">
+          {/* n8n status pill */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className={`flex cursor-default items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
+                  isConnected
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    : 'border-red-400/30 bg-red-400/10 text-red-600 dark:text-red-400'
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 animate-pulse rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-400'}`} />
+                n8n {isConnected ? 'Online' : 'Offline'}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[220px] space-y-1 text-center">
+              <p className="font-semibold">Motor de Automação (n8n)</p>
+              <p className="text-xs text-muted-foreground">
+                {isConnected
+                  ? 'Servidor n8n acessível — workflows podem ser acionados.'
+                  : 'Servidor n8n inacessível. Verifique se o Docker está em execução.'}
+              </p>
+              {keepAlive.lastPing && (
+                <p className="text-[11px] text-muted-foreground/70">
+                  Último ping: {new Date(keepAlive.lastPing).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </p>
+              )}
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Keep-alive toggle */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant={keepAlive.isActive ? 'secondary' : 'ghost'}
                 size="icon"
-                className="h-8 w-8"
+                className={`h-8 w-8 ${keepAlive.isActive ? 'border border-primary/30 bg-primary/10' : ''}`}
                 onClick={() => (keepAlive.isActive ? keepAlive.stop() : keepAlive.start())}
               >
-                <Zap className={`h-3.5 w-3.5 ${keepAlive.isActive ? 'animate-pulse text-primary' : ''}`} />
+                <Zap className={`h-3.5 w-3.5 ${keepAlive.isActive ? 'text-primary' : ''}`} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{keepAlive.isActive ? 'Desativar Keep-Alive' : 'Ativar Keep-Alive'}</TooltipContent>
+            <TooltipContent side="bottom" className="max-w-[230px] space-y-1">
+              <p className="font-semibold">
+                Keep-Alive {keepAlive.isActive ? '— Ativo' : '— Inativo'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Envia um ping ao n8n a cada 4 min para evitar que o servidor adormeça por inatividade.
+              </p>
+              {keepAlive.isActive && keepAlive.lastPing && (
+                <p className="text-[11px] text-muted-foreground/70">
+                  Último ping: {new Date(keepAlive.lastPing).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                  {keepAlive.lastStatus === 'connected' && ' ✓'}
+                  {keepAlive.lastStatus === 'unreachable' && ' ✗'}
+                </p>
+              )}
+              <p className="text-[11px] text-primary/80">
+                {keepAlive.isActive ? 'Clique para desativar' : 'Clique para ativar'}
+              </p>
+            </TooltipContent>
           </Tooltip>
+
+          {/* Refresh */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void refreshN8n()}>
                 <RefreshCw className={`h-3.5 w-3.5 ${loadingAutomations ? 'animate-spin' : ''}`} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Atualizar</TooltipContent>
+            <TooltipContent side="bottom" className="max-w-[200px] space-y-1">
+              <p className="font-semibold">Atualizar Dashboard</p>
+              <p className="text-xs text-muted-foreground">
+                Recarrega o estado dos workflows, métricas e contadores do pipeline agora.
+              </p>
+            </TooltipContent>
           </Tooltip>
         </div>
       </div>
@@ -532,17 +578,17 @@ export function AutomationDashboardV2({
       <StatBar
         stats={[
           {
-            label: 'Workflows',
-            value: `${activeWorkflows}/${workflows.length}`,
-            tone: isConnected ? 'success' : 'warning',
+            label: 'Workflows ativos',
+            value: `${activeWorkflows} / ${workflows.length}`,
+            tone: isConnected && activeWorkflows > 0 ? 'success' : 'warning',
           },
           {
             label: 'Automações ativas',
-            value: `${activeAutomations}/${effectiveTotalAutomations}`,
-            tone: 'success',
+            value: `${activeAutomations} / ${effectiveTotalAutomations}`,
+            tone: activeAutomations > 0 ? 'success' : 'neutral',
           },
           {
-            label: 'Erros',
+            label: 'Erros recentes',
             value: String(pipelineErrors),
             tone: pipelineErrors > 0 ? 'warning' : 'neutral',
           },
@@ -557,17 +603,21 @@ export function AutomationDashboardV2({
       {/* ── Tab navigation ── */}
       <Tabs value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
         <TabsList className="h-auto w-full gap-1 overflow-x-auto rounded-xl border border-border/40 bg-muted/40 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsTrigger value="pipeline" className="gap-1.5 rounded-lg px-3 py-2 text-xs">
-            <Zap className="h-3.5 w-3.5" />Pipeline
+          <TabsTrigger value="pipeline" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+            <Zap className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden xs:inline sm:inline">Pipeline</span>
           </TabsTrigger>
-          <TabsTrigger value="automations" className="gap-1.5 rounded-lg px-3 py-2 text-xs">
-            <Workflow className="h-3.5 w-3.5" />Automações
+          <TabsTrigger value="automations" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+            <Workflow className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden xs:inline sm:inline">Automações</span>
           </TabsTrigger>
-          <TabsTrigger value="logs" className="gap-1.5 rounded-lg px-3 py-2 text-xs">
-            <Clock className="h-3.5 w-3.5" />Logs
+          <TabsTrigger value="logs" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+            <Clock className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden xs:inline sm:inline">Logs</span>
           </TabsTrigger>
-          <TabsTrigger value="tools" className="gap-1.5 rounded-lg px-3 py-2 text-xs">
-            <Wrench className="h-3.5 w-3.5" />Ferramentas
+          <TabsTrigger value="tools" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+            <Wrench className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden xs:inline sm:inline">Ferramentas</span>
           </TabsTrigger>
         </TabsList>
       </Tabs>

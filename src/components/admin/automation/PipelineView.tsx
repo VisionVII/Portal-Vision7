@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Zap, Activity, PlayCircle, Trash2, Loader2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Section, SectionIcon } from './Section';
 import { CuratedPostsReview } from './CuratedPostsReview';
+
+const NewsPipelineCard = lazy(() =>
+  import('./NewsPipelineCard').then((m) => ({ default: m.NewsPipelineCard })),
+);
 
 const CLEANUP_OPTIONS = [
   { label: '24 h', hours: 24 },
@@ -177,6 +181,11 @@ export function PipelineView({
 
   return (
     <div className="space-y-4">
+      {/* Main pipeline control card — workflows, config, activity */}
+      <Suspense fallback={<div className="flex items-center justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}>
+        <NewsPipelineCard />
+      </Suspense>
+
       {/* Pipeline stages */}
       <Section
         title="Estado do pipeline"

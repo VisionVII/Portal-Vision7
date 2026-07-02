@@ -59,7 +59,7 @@ const SectionPageHero: React.FC<SectionPageHeroProps> = ({
             height={480}
             className="absolute inset-0 h-full w-full object-cover object-center"
             loading="eager"
-            fetchpriority="high"
+            fetchPriority="high"
             decoding="async"
             onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
@@ -83,7 +83,9 @@ const SectionPageHero: React.FC<SectionPageHeroProps> = ({
       <div className="container relative mx-auto px-4">
         <div
           className={cn(
-            'flex min-h-[calc(100svh-8rem)] py-10 sm:min-h-[calc(100svh-7.5rem)] sm:py-12 lg:min-h-[calc(100svh-7rem)] lg:py-16',
+            hasMedia
+              ? 'flex min-h-[calc(100svh-8rem)] py-10 sm:min-h-[calc(100svh-7.5rem)] sm:py-12 lg:min-h-[calc(100svh-7rem)] lg:py-16'
+              : 'flex min-h-[220px] py-10 sm:min-h-[260px] sm:py-12 lg:min-h-[300px] lg:py-14',
             align === 'center' ? 'items-end justify-center md:items-center' : 'items-end justify-start',
           )}
         >

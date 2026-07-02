@@ -50,7 +50,7 @@ const PostCard: React.FC<PostCardProps> = ({
               height={540}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="eager"
-              fetchpriority="high"
+              fetchPriority="high"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           ) : (
@@ -143,7 +143,7 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
         <div className="mt-auto flex items-center gap-2 border-t border-border pt-2.5 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1 truncate"><User size={11} />{author}</span>
-          <span className="hidden items-center gap-1 sm:flex"><Calendar size={11} />{date}</span>
+          <span className="flex items-center gap-1 shrink-0"><Calendar size={11} />{date}</span>
           <Link to={linkPath} className="ml-auto flex items-center gap-1 whitespace-nowrap font-medium text-primary hover:underline">
             Ler <ArrowRight size={11} />
           </Link>

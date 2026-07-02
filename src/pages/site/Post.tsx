@@ -78,6 +78,8 @@ const Post = () => {
   const [newsletterOpen, setNewsletterOpen] = useState(false);
   const shareRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [readProgress, setReadProgress] = useState(0);
+  const [showBackTop, setShowBackTop] = useState(false);
 
   const postUrl = `${SITE_URL}/post/${slug ?? ''}`;
 
@@ -110,7 +112,20 @@ const Post = () => {
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    setReadProgress(0);
+    setShowBackTop(false);
   }, [slug]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      setReadProgress(docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0);
+      setShowBackTop(scrollTop > 400);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     if (post?.id && trackedPostIdRef.current !== post.id) {
@@ -179,7 +194,7 @@ const Post = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Post não encontrado</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-4 sm:text-4xl">Post não encontrado</h1>
           <p className="text-muted-foreground mb-8">O artigo que procura não existe ou foi removido.</p>
           <Link 
             to="/" 
@@ -206,7 +221,37 @@ const Post = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Reading progress bar — fixed at top below sticky header */}
+      <div
+        className="fixed left-0 top-0 z-[60] h-0.5 bg-gradient-to-r from-primary via-primary/80 to-primary/60 transition-all duration-100 ease-out"
+        style={{ width: `${readProgress}%` }}
+        role="progressbar"
+        aria-valuenow={Math.round(readProgress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Progresso de leitura"
+      />
+
       <Header />
+
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="container mx-auto px-4 sm:px-5">
+          <ol className="flex min-h-[36px] items-center gap-1.5 text-xs text-muted-foreground">
+            <li><Link to="/" className="hover:text-foreground transition-colors">Início</Link></li>
+            <li aria-hidden="true" className="text-border">›</li>
+            <li>
+              <Link to={categoryPath} className="hover:text-foreground transition-colors capitalize">
+                {categoryLabel}
+              </Link>
+            </li>
+            <li aria-hidden="true" className="text-border">›</li>
+            <li className="truncate max-w-[200px] sm:max-w-xs font-medium text-foreground" aria-current="page">
+              {post.title}
+            </li>
+          </ol>
+        </div>
+      </nav>
 
       {/* Hero Section */}
       <div className="relative">
@@ -414,6 +459,18 @@ const Post = () => {
       <Footer />
 
       <NewsletterModal open={newsletterOpen} onClose={() => setNewsletterOpen(false)} />
+
+      {/* Back to top button */}
+      {showBackTop && (
+        <button
+          type="button"
+          aria-label="Voltar ao topo"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 right-5 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-primary/40 sm:bottom-8 sm:right-8"
+        >
+          <ArrowLeft className="h-4 w-4 rotate-90 text-foreground" />
+        </button>
+      )}
     </div>
   );
 };

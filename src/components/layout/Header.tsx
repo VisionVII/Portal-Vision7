@@ -181,14 +181,14 @@ const Header = () => {
 
           {/* ═══════════ MOBILE NAV ═══════════ */}
           <div className="flex min-h-[56px] items-center gap-1.5 py-2 md:hidden">
-            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {primaryNavItems.slice(1, 4).map((item) => (
+            <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {primaryNavItems.map((item) => (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   end={item.path === '/'}
                   className={({ isActive }) =>
-                    `flex-shrink-0 rounded-lg px-3 py-2 text-xs font-semibold tracking-tight transition-all ${
+                    `flex-shrink-0 rounded-lg px-2.5 py-2 text-xs font-semibold tracking-tight transition-all ${
                       isActive
                         ? 'bg-white/20 text-white dark:bg-primary dark:text-white'
                         : 'text-white/80 hover:bg-white/10 hover:text-white dark:text-foreground/60 dark:hover:bg-primary/15 dark:hover:text-primary'

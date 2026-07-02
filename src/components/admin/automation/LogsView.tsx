@@ -1,4 +1,4 @@
-import { Clock, Shield, Settings2 } from 'lucide-react';
+import { Clock, Shield } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -9,7 +9,6 @@ import {
 import { Section, SectionIcon } from './Section';
 import { ExecutionTimeline } from './ExecutionTimeline';
 import { AuditLogViewer } from './AuditLogViewer';
-import { NewsPipelineCard } from './NewsPipelineCard';
 
 import type { AutomationExecution, ExecutionStatus } from '@/types/automation';
 
@@ -71,15 +70,6 @@ export function LogsView({
         <AuditLogViewer />
       </Section>
 
-      <Section
-        title="Detalhe técnico"
-        description="Configuração avançada do pipeline e logs internos"
-        icon={<SectionIcon icon={Settings2} className="bg-muted text-muted-foreground" />}
-        collapsible
-        defaultExpanded={false}
-      >
-        <NewsPipelineCard />
-      </Section>
     </div>
   );
 }

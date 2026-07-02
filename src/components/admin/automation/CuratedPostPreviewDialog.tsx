@@ -77,8 +77,8 @@ export function CuratedPostPreviewDialog({
         if (!isOpen) onClose();
       }}
     >
-      <DialogContent className="mx-4 max-w-6xl max-h-[88vh] overflow-hidden rounded-2xl p-0 sm:mx-6">
-        <DialogHeader className="border-b border-border/70 bg-muted/30 px-6 py-5">
+      <DialogContent className="mx-4 flex max-w-6xl max-h-[90vh] flex-col overflow-hidden rounded-2xl p-0 sm:mx-6">
+        <DialogHeader className="shrink-0 overflow-y-auto border-b border-border/70 bg-muted/30 px-6 py-4 max-h-[45vh]">
           {editMode ? (
             <Input
               value={editTitle}
@@ -198,8 +198,8 @@ export function CuratedPostPreviewDialog({
           </div>
         </DialogHeader>
 
-        <Tabs defaultValue="preview" className="flex flex-1 overflow-hidden">
-          <TabsList className="h-auto w-full justify-start gap-2 rounded-none border-b border-border/60 bg-background px-6 py-3">
+        <Tabs defaultValue="preview" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <TabsList className="h-auto w-full shrink-0 justify-start gap-2 rounded-none border-b border-border/60 bg-background px-6 py-3">
             <TabsTrigger value="preview" className="gap-2 rounded-lg px-3 py-1.5">
               <FileText className="w-4 h-4" />
               {editMode ? 'Editar' : 'Estrutura do Post'}
@@ -210,9 +210,12 @@ export function CuratedPostPreviewDialog({
             </TabsTrigger>
           </TabsList>
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] overflow-hidden px-6 py-5">
-            <div className="flex flex-col overflow-hidden rounded-3xl border border-border/60 bg-background p-6 shadow-sm" style={{ maxHeight: 'calc(88vh - 280px)' }}>
-              <TabsContent value="preview" className="mt-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-hidden px-6 pb-5 pt-4">
+            <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-background shadow-sm">
+              <TabsContent
+                value="preview"
+                className="mt-0 data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col overflow-y-auto p-6"
+              >
                 {editMode ? (
                   <div className="space-y-4">
                     <div>
@@ -235,42 +238,33 @@ export function CuratedPostPreviewDialog({
                       />
                     </div>
                   </div>
-                ) : detailPost.body_html ? (
-                  <div className="overflow-y-auto rounded-xl border border-border/60 bg-background p-6">
-                    <RichContentPreview
-                      html={detailPost.body_html}
-                      variant="full"
-                    />
-                  </div>
+                ) : (detailPost.body_html || detailPost.body_markdown) ? (
+                  <RichContentPreview
+                    html={(detailPost.body_html || detailPost.body_markdown!.replace(/\\n/g, '\n'))}
+                    variant="full"
+                  />
                 ) : (
-                  <div className="rounded-xl border border-border/60 bg-background p-6">
-                    <p className="text-sm font-medium text-foreground">Sem conteúdo HTML formatado</p>
-                    <p className="mt-1 text-sm text-muted-foreground">A estrutura renderizada ainda não foi gerada. Use o conteúdo markdown abaixo como referência editorial.</p>
-                    {detailPost.body_markdown && (
-                      <pre className="mt-4 max-h-[44vh] overflow-auto whitespace-pre-wrap rounded-lg border border-border/50 bg-muted/40 p-4 font-mono text-sm text-foreground/85">
-                        {detailPost.body_markdown}
-                      </pre>
-                    )}
-                  </div>
+                  <p className="text-sm text-muted-foreground">Sem conteúdo disponível para pré-visualização.</p>
                 )}
               </TabsContent>
 
-              <TabsContent value="source" className="mt-0">
+              <TabsContent
+                value="source"
+                className="mt-0 data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col overflow-y-auto p-6"
+              >
                 {detailPost.body_markdown ? (
-                  <pre className="overflow-auto whitespace-pre-wrap rounded-xl border border-border/60 bg-background p-4 font-mono text-sm leading-relaxed text-foreground/85">
-                    {detailPost.body_markdown}
+                  <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-foreground/85">
+                    {detailPost.body_markdown.replace(/\\n/g, '\n')}
                   </pre>
                 ) : (
-                  <div className="rounded-xl border border-border/60 bg-background p-6 text-center">
-                    <p className="text-sm text-muted-foreground">Sem código fonte markdown disponível</p>
-                  </div>
+                  <p className="text-sm text-muted-foreground text-center">Sem código fonte markdown disponível</p>
                 )}
               </TabsContent>
             </div>
           </div>
         </Tabs>
 
-        <DialogFooter className="border-t border-border/70 bg-background px-6 py-4">
+        <DialogFooter className="shrink-0 border-t border-border/70 bg-background px-6 py-4">
           <div className="flex gap-2 w-full flex-wrap sm:flex-nowrap">
             {canEdit(detailPost.status) && !editMode && (
               <Button
