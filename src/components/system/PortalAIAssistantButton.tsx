@@ -114,6 +114,18 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isNetworkOffline, setIsNetworkOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const onOnline = () => setIsNetworkOffline(false);
+    const onOffline = () => setIsNetworkOffline(true);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
 
   // Load AI config from DB (site_settings), merge with hardcoded defaults
   const [aiConfig, setAiConfig] = useState<PortalAssistantConfig>(portalAssistantConfig);
@@ -325,7 +337,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       let edgeError: string | null = null;
 
       // Skip edge function immediately when browser reports no connectivity
-      const isDefinitelyOffline = !navigator.onLine;
+      const isDefinitelyOffline = isNetworkOffline;
 
       if (isDefinitelyOffline) {
         edgeError = 'network';
@@ -362,12 +374,11 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
           clearTimeout(abortTimer);
 
           if (error) {
-            console.warn('[Vision7 AI] Edge function error:', error.message || error);
-            edgeError = isNetworkError(error)
-              ? 'network'
-              : String(error.message || 'Erro na função IA');
+            const msg = String(error.message || error);
+            console.error('[Vision7 AI] Edge function error:', msg, '\n→ Verifique: 1) Admin > Settings > Assistente IA (provider deve ser Claude Haiku/Sonnet)  2) Supabase > Edge Functions > Secrets (ANTHROPIC_API_KEY)  3) Edge function "portal-ai-assistant" deployada');
+            edgeError = isNetworkError(error) ? 'network' : msg;
           } else if (data?.error) {
-            console.warn('[Vision7 AI] Edge function returned error:', data.error);
+            console.error('[Vision7 AI] Edge function returned error:', data.error, '\n→ Verifique: 1) ANTHROPIC_API_KEY em Supabase > Edge Functions > Secrets  2) Admin > Settings > Assistente IA');
             edgeError = String(data.error);
           } else {
             reply = normalizePortalAssistantReply(data);
@@ -480,6 +491,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
           question={question}
           isLoading={isLoading}
           activeProvider={activeProvider}
+          isNetworkOffline={isNetworkOffline}
           messageCount={messages.length}
           onQuestionChange={setQuestion}
           onSubmit={handleSubmit}
