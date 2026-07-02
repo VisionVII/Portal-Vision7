@@ -4,7 +4,7 @@ import {
   LayoutGrid, Plus, Clock, Zap,
   Workflow, RefreshCw, Wrench,
   Layers3, ArrowRight, Activity, Radio, Sparkles,
-  Trash2, Loader2,
+  Trash2, Loader2, TrendingUp, AlertTriangle, Newspaper, CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -64,29 +64,59 @@ interface AutomationDashboardV2Props {
 
 type DashboardView = 'pipeline' | 'automations' | 'logs' | 'tools';
 
-function StatBar({
-  stats,
-}: {
-  stats: Array<{ label: string; value: string; tone: 'success' | 'warning' | 'neutral' }>;
-}) {
+interface KpiStat {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  tone: 'success' | 'warning' | 'error' | 'neutral' | 'blue';
+}
+
+function KpiGrid({ stats }: { stats: KpiStat[] }) {
+  const toneMap = {
+    success: {
+      card: 'border-emerald-500/20 bg-emerald-500/[0.04]',
+      icon: 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400',
+      value: 'text-emerald-600 dark:text-emerald-400',
+    },
+    warning: {
+      card: 'border-amber-500/20 bg-amber-500/[0.04]',
+      icon: 'bg-amber-500/10 text-amber-500 dark:text-amber-400',
+      value: 'text-amber-600 dark:text-amber-400',
+    },
+    error: {
+      card: 'border-red-400/20 bg-red-500/[0.04]',
+      icon: 'bg-red-500/10 text-red-500 dark:text-red-400',
+      value: 'text-red-600 dark:text-red-400',
+    },
+    blue: {
+      card: 'border-blue-500/20 bg-blue-500/[0.04]',
+      icon: 'bg-blue-500/10 text-blue-500 dark:text-blue-400',
+      value: 'text-blue-600 dark:text-blue-400',
+    },
+    neutral: {
+      card: 'border-border/40 bg-card',
+      icon: 'bg-muted text-muted-foreground',
+      value: 'text-foreground',
+    },
+  };
+
   return (
-    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/40 bg-border/30 sm:grid-cols-4">
-      {stats.map((stat) => (
-        <div key={stat.label} className="flex flex-col gap-0.5 bg-card px-4 py-3">
-          <span className="truncate text-[11px] font-medium text-muted-foreground">{stat.label}</span>
-          <span
-            className={`text-xl font-bold tabular-nums ${
-              stat.tone === 'success'
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : stat.tone === 'warning'
-                  ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-foreground'
-            }`}
-          >
-            {stat.value}
-          </span>
-        </div>
-      ))}
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+      {stats.map((stat) => {
+        const t = toneMap[stat.tone];
+        const Icon = stat.icon;
+        return (
+          <div key={stat.label} className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${t.card}`}>
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-medium text-muted-foreground">{stat.label}</p>
+              <p className={`text-xl font-bold tabular-nums leading-tight ${t.value}`}>{stat.value}</p>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -204,6 +234,15 @@ export function AutomationDashboardV2({
 
   const activeWorkflows = useMemo(() => workflows.filter((w) => w.active).length, [workflows]);
 
+  const workflowStepStates = useMemo(() => [
+    { key: 'WF-01', label: 'Coleta RSS', shortLabel: 'Coleta' },
+    { key: 'WF-02', label: 'Cluster & Dedup', shortLabel: 'Cluster' },
+    { key: 'WF-03', label: 'IA Reescrita', shortLabel: 'IA Reescrita' },
+  ].map((step) => {
+    const wf = workflows.find((w) => w.name?.includes(step.key));
+    return { ...step, active: wf?.active === true, found: !!wf };
+  }), [workflows]);
+
   // If automations_v2 table has no records yet, fall back to n8n workflow counts so the pill shows real state.
   // Counts come from useAutomationStats() (unpaginated head:true queries), not from the
   // current page's `automations` array, so they stay correct past page 1 (NFR-001).
@@ -260,6 +299,7 @@ export function AutomationDashboardV2({
       helper: `${diagnostics?.staging.unprocessed ?? 0} em fila`,
       tone: (diagnostics?.staging.unprocessed ?? 0) > 0 ? 'warning' : 'neutral',
       icon: Workflow,
+      lastAt: diagnostics?.lastStagingAt ?? null,
     },
     {
       label: 'Cluster',
@@ -267,6 +307,7 @@ export function AutomationDashboardV2({
       helper: `${diagnostics?.clusters.highConfidence ?? 0} confiáveis`,
       tone: (diagnostics?.clusters.lowConfidence ?? 0) > 0 ? 'warning' : 'success',
       icon: Layers3,
+      lastAt: diagnostics?.lastClusterAt ?? null,
     },
     {
       label: 'IA Reescrita',
@@ -274,6 +315,7 @@ export function AutomationDashboardV2({
       helper: `${diagnostics?.curated.ready ?? 0} prontos`,
       tone: (diagnostics?.curated.ready ?? 0) > 0 ? 'success' : 'neutral',
       icon: Sparkles,
+      lastAt: diagnostics?.lastCuratedAt ?? null,
     },
     {
       label: 'Publicação',
@@ -281,6 +323,7 @@ export function AutomationDashboardV2({
       helper: `${diagnostics?.curated.published ?? 0} publicados`,
       tone: (diagnostics?.curated.published ?? 0) > 0 ? 'success' : 'neutral',
       icon: Radio,
+      lastAt: diagnostics?.lastCuratedAt ?? null,
     },
   ] as const), [diagnostics]);
 
@@ -574,27 +617,37 @@ export function AutomationDashboardV2({
         </div>
       </div>
 
-      {/* ── Stats bar ── */}
-      <StatBar
+      {/* ── KPI grid ── */}
+      <KpiGrid
         stats={[
           {
             label: 'Workflows ativos',
-            value: `${activeWorkflows} / ${workflows.length}`,
+            value: `${activeWorkflows} / ${workflows.length || '—'}`,
+            icon: Workflow,
             tone: isConnected && activeWorkflows > 0 ? 'success' : 'warning',
           },
           {
-            label: 'Automações ativas',
-            value: `${activeAutomations} / ${effectiveTotalAutomations}`,
-            tone: activeAutomations > 0 ? 'success' : 'neutral',
+            label: 'Publicados',
+            value: String(diagnostics?.curated.published ?? '—'),
+            icon: Newspaper,
+            tone: (diagnostics?.curated.published ?? 0) > 0 ? 'success' : 'neutral',
+          },
+          {
+            label: 'Para revisar',
+            value: String((diagnostics?.curated.ready ?? 0) + (diagnostics?.curated.draft ?? 0)),
+            icon: CheckCircle2,
+            tone: (diagnostics?.curated.ready ?? 0) > 0 ? 'blue' : 'neutral',
           },
           {
             label: 'Erros recentes',
             value: String(pipelineErrors),
-            tone: pipelineErrors > 0 ? 'warning' : 'neutral',
+            icon: AlertTriangle,
+            tone: pipelineErrors > 0 ? 'error' : 'neutral',
           },
           {
             label: 'Taxa de sucesso',
             value: successRate === null ? 'N/D' : `${successRate}%`,
+            icon: TrendingUp,
             tone: successRate === null ? 'neutral' : successRate >= 90 ? 'success' : 'warning',
           },
         ]}
@@ -633,6 +686,11 @@ export function AutomationDashboardV2({
             cleaning={cleaning}
             handleCleanup={() => void handleCleanup()}
             setCleanupHours={setCleanupHours}
+            isConnected={isConnected}
+            keepAlive={keepAlive}
+            diagnostics={diagnostics}
+            workflowSteps={workflowStepStates}
+            onRefreshEngine={() => void refreshN8n()}
           />
         )}
 

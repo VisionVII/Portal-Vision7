@@ -3,6 +3,9 @@ import { Zap, Activity, PlayCircle, Trash2, Loader2, ChevronRight } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Section, SectionIcon } from './Section';
 import { CuratedPostsReview } from './CuratedPostsReview';
+import { EngineStatusPanel } from './EngineStatusPanel';
+import type { WorkflowStep } from './EngineStatusPanel';
+import type { PipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
 
 const NewsPipelineCard = lazy(() =>
   import('./NewsPipelineCard').then((m) => ({ default: m.NewsPipelineCard })),
@@ -50,6 +53,7 @@ function PipelineRail({
     helper: string;
     tone: Tone;
     icon: React.ElementType;
+    lastAt?: string | null;
   }>;
 }) {
   return (
@@ -58,6 +62,19 @@ function PipelineRail({
         const Icon = stage.icon;
         const statusLabel =
           stage.tone === 'warning' ? 'Atenção' : stage.value > 0 ? 'OK' : 'Aguardando';
+
+        const relTime = stage.lastAt
+          ? (() => {
+              const diff = Date.now() - new Date(stage.lastAt).getTime();
+              const m = Math.floor(diff / 60_000);
+              if (m < 1) return 'agora';
+              if (m < 60) return `${m}min`;
+              const h = Math.floor(m / 60);
+              if (h < 24) return `${h}h`;
+              return `${Math.floor(h / 24)}d`;
+            })()
+          : null;
+
         return (
           <div key={stage.label} className="relative flex min-w-[120px] flex-1 flex-col gap-1 px-4 py-4">
             <div className="flex items-center gap-2">
@@ -75,6 +92,11 @@ function PipelineRail({
                 {statusLabel}
               </span>
             </div>
+            {relTime && (
+              <span className="mt-0.5 text-[10px] text-muted-foreground/50">
+                Últ: {relTime}
+              </span>
+            )}
             {i < stages.length - 1 && (
               <ChevronRight className="absolute right-[-0.6rem] top-1/2 hidden h-3 w-3 -translate-y-1/2 text-border xl:block" />
             )}
@@ -167,6 +189,16 @@ interface PipelineViewProps {
   cleaning: boolean;
   handleCleanup: () => void;
   setCleanupHours: (hours: number) => void;
+  isConnected: boolean;
+  keepAlive: {
+    isActive: boolean;
+    lastPing: string | null;
+    lastStatus: 'connected' | 'error' | 'unreachable' | null;
+    pingCount: number;
+  };
+  diagnostics: PipelineDiagnostics | undefined;
+  workflowSteps: WorkflowStep[];
+  onRefreshEngine: () => void;
 }
 
 export function PipelineView({
@@ -176,11 +208,25 @@ export function PipelineView({
   cleaning,
   handleCleanup,
   setCleanupHours,
+  isConnected,
+  keepAlive,
+  diagnostics,
+  workflowSteps,
+  onRefreshEngine,
 }: PipelineViewProps) {
   const [cleanupOpen, setCleanupOpen] = useState(false);
 
   return (
     <div className="space-y-4">
+      {/* ── Engine status panel — real-time motor state, WF dots, published count ── */}
+      <EngineStatusPanel
+        isConnected={isConnected}
+        keepAlive={keepAlive}
+        diagnostics={diagnostics}
+        workflowSteps={workflowSteps}
+        onRefresh={onRefreshEngine}
+      />
+
       {/* Main pipeline control card — workflows, config, activity */}
       <Suspense fallback={<div className="flex items-center justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}>
         <NewsPipelineCard />
