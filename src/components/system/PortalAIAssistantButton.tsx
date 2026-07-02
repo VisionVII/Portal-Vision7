@@ -31,10 +31,10 @@ import type { AssistantMessageCardData } from './AssistantMessageCard';
 // Helper utilities
 // ---------------------------------------------------------------------------
 
-/** Retry a fetch-based call with exponential backoff for network errors */
+/** Retry a fetch-based call once with backoff; aborts on first attempt if signal fires. */
 async function retryEdgeFunction<T>(
   fn: () => Promise<T>,
-  maxRetries = 2,
+  maxRetries = 1,
 ): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -42,10 +42,12 @@ async function retryEdgeFunction<T>(
       return await fn();
     } catch (err) {
       lastError = err;
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      if (isAbort) throw lastError;
       const isNetError =
         err instanceof TypeError && /fetch|network|internet|disconnected/i.test(err.message);
       if (!isNetError || attempt === maxRetries) throw lastError;
-      await new Promise((r) => setTimeout(r, 800 * 2 ** attempt));
+      await new Promise((r) => setTimeout(r, 800));
     }
   }
   throw lastError;
@@ -322,11 +324,21 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       let reply = null;
       let edgeError: string | null = null;
 
-      if (
+      // Skip edge function immediately when browser reports no connectivity
+      const isDefinitelyOffline = !navigator.onLine;
+
+      if (isDefinitelyOffline) {
+        edgeError = 'network';
+      } else if (
         aiConfig.enabled &&
         (aiConfig.provider === 'claude-haiku' || aiConfig.provider === 'claude-sonnet') &&
         aiConfig.edgeFunctionName
       ) {
+        // AbortController guards against silent network hangs (e.g. captive portals,
+        // firewalls that drop packets without resetting the connection).
+        const abortCtrl = new AbortController();
+        const abortTimer = setTimeout(() => abortCtrl.abort(), 12_000);
+
         try {
           const { data, error } = await retryEdgeFunction(() =>
             supabase.functions.invoke(
@@ -341,9 +353,13 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                   assistantId: aiConfig.assistantId,
                   model: aiConfig.model,
                 },
+                // @ts-expect-error — signal is accepted by fetch but not typed in supabase-js
+                signal: abortCtrl.signal,
               }
             ),
           );
+
+          clearTimeout(abortTimer);
 
           if (error) {
             console.warn('[Vision7 AI] Edge function error:', error.message || error);
@@ -360,8 +376,10 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
             }
           }
         } catch (fnErr) {
+          clearTimeout(abortTimer);
+          const isAbort = fnErr instanceof DOMException && (fnErr as DOMException).name === 'AbortError';
           console.warn('[Vision7 AI] Edge function call failed:', fnErr instanceof Error ? fnErr.message : 'unknown');
-          edgeError = isNetworkError(fnErr) ? 'network' : 'Falha ao contactar o serviço IA';
+          edgeError = isAbort || isNetworkError(fnErr) ? 'network' : 'Falha ao contactar o serviço IA';
         }
       }
 
