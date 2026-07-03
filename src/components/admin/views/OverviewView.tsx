@@ -133,20 +133,20 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                 )}
               </div>
             ) : (
-              <div className="divide-y divide-border/40 overflow-hidden">
+              <div className="divide-y divide-border/40">
                 {recentPosts.map((post) => {
                   const statusInfo = STATUS_LABEL[post.status] ?? { label: post.status, cls: 'bg-muted text-muted-foreground' };
                   return (
-                    <div key={post.id} className="flex min-w-0 items-center gap-2 py-2.5 first:pt-0 last:pb-0">
-                      <div className="min-w-0 flex-1">
+                    <div key={post.id} className="flex items-center gap-2 py-2.5 first:pt-0 last:pb-0">
+                      <div className="min-w-0 flex-1 overflow-hidden">
                         <button
                           type="button"
                           onClick={() => onEdit(post)}
-                          className="w-full truncate text-left text-sm font-medium text-foreground hover:text-primary"
+                          className="block w-full truncate text-left text-sm font-medium text-foreground hover:text-primary"
                         >
                           {post.title}
                         </button>
-                        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                        <p className="truncate text-[11px] text-muted-foreground">
                           {post.categories?.name ?? 'Sem categoria'} · {formatDate(post.created_at)}
                         </p>
                       </div>
@@ -165,7 +165,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         <div className="space-y-4 lg:col-span-2">
           {/* Weekly chart */}
           <Card className="border-border/40 shadow-sm">
-            <CardHeader className="pb-2">
+            <CardHeader className="px-3 pb-2 sm:px-6">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                   <TrendingUp className="h-3.5 w-3.5 text-primary" />
@@ -178,7 +178,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                 )}
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="px-3 pt-0 sm:px-6">
               {weeklyPosts.every((v) => v === 0) ? (
                 <p className="py-4 text-center text-xs text-muted-foreground">Sem publicações nas últimas 4 semanas</p>
               ) : (
@@ -200,13 +200,13 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
 
           {/* Top categories */}
           <Card className="border-border/40 shadow-sm">
-            <CardHeader className="pb-2">
+            <CardHeader className="px-3 pb-2 sm:px-6">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                 <BarChart3 className="h-3.5 w-3.5 text-primary" />
                 Top categorias
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="px-3 pt-0 sm:px-6">
               {postsByCategory.length === 0 ? (
                 <p className="py-4 text-center text-xs text-muted-foreground">Sem dados</p>
               ) : (
