@@ -69,10 +69,10 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
           </div>
         )}
         actionsSlot={(
-          <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 pt-2 xs:flex-row xs:items-center">
             <a
               href="#artigos"
-              className="inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-white/90"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-white/90 xs:w-auto"
             >
               Explorar artigos
             </a>

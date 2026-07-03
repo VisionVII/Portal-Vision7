@@ -191,14 +191,16 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Method not allowed' }, 405, cors);
   }
 
-  // Auth
+  // Auth — diagnostic info only exposed in development
   if (!(await isAuthorized(req))) {
-    const authHeader = req.headers.get('Authorization') ?? '';
-    const apiKeyHeader = req.headers.get('apikey') ?? '';
-    return jsonResponse({
-      error: 'Unauthorized',
-      diagnostic: buildUnauthorizedDiagnostic(authHeader, apiKeyHeader),
-    }, 401, cors);
+    const isDev = (Deno.env.get('ENVIRONMENT') ?? '').toLowerCase() === 'development';
+    const body: Record<string, unknown> = { error: 'Unauthorized' };
+    if (isDev) {
+      const authHeader = req.headers.get('Authorization') ?? '';
+      const apiKeyHeader = req.headers.get('apikey') ?? '';
+      body.diagnostic = buildUnauthorizedDiagnostic(authHeader, apiKeyHeader);
+    }
+    return jsonResponse(body, 401, cors);
   }
 
   // Parse body

@@ -428,28 +428,28 @@ const Index = () => {
         overlayClassName="bg-[linear-gradient(118deg,rgba(2,6,23,0.58)_0%,rgba(2,6,23,0.12)_42%,rgba(2,6,23,0.62)_100%)]"
         contentClassName="max-w-[36rem] pb-2 text-left sm:pb-6 lg:pb-10 xl:pl-6"
         actionsSlot={(
-          <div className="flex flex-col items-start gap-4 pt-6 sm:pt-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex w-full flex-col gap-4 pt-6 sm:pt-8">
+            <div className="flex w-full flex-col gap-3 xs:flex-row xs:items-center">
               {isExternalBannerHref ? (
                 <a
                   href={bannerHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100"
+                  className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100 xs:w-auto xs:min-w-[180px]"
                 >
                   {heroPrimaryCta}
                 </a>
               ) : isHashBannerHref ? (
                 <a
                   href={bannerHref}
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100"
+                  className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100 xs:w-auto xs:min-w-[180px]"
                 >
                   {heroPrimaryCta}
                 </a>
               ) : (
                 <Link
                   to={bannerHref}
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-7 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100"
+                  className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100 xs:w-auto xs:min-w-[180px]"
                 >
                   {heroPrimaryCta}
                 </Link>
@@ -457,7 +457,7 @@ const Index = () => {
 
               <Link
                 to={heroSecondaryHref}
-                className="inline-flex min-w-[220px] items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/15"
+                className="inline-flex w-full items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/15 xs:w-auto xs:min-w-[180px]"
               >
                 {heroSecondaryCta}
               </Link>

@@ -109,7 +109,7 @@ const SectionPageHero: React.FC<SectionPageHeroProps> = ({
                 {hasTitle ? (
                   <h1
                     className={cn(
-                      'text-balance text-4xl font-headline font-bold leading-tight text-white sm:text-5xl lg:text-6xl',
+                      'break-words text-balance text-3xl font-headline font-bold leading-tight text-white sm:text-4xl lg:text-5xl xl:text-6xl',
                       titleClassName,
                     )}
                   >

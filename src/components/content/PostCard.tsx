@@ -142,9 +142,9 @@ const PostCard: React.FC<PostCardProps> = ({
           <p className="mb-2 line-clamp-2 hidden text-[13px] leading-relaxed text-muted-foreground sm:block">{safeExcerpt}</p>
         </div>
         <div className="mt-auto flex items-center gap-2 border-t border-border pt-2.5 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1 truncate"><User size={11} />{author}</span>
-          <span className="flex items-center gap-1 shrink-0"><Calendar size={11} />{date}</span>
-          <Link to={linkPath} className="ml-auto flex items-center gap-1 whitespace-nowrap font-medium text-primary hover:underline">
+          <span className="flex min-w-0 items-center gap-1 truncate"><User size={11} className="shrink-0" /><span className="truncate">{author}</span></span>
+          <span className="flex shrink-0 items-center gap-1"><Calendar size={11} />{date}</span>
+          <Link to={linkPath} className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap font-medium text-primary hover:underline">
             Ler <ArrowRight size={11} />
           </Link>
         </div>
