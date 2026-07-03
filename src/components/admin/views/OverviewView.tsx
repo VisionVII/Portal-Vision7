@@ -102,7 +102,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       <div className="grid gap-4 lg:grid-cols-5">
         {/* Recent posts — wider column */}
         <Card className="border-border/40 shadow-sm lg:col-span-3">
-          <CardHeader className="pb-3">
+          <CardHeader className="px-3 pb-3 sm:px-6">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold">Artigos recentes</CardTitle>
               {allowedViews.includes('content') && (
@@ -116,7 +116,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
               )}
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="px-3 pt-0 sm:px-6">
             {postsLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3, 4].map((i) => (
@@ -133,24 +133,24 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
                 )}
               </div>
             ) : (
-              <div className="divide-y divide-border/40">
+              <div className="divide-y divide-border/40 overflow-hidden">
                 {recentPosts.map((post) => {
                   const statusInfo = STATUS_LABEL[post.status] ?? { label: post.status, cls: 'bg-muted text-muted-foreground' };
                   return (
-                    <div key={post.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <div key={post.id} className="flex min-w-0 items-center gap-2 py-2.5 first:pt-0 last:pb-0">
                       <div className="min-w-0 flex-1">
                         <button
                           type="button"
                           onClick={() => onEdit(post)}
-                          className="block max-w-full truncate text-left text-sm font-medium text-foreground hover:text-primary"
+                          className="w-full truncate text-left text-sm font-medium text-foreground hover:text-primary"
                         >
                           {post.title}
                         </button>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
                           {post.categories?.name ?? 'Sem categoria'} · {formatDate(post.created_at)}
                         </p>
                       </div>
-                      <span className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold ${statusInfo.cls}`}>
+                      <span className={`shrink-0 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${statusInfo.cls}`}>
                         {statusInfo.label}
                       </span>
                     </div>
