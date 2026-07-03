@@ -349,7 +349,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
         // AbortController guards against silent network hangs (e.g. captive portals,
         // firewalls that drop packets without resetting the connection).
         const abortCtrl = new AbortController();
-        const abortTimer = setTimeout(() => abortCtrl.abort(), 12_000);
+        const abortTimer = setTimeout(() => abortCtrl.abort(), 20_000);
 
         try {
           const { data, error } = await retryEdgeFunction(() =>
@@ -455,7 +455,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
           aria-label="Abrir assistente Vision7 AI"
           className={`shrink-0 text-white shadow-lg shadow-[#027ae3]/25 hover:bg-[#0269c2] ${
             compact
-              ? 'h-9 w-9 rounded-lg border border-white/15 bg-[#027ae3]/95 p-0'
+              ? 'h-11 w-11 rounded-lg border border-white/15 bg-[#027ae3]/95 p-0'
               : 'rounded-full bg-[#027ae3] px-3.5 py-2 text-sm'
           }`}
         >
@@ -467,7 +467,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       <SheetContent
         side="right"
         aria-describedby={undefined}
-        className="flex w-[96vw] flex-col gap-0 p-0 sm:max-w-lg lg:max-w-xl [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-white/15 [&>button]:p-1.5 [&>button]:text-white [&>button]:opacity-100 [&>button:hover]:bg-white/25 [&>button:hover]:text-white"
+        className="flex h-[100dvh] w-[96vw] flex-col gap-0 p-0 sm:max-w-lg lg:max-w-xl [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-white/15 [&>button]:p-1.5 [&>button]:text-white [&>button]:opacity-100 [&>button:hover]:bg-white/25 [&>button:hover]:text-white"
       >
         <VisuallyHidden><SheetTitle>Assistente Vision7 AI</SheetTitle></VisuallyHidden>
 

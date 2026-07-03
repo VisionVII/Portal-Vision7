@@ -119,7 +119,18 @@ export function PipelineDiagnosticsPanel({ diagnostics, diagnosticsError, active
       alerts.push({ type: 'warn', key: 'notags', node: 'Sem config ativa no DB — n8n usará tags padrão (IA, cibersegurança, automação)' });
 
     if (diagnostics.staging.total === 0 && diagnostics.clusters.total === 0 && diagnostics.curated.total === 0)
-      alerts.push({ type: 'info', key: 'empty', node: 'Pipeline vazio — execute os workflows ou aguarde os crons automáticos' });
+      alerts.push({
+        type: 'warn', key: 'empty',
+        node: (
+          <span>
+            Pipeline vazio — se o WF-01 já correu sem erro visível, a causa mais provável é que as variáveis{' '}
+            <code className="rounded bg-amber-500/10 px-1 font-mono">SUPABASE_SERVICE_ROLE_KEY</code> e{' '}
+            <code className="rounded bg-amber-500/10 px-1 font-mono">SUPABASE_URL</code>{' '}
+            não estão configuradas em n8n → Settings → Variables (são <em>$vars</em>, não <em>$env</em>).
+            Para WF-03 verificar também <code className="rounded bg-amber-500/10 px-1 font-mono">ANTHROPIC_API_KEY</code> em n8n → Settings → Environment Variables.
+          </span>
+        ),
+      });
   }
 
   const stagingTone = diagnostics ? (diagnostics.staging.unprocessed > 50 ? 'amber' : diagnostics.staging.total > 0 ? 'blue' : 'default') : 'default';

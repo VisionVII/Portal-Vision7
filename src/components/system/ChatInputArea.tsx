@@ -23,7 +23,7 @@ export const ChatInputArea = ({
   onQuestionChange,
   onSubmit,
 }: ChatInputAreaProps) => (
-  <div className="shrink-0 border-t border-border bg-background px-4 py-3">
+  <div className="shrink-0 border-t border-border bg-background px-4 pt-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
     {activeProvider === 'local-preview' && messageCount > 1 && (
       isNetworkOffline ? (
         <div className="mb-2 flex items-center gap-1.5 text-[10px] text-amber-600 dark:text-amber-400">
