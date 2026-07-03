@@ -263,13 +263,13 @@ const Header = () => {
                   {/* ─── Categories grid ─── */}
                   <div className="flex flex-1 flex-col gap-2.5 overflow-hidden">
                     <p className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-foreground/50">Categorias</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2.5">
                       {mobileCategoryItems.map((item) => (
                         <SheetClose asChild key={item.path}>
                           <NavLink
                             to={item.path}
                             className={({ isActive }) =>
-                              `flex min-h-[44px] items-center justify-start rounded-lg px-3.5 py-2.5 text-left text-sm font-semibold tracking-tight transition-all ${
+                              `flex min-h-[48px] items-center justify-start rounded-xl px-3.5 py-2.5 text-left text-sm font-semibold tracking-tight transition-all ${
                                 isActive
                                   ? 'bg-primary/10 text-primary'
                                   : 'bg-muted/30 text-foreground/70 hover:bg-muted/60 hover:text-foreground'

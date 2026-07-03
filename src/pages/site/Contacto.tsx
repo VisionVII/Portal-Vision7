@@ -2,14 +2,53 @@ import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import SectionPageHero from '@/components/content/SectionPageHero';
-import { Mail, MapPin, Globe } from 'lucide-react';
+import { Mail, MapPin, Globe, CheckCircle2, Lock } from 'lucide-react';
+
+const INFO_ITEMS = [
+  {
+    icon: Mail,
+    label: 'Email',
+    content: (
+      <a
+        href="mailto:contacto@vision7.pt"
+        className="text-sm text-muted-foreground transition-colors hover:text-primary"
+      >
+        contacto@vision7.pt
+      </a>
+    ),
+  },
+  {
+    icon: Globe,
+    label: 'Website',
+    content: <span className="text-sm text-muted-foreground">portal.vision7.pt</span>,
+  },
+  {
+    icon: MapPin,
+    label: 'País',
+    content: <span className="text-sm text-muted-foreground">Portugal</span>,
+  },
+];
+
+const SUBJECTS = [
+  'Sugestão Editorial',
+  'Colaboração / Parceria',
+  'Publicidade',
+  'Correção de Conteúdo',
+  'Questão Técnica',
+  'Outro',
+];
 
 const Contacto = () => {
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -39,76 +78,66 @@ const Contacto = () => {
         )}
       />
 
-      <div className="py-12">
+      <div className="py-10 sm:py-14">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-4xl">
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
 
-              {/* Info de contacto */}
+              {/* Info sidebar */}
               <div className="space-y-4">
-                <h2 className="font-editorial text-2xl font-bold">Informações</h2>
+                <h2 className="font-editorial text-xl font-bold sm:text-2xl">Informações</h2>
 
-                <Card>
-                  <CardContent className="flex items-start gap-3 p-5">
-                    <Mail className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <div>
-                      <p className="font-semibold text-sm">Email</p>
-                      <a href="mailto:contacto@vision7.pt" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                        contacto@vision7.pt
-                      </a>
-                    </div>
-                  </CardContent>
-                </Card>
+                {INFO_ITEMS.map(({ icon: Icon, label, content }) => (
+                  <Card key={label}>
+                    <CardContent className="flex items-start gap-3 p-4 sm:p-5">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Icon className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                          {label}
+                        </p>
+                        <div className="mt-0.5">{content}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
 
-                <Card>
-                  <CardContent className="flex items-start gap-3 p-5">
-                    <Globe className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <div>
-                      <p className="font-semibold text-sm">Website</p>
-                      <span className="text-sm text-muted-foreground">portal.vision7.pt</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="flex items-start gap-3 p-5">
-                    <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <div>
-                      <p className="font-semibold text-sm">País</p>
-                      <span className="text-sm text-muted-foreground">Portugal</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className="rounded-lg border border-border bg-muted/40 p-4 text-xs text-muted-foreground leading-relaxed">
-                  <strong className="block mb-1">Privacidade</strong>
-                  Os dados submetidos neste formulário são utilizados exclusivamente para responder ao seu contacto e não são partilhados com terceiros.
+                <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-4 text-xs leading-relaxed text-muted-foreground">
+                  <Lock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60" />
+                  <span>
+                    Os dados submetidos são usados exclusivamente para responder ao seu contacto e não são partilhados com terceiros.
+                  </span>
                 </div>
               </div>
 
-              {/* Formulário */}
+              {/* Form */}
               <div className="lg:col-span-2">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Enviar Mensagem</CardTitle>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg">Enviar Mensagem</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {submitted ? (
-                      <div className="py-8 text-center">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                          <Mail className="h-6 w-6" />
+                      <div className="flex flex-col items-center gap-4 py-8 text-center">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10">
+                          <CheckCircle2 className="h-7 w-7 text-emerald-500" />
                         </div>
-                        <p className="font-semibold">Mensagem preparada!</p>
-                        <p className="mt-1 text-sm text-muted-foreground">O seu cliente de email foi aberto com a mensagem pronta a enviar.</p>
+                        <div>
+                          <p className="font-semibold">Mensagem preparada!</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            O seu cliente de email foi aberto com a mensagem pronta a enviar.
+                          </p>
+                        </div>
                       </div>
                     ) : (
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          <div>
-                            <label htmlFor="name" className="mb-1.5 block text-sm font-medium">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="name">
                               Nome <span className="text-destructive">*</span>
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                               id="name"
                               name="name"
                               type="text"
@@ -116,14 +145,13 @@ const Contacto = () => {
                               value={form.name}
                               onChange={handleChange}
                               placeholder="O seu nome"
-                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             />
                           </div>
-                          <div>
-                            <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="email">
                               Email <span className="text-destructive">*</span>
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                               id="email"
                               name="email"
                               type="email"
@@ -131,52 +159,45 @@ const Contacto = () => {
                               value={form.email}
                               onChange={handleChange}
                               placeholder="email@exemplo.com"
-                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             />
                           </div>
                         </div>
 
-                        <div>
-                          <label htmlFor="subject" className="mb-1.5 block text-sm font-medium">Assunto</label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="subject">Assunto</Label>
                           <select
                             id="subject"
                             name="subject"
                             value={form.subject}
                             onChange={handleChange}
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <option value="">Selecionar assunto...</option>
-                            <option value="Sugestão Editorial">Sugestão Editorial</option>
-                            <option value="Colaboração / Parceria">Colaboração / Parceria</option>
-                            <option value="Publicidade">Publicidade</option>
-                            <option value="Correção de Conteúdo">Correção de Conteúdo</option>
-                            <option value="Questão Técnica">Questão Técnica</option>
-                            <option value="Outro">Outro</option>
+                            {SUBJECTS.map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
                           </select>
                         </div>
 
-                        <div>
-                          <label htmlFor="message" className="mb-1.5 block text-sm font-medium">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="message">
                             Mensagem <span className="text-destructive">*</span>
-                          </label>
+                          </Label>
                           <textarea
                             id="message"
                             name="message"
                             required
-                            rows={6}
+                            rows={5}
                             value={form.message}
                             onChange={handleChange}
                             placeholder="Escreva a sua mensagem aqui..."
-                            className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            className="flex w-full resize-none rounded-md border border-input bg-background px-3 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                           />
                         </div>
 
-                        <button
-                          type="submit"
-                          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-                        >
+                        <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold">
                           Enviar Mensagem
-                        </button>
+                        </Button>
                       </form>
                     )}
                   </CardContent>

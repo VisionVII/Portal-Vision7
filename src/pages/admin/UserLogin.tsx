@@ -287,7 +287,7 @@ const UserLogin = () => {
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
-                className="text-center text-2xl tracking-[0.4em] font-mono"
+                className="text-center text-xl tracking-[0.3em] font-mono sm:text-2xl sm:tracking-[0.4em]"
                 maxLength={6}
                 autoFocus
               />
@@ -408,7 +408,7 @@ const UserLogin = () => {
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
-                className="text-center text-2xl tracking-[0.4em] font-mono"
+                className="text-center text-xl tracking-[0.3em] font-mono sm:text-2xl sm:tracking-[0.4em]"
                 maxLength={6}
                 autoFocus
               />
@@ -450,9 +450,9 @@ const BackButton = ({ onClick }: { onClick: () => void }) => (
   <button
     type="button"
     onClick={onClick}
-    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mx-auto pt-2"
+    className="mx-auto flex min-h-[44px] items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
   >
-    <ArrowLeft className="h-3.5 w-3.5" /> Voltar
+    <ArrowLeft className="h-4 w-4" /> Voltar
   </button>
 );
 

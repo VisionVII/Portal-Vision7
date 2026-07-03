@@ -80,10 +80,10 @@ const Sobre = () => {
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {STATS.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="rounded-2xl border border-border bg-card p-5 text-center shadow-sm">
+                <div key={label} className="rounded-2xl border border-border bg-card p-4 text-center shadow-sm sm:p-5">
                   <Icon className="mx-auto mb-2 h-5 w-5 text-primary" />
-                  <p className="text-2xl font-bold font-headline text-foreground">{value}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
+                  <p className="font-headline text-xl font-bold text-foreground sm:text-2xl">{value}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-xs">{label}</p>
                 </div>
               ))}
             </div>
@@ -144,14 +144,14 @@ const Sobre = () => {
               <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 <Link
                   to="/contacto"
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-primary/30 sm:w-auto"
                 >
                   Entrar em Contacto
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <a
                   href="#newsletter"
-                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-muted hover:-translate-y-0.5"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 text-sm font-semibold text-foreground transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted sm:w-auto"
                 >
                   <Mail className="h-4 w-4 text-primary" />
                   Subscrever Newsletter
