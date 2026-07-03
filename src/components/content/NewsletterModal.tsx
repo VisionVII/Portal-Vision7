@@ -161,7 +161,7 @@ const NewsletterModal = ({ open, onClose }: NewsletterModalProps) => {
                 )}
               </button>
 
-              <p className="text-center text-[11px] text-muted-foreground/70">
+              <p className="text-center text-xs text-muted-foreground/70">
                 Ao assinar, concorda com nossa{' '}
                 <a href="/privacy-policy" className="underline hover:text-foreground transition-colors">
                   Política de Privacidade

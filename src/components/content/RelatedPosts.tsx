@@ -15,7 +15,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ posts }) => {
       <h2 className="text-2xl font-headline font-bold text-foreground mb-6">
         Artigos Relacionados
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3">
         {posts.map(post => (
           <Link
             key={post.id}
