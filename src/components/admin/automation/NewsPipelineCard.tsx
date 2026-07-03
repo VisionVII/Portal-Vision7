@@ -666,7 +666,7 @@ export function NewsPipelineCard() {
               <TooltipTrigger asChild>
                 <Button
                   size="sm" variant="ghost"
-                  className={`h-8 w-8 rounded-lg p-0 ${showConfig ? 'bg-blue-500/10 text-blue-400' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                  className={`h-8 w-8 rounded-lg p-0 transition-all ${showConfig ? 'bg-blue-500/25 text-blue-300 ring-1 ring-inset ring-blue-500/50' : 'text-muted-foreground/60 hover:bg-muted/50 hover:text-foreground'}`}
                   onClick={openConfig}
                 >
                   <Settings2 className="h-4 w-4" />
@@ -692,7 +692,7 @@ export function NewsPipelineCard() {
               <TooltipTrigger asChild>
                 <Button
                   size="sm" variant="ghost"
-                  className={`h-8 w-8 rounded-lg p-0 ${showSettings ? 'bg-amber-500/10 text-amber-400' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                  className={`h-8 w-8 rounded-lg p-0 transition-all ${showSettings ? 'bg-amber-500/25 text-amber-300 ring-1 ring-inset ring-amber-500/50' : 'text-muted-foreground/60 hover:bg-muted/50 hover:text-foreground'}`}
                   onClick={() => setShowSettings(!showSettings)}
                 >
                   <Shield className="h-4 w-4" />
@@ -705,7 +705,7 @@ export function NewsPipelineCard() {
               <TooltipTrigger asChild>
                 <Button
                   size="sm" variant="ghost"
-                  className={`h-8 w-8 rounded-lg p-0 ${showLog ? 'bg-blue-500/10 text-blue-400' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                  className={`h-8 w-8 rounded-lg p-0 transition-all ${showLog ? 'bg-blue-500/25 text-blue-300 ring-1 ring-inset ring-blue-500/50' : 'text-muted-foreground/60 hover:bg-muted/50 hover:text-foreground'}`}
                   onClick={() => setShowLog(!showLog)}
                 >
                   <Activity className="h-4 w-4" />
@@ -715,14 +715,16 @@ export function NewsPipelineCard() {
             </Tooltip>
 
             <div className="ml-1 flex items-center gap-2 border-l border-border/40 pl-2">
-              <span className="hidden text-[11px] font-medium text-muted-foreground sm:inline">Auto</span>
+              <span className={`hidden text-[11px] font-semibold sm:inline ${allActive ? 'text-cyan-400' : 'text-muted-foreground/50'}`}>
+                {allActive ? 'ON' : 'OFF'}
+              </span>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Switch
                     checked={allActive}
                     disabled={!pipelineFound}
                     onCheckedChange={() => void handleToggleAll()}
-                    className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-600"
+                    className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-600 data-[state=unchecked]:bg-neutral-600"
                   />
                 </TooltipTrigger>
                 <TooltipContent side="bottom">

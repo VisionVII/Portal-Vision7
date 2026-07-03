@@ -100,7 +100,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   onClick={() => onViewChange(item.id)}
                   className={`relative inline-flex shrink-0 snap-start items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-medium transition-all duration-150 active:scale-[0.97] ${
                     isActive
-                      ? 'border-primary/30 bg-primary/10 text-primary shadow-sm dark:border-primary/40 dark:bg-primary/15'
+                      ? 'border-primary/40 bg-primary/15 text-primary shadow-sm dark:border-primary/50 dark:bg-primary/20'
                       : 'border-transparent bg-muted/40 text-muted-foreground active:bg-muted/60'
                   }`}
                 >
@@ -174,15 +174,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                         collapsed ? 'justify-center px-1.5' : 'gap-3 px-3'
                       } ${
                         isActive
-                          ? 'bg-primary/8 text-primary-700 shadow-sm dark:bg-primary/12 dark:text-primary-300'
+                          ? 'bg-primary/12 text-primary shadow-sm dark:bg-primary/18 dark:text-primary'
                           : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                       }`}
                     >
                       <div
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors duration-150 ${
                           isActive
-                            ? 'bg-primary/15 text-primary ring-1 ring-primary/30 dark:bg-primary/20'
-                            : 'text-muted-foreground'
+                            ? 'bg-primary/20 text-primary ring-1 ring-primary/40 dark:bg-primary/25'
+                            : 'text-muted-foreground/70'
                         }`}
                       >
                         <Icon className="h-4 w-4" />
