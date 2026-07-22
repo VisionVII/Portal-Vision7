@@ -1,6 +1,6 @@
 # Vision7 — Spec-Driven Development (SDD)
 
-> Atualizado: 20 de Julho de 2026
+> Atualizado: 22 de Julho de 2026
 
 ## Status dos Módulos
 
@@ -20,7 +20,7 @@
 | Agents & Skills AI | 0.8.0 | 🟡 Em desenvolvimento |
 | CI/CD & DevOps | 0.3.0 | 🟡 Em desenvolvimento |
 | Portal Assistant | 0.1.0 | 🟡 Em desenvolvimento |
-| Tutorial de Onboarding (Admin) | 0.1.0 | 🟡 Em desenvolvimento — ver `sdd/modules/admin-onboarding.json` |
+| Tutorial de Onboarding (Admin) | 0.2.0 | 🟡 Código em produção (main) — migration `user_onboarding` e QA manual pendentes; ver `sdd/modules/admin-onboarding.json` |
 | Automação n8n (Legacy v1) | 1.1.0 | ⛔ Depreciado — substituído por Automation Engine v2 |
 
 ⚠️ `bash sdd/scripts/sdd-stale-check.sh` reporta a maioria dos módulos com specs desactualizados

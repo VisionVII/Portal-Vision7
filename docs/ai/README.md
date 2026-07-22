@@ -1,6 +1,6 @@
 # Arquitetura AI do Portal Vision7
 
-> Atualizado: 10 de Julho de 2026
+> Atualizado: 22 de Julho de 2026
 
 Esta pasta contém a arquitetura de agentes IA e skills especializadas para o desenvolvimento e manutenção do Vision7, um portal digital focado em tecnologias web, automação e informações relevantes.
 
@@ -139,7 +139,7 @@ Supabase Edge Function (ingest-manus-post)
 | `title` | string | 55–65 chars, SEO keyword início | H1 + Indexação |
 | `slug` | string | 6 palavras max, sem acentos | URL única |
 | `meta_description` | string | 145–155 chars exactos | SERP snippet |
-| `category` | enum | tecn\|mundo\|saude\|musica\|desporto\|audio | Organização |
+| `category` | enum | tecnologia\|mundo\|saude\|musica\|desporto | Organização |
 | `seo.primary_keyword` | string | Palavra-chave principal | Ranking |
 | `content.body` | string | 1400–1800 wds, ≥5 H2 | Autoridade |
 | `quality_score.total` | number | 0–10, ≥9.5 publicável | Auditoria |

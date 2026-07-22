@@ -1,41 +1,41 @@
 {
   "$schema": "./module_schema.json",
   "module": "Tutorial de Onboarding (Admin)",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "owner": "Vision7 Core Team",
-  "status": "Em desenvolvimento",
-  "last_updated": "2026-07-20",
+  "status": "Código em produção — migration user_onboarding e QA manual pendentes",
+  "last_updated": "2026-07-22",
   "objective": "Tour guiado nativo (sem libs externas) que ensina cada área do dashboard admin passo-a-passo, com progresso persistido por utilizador e um único ponto de controlo em Configurações.",
   "functional_requirements": [
     {
       "id": "FR-001",
       "description": "Mostrar um coachmark sequencial por área do dashboard (Visão geral, Conteúdo, Automações, Configurações), ancorado a elementos reais via atributos data-tour.",
       "priority": "Alta",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado (código) — QA manual pendente"
     },
     {
       "id": "FR-002",
       "description": "Persistir progresso (passos concluídos, ativo/inativo) em localStorage e espelhar em Supabase (user_onboarding) quando o utilizador está autenticado, com fallback silencioso.",
       "priority": "Alta",
-      "status": "Em desenvolvimento"
+      "status": "Código finalizado — tabela user_onboarding ainda por criar em produção (migration pendente)"
     },
     {
       "id": "FR-003",
       "description": "Ponto único de controlo em Configurações — ativar/desativar, ver progresso por área, reiniciar tutorial.",
       "priority": "Alta",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado (código) — QA manual pendente"
     },
     {
       "id": "FR-004",
       "description": "Não reabrir automaticamente o overlay depois de uma área estar concluída ou do tutorial ter sido desativado/saltado.",
       "priority": "Média",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado (código) — QA manual pendente"
     },
     {
       "id": "FR-005",
       "description": "Mini-tutorial estático inline (\"O que fazer agora\") nas áreas mais densas (Automações, Conteúdo), independente do overlay.",
       "priority": "Média",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado (código) — QA manual pendente"
     }
   ],
   "non_functional_requirements": [
@@ -49,7 +49,7 @@
       "id": "NFR-002",
       "description": "Navegável por teclado (foco preso no coachmark, Esc fecha), role=dialog e aria-labelledby.",
       "category": "Acessibilidade",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado"
     },
     {
       "id": "NFR-003",
@@ -128,6 +128,12 @@
       "version": "0.1.0",
       "author": "Claude Code",
       "description": "SDD inicial do tutorial de onboarding do dashboard admin — tour guiado nativo, persistência híbrida localStorage/Supabase, toggle único em Configurações."
+    },
+    {
+      "date": "2026-07-22",
+      "version": "0.2.0",
+      "author": "Claude Code",
+      "description": "Implementação enviada para main (commit 3438b9a): todos os FR/NFR de código concluídos. Pendente: aplicar migration user_onboarding em produção (Supabase) e correr os 4 cenários de QA manual."
     }
   ]
 }

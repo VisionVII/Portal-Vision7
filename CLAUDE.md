@@ -103,6 +103,15 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 ### Remoção Audiocast ✅
 - [x] Feature audiocast removida por completo (código + docs + rotas)
 - [x] URLs legados `/audiocasts` e `/audiocast/:id` redirecionam para `/`
+- [ ] Limpeza pendente: `supabase/functions/portal-ai-assistant/index.ts` ainda tem o assistente a sugerir links `/audiocasts` (redirecionam para `/`) — referências vestigiais do system prompt, não afectam o resto do portal
+
+### F7 — Tutorial de Onboarding (Admin) 🟡
+- [x] Tour guiado nativo por área (Visão Geral, Conteúdo, Automações, Configurações) — `src/components/admin/onboarding/`
+- [x] Persistência híbrida localStorage + Supabase (`user_onboarding`), com fallback silencioso
+- [x] Ponto único de controlo em Configurações > Tutorial (activar/desactivar, progresso, reiniciar)
+- [x] Mini-tutoriais inline ("O que fazer agora") em Conteúdo e Automações
+- [ ] Migration `supabase/migrations/20260720120000_user_onboarding.sql` aplicada em produção (código já em `main`, tabela ainda por criar no Supabase)
+- [ ] QA manual dos 4 cenários — ver `sdd/modules/admin-onboarding.json`
 
 ---
 

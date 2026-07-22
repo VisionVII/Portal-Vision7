@@ -152,6 +152,7 @@ O painel interno ja esta completo com areas praticas para operacao diaria.
 - Configuracoes gerais do portal.
 - Configuracao do assistente IA.
 - Configuracao de monetizacao.
+- Tutorial guiado para quem esta a usar o painel pela primeira vez (liga/desliga em Configuracoes).
 
 11) COMO TUDO SE CONECTA NA PRATICA
 
