@@ -52,7 +52,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
   const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);
 
   const recentPosts = useMemo(
-    () => [...(posts ?? [])].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 8),
+    () => [...(posts ?? [])].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5),
     [posts],
   );
 
