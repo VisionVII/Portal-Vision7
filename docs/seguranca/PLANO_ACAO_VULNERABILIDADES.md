@@ -1,5 +1,11 @@
 # 🚨 MAPA DE VULNERABILIDADES & PLANO DE AÇÃO
 
+> ⚠️ **REGISTO HISTÓRICO — ver [SUMMARY_KEY_FINDINGS.md](SUMMARY_KEY_FINDINGS.md) para o estado actual (10 Jul 2026).**
+> Este plano de acção de 4 semanas é da auditoria original (Março/Abril 2026). A maior parte das
+> vulnerabilidades V1–V6 abaixo **já foi corrigida** — cada uma tem uma nota de estado verificado
+> logo a seguir ao título. O código de exemplo/patches dentro de cada secção é mantido como registo,
+> não reflecte necessariamente o código actual.
+
 ## 📍 Mapa de Vulnerabilidades por Módulo
 
 ```
@@ -91,6 +97,9 @@ INFRAESTRUTURA
 ## 🔴 VULNERABILIDADES CRÍTICAS
 
 ### V1: Auto-Admin Trigger
+> ✅ **RESOLVIDO** — removido em `20260323084000_remove_auto_admin.sql`, substituído por
+> `registration_invites` (aprovação + token + expiração).
+
 **Severidade:** 🔴🔴🔴 CRÍTICA  
 **Arquivo:** `supabase/migrations/20260316094654_3224bdbe-379b-4734-b305-0d8b553d2e43.sql`  
 **Linhas:** ~7-18
@@ -168,6 +177,8 @@ $$ LANGUAGE plpgsql;
 ---
 
 ### V2: XSS em Posts (dangerouslySetInnerHTML)
+> ✅ **RESOLVIDO** — `Post.tsx` sanitiza via DOMPurify (`src/lib/richContent.ts`) antes de renderizar.
+
 **Severidade:** 🔴🔴🔴 CRÍTICA  
 **Arquivo:** `src/pages/Post.tsx`  
 **Linha:** 126
@@ -241,6 +252,8 @@ const cleanHTML = DOMPurify.sanitize(post.content, {
 ---
 
 ### V3: Token em localStorage (XSS Vulnerable)
+> 🟡 **AINDA ABERTO (verificado 10/07/2026)** — `client.ts:24` continua com `window.localStorage`.
+
 **Severidade:** 🔴🔴 ALTA  
 **Arquivo:** `src/integrations/supabase/client.ts`
 
@@ -301,6 +314,8 @@ auth: {
 ## 🟡 VULNERABILIDADES MÉDIAS
 
 ### V4: Race Condition em checkAdminRole()
+> ✅ **RESOLVIDO** — `AuthContext.tsx` usa guards (`signingInRef`, `loadedRolesForRef`) + safety timer 8s.
+
 **Severidade:** 🟡🟡 MÉDIA  
 **Arquivo:** `src/contexts/AuthContext.tsx`  
 **Linhas:** 40-50
@@ -359,6 +374,8 @@ useEffect(() => {
 ---
 
 ### V5: Newsletter sem Validação
+> 🟡 **AINDA ABERTO** — a mesma policy `WITH CHECK (true)` continua activa, sem double opt-in.
+
 **Severidade:** 🟡🟡 MÉDIA  
 **Arquivo:** `supabase/migrations/20260217224603_...sql`
 
@@ -456,6 +473,10 @@ const handleConfirm = async (token: string) => {
 ---
 
 ### V6: Sem Rate Limiting
+> 🟡 **PARCIAL** — `supabase/functions/_shared/rateLimit.ts` implementado e usado pelos edge functions
+> `n8n-proxy`/`n8n-settings`/`n8n-workflow-import`. Login/registo/newsletter continuam sem rate limiting
+> explícito (dependem do throttling nativo do Supabase Auth).
+
 **Severidade:** 🟡🟡 MÉDIA  
 **Risco:** Brute force, DDOS, spam
 
@@ -725,27 +746,33 @@ async function checkRateLimit(ip: string, endpoint: string) {
 
 ## 📊 Resumo por Severidade
 
-```
-🔴 CRÍTICAS (Fazer esta semana):
-├── V1: Auto-admin trigger removal       [1 dia]
-├── V2: XSS sanitization (DOMPurify)    [1 dia]
-├── V3: Token storage seguro             [1 dia]
-└── V4: Race condition fix                [0.5 dia]
+> Plano original abaixo, preservado. Estado real verificado em 10/07/2026:
 
-🟡 MÉDIAS (Próximas 2 semanas):
-├── V5: Newsletter validation             [1.5 dias]
-├── V6: Rate limiting                     [1.5 dias]
-├── V7: Double opt-in newsletter          [2 dias]
-├── V8: Session timeout                   [1 dia]
-└── V9: Audit logging                     [2 dias]
-
-🟢 ROADMAP (Mês que vem):
-├── Multi-role system                     [2 dias]
-├── 2FA/TOTP                              [2 dias]
-├── Permission matrix                     [1.5 dias]
-├── Admin approval flow                   [1.5 dias]
-└── API public documentation              [2 dias]
 ```
+🔴 CRÍTICAS (plano original):
+├── V1: Auto-admin trigger removal       ✅ RESOLVIDO
+├── V2: XSS sanitization (DOMPurify)     ✅ RESOLVIDO
+├── V3: Token storage seguro             🟡 AINDA ABERTO (localStorage)
+└── V4: Race condition fix               ✅ RESOLVIDO
+
+🟡 MÉDIAS (plano original):
+├── V5: Newsletter validation            🟡 AINDA ABERTO
+├── V6: Rate limiting                    🟡 PARCIAL (só edge functions n8n-*)
+├── V7: Double opt-in newsletter         🟡 AINDA ABERTO (mesmo item que V5)
+├── V8: Session timeout                  ⚪ não verificado nesta revisão
+└── V9: Audit logging                    ✅ RESOLVIDO (audit_logs + automation_audit_log)
+
+🟢 ROADMAP (plano original):
+├── Multi-role system                    ✅ RESOLVIDO (app_role enum + has_role() + registration_invites)
+├── 2FA/TOTP                             ✅ RESOLVIDO (useMFA/MFASetup/MFAChallenge)
+├── Permission matrix                    ⚪ não verificado nesta revisão
+├── Admin approval flow                  ✅ RESOLVIDO (registration_invites)
+└── API public documentation             ⚪ não verificado nesta revisão
+```
+
+**Restam por fazer (confirmado):** token storage (V3), newsletter double opt-in (V5/V7), rate limiting
+fora dos edge functions de automação (V6). Ver [SUMMARY_KEY_FINDINGS.md](SUMMARY_KEY_FINDINGS.md) para
+a lista priorizada.
 
 ---
 

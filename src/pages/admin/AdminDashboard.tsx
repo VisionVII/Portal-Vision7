@@ -8,6 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Post, usePosts } from '@/hooks/usePosts';
 import { MFAChallenge } from '@/components/admin/MFAChallenge';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { TourProgressProvider } from '@/components/admin/onboarding/TourProgressContext';
+import { TourController } from '@/components/admin/onboarding/TourController';
 
 // Lazy-loaded views
 const OverviewView = lazy(() => import('@/components/admin/views/OverviewView'));
@@ -141,67 +143,70 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader onNewPost={handleNewPost} onMenuOpen={() => setMobileMenuOpen(true)} />
+    <TourProgressProvider activeView={activeView} onNavigate={setActiveView}>
+      <div className="min-h-screen bg-background">
+        <TourController />
+        <DashboardHeader onNewPost={handleNewPost} onMenuOpen={() => setMobileMenuOpen(true)} />
 
-      {/* Mobile drawer — vertical sidebar */}
-      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="flex w-72 flex-col gap-0 p-0">
-          <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
-          <div className="overflow-y-auto px-3 py-4">
-            <DashboardSidebar
-              activeView={activeView}
-              onViewChange={(view) => { setActiveView(view); setMobileMenuOpen(false); }}
-              allowedViews={allowedViews}
-              draftCount={draftCount}
-              forceVertical
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+        {/* Mobile drawer — vertical sidebar */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetContent side="left" className="flex w-72 flex-col gap-0 p-0">
+            <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
+            <div className="overflow-y-auto px-3 py-4">
+              <DashboardSidebar
+                activeView={activeView}
+                onViewChange={(view) => { setActiveView(view); setMobileMenuOpen(false); }}
+                allowedViews={allowedViews}
+                draftCount={draftCount}
+                forceVertical
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
 
-      <div className="flex min-h-[calc(100vh-3.5rem)]">
-        {/* Desktop sidebar */}
-        <div className={`hidden shrink-0 border-r border-border/40 bg-background lg:block transition-[width] duration-300 ease-in-out ${
-          sidebarCollapsed ? 'w-[60px]' : 'w-56 xl:w-64'
-        }`}>
-          <div className="sticky top-14 overflow-y-auto p-3">
-            <DashboardSidebar
-              activeView={activeView}
-              onViewChange={setActiveView}
-              allowedViews={allowedViews}
-              draftCount={draftCount}
-              collapsed={sidebarCollapsed}
-              onToggleCollapse={toggleSidebar}
-            />
+        <div className="flex min-h-[calc(100vh-3.5rem)]">
+          {/* Desktop sidebar */}
+          <div className={`hidden shrink-0 border-r border-border/40 bg-background lg:block transition-[width] duration-300 ease-in-out ${
+            sidebarCollapsed ? 'w-[60px]' : 'w-56 xl:w-64'
+          }`}>
+            <div className="sticky top-14 overflow-y-auto p-3">
+              <DashboardSidebar
+                activeView={activeView}
+                onViewChange={setActiveView}
+                allowedViews={allowedViews}
+                draftCount={draftCount}
+                collapsed={sidebarCollapsed}
+                onToggleCollapse={toggleSidebar}
+              />
+            </div>
           </div>
+
+          {/* Main content */}
+          <main className="min-w-0 flex-1 overflow-x-hidden bg-muted/20">
+            <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+
+              <Suspense fallback={<ViewSkeleton />}>
+                <Panel view="overview">
+                  <OverviewView onNewPost={handleNewPost} onNavigate={setActiveView} onEdit={handleEdit} allowedViews={allowedViews} />
+                </Panel>
+                <Panel view="content">
+                  <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />
+                </Panel>
+                <Panel view="builder"><BuilderView /></Panel>
+                <Panel view="media"><MediaGalleryView /></Panel>
+                <Panel view="automations"><AutomationsView isActive={activeView === 'automations'} /></Panel>
+                <Panel view="courses"><CoursesView /></Panel>
+                <Panel view="crm"><CrmView /></Panel>
+                <Panel view="analytics"><AnalyticsView /></Panel>
+                <Panel view="access"><AccessView /></Panel>
+                <Panel view="developer"><DeveloperView /></Panel>
+                <Panel view="settings"><SettingsView /></Panel>
+              </Suspense>
+            </div>
+          </main>
         </div>
-
-        {/* Main content */}
-        <main className="min-w-0 flex-1 overflow-x-hidden bg-muted/20">
-          <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-
-            <Suspense fallback={<ViewSkeleton />}>
-              <Panel view="overview">
-                <OverviewView onNewPost={handleNewPost} onNavigate={setActiveView} onEdit={handleEdit} allowedViews={allowedViews} />
-              </Panel>
-              <Panel view="content">
-                <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />
-              </Panel>
-              <Panel view="builder"><BuilderView /></Panel>
-              <Panel view="media"><MediaGalleryView /></Panel>
-              <Panel view="automations"><AutomationsView isActive={activeView === 'automations'} /></Panel>
-              <Panel view="courses"><CoursesView /></Panel>
-              <Panel view="crm"><CrmView /></Panel>
-              <Panel view="analytics"><AnalyticsView /></Panel>
-              <Panel view="access"><AccessView /></Panel>
-              <Panel view="developer"><DeveloperView /></Panel>
-              <Panel view="settings"><SettingsView /></Panel>
-            </Suspense>
-          </div>
-        </main>
       </div>
-    </div>
+    </TourProgressProvider>
   );
 };
 

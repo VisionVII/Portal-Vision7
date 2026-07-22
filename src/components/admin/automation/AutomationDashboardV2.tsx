@@ -33,6 +33,7 @@ import { useCuratedPosts } from '@/hooks/useCuratedPosts';
 import { usePipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTour } from '@/components/admin/onboarding/TourProgressContext';
 import { supabase } from '@/integrations/supabase/client';
 import { logAutomationAction } from '@/services/auditLog';
 import { notifyAdmin } from '@/services/adminNotifications';
@@ -69,9 +70,11 @@ interface KpiStat {
   value: string;
   icon: React.ElementType;
   tone: 'success' | 'warning' | 'error' | 'neutral' | 'blue';
+  /** Escondida em ecrãs < lg por defeito — revelada pelo botão "Ver métricas" ou sempre visível a partir de lg. */
+  secondary?: boolean;
 }
 
-function KpiGrid({ stats }: { stats: KpiStat[] }) {
+function KpiGrid({ stats, showSecondary = true }: { stats: KpiStat[]; showSecondary?: boolean }) {
   const toneMap = {
     success: {
       card: 'border-emerald-500/20 bg-emerald-500/[0.04]',
@@ -105,8 +108,9 @@ function KpiGrid({ stats }: { stats: KpiStat[] }) {
       {stats.map((stat) => {
         const t = toneMap[stat.tone];
         const Icon = stat.icon;
+        const visibility = stat.secondary ? `${showSecondary ? 'flex' : 'hidden'} lg:flex` : 'flex';
         return (
-          <div key={stat.label} className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${t.card}`}>
+          <div key={stat.label} className={`${visibility} items-center gap-3 rounded-xl border px-4 py-3 ${t.card}`}>
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
               <Icon className="h-4 w-4" />
             </div>
@@ -126,9 +130,11 @@ export function AutomationDashboardV2({
 }: AutomationDashboardV2Props) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isAreaComplete } = useTour();
   const queryClient = useQueryClient();
 
   const [activeView, setActiveView] = useState<DashboardView>('pipeline');
+  const [showSecondaryKpis, setShowSecondaryKpis] = useState(false);
   const [activeCategory, setActiveCategory] = useState<AutomationCategory | 'all'>('all');
   const [automationsPage, setAutomationsPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
@@ -292,12 +298,12 @@ export function AutomationDashboardV2({
     ];
   }, [curatedPosts]);
 
-  const pipelineStages = useMemo(() => ([
+  const pipelineStages = useMemo(() => [
     {
       label: 'Coleta',
       value: diagnostics?.staging.total ?? 0,
       helper: `${diagnostics?.staging.unprocessed ?? 0} em fila`,
-      tone: (diagnostics?.staging.unprocessed ?? 0) > 0 ? 'warning' : 'neutral',
+      tone: (diagnostics?.staging.unprocessed ?? 0) > 0 ? ('warning' as const) : ('neutral' as const),
       icon: Workflow,
       lastAt: diagnostics?.lastStagingAt ?? null,
     },
@@ -305,7 +311,7 @@ export function AutomationDashboardV2({
       label: 'Cluster',
       value: diagnostics?.clusters.total ?? 0,
       helper: `${diagnostics?.clusters.highConfidence ?? 0} confiáveis`,
-      tone: (diagnostics?.clusters.lowConfidence ?? 0) > 0 ? 'warning' : 'success',
+      tone: (diagnostics?.clusters.lowConfidence ?? 0) > 0 ? ('warning' as const) : ('success' as const),
       icon: Layers3,
       lastAt: diagnostics?.lastClusterAt ?? null,
     },
@@ -313,7 +319,7 @@ export function AutomationDashboardV2({
       label: 'IA Reescrita',
       value: (diagnostics?.curated.ready ?? 0) + (diagnostics?.curated.draft ?? 0),
       helper: `${diagnostics?.curated.ready ?? 0} prontos`,
-      tone: (diagnostics?.curated.ready ?? 0) > 0 ? 'success' : 'neutral',
+      tone: (diagnostics?.curated.ready ?? 0) > 0 ? ('success' as const) : ('neutral' as const),
       icon: Sparkles,
       lastAt: diagnostics?.lastCuratedAt ?? null,
     },
@@ -321,11 +327,11 @@ export function AutomationDashboardV2({
       label: 'Publicação',
       value: diagnostics?.curated.published ?? 0,
       helper: `${diagnostics?.curated.published ?? 0} publicados`,
-      tone: (diagnostics?.curated.published ?? 0) > 0 ? 'success' : 'neutral',
+      tone: (diagnostics?.curated.published ?? 0) > 0 ? ('success' as const) : ('neutral' as const),
       icon: Radio,
       lastAt: diagnostics?.lastCuratedAt ?? null,
     },
-  ] as const), [diagnostics]);
+  ], [diagnostics]);
 
   const handleSave = async (payload: CreateAutomationPayload) => {
     if (editingAutomation) {
@@ -617,44 +623,68 @@ export function AutomationDashboardV2({
         </div>
       </div>
 
+      {/* ── O que fazer agora (mini-tutorial inline) ── */}
+      {!isAreaComplete('automations') && (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+          <p className="mb-2 text-xs font-semibold text-primary">O que fazer agora</p>
+          <ol className="space-y-1 text-xs text-muted-foreground">
+            <li>1. Confere o estado do <strong className="text-foreground">Pipeline</strong> — coleta, cluster e reescrita IA.</li>
+            <li>2. Revê os posts prontos para publicar.</li>
+            <li>3. Ajusta ou cria automações no separador <strong className="text-foreground">Automações</strong>.</li>
+          </ol>
+        </div>
+      )}
+
       {/* ── KPI grid ── */}
-      <KpiGrid
-        stats={[
-          {
-            label: 'Workflows ativos',
-            value: `${activeWorkflows} / ${workflows.length || '—'}`,
-            icon: Workflow,
-            tone: isConnected && activeWorkflows > 0 ? 'success' : 'warning',
-          },
-          {
-            label: 'Publicados',
-            value: String(diagnostics?.curated.published ?? '—'),
-            icon: Newspaper,
-            tone: (diagnostics?.curated.published ?? 0) > 0 ? 'success' : 'neutral',
-          },
-          {
-            label: 'Para revisar',
-            value: String((diagnostics?.curated.ready ?? 0) + (diagnostics?.curated.draft ?? 0)),
-            icon: CheckCircle2,
-            tone: (diagnostics?.curated.ready ?? 0) > 0 ? 'blue' : 'neutral',
-          },
-          {
-            label: 'Erros recentes',
-            value: String(pipelineErrors),
-            icon: AlertTriangle,
-            tone: pipelineErrors > 0 ? 'error' : 'neutral',
-          },
-          {
-            label: 'Taxa de sucesso',
-            value: successRate === null ? 'N/D' : `${successRate}%`,
-            icon: TrendingUp,
-            tone: successRate === null ? 'neutral' : successRate >= 90 ? 'success' : 'warning',
-          },
-        ]}
-      />
+      <div data-tour="automation-kpis">
+        <KpiGrid
+          showSecondary={showSecondaryKpis}
+          stats={[
+            {
+              label: 'Workflows ativos',
+              value: `${activeWorkflows} / ${workflows.length || '—'}`,
+              icon: Workflow,
+              tone: isConnected && activeWorkflows > 0 ? 'success' : 'warning',
+            },
+            {
+              label: 'Publicados',
+              value: String(diagnostics?.curated.published ?? '—'),
+              icon: Newspaper,
+              tone: (diagnostics?.curated.published ?? 0) > 0 ? 'success' : 'neutral',
+            },
+            {
+              label: 'Erros recentes',
+              value: String(pipelineErrors),
+              icon: AlertTriangle,
+              tone: pipelineErrors > 0 ? 'error' : 'neutral',
+            },
+            {
+              label: 'Para revisar',
+              value: String((diagnostics?.curated.ready ?? 0) + (diagnostics?.curated.draft ?? 0)),
+              icon: CheckCircle2,
+              tone: (diagnostics?.curated.ready ?? 0) > 0 ? 'blue' : 'neutral',
+              secondary: true,
+            },
+            {
+              label: 'Taxa de sucesso',
+              value: successRate === null ? 'N/D' : `${successRate}%`,
+              icon: TrendingUp,
+              tone: successRate === null ? 'neutral' : successRate >= 90 ? 'success' : 'warning',
+              secondary: true,
+            },
+          ]}
+        />
+        <button
+          type="button"
+          onClick={() => setShowSecondaryKpis((v) => !v)}
+          className="mt-2 text-xs font-medium text-primary hover:underline lg:hidden"
+        >
+          {showSecondaryKpis ? 'Ver menos métricas' : 'Ver métricas'}
+        </button>
+      </div>
 
       {/* ── Tab navigation ── */}
-      <Tabs value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
+      <Tabs data-tour="automation-tabs" value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
         <TabsList className="h-auto w-full gap-1 overflow-x-auto rounded-xl border border-border/40 bg-muted/40 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="pipeline" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
             <Zap className="h-3.5 w-3.5 shrink-0" />

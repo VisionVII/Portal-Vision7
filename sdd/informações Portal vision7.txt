@@ -1,7 +1,7 @@
 INFORMACOES PORTAL VISION7
 
 Este documento explica, em linguagem simples, como o Portal Vision7 funciona hoje.
-A ideia e servir como base para conversar com GPT sem termos tecnicos.
+A ideia e servir como base para conversar com GEMINI sem termos tecnicos.
 
 1) O QUE E O PORTAL VISION7
 

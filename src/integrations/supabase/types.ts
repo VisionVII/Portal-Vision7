@@ -1503,6 +1503,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_onboarding: {
+        Row: {
+          user_id: string
+          enabled: boolean
+          completed_steps: string[]
+          dismissed: boolean
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          enabled?: boolean
+          completed_steps?: string[]
+          dismissed?: boolean
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          enabled?: boolean
+          completed_steps?: string[]
+          dismissed?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           assigned_at: string

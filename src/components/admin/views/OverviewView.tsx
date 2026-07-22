@@ -145,7 +145,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
           {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border/20 bg-card/50 shadow-sm dark:bg-card/30 sm:grid-cols-4 [&>*:not(:last-child)]:border-r-0 sm:[&>*:not(:last-child)]:border-r sm:[&>*]:border-r-0">
+        <div data-tour="overview-stats" className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border/20 bg-card/50 shadow-sm dark:bg-card/30 sm:grid-cols-4 [&>*:not(:last-child)]:border-r-0 sm:[&>*:not(:last-child)]:border-r sm:[&>*]:border-r-0">
           {/* — Este mês — */}
           <div className="relative overflow-hidden px-4 py-4 sm:border-r sm:border-border/20">
             <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground/50">Este mês</p>
@@ -198,7 +198,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       <div className="grid gap-8 xl:grid-cols-5">
 
         {/* ── Article stream (3/5) ──────────────────────── */}
-        <div className="xl:col-span-3">
+        <div data-tour="overview-articles" className="xl:col-span-3">
           <div className="mb-4 flex items-center justify-between">
             <SectionLabel>Últimos artigos</SectionLabel>
             {allowedViews.includes('content') && (
@@ -259,7 +259,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
         </div>
 
         {/* ── Right column: chart + categories (2/5) ───── */}
-        <div className="space-y-8 xl:col-span-2">
+        <div data-tour="overview-sidebar" className="space-y-8 xl:col-span-2">
 
           {/* Weekly chart */}
           <div>

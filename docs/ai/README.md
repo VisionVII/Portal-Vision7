@@ -1,6 +1,6 @@
 # Arquitetura AI do Portal Vision7
 
-> Atualizado: 12 de Abril de 2026
+> Atualizado: 10 de Julho de 2026
 
 Esta pasta contém a arquitetura de agentes IA e skills especializadas para o desenvolvimento e manutenção do Vision7, um portal digital focado em tecnologias web, automação e informações relevantes.
 
@@ -53,14 +53,15 @@ Esta pasta contém a arquitetura de agentes IA e skills especializadas para o de
 ```
 WF-01 Coleta RSS (30min) → news_staging (300+ artigos)
 WF-02 Dedup/Cluster (20min) → news_clusters (199 clusters)
-WF-03 Curadoria AI Groq (60min) → curated_posts (score 86-100)
+WF-03 Curadoria AI Claude Sonnet (60min) → curated_posts (score 86-100)
 WF-04 Pipeline Monitor
 WF-05 Social Distribution
 WF-06 Learning Loop
 ```
 
 - n8n: `https://portal-vision7.onrender.com` (Render, community edition)
-- AI Model: Groq `llama-3.1-8b-instant`
+- AI Model: `claude-sonnet-4-6` (WF-03, curadoria editorial) · `claude-haiku-4-5-20251001` (assistente do portal, chat público)
+- Groq e HuggingFace foram eliminados (ver [CLAUDE.md](../../CLAUDE.md)) — `GROQ_API_KEY` só sobrevive como validação vestigial não usada em `n8n-settings`
 - Todos os 6 workflows ativos em produção
 
 ## Áreas de Foco
@@ -92,8 +93,8 @@ O front-end do botão Vision7 AI está preparado em `src/modules/portal-ai/` com
 
 - `sdd/modules/agents-skills-ai.json` (v0.8.0)
 - `sdd/modules/frontend-ui.json` (v1.3.0)
-- `sdd/modules/auth-security.json` (v1.3.0)
-- `sdd/modules/automation-engine.json` (v2.1.0)
+- `sdd/modules/auth-security.json` (v2.0.0 — Production Design Ready)
+- `sdd/modules/automation-engine.json` (v2.4.0)
 
 ## Motor Editorial Vision7 v1.0 (NOVO ✨)
 
@@ -118,7 +119,7 @@ Motor de geração de conteúdo editorial de referência, integrado com n8n work
 n8n WF-02 (Editorial Engine)
   ├── Ler briefing (Notion)
   ├── Enriquecer dados (APIs externas)
-  ├── Gerar artigo (Claude Opus 4.6)
+  ├── Gerar artigo (Claude Sonnet 4.6)
   ├── Estruturar JSON (MOTOR_EDITORIAL_V1.0)
   ├── Validar Quality Score (≥9.5)
   └── POST → /functions/v1/ingest-manus-post

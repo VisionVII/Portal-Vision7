@@ -20,8 +20,8 @@ ERRORS=0
 WARNINGS=0
 
 log_ok()    { echo -e "${GREEN}✓${NC} $1"; }
-log_warn()  { echo -e "${YELLOW}⚠${NC} $1"; ((WARNINGS++)); }
-log_err()   { echo -e "${RED}✗${NC} $1"; ((ERRORS++)); }
+log_warn()  { echo -e "${YELLOW}⚠${NC} $1"; WARNINGS=$((WARNINGS + 1)); }
+log_err()   { echo -e "${RED}✗${NC} $1"; ERRORS=$((ERRORS + 1)); }
 
 echo "═══════════════════════════════════════════"
 echo " SDD Validation — Vision7"

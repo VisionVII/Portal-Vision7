@@ -1,10 +1,15 @@
-# Vision
+# Vision7
 
 ## Project info
 
-Este repositório contém o portal digital premium Vision.
+Este repositório contém o **Vision7**, portal editorial full-stack em português brasileiro (PT-BR),
+com foco em Tecnologia, Mundo, Saúde, Música e Desporto — dashboard admin completo, automações n8n,
+motor IA (Claude) e monetização integrada.
 
-**Marca atual**: Vision Premium
+**Marca atual**: Vision7
+
+Ver [CLAUDE.md](CLAUDE.md) para stack técnica completa e regras do motor IA, e [sdd/README.md](sdd/README.md)
+para o estado actual de cada módulo do projecto.
 
 ## Estrutura do repositório
 
@@ -79,9 +84,9 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Use your normal Vite deployment path, e.g. Netlify, Vercel, or qualquer outro host de sua preferência.
+O deploy de produção é feito via Vercel.
 
-## Posso conectar um domínio personalizado ao portal Vision?
+## Posso conectar um domínio personalizado ao portal Vision7?
 
 Yes, you can!
 

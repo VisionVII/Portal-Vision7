@@ -2,6 +2,13 @@
 
 **Data:** 23 de Março, 2026 | **Status:** Porto em Produção
 
+> ⚠️ **REGISTO HISTÓRICO — ver [SUMMARY_KEY_FINDINGS.md](SUMMARY_KEY_FINDINGS.md) para o estado actual (10 Jul 2026).**
+> Este documento descreve o projecto na sua fase inicial ("Lusitânia Digital Pulse", antes do rebrand
+> para Vision7). As secções 1–4 (auth, base de dados, componentes admin, temas) descrevem uma versão
+> do código já substancialmente refeita — não confiar nos nomes de ficheiros/schemas/linhas aqui como
+> estado actual. A secção 6 (Gaps e Vulnerabilidades) foi **revista e anotada item-a-item** abaixo com
+> o estado real verificado contra o código em 10/07/2026 — a maioria já está corrigida.
+
 ---
 
 ## 📑 ÍNDICE
@@ -403,18 +410,21 @@ Dark Mode:
 
 #### ✅ Checklist de Proteções
 
-| Proteção | Status | Implementação |
-|----------|--------|-----------------|
-| **SSL/TLS** | ✅ | Supabase default HTTPS |
-| **CSRF Protection** | ❌ | Não implementado |
-| **Input Validation** | 🟡 | Parcial (email no newsletter) |
-| **Output Encoding** | ❌ | Não (XSS risk em posts) |
-| **Rate Limiting** | ❌ | Não (frontend) |
-| **Authentication** | ✅ | Supabase Auth |
-| **Authorization** | 🟡 | RLS + isAdmin flag |
-| **Secrets Management** | ✅ | Env vars (.env) |
-| **Error Handling** | ✅ | ErrorBoundary + try/catch |
-| **Logging** | ⚠️ | Console.error apenas |
+> Tabela original (Março 2026) preservada abaixo com riscos. Estado verificado em 10/07/2026 na
+> coluna seguinte.
+
+| Proteção | Status (orig.) | Implementação (orig.) | Estado actual (10/07/2026) |
+|----------|--------|-----------------|-----------------|
+| **SSL/TLS** | ✅ | Supabase default HTTPS | ✅ inalterado |
+| **CSRF Protection** | ❌ | Não implementado | 🟡 sem tokens CSRF clássicos; risco reduzido pela arquitectura bearer-token/PKCE (SPA+API, não forms com cookie-session), mas não documentado explicitamente |
+| **Input Validation** | 🟡 | Parcial (email no newsletter) | 🟡 inalterado |
+| **Output Encoding** | ❌ | Não (XSS risk em posts) | ✅ DOMPurify (`src/lib/richContent.ts`) |
+| **Rate Limiting** | ❌ | Não (frontend) | 🟡 edge functions n8n-* têm `checkRateLimit()`; login/newsletter não |
+| **Authentication** | ✅ | Supabase Auth | ✅ OTP (`UserLogin.tsx`) + MFA/TOTP opcional |
+| **Authorization** | 🟡 | RLS + isAdmin flag | ✅ RLS + `app_role` enum + `has_role()` + `registration_invites` |
+| **Secrets Management** | ✅ | Env vars (.env) | ✅ inalterado |
+| **Error Handling** | ✅ | ErrorBoundary + try/catch | ✅ inalterado |
+| **Logging** | ⚠️ | Console.error apenas | ✅ `audit_logs` + `automation_audit_log` para acções admin |
 
 #### Validações Frontend Existentes
 
@@ -471,6 +481,8 @@ auth: {
 ### 🔴 CRÍTICAS
 
 #### 6.1 **XSS Vulnerability em Posts**
+> ✅ **RESOLVIDO (verificado 10/07/2026)** — `src/pages/site/Post.tsx` renderiza `sanitizedContent`
+> (sanitizado via `src/lib/richContent.ts`, que usa DOMPurify), não `post.content` bruto.
 - **Arquivo:** [src/pages/Post.tsx](src/pages/Post.tsx#L126)
 - **Linha:** 126
 - **Código:**
@@ -482,6 +494,8 @@ auth: {
 - **Solução:** Usar biblioteca sanitization (DOMPurify, xss-lib)
 
 #### 6.2 **Auto-Admin para Novo Registado**
+> ✅ **RESOLVIDO** — trigger removido em `supabase/migrations/20260323084000_remove_auto_admin.sql`,
+> substituído por fluxo de aprovação via tabela `registration_invites` (token, expiração 7 dias, role explícita).
 - **Arquivo:** [supabase/migrations/20260316094654_...sql](supabase/migrations/20260316094654_3224bdbe-379b-4734-b305-0d8b553d2e43.sql)
 - **Linha:** ~7
 - **Código:**
@@ -496,6 +510,10 @@ CREATE TRIGGER on_auth_user_created_assign_admin
 - **Solução:** Remover trigger, criar sistema de convite/aprovação
 
 #### 6.3 **Token Storage em localStorage (XSS Vulnerable)**
+
+> 🟡 **AINDA ABERTO (verificado 10/07/2026)** — `src/integrations/supabase/client.ts:24` continua a
+> usar `window.localStorage`. Não foi corrigido desde a auditoria original.
+
 - **Arquivo:** [src/integrations/supabase/client.ts](src/integrations/supabase/client.ts)
 - **Código:**
 ```typescript
@@ -506,11 +524,19 @@ storage: localStorage,  // ⚠️ Acessível via console
 - **Solução:** Considerar sessionStorage OU cookie HTTP-only via service worker
 
 #### 6.4 **Sem Sanitização de Entrada HTML**
+
+> ✅ **RESOLVIDO** — DOMPurify aplicado de forma centralizada em `src/lib/richContent.ts`, usado por
+> `RichTextEditor.tsx` e `editorialPostTemplates.ts`.
+
 - **Locais:** PostForm, RichTextEditor
 - **Risco:** Injeção de HTML/JavaScript via URL em `addImage()`
 - **Solução:** Validar URLs com `new URL()`, sanitizar com DOMPurify
 
 #### 6.5 **Sem Revogação de Token para Admin**
+
+> 🟡 **PARCIAL** — `AuthContext.tsx` chama `supabase.auth.signOut({ scope: 'local' })` e `signOut()`,
+> mas não há um mecanismo explícito de "forçar logout de outro utilizador" a partir do admin dashboard.
+
 - **AuthContext não tem método de:** Logout forçado de outro user, revogação de sessão
 - **Impacto:** Admin comprometido pode ser logado indefinidamente
 - **Solução:** Implementar `force_sign_out` no Supabase
@@ -518,6 +544,10 @@ storage: localStorage,  // ⚠️ Acessível via console
 ### 🟡 MÉDIAS
 
 #### 6.6 **Race Condition em checkAdminRole()**
+
+> ✅ **RESOLVIDO** — implementação actual usa guards (`signingInRef`, `loadedRolesForRef`) e um safety
+> timer de 8s em vez do `setTimeout(…, 0)` ingénuo descrito abaixo.
+
 - **Arquivo:** [src/contexts/AuthContext.tsx](src/contexts/AuthContext.tsx#L40-L50)
 - **Problema:**
 ```typescript
@@ -529,6 +559,10 @@ setTimeout(() => {
 - **Solução:** Usar `Promise.all()` ou fazer sync antes de setLoading(false)
 
 #### 6.7 **Sem Validação de Newsletter**
+
+> 🟡 **AINDA ABERTO** — a policy `WITH CHECK (true)` continua igual na migration
+> `20260217224603_...sql`. Sem double opt-in implementado.
+
 - **RLS Policy:**
 ```sql
 CREATE POLICY "Anyone can subscribe to newsletter"
@@ -543,10 +577,19 @@ WITH CHECK (true);  -- Sem validação
 - **Solução:** Token validation, CORS headers
 
 #### 6.9 **Auditoria Inexistente**
+
+> ✅ **RESOLVIDO** — `audit_logs` (migration `20260323082000_audit_logs.sql`) e `automation_audit_log`
+> (com `diffAutomation()` campo-a-campo em `src/services/auditLog.ts`).
+
 - **Problema:** Nenhuma tabela de logs para ações admin
 - **Solução:** Criar `audit_logs` table com trigger em posts/users
 
 #### 6.10 **Rate Limiting Insuficiente**
+
+> 🟡 **PARCIAL** — `supabase/functions/_shared/rateLimit.ts` (`checkRateLimit()`) está implementado e
+> usado por `n8n-proxy`, `n8n-settings`, `n8n-workflow-import`. Não é usado em login/registo/newsletter —
+> esses dependem só do throttling nativo do Supabase Auth.
+
 - **Problema:** Sem rate limiting em forms
 - **Risco:** Brute force em login, newsletter spam
 - **Solução:** Implementar rate limiting em edge functions
@@ -554,6 +597,10 @@ WITH CHECK (true);  -- Sem validação
 ### 🟢 MODERADAS
 
 #### 6.11 **Sem 2FA/MFA**
+
+> ✅ **RESOLVIDO** — TOTP implementado via `src/hooks/useMFA.ts`, `MFASetup.tsx`, `MFAChallenge.tsx`
+> (usa `supabase.auth.mfa`).
+
 - **Apenas email/password**
 - **Solução:** Integrar TOTP com `@supabase/auth-js`
 

@@ -1,0 +1,133 @@
+{
+  "$schema": "./module_schema.json",
+  "module": "Tutorial de Onboarding (Admin)",
+  "version": "0.1.0",
+  "owner": "Vision7 Core Team",
+  "status": "Em desenvolvimento",
+  "last_updated": "2026-07-20",
+  "objective": "Tour guiado nativo (sem libs externas) que ensina cada área do dashboard admin passo-a-passo, com progresso persistido por utilizador e um único ponto de controlo em Configurações.",
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "description": "Mostrar um coachmark sequencial por área do dashboard (Visão geral, Conteúdo, Automações, Configurações), ancorado a elementos reais via atributos data-tour.",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-002",
+      "description": "Persistir progresso (passos concluídos, ativo/inativo) em localStorage e espelhar em Supabase (user_onboarding) quando o utilizador está autenticado, com fallback silencioso.",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-003",
+      "description": "Ponto único de controlo em Configurações — ativar/desativar, ver progresso por área, reiniciar tutorial.",
+      "priority": "Alta",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-004",
+      "description": "Não reabrir automaticamente o overlay depois de uma área estar concluída ou do tutorial ter sido desativado/saltado.",
+      "priority": "Média",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "FR-005",
+      "description": "Mini-tutorial estático inline (\"O que fazer agora\") nas áreas mais densas (Automações, Conteúdo), independente do overlay.",
+      "priority": "Média",
+      "status": "Em desenvolvimento"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "description": "Sem dependências novas — construído apenas com primitivos shadcn/ui já presentes no projeto.",
+      "category": "Manutenibilidade",
+      "status": "Finalizado"
+    },
+    {
+      "id": "NFR-002",
+      "description": "Navegável por teclado (foco preso no coachmark, Esc fecha), role=dialog e aria-labelledby.",
+      "category": "Acessibilidade",
+      "status": "Em desenvolvimento"
+    },
+    {
+      "id": "NFR-003",
+      "description": "RLS em user_onboarding restringe cada utilizador à sua própria linha (auth.uid() = user_id).",
+      "category": "Segurança",
+      "status": "Finalizado"
+    }
+  ],
+  "flows": {
+    "data_flow": "TourProgressProvider (AdminDashboard) → useTourProgress (localStorage + Supabase) → TourController lê a área ativa e decide o passo → TourSpotlight resolve o alvo data-tour visível e renderiza o coachmark.",
+    "user_flow": "Primeira visita → tour da área ativa arranca automaticamente → utilizador avança/recua/salta → ao concluir uma área fica marcada como feita → quando todas as áreas estão completas o overlay deixa de aparecer → utilizador pode reativar/reiniciar em Configurações."
+  },
+  "dependencies": {
+    "modules": ["cms", "supabase-database", "auth-security"],
+    "packages": [],
+    "supabase_tables": ["user_onboarding"],
+    "api_endpoints": []
+  },
+  "files": {
+    "components": [
+      "src/components/admin/onboarding/TourSpotlight.tsx",
+      "src/components/admin/onboarding/TourController.tsx",
+      "src/components/admin/onboarding/TutorialSettingsCard.tsx",
+      "src/components/admin/onboarding/TourProgressContext.tsx"
+    ],
+    "hooks": [
+      "src/components/admin/onboarding/useTourProgress.ts"
+    ],
+    "pages": [
+      "src/pages/admin/AdminDashboard.tsx"
+    ],
+    "services": [],
+    "types": [
+      "src/components/admin/onboarding/tour-types.ts"
+    ],
+    "migrations": [
+      "supabase/migrations/20260720120000_user_onboarding.sql"
+    ]
+  },
+  "qa_tests": [
+    {
+      "id": "QA-001",
+      "type": "manual",
+      "description": "Primeira visita ao dashboard → tour da Visão geral arranca sozinho.",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-002",
+      "type": "manual",
+      "description": "Concluir todos os passos de todas as áreas → overlay não reaparece e o cartão em Configurações mostra 'Concluído'.",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-003",
+      "type": "manual",
+      "description": "'Reiniciar tutorial' em Configurações volta a mostrar o overlay a partir da Visão geral.",
+      "status": "Pendente"
+    },
+    {
+      "id": "QA-004",
+      "type": "manual",
+      "description": "Em viewport estreita, o coachmark aponta para o item de navegação visível (mobile), não para o desktop escondido por CSS.",
+      "status": "Pendente"
+    }
+  ],
+  "security_considerations": [
+    "user_onboarding tem RLS por utilizador (auth.uid() = user_id); sem essa condição um utilizador poderia ler/escrever o progresso de outro.",
+    "Falhas de leitura/escrita em Supabase degradam sempre para localStorage-only — nunca bloqueiam o dashboard."
+  ],
+  "scalability_notes": [
+    "Registo de passos (TOUR_AREAS) é estático em código — crescer para dezenas de áreas é trivial, sem custo de infraestrutura."
+  ],
+  "change_history": [
+    {
+      "date": "2026-07-20",
+      "version": "0.1.0",
+      "author": "Claude Code",
+      "description": "SDD inicial do tutorial de onboarding do dashboard admin — tour guiado nativo, persistência híbrida localStorage/Supabase, toggle único em Configurações."
+    }
+  ]
+}

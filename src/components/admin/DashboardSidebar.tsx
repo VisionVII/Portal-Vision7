@@ -97,6 +97,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 <button
                   key={item.id}
                   type="button"
+                  data-tour={`nav-${item.id}`}
                   onClick={() => onViewChange(item.id)}
                   className={`relative inline-flex shrink-0 snap-start items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-medium transition-all duration-150 active:scale-[0.97] ${
                     isActive
@@ -169,6 +170,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     <button
                       key={item.id}
                       type="button"
+                      data-tour={`nav-${item.id}`}
                       onClick={() => onViewChange(item.id)}
                       className={`flex w-full items-center rounded-lg py-2 text-left transition-all duration-150 active:scale-[0.98] ${
                         collapsed ? 'justify-center px-1.5' : 'gap-3 px-3'
