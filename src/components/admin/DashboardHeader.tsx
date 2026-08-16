@@ -1,15 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, CheckCheck, ChevronDown, Globe, LogOut, Menu, Plus, User } from 'lucide-react';
+import { Bell, CheckCheck, ChevronDown, Globe, LogOut, Menu, Plus, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useAdminNotifications, useMarkNotificationRead, useMarkAllRead } from '@/hooks/useAdminNotifications';
 
+interface HeaderSearchConfig {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}
+
 interface DashboardHeaderProps {
   onNewPost: () => void;
   onMenuOpen?: () => void;
+  search?: HeaderSearchConfig;
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -21,7 +29,21 @@ const ROLE_LABEL: Record<string, string> = {
   analyst: 'Analyst',
 };
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost, onMenuOpen }) => {
+function HeaderSearchInput({ search, className }: { search: HeaderSearchConfig; className?: string }) {
+  return (
+    <div className={`relative ${className ?? ''}`}>
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        value={search.value}
+        onChange={(e) => search.onChange(e.target.value)}
+        placeholder={search.placeholder ?? 'Pesquisar...'}
+        className="h-8 rounded-lg pl-8 text-xs"
+      />
+    </div>
+  );
+}
+
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost, onMenuOpen, search }) => {
   const { user, primaryRole, roles, signOut } = useAuth();
   const navigate = useNavigate();
   const { data: siteSettings } = useSiteSettings();
@@ -64,10 +86,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost, onMenuOpen
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
-      <div className="flex h-14 items-center justify-between gap-2 px-3 sm:px-5">
+      <div className="flex h-14 items-center gap-2 px-3 sm:px-5">
 
         {/* Left: hamburger + logo */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {onMenuOpen && (
             <Button
               variant="ghost"
@@ -88,11 +110,18 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost, onMenuOpen
           )}
         </div>
 
+        {/* Center: contextual search (desktop) */}
+        {search && (
+          <div data-tour="content-search" className="hidden min-w-0 flex-1 sm:flex sm:justify-center">
+            <HeaderSearchInput search={search} className="w-full max-w-sm" />
+          </div>
+        )}
+
         {/* Right: actions */}
-        <div className="flex items-center gap-1 sm:gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
 
           {/* New post */}
-          <Button onClick={onNewPost} size="sm" className="h-8 gap-1.5 px-3">
+          <Button data-tour="content-new-post" onClick={onNewPost} size="sm" className="h-8 gap-1.5 px-3">
             <Plus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline text-xs">Novo post</span>
           </Button>
@@ -192,6 +221,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost, onMenuOpen
           </Popover>
         </div>
       </div>
+
+      {/* Mobile: search on its own row (no room for it inline) — same
+          data-tour as the desktop one above; TourSpotlight resolves whichever
+          copy is actually visible at the current breakpoint. */}
+      {search && (
+        <div data-tour="content-search" className="border-t border-border/30 px-3 py-2 sm:hidden">
+          <HeaderSearchInput search={search} />
+        </div>
+      )}
     </header>
   );
 };

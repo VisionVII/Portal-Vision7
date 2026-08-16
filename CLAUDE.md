@@ -116,8 +116,9 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 
 ### F8 — Redesign do Dashboard Admin 🟡
 Iniciativa contínua de melhoria de design/UX, área por área. Cada fase é combinada com o utilizador antes de implementar.
-- [x] Visão Geral — removido botão "Novo post" duplicado (já existe no header global) e botão "Automações" (redundante com a sidebar)
-- [ ] Conteúdo
+- [x] Visão Geral — removido botão "Novo post" duplicado (já existe no header global) e botão "Automações" (redundante com a sidebar). Depois: título estático substituído por faixa de informações rotativa (data/hora ao vivo + mensagens do portal em crossfade), cards de stats maiores/individuais com tom de cor por estado, secções "Semanas" e "Top categorias" removidas, "Últimos artigos" reduzido para 4 itens
+- [x] Conteúdo — removido cabeçalho (pill/título/subtítulo) e badges de contagem redundantes com os cards da Visão Geral; barra de pesquisa movida para o header global (contextual, só aparece com Conteúdo activo — reaproveitável por outras áreas no futuro)
+- [ ] Builder (Homepage)
 - [ ] Builder (Homepage)
 - [ ] Media (Galeria)
 - [ ] Automações

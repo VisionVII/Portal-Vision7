@@ -41,6 +41,7 @@ const AdminDashboard = () => {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [activeView, setActiveView] = useState<AdminView>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contentSearchQuery, setContentSearchQuery] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('admin-sidebar-collapsed');
     return saved === 'true';
@@ -146,7 +147,15 @@ const AdminDashboard = () => {
     <TourProgressProvider activeView={activeView} onNavigate={setActiveView}>
       <div className="min-h-screen bg-background">
         <TourController />
-        <DashboardHeader onNewPost={handleNewPost} onMenuOpen={() => setMobileMenuOpen(true)} />
+        <DashboardHeader
+          onNewPost={handleNewPost}
+          onMenuOpen={() => setMobileMenuOpen(true)}
+          search={activeView === 'content' ? {
+            value: contentSearchQuery,
+            onChange: setContentSearchQuery,
+            placeholder: 'Buscar posts por título ou categoria...',
+          } : undefined}
+        />
 
         {/* Mobile drawer — vertical sidebar */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -190,7 +199,13 @@ const AdminDashboard = () => {
                   <OverviewView onNewPost={handleNewPost} onNavigate={setActiveView} onEdit={handleEdit} allowedViews={allowedViews} />
                 </Panel>
                 <Panel view="content">
-                  <ContentView editingPost={editingPost} showPostForm={showPostForm} onNewPost={handleNewPost} onEdit={handleEdit} onCloseForm={handleCloseForm} />
+                  <ContentView
+                    editingPost={editingPost}
+                    showPostForm={showPostForm}
+                    onEdit={handleEdit}
+                    onCloseForm={handleCloseForm}
+                    searchQuery={contentSearchQuery}
+                  />
                 </Panel>
                 <Panel view="builder"><BuilderView /></Panel>
                 <Panel view="media"><MediaGalleryView /></Panel>

@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Sparkles, FolderOpen, Trash2, LayoutList, Search } from 'lucide-react';
+import { Sparkles, FolderOpen, Trash2, LayoutList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
 import PostForm from '@/components/admin/PostForm';
 import PostsTable from '@/components/admin/PostsTable';
 import { Post, usePosts } from '@/hooks/usePosts';
@@ -17,17 +16,18 @@ import { useTour } from '@/components/admin/onboarding/TourProgressContext';
 interface ContentViewProps {
   editingPost: Post | null;
   showPostForm: boolean;
-  onNewPost: () => void;
   onEdit: (post: Post) => void;
   onCloseForm: () => void;
+  /** Vem do header global — a pesquisa em si vive lá, só o filtro fica aqui. */
+  searchQuery: string;
 }
 
 const ContentView: React.FC<ContentViewProps> = ({
   editingPost,
   showPostForm,
-  onNewPost,
   onEdit,
   onCloseForm,
+  searchQuery,
 }) => {
   const { data: posts, isLoading: postsLoading } = usePosts(true);
   const { data: curatedStats } = useCuratedPostsStats();
@@ -37,11 +37,8 @@ const ContentView: React.FC<ContentViewProps> = ({
   const { isAreaComplete } = useTour();
 
   const [activeTab, setActiveTab] = useState<'posts' | 'curated' | 'categories'>('posts');
-  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
 
-  const publishedPosts = useMemo(() => posts?.filter((p) => p.status === 'published') ?? [], [posts]);
-  const draftPosts = useMemo(() => posts?.filter((p) => p.status === 'draft') ?? [], [posts]);
   const postsPerCategory = useMemo(() => {
     const countMap = new Map<string, number>();
     (posts ?? []).forEach((post) => {
@@ -64,60 +61,18 @@ const ContentView: React.FC<ContentViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* ── Page Header ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
-            <LayoutList className="h-3 w-3" />
-            Gestão editorial
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Conteúdo
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Posts editoriais, curadoria de IA e categorias do portal.
-          </p>
-        </div>
-        <Button data-tour="content-new-post" onClick={onNewPost} className="gap-2 rounded-xl shadow-sm sm:shrink-0">
-          <Plus className="h-4 w-4" />
-          Novo Post
-        </Button>
-      </div>
-
-      {/* ── Search + filter bar ── */}
-      <div data-tour="content-search" className="rounded-2xl border border-border/40 bg-card/80 p-4 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Buscar posts por título ou categoria..."
-              className="h-11 rounded-2xl pl-9"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-muted/30 p-1">
-            {(['all', 'published', 'draft'] as const).map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setStatusFilter(status)}
-                className={`rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${statusFilter === status ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/80 hover:text-foreground'}`}
-              >
-                {status === 'all' ? 'Todos' : status === 'published' ? 'Publicados' : 'Rascunhos'}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-        <span className="rounded-full bg-muted px-2.5 py-1 font-medium">{publishedPosts.length} publicados</span>
-        <span className="rounded-full bg-amber-500/10 px-2.5 py-1 font-medium text-amber-600 dark:text-amber-400">{draftPosts.length} rascunhos</span>
-        {curatedStats && curatedStats.ready > 0 && (
-          <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 font-medium text-cyan-600 dark:text-cyan-400">{curatedStats.ready} curados prontos</span>
-        )}
+      {/* ── Status filter (pesquisa em si vive no header global) ── */}
+      <div data-tour="content-filter" className="flex items-center gap-2 rounded-2xl border border-border/40 bg-muted/30 p-1 w-fit">
+        {(['all', 'published', 'draft'] as const).map((status) => (
+          <button
+            key={status}
+            type="button"
+            onClick={() => setStatusFilter(status)}
+            className={`rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${statusFilter === status ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/80 hover:text-foreground'}`}
+          >
+            {status === 'all' ? 'Todos' : status === 'published' ? 'Publicados' : 'Rascunhos'}
+          </button>
+        ))}
       </div>
 
       {/* ── Mini-tutorial inline: "O que fazer agora" ── */}
