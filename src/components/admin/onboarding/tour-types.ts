@@ -27,13 +27,22 @@ export const TOUR_AREAS: TourArea[] = [
     label: 'Visão geral',
     steps: [
       {
+        id: 'overview-banner',
+        view: 'overview',
+        targetSelector: '[data-tour="overview-banner"]',
+        title: 'Informações do portal',
+        body: 'Data e hora ao vivo, mais mensagens sobre o estado do portal em rotação — sempre visível no topo.',
+        placement: 'bottom',
+        order: 1,
+      },
+      {
         id: 'overview-stats',
         view: 'overview',
         targetSelector: '[data-tour="overview-stats"]',
         title: 'Os teus números',
         body: 'Publicações do mês, total, visualizações e rascunhos — o resumo rápido do portal.',
         placement: 'bottom',
-        order: 1,
+        order: 2,
       },
       {
         id: 'overview-articles',
@@ -42,15 +51,6 @@ export const TOUR_AREAS: TourArea[] = [
         title: 'Últimos artigos',
         body: 'A tua atividade editorial recente. Clica num artigo para o abrir e editar.',
         placement: 'right',
-        order: 2,
-      },
-      {
-        id: 'overview-sidebar',
-        view: 'overview',
-        targetSelector: '[data-tour="overview-sidebar"]',
-        title: 'Tendências e categorias',
-        body: 'Semanas de publicação e as categorias mais fortes do portal, de relance.',
-        placement: 'left',
         order: 3,
       },
       {
