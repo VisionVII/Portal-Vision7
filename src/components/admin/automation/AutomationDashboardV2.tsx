@@ -681,9 +681,9 @@ export function AutomationDashboardV2({
         </button>
       </div>
 
-      {/* ── Tab navigation (sticky — acompanha o scroll, fica logo abaixo do header) ── */}
+      {/* ── Tab navigation (sticky, descolada do header + glassmorphism) ── */}
       <Tabs data-tour="automation-tabs" value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
-        <TabsList className="sticky top-14 z-40 h-auto w-full gap-1 overflow-x-auto rounded-xl border border-border/40 bg-background/95 p-1 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <TabsList className="sticky top-[4.5rem] z-40 h-auto w-full gap-1 overflow-x-auto rounded-2xl border border-white/25 bg-background/40 p-1 shadow-[0_8px_30px_-6px_rgba(2,122,227,0.35)] ring-1 ring-white/10 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/30 dark:border-white/10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger data-tour="automation-tab-pipeline" value="pipeline" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
             <Zap className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Pipeline</span>
