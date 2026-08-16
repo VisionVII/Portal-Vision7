@@ -1,9 +1,9 @@
 {
   "module": "Analytics",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "owner": "Vision7 Core Team",
-  "status": "Em desenvolvimento",
-  "last_updated": "2026-04-05",
+  "status": "Maioritariamente finalizado — falta escrever os testes automatizados (QA-001 a QA-004)",
+  "last_updated": "2026-08-16",
   "objective": "Sistema de analytics e monetização para rastreamento de eventos, métricas de engajamento, trending content e configuração de monetização do portal.",
   "functional_requirements": [
     {
@@ -34,13 +34,13 @@
       "id": "FR-005",
       "description": "Dashboard visual de analytics no admin (gráficos, tabelas)",
       "priority": "Alta",
-      "status": "Pendente"
+      "status": "Finalizado — AnalyticsView.tsx (KPIs, BarChart/LineChart/PieChart via recharts, seletor de período)"
     },
     {
       "id": "FR-006",
       "description": "Configuração de monetização: ads, sponsorships, premium content",
       "priority": "Média",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado — useMonetization.ts (settings, ads enabled, ad slots, subscription, premium features)"
     }
   ],
   "non_functional_requirements": [
@@ -60,7 +60,7 @@
       "id": "NFR-003",
       "description": "GDPR-compliant: apenas rastrear com consentimento de cookies analytics",
       "category": "Segurança",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado — useTrackEvent() verifica isAllowed('analytics') do CMP antes de qualquer insert"
     }
   ],
   "flows": {
@@ -78,7 +78,9 @@
     "api_endpoints": ["supabase.from('analytics_events')", "supabase.from('monetization_settings')"]
   },
   "files": {
-    "components": [],
+    "components": [
+      "src/components/admin/views/AnalyticsView.tsx"
+    ],
     "hooks": [
       "src/hooks/useAnalytics.ts",
       "src/hooks/useMonetization.ts"
@@ -150,6 +152,12 @@
       "version": "0.5.0",
       "author": "Vision7 Team",
       "description": "SDD spec gerado; dashboard visual pendente"
+    },
+    {
+      "date": "2026-08-16",
+      "version": "0.6.0",
+      "author": "Claude Code",
+      "description": "SDD sincronizado — dashboard visual (FR-005), monetização (FR-006) e consentimento GDPR (NFR-003) já estavam implementados e a funcionar, só o SDD estava desatualizado. Único gap real confirmado: nenhum dos QA-001 a QA-004 tem teste automatizado escrito."
     }
   ]
 }

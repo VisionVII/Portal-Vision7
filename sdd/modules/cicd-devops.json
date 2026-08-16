@@ -1,40 +1,40 @@
 {
   "module": "CI/CD & DevOps",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "owner": "Vision7 Core Team",
-  "status": "Em desenvolvimento",
-  "last_updated": "2026-04-05",
+  "status": "Maioritariamente finalizado — falta staging de migrations (FR-006)",
+  "last_updated": "2026-08-16",
   "objective": "Pipeline de CI/CD com lint, type-check, build, deploy e validação SDD integrada. Inclui GitHub Actions, Supabase CLI e n8n webhooks.",
   "functional_requirements": [
     {
       "id": "FR-001",
       "description": "Lint automático (ESLint) em PRs e pushes",
       "priority": "Crítica",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado — .github/workflows/sdd-ci.yml, job lint-typecheck"
     },
     {
       "id": "FR-002",
       "description": "Type-check TypeScript em PRs",
       "priority": "Crítica",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado — mesmo job (npx tsc --noEmit)"
     },
     {
       "id": "FR-003",
       "description": "Build de produção Vite com análise de bundle",
       "priority": "Alta",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado — job build, com relatório de tamanho de bundle no step summary"
     },
     {
       "id": "FR-004",
       "description": "Validação SDD antes de merge (sdd-validate script)",
       "priority": "Alta",
-      "status": "Pendente"
+      "status": "Finalizado — job sdd-validate"
     },
     {
       "id": "FR-005",
       "description": "Deploy preview para PRs",
       "priority": "Média",
-      "status": "Pendente"
+      "status": "Finalizado — via integração nativa Git do Vercel (preview automático por push/PR), sem step dedicado no GitHub Actions"
     },
     {
       "id": "FR-006",
@@ -46,7 +46,7 @@
       "id": "FR-007",
       "description": "Notificação quando SDD desatualizado (stale check)",
       "priority": "Média",
-      "status": "Pendente"
+      "status": "Finalizado — job sdd-validate, step 'Check SDD Freshness' (sdd-stale-check.sh --days=60, continue-on-error — avisa, não bloqueia merge)"
     }
   ],
   "non_functional_requirements": [
@@ -54,7 +54,7 @@
       "id": "NFR-001",
       "description": "Pipeline completa deve completar em < 5 min",
       "category": "Performance",
-      "status": "Pendente"
+      "status": "Finalizado — ~58-60s observado nas últimas execuções (gh run list)"
     },
     {
       "id": "NFR-002",
@@ -103,32 +103,44 @@
     {
       "step": "ESLint check",
       "tool": "GitHub Actions",
-      "trigger": "PR para main",
-      "status": "Pendente"
+      "trigger": "PR e push para main",
+      "status": "Finalizado"
     },
     {
       "step": "TypeScript type-check",
       "tool": "GitHub Actions",
-      "trigger": "PR para main",
-      "status": "Pendente"
+      "trigger": "PR e push para main",
+      "status": "Finalizado"
     },
     {
       "step": "Vite build",
       "tool": "GitHub Actions",
-      "trigger": "Push para main",
-      "status": "Pendente"
+      "trigger": "PR e push para main",
+      "status": "Finalizado"
     },
     {
       "step": "SDD validation",
       "tool": "sdd/scripts/sdd-validate.sh",
-      "trigger": "PR para main",
-      "status": "Pendente"
+      "trigger": "PR e push para main",
+      "status": "Finalizado"
     },
     {
       "step": "SDD stale check",
       "tool": "sdd/scripts/sdd-stale-check.sh",
-      "trigger": "Semanal (cron)",
-      "status": "Pendente"
+      "trigger": "PR e push para main (não semanal/cron como planeado inicialmente)",
+      "status": "Finalizado (aviso — continue-on-error, não bloqueia merge)"
+    },
+    {
+      "step": "Secret scanning",
+      "tool": "gitleaks-action",
+      "trigger": "PR e push para main",
+      "status": "Finalizado — não estava no plano original, adicionado durante a implementação"
+    },
+    {
+      "step": "Validação de migrations SQL",
+      "tool": ".github/scripts/check_sql_parens.py",
+      "trigger": "PR e push para main",
+      "status": "Finalizado — não estava no plano original; verifica parênteses e avisa sobre statements destrutivos (DROP/TRUNCATE)"
     }
   ],
   "scalability_notes": [
@@ -148,6 +160,12 @@
       "version": "0.3.0",
       "author": "Vision7 Team",
       "description": "SDD spec criado; scripts de validação planejados"
+    },
+    {
+      "date": "2026-08-16",
+      "version": "0.4.0",
+      "author": "Claude Code",
+      "description": "SDD sincronizado — .github/workflows/sdd-ci.yml já implementa lint, type-check, build, validação e freshness-check de SDD, secret scanning e validação de migrations (os dois últimos nem estavam no plano original). Deploy preview confirmado via integração nativa do Vercel. Único gap real que sobra: staging environment para migrations (FR-006). Também removido, no mesmo período, um pipeline de deploy duplicado (GitHub Actions vs Vercel nativo) que causava reversões aleatórias em produção — ver commit 089b131."
     }
   ]
 }

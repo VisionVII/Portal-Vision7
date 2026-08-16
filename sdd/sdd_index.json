@@ -141,8 +141,8 @@
       "id": "analytics",
       "name": "Analytics",
       "spec_file": "sdd/modules/analytics.json",
-      "version": "0.5.0",
-      "status": "Em desenvolvimento",
+      "version": "0.6.0",
+      "status": "Maioritariamente finalizado — falta escrever os testes automatizados (QA-001 a QA-004)",
       "owner": "Vision7 Core Team",
       "depends_on": [
         "supabase-database",
@@ -229,8 +229,8 @@
       "id": "agents-skills-ai",
       "name": "Agents & Skills AI",
       "spec_file": "sdd/modules/agents-skills-ai.json",
-      "version": "0.8.0",
-      "status": "Em desenvolvimento",
+      "version": "0.9.0",
+      "status": "Maioritariamente finalizado — falta FR-008 (jornadas multi-login por hierarquia)",
       "owner": "Vision7 Core Team",
       "depends_on": [],
       "dependents": [],
@@ -244,8 +244,8 @@
       "id": "cicd-devops",
       "name": "CI/CD & DevOps",
       "spec_file": "sdd/modules/cicd-devops.json",
-      "version": "0.3.0",
-      "status": "Em desenvolvimento",
+      "version": "0.4.0",
+      "status": "Maioritariamente finalizado — falta staging de migrations (FR-006)",
       "owner": "Vision7 Core Team",
       "depends_on": [
         "automation-engine"
@@ -261,8 +261,8 @@
       "id": "portal-assistant",
       "name": "Portal Assistant",
       "spec_file": "sdd/modules/portal-assistant.json",
-      "version": "0.1.0",
-      "status": "Em desenvolvimento",
+      "version": "0.2.0",
+      "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [
         "supabase-database",
