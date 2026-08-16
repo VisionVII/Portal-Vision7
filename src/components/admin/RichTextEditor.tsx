@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import ImageExtension from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -73,8 +75,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           levels: [1, 2, 3, 4],
         },
         codeBlock: false,
-        link: { openOnClick: false },
+        // O TipTap v3 já regista 'link'/'underline' dentro do StarterKit —
+        // desligados aqui para evitar registo duplicado, mantendo as
+        // instâncias configuradas abaixo (comportamento inalterado).
+        link: false,
+        underline: false,
       }),
+      Underline,
+      Link.configure({ openOnClick: false }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       ImageExtension,
       Placeholder.configure({ placeholder: placeholder || 'Escreva o conteúdo...' }),
@@ -89,12 +97,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     ],
     content,
     onUpdate: ({ editor }) => {
+      if (editor.isDestroyed) return;
       onChange(editor.getHTML());
     },
   });
 
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
 
     const currentHtml = editor.getHTML();
     if (content !== currentHtml) {
