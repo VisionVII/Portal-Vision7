@@ -58,7 +58,7 @@ function rowToPipelineConfig(row: PipelineSearchConfigRow): PipelineSearchConfig
     label: row.label,
     tags: flattenThemeSearchTerms(themeRules),
     language: row.language ?? 'pt-BR',
-    region: row.region ?? 'PT',
+    region: row.region ?? 'BR',
     defaultPostTags: sanitizeStringList(row.default_post_tags, DEFAULT_PIPELINE_POST_TAGS),
     themeRules,
     is_active: row.is_active,
@@ -94,7 +94,7 @@ function buildExtendedPayload(input: SavePipelineConfigInput) {
   return {
     label: input.label.trim() || 'Padrão',
     language: (input.language || 'pt-BR').trim() || 'pt-BR',
-    region: (input.region || 'PT').trim() || 'PT',
+    region: (input.region || 'BR').trim() || 'BR',
     tags: normalizedTags,
     theme_rules: normalizedThemeRules as unknown as Json,
     default_post_tags: sanitizeStringList(input.defaultPostTags, DEFAULT_PIPELINE_POST_TAGS),
@@ -111,7 +111,7 @@ function buildLegacyPayload(input: SavePipelineConfigInput) {
   return {
     label: input.label.trim() || 'Padrão',
     language: (input.language || 'pt-BR').trim() || 'pt-BR',
-    region: (input.region || 'PT').trim() || 'PT',
+    region: (input.region || 'BR').trim() || 'BR',
     tags: sanitizeStringList(input.tags, flattenThemeSearchTerms(normalizedThemeRules)),
     updated_at: new Date().toISOString(),
   };
@@ -213,7 +213,7 @@ export function usePipelineConfig() {
         id,
         label: currentConfig?.label ?? 'Padrão',
         language: currentConfig?.language ?? 'pt-BR',
-        region: currentConfig?.region ?? 'PT',
+        region: currentConfig?.region ?? 'BR',
         tags,
         themeRules: buildThemeRulesFromTags(tags),
         defaultPostTags: currentConfig?.defaultPostTags ?? DEFAULT_PIPELINE_POST_TAGS,

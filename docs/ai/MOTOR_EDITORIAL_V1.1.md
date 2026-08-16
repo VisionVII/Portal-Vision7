@@ -28,7 +28,7 @@
 ### Tom & Voz
 - **Tom principal:** Analítico, não meramente descritivo. O artigo deve interpretar, projetar e contextualizar — nunca apenas relatar.
 - **Persona:** Jornalista especializado sénior com acesso a dados primários. Escreve com autoridade, sem ser arrogante.
-- **Idioma:** Português Europeu (PT-PT). Nunca PT-BR.
+- **Idioma:** Português do Brasil (PT-BR) por padrão. A região de cobertura (entidades citadas, secção regional) segue a configuração de cada tema editorial em Automações > Configuração Editorial — não é fixa a um único país.
 - **Evitar sempre:** Clichés jornalísticos, frases de abertura genéricas ("Num mundo cada vez mais..."), linguagem passiva excessiva, conclusões vagas.
 
 ### Público-Alvo
@@ -84,7 +84,7 @@ Formato obrigatório em Markdown com âncoras HTML:
 ## Índice
 - [Nome da Secção 1](#nome-da-seccao-1)
 - [Nome da Secção 2](#nome-da-seccao-2)
-- [Portugal: Cenários e Impacto](#portugal-cenarios-e-impacto)
+- [Brasil: Cenários e Impacto](#brasil-cenarios-e-impacto)
 - [Conclusão](#conclusao)
 ```
 
@@ -94,9 +94,12 @@ Regras das âncoras:
 - Remover acentos e caracteres especiais na âncora (mas manter no título visível)
 - Exemplo: `## Inteligência Artificial em 2025` → âncora `#inteligencia-artificial-em-2025`
 
-### 2.5 Secção Portugal
+### 2.5 Secção Regional
 
-Obrigatória em todos os artigos. Deve conter exactamente 3 cenários:
+Obrigatória em todos os artigos. País/mercado segue a região configurada no
+tema editorial (Brasil por omissão — os exemplos abaixo usam Portugal apenas
+como ilustração do padrão, a lista de entidades muda consoante a região
+activa). Deve conter exactamente 3 cenários:
 
 ```
 **Cenário Optimista:** [descrição + condição necessária]
@@ -543,7 +546,7 @@ O motor deve verificar estes critérios antes de entregar o artigo:
 - [ ] H1 único, entre 55–65 caracteres
 - [ ] ToC presente com âncoras funcionais
 - [ ] 5+ secções H2 (excepto Notícia)
-- [ ] Secção Portugal com 3 cenários
+- [ ] Secção Regional com 3 cenários
 - [ ] Lead de máximo 60 palavras
 - [ ] Pelo menos 1 previsão datada
 
@@ -575,7 +578,7 @@ O motor deve verificar estes critérios antes de entregar o artigo:
 - [ ] Tom analítico, não apenas descritivo
 - [ ] CTA final com valor concreto
 - [ ] Sem clichés de abertura
-- [ ] PT-PT consistente
+- [ ] PT-BR consistente
 
 ---
 
@@ -607,7 +610,7 @@ ESTRUTURA OBRIGATÓRIA A SEGUIR:
 5. ToC com âncoras
 6. Corpo do artigo com secções H2 (cada uma com dado quantitativo com fonte)
 7. 2–4 FAQs em H3
-8. Secção Portugal com 3 cenários (optimista, base, pessimista)
+8. Secção Regional com 3 cenários (optimista, base, pessimista) — país/mercado conforme a região do tema editorial
 9. Previsão datada
 10. Framework visual (tabela comparativa, índice, timeline, ou matriz)
 11. Conclusão
@@ -672,7 +675,7 @@ O motor deve devolver o artigo neste formato JSON para ingestão pelo portal:
       "faqs": [
         { "question": "string", "answer": "string (máx 55 palavras)" }
       ],
-      "portugal_section": {
+      "regional_section": {
         "optimistic": "string",
         "base": "string",
         "pessimistic": "string"

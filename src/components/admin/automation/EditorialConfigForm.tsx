@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { sanitizeStringList, type PipelineThemeRule } from '@/lib/pipelineThemes';
 
 function parseListInput(value: string): string[] {
@@ -332,6 +333,27 @@ export function EditorialConfigForm({
                             placeholder="Ex: ia"
                           />
                         </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-medium text-muted-foreground">
+                          Região de pesquisa
+                          <span className="ml-1.5 text-[10px] text-muted-foreground/60">(de onde vêm as notícias deste tema)</span>
+                        </label>
+                        <Select
+                          value={theme.region ? theme.region : 'inherit'}
+                          onValueChange={(value) => onUpdateThemeRule(theme.id, { region: value === 'inherit' ? '' : value })}
+                        >
+                          <SelectTrigger className="h-9 text-xs bg-muted/40 border-border/40">
+                            <SelectValue placeholder="Herdar da configuração global" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="inherit">Herdar da configuração global</SelectItem>
+                            <SelectItem value="BR">Brasil</SelectItem>
+                            <SelectItem value="PT">Portugal</SelectItem>
+                            <SelectItem value="GLOBAL">Internacional (sem filtro)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-1.5">

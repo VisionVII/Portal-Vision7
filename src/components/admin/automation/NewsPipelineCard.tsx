@@ -173,8 +173,8 @@ export function NewsPipelineCard() {
   /* ── Tag editing state ── */
   const [showConfig, setShowConfig] = useState(false);
   const [editConfigLabel, setEditConfigLabel] = useState('Padrão');
-  const [editLanguage, setEditLanguage] = useState('pt-PT');
-  const [editRegion, setEditRegion] = useState('PT');
+  const [editLanguage, setEditLanguage] = useState('pt-BR');
+  const [editRegion, setEditRegion] = useState('BR');
   const [editDefaultPostTags, setEditDefaultPostTags] = useState<string[]>(DEFAULT_PIPELINE_POST_TAGS);
   const [newDefaultPostTag, setNewDefaultPostTag] = useState('');
   const [editThemeRules, setEditThemeRules] = useState<PipelineThemeRule[]>(DEFAULT_PIPELINE_THEME_RULES);
@@ -526,8 +526,8 @@ export function NewsPipelineCard() {
   /* ── Tag management ── */
   const openConfig = () => {
     setEditConfigLabel(activeConfig?.label ?? 'Padrão');
-    setEditLanguage(activeConfig?.language ?? 'pt-PT');
-    setEditRegion(activeConfig?.region ?? 'PT');
+    setEditLanguage(activeConfig?.language ?? 'pt-BR');
+    setEditRegion(activeConfig?.region ?? 'BR');
     setEditDefaultPostTags(activeConfig?.defaultPostTags ?? DEFAULT_PIPELINE_POST_TAGS);
     setNewDefaultPostTag('');
     setEditThemeRules(activeConfig?.themeRules?.length ? activeConfig.themeRules : DEFAULT_PIPELINE_THEME_RULES);
@@ -554,6 +554,7 @@ export function NewsPipelineCard() {
         label: '',
         searchTerms: [],
         postTags: [],
+        region: '',
       },
     ]));
   };

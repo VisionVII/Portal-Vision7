@@ -168,7 +168,7 @@ Artigos devem ter:
 3. Entidades SEO reais (NVIDIA, TSMC, IBM, Google, Anthropic…)
 4. Uma previsão datada forte
 5. Framework visual proprietário
-6. Secção Portugal com 3 cenários
+6. Secção regional (país/mercado do tema editorial) com 3 cenários — Brasil por omissão, configurável por tema em Automações > Configuração Editorial
 7. CTA com valor concreto
 8. Interlinking contextual no meio do texto
 9. Tom analítico — nunca apenas descritivo

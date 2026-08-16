@@ -4,6 +4,8 @@ export interface PipelineThemeRule {
   label: string;
   searchTerms: string[];
   postTags: string[];
+  /** Região de pesquisa deste tema (ex: 'BR', 'PT', '' = herda a região global da config). */
+  region?: string;
 }
 
 export const DEFAULT_PIPELINE_POST_TAGS = ['vision7', 'tecnologia'];
@@ -106,6 +108,7 @@ function normalizeThemeRule(rawRule: unknown, index: number): PipelineThemeRule 
   const rawLabel = typeof rule.label === 'string' ? rule.label.trim() : '';
   const rawSlug = typeof rule.slug === 'string' ? rule.slug.trim() : '';
   const rawId = typeof rule.id === 'string' ? rule.id.trim() : '';
+  const rawRegion = typeof rule.region === 'string' ? rule.region.trim() : '';
   const fallbackSource = rawLabel || rawSlug || searchTerms[0] || `tema_${index + 1}`;
   const slug = normalizeText(rawSlug || rawLabel || searchTerms[0] || rawId);
   const label = rawLabel || toLabel(fallbackSource);
@@ -118,6 +121,7 @@ function normalizeThemeRule(rawRule: unknown, index: number): PipelineThemeRule 
     label,
     searchTerms,
     postTags: postTags.length > 0 ? postTags : [label.toLowerCase()],
+    region: rawRegion,
   };
 }
 
