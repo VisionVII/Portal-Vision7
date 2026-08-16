@@ -94,7 +94,7 @@ const ContentView: React.FC<ContentViewProps> = ({
 
       {/* ── Tabs: Posts | Curados IA | Categorias ── */}
       <Tabs data-tour="content-tabs" value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-        <TabsList className="h-auto w-full gap-1 overflow-x-auto rounded-2xl p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <TabsList className="h-auto w-full gap-1 overflow-x-auto rounded-2xl border-0 bg-transparent p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="posts" className="gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold sm:px-4">
             <LayoutList className="w-3.5 h-3.5 shrink-0" />
             Posts editoriais
