@@ -4,7 +4,7 @@ import type { EmailTemplateData, EmailTemplateType } from '../src/lib/email/type
 
 const SEND_INTERVAL_MS = 60_000;
 const recipients = ['visionvidevgrid@proton.me', 'hvvctor@gmail.com'];
-const origin = 'https://www.vision7.pt';
+const origin = 'https://portal.vision7.pt';
 
 function loadEnv() {
   return Object.fromEntries(

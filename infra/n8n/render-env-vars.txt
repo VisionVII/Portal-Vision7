@@ -80,8 +80,8 @@ WEBHOOK_URL=https://n8n-vision7.onrender.com
 # ── Embed interno no portal (mesma origin via /n8n) ─────────────────────────
 # Necessário para usar o n8n embutido no portal sem bloqueio SAMEORIGIN.
 N8N_PATH=/n8n
-N8N_EDITOR_BASE_URL=https://www.vision7.pt/n8n
-N8N_HOST=www.vision7.pt
+N8N_EDITOR_BASE_URL=https://portal.vision7.pt/n8n
+N8N_HOST=portal.vision7.pt
 N8N_PROTOCOL=https
 
 # ── Execuções: salvar tudo no DB ─────────────────────────────────────────────

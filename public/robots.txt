@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://www.vision7.pt/sitemap.xml
+Sitemap: https://portal.vision7.pt/sitemap.xml

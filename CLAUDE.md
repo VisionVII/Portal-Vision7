@@ -110,7 +110,7 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 - [x] Persistência híbrida localStorage + Supabase (`user_onboarding`), com fallback silencioso
 - [x] Ponto único de controlo em Configurações > Tutorial (activar/desactivar, progresso, reiniciar)
 - [x] Mini-tutoriais inline ("O que fazer agora") em Conteúdo e Automações
-- [ ] Migration `supabase/migrations/20260720120000_user_onboarding.sql` aplicada em produção (código já em `main`, tabela ainda por criar no Supabase)
+- [x] Migration `supabase/migrations/20260720120000_user_onboarding.sql` aplicada em produção (confirmado via REST API — `permission denied` em vez de `relation does not exist`)
 - [ ] QA manual dos 4 cenários — ver `sdd/modules/admin-onboarding.json`
 
 ---

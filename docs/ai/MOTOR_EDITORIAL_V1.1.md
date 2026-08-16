@@ -801,7 +801,7 @@ As tabelas abaixo são as que existem confirmadamente no schema actual:
 ### Infraestrutura de Produção
 - **n8n (workflows):** `https://portal-vision7.onrender.com` (Render Community Edition)
 - **Supabase:** Projecto `xhpfxvoonpclonjyfimt` — West EU (Ireland)
-- **Portal público:** `https://vision7.pt`
+- **Portal público:** `https://portal.vision7.pt`
 - **Frontend:** React 18 + Vite + TypeScript — Vercel Edge Network
 
 ### Documentação Interna (fontes de verdade)

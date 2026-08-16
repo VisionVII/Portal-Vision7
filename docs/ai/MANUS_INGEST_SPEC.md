@@ -94,7 +94,7 @@ Payload raiz com `.article`:
   "id": "uuid",
   "slug": "slug-do-artigo",
   "status": "published|draft",
-  "url": "https://www.vision7.pt/post/slug-do-artigo",
+  "url": "https://portal.vision7.pt/post/slug-do-artigo",
   "quality_score": 9.7
 }
 ```
@@ -130,7 +130,7 @@ Payload raiz com `.article`:
   "id": "uuid",
   "slug": "slug-do-artigo",
   "status": "published|draft",
-  "url": "https://www.vision7.pt/post/slug-do-artigo"
+  "url": "https://portal.vision7.pt/post/slug-do-artigo"
 }
 ```
 
