@@ -1,8 +1,8 @@
 {
   "module": "Analytics",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "owner": "Vision7 Core Team",
-  "status": "Maioritariamente finalizado — falta escrever os testes automatizados (QA-001 a QA-004)",
+  "status": "Finalizado — QA 4/4 aprovado",
   "last_updated": "2026-08-16",
   "objective": "Sistema de analytics e monetização para rastreamento de eventos, métricas de engajamento, trending content e configuração de monetização do portal.",
   "functional_requirements": [
@@ -91,7 +91,8 @@
       "src/integrations/supabase/types.ts"
     ],
     "migrations": [
-      "supabase/migrations/20260217224603_09688a98-dec5-4c1f-843b-bec95ed6869d.sql"
+      "supabase/migrations/20260217224603_09688a98-dec5-4c1f-843b-bec95ed6869d.sql",
+      "supabase/migrations/20260816120000_grant_analytics_events_anon_insert.sql"
     ]
   },
   "qa_tests": [
@@ -99,25 +100,25 @@
       "id": "QA-001",
       "type": "unit",
       "description": "Testar useTrackEvent registra evento corretamente no Supabase",
-      "status": "Pendente"
+      "status": "Aprovado — src/test/analytics.test.tsx"
     },
     {
       "id": "QA-002",
       "type": "unit",
       "description": "Testar useAnalyticsSummary retorna agregação correta",
-      "status": "Pendente"
+      "status": "Aprovado — src/test/analytics.test.tsx (agregação por tipo/dia, caso vazio, propagação de erro)"
     },
     {
       "id": "QA-003",
       "type": "security",
       "description": "Verificar RLS: visitante não pode ler analytics_events",
-      "status": "Pendente"
+      "status": "Aprovado — verificado ao vivo via REST API (anon SELECT → 42501 permission denied, correcto)"
     },
     {
       "id": "QA-004",
       "type": "integration",
       "description": "Testar GDPR: tracking desligado sem consentimento de cookies",
-      "status": "Pendente"
+      "status": "Aprovado — src/test/analytics.test.tsx ('respects CMP consent check')"
     }
   ],
   "ci_cd_integration": [
@@ -125,7 +126,7 @@
       "step": "Type-check hooks de analytics",
       "tool": "TypeScript",
       "trigger": "PR para main",
-      "status": "Pendente"
+      "status": "Finalizado — coberto pelo job lint-typecheck em .github/workflows/sdd-ci.yml"
     }
   ],
   "scalability_notes": [
@@ -138,7 +139,8 @@
     "RLS deny-by-default em analytics_events",
     "Apenas admin roles podem ler dados agregados",
     "IP e user_agent armazenados para audit mas não expostos no frontend",
-    "GDPR: cookie consent required antes de tracking"
+    "GDPR: cookie consent required antes de tracking",
+    "anon tem GRANT INSERT (não SELECT) — pode escrever o seu próprio evento mas nunca ler dados agregados de outros"
   ],
   "change_history": [
     {
@@ -158,6 +160,12 @@
       "version": "0.6.0",
       "author": "Claude Code",
       "description": "SDD sincronizado — dashboard visual (FR-005), monetização (FR-006) e consentimento GDPR (NFR-003) já estavam implementados e a funcionar, só o SDD estava desatualizado. Único gap real confirmado: nenhum dos QA-001 a QA-004 tem teste automatizado escrito."
+    },
+    {
+      "date": "2026-08-16",
+      "version": "0.7.0",
+      "author": "Claude Code",
+      "description": "QA 4/4 aprovado. Ao escrever QA-002 e verificar QA-003 ao vivo via REST API, descobriu-se que useTrackEvent nunca conseguia inserir como visitante anónimo — 20260411130000_fix_table_grants.sql só tinha dado GRANT INSERT a authenticated, nunca a anon, apesar da RLS policy dizer explicitamente FOR INSERT TO anon, authenticated. Corrigido em 20260816120000_grant_analytics_events_anon_insert.sql (GRANT INSERT ON analytics_events TO anon), aplicado manualmente via SQL Editor e confirmado (HTTP 201 no insert como anon). Isto explica por que a infraestrutura de tracking existia mas analytics_events nunca recebia dados reais do site público."
     }
   ]
 }

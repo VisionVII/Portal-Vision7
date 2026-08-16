@@ -141,8 +141,8 @@
       "id": "analytics",
       "name": "Analytics",
       "spec_file": "sdd/modules/analytics.json",
-      "version": "0.6.0",
-      "status": "Maioritariamente finalizado — falta escrever os testes automatizados (QA-001 a QA-004)",
+      "version": "0.7.0",
+      "status": "Finalizado — QA 4/4 aprovado",
       "owner": "Vision7 Core Team",
       "depends_on": [
         "supabase-database",
