@@ -280,6 +280,15 @@
     @apply bg-neutral-100 dark:bg-neutral-800 border border-dashed border-neutral-300 dark:border-neutral-700 rounded-xl flex items-center justify-center text-muted-foreground;
   }
 
+  /* Vidro fosco reutilizável para elementos flutuantes do dashboard admin
+     (botões de tabs sticky, cards sobre o glow ambiente). Opacidade
+     moderada de propósito — o objectivo é sugerir profundidade sem
+     comprometer o contraste do texto por cima. Usar com moderação, só
+     onde faz sentido visualmente (não em blocos de texto densos). */
+  .glass-panel {
+    @apply rounded-xl border border-white/20 bg-background/40 shadow-sm backdrop-blur-xl transition-all dark:border-white/10;
+  }
+
   /* Premium soft shadow override for cards */
   .blog-card,
   [class*="shadow-md"] {

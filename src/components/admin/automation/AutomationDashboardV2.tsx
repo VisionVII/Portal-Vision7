@@ -681,22 +681,22 @@ export function AutomationDashboardV2({
         </button>
       </div>
 
-      {/* ── Tab navigation (sticky, descolada do header + glassmorphism) ── */}
+      {/* ── Tab navigation (sticky, descolada do header — vidro em cada botão, sem barra sólida a uni-los) ── */}
       <Tabs data-tour="automation-tabs" value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
-        <TabsList className="sticky top-[4.5rem] z-40 h-auto w-full gap-1 overflow-x-auto rounded-2xl border border-white/25 bg-background/40 p-1 shadow-[0_8px_30px_-6px_rgba(2,122,227,0.35)] ring-1 ring-white/10 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/30 dark:border-white/10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsTrigger data-tour="automation-tab-pipeline" value="pipeline" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+        <TabsList className="sticky top-[4.5rem] z-40 h-auto w-full gap-2 overflow-x-auto bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger data-tour="automation-tab-pipeline" value="pipeline" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:flex-none sm:px-4">
             <Zap className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Pipeline</span>
           </TabsTrigger>
-          <TabsTrigger data-tour="automation-tab-automations" value="automations" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-automations" value="automations" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:flex-none sm:px-4">
             <Workflow className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Automações</span>
           </TabsTrigger>
-          <TabsTrigger data-tour="automation-tab-logs" value="logs" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-logs" value="logs" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:flex-none sm:px-4">
             <Clock className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Logs</span>
           </TabsTrigger>
-          <TabsTrigger data-tour="automation-tab-tools" value="tools" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-tools" value="tools" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:flex-none sm:px-4">
             <Wrench className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Ferramentas</span>
           </TabsTrigger>
