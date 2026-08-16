@@ -1,10 +1,8 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import SectionPageHero from '@/components/content/SectionPageHero';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { parseSectionPageBanners, SECTION_PAGE_BANNERS_KEY } from '@/lib/sectionPageConfig';
 import { Link } from 'react-router-dom';
 import { Cpu, Globe, Heart, Music, Trophy, ArrowRight, Mail, BarChart2, Zap, Eye } from 'lucide-react';
 
@@ -43,13 +41,6 @@ const DIFFERENTIATORS = [
 ];
 
 const Sobre = () => {
-  const { data: siteSettings } = useSiteSettings();
-  const sectionPageBanners = useMemo(
-    () => parseSectionPageBanners(siteSettings?.[SECTION_PAGE_BANNERS_KEY]),
-    [siteSettings],
-  );
-  const aboutHero = sectionPageBanners.about;
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
@@ -59,11 +50,6 @@ const Sobre = () => {
         description="Um portal editorial português dedicado a tecnologia, cultura, saúde, desporto e tendências globais — com rigor analítico e curadoria premium."
         align="left"
         fallbackClassName="bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800"
-        media={aboutHero?.bannerUrl || aboutHero?.mobileBannerUrl ? {
-          desktopUrl: aboutHero.bannerUrl,
-          mobileUrl: aboutHero.mobileBannerUrl,
-          alt: 'Banner da página Sobre',
-        } : null}
         metaSlot={(
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/88 backdrop-blur-sm">

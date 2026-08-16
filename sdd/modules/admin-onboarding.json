@@ -1,15 +1,15 @@
 {
   "$schema": "./module_schema.json",
   "module": "Tutorial de Onboarding (Admin)",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "owner": "Vision7 Core Team",
-  "status": "Finalizado — cobertura completa (11 áreas, 38 passos) + QA manual aprovada (4/4)",
+  "status": "Finalizado — cobertura completa (10 áreas, 36 passos) + QA manual aprovada (4/4)",
   "last_updated": "2026-08-16",
-  "objective": "Tour guiado nativo (sem libs externas) que ensina cada uma das 11 áreas do dashboard admin passo-a-passo — incluindo o motor de automação em detalhe (Pipeline, Automações, Logs, Ferramentas) — com progresso persistido por utilizador e um único ponto de controlo em Configurações.",
+  "objective": "Tour guiado nativo (sem libs externas) que ensina cada uma das 10 áreas do dashboard admin passo-a-passo — incluindo o motor de automação em detalhe (Pipeline, Automações, Logs, Ferramentas) — com progresso persistido por utilizador e um único ponto de controlo em Configurações.",
   "functional_requirements": [
     {
       "id": "FR-001",
-      "description": "Mostrar um coachmark sequencial por área do dashboard (as 11 áreas: Visão geral, Conteúdo, Builder, Media, Automações, Cursos, CRM, Analytics, Acesso, Developer, Configurações), ancorado a elementos reais via atributos data-tour.",
+      "description": "Mostrar um coachmark sequencial por área do dashboard (as 10 áreas: Visão geral, Conteúdo, Media, Automações, Cursos, CRM, Analytics, Acesso, Developer, Configurações), ancorado a elementos reais via atributos data-tour.",
       "priority": "Alta",
       "status": "Finalizado (código + QA manual aprovada)"
     },
@@ -152,6 +152,12 @@
       "version": "0.3.0",
       "author": "Claude Code",
       "description": "Expansão de 4 para 11 áreas (38 passos), motor activateSelector para passos dentro de tabs não-default. Migration user_onboarding confirmada em produção. Durante o QA manual, 3 bugs reais corrigidos: (1) crash do React ao trocar de área a meio do tour — stepIndex desatualizado indexava fora dos limites do array de passos da nova área antes do useEffect de reset correr; (2) coachmark sobreposto ao alvo (placement 'top') ou a sair do ecrã por baixo em secções próximas do fundo da página — computePosition() não descontava a altura real do cartão; (3) crash do editor de posts (getHTML() num editor TipTap já destruído por corrida de desmontagem, mais fácil de disparar por duplo-toque em mobile) — não é bug do tutorial em si, mas foi descoberto durante o QA guiado pelo tutorial. QA manual aprovado 4/4."
+    },
+    {
+      "date": "2026-08-16",
+      "version": "0.4.0",
+      "author": "Claude Code",
+      "description": "Área 'Builder' removida (4 passos) — o Homepage Builder foi retirado por completo do dashboard (ver módulo CMS v1.3.0). Tour passa de 11 para 10 áreas, de 38 para 36 passos."
     }
   ]
 }

@@ -1,14 +1,14 @@
 {
   "module": "CMS",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "owner": "Vision7 Core Team",
   "status": "Finalizado",
-  "last_updated": "2026-04-08",
+  "last_updated": "2026-08-16",
   "objective": "Sistema de gestão de conteúdo completo para administração do portal: posts, cursos, categorias, newsletter, site settings, media uploads e developer tools.",
   "functional_requirements": [
     {
       "id": "FR-001",
-      "description": "Dashboard admin com 9 views: Overview, Builder, Conteúdo, Automações, Cursos, CRM, Acessos, Developer, Brand Settings",
+      "description": "Dashboard admin com 8 views: Overview, Conteúdo, Automações, Cursos, CRM, Acessos, Developer, Brand Settings",
       "priority": "Crítica",
       "status": "Finalizado"
     },
@@ -32,7 +32,7 @@
     },
     {
       "id": "FR-006",
-      "description": "Site settings: favicon, hero banner, seções homepage, metadata",
+      "description": "Site settings: logo, nome do portal, metadata do curso/parceiro. Layout e conteúdo da homepage e páginas fixas deixaram de ser editáveis via admin — fixos no código-fonte",
       "priority": "Alta",
       "status": "Finalizado"
     },
@@ -44,7 +44,7 @@
     },
     {
       "id": "FR-008",
-      "description": "Brand settings e CMS customizer para identidade visual",
+      "description": "Brand settings (logo, nome do portal) via SiteSettingsManager",
       "priority": "Média",
       "status": "Finalizado"
     },
@@ -125,7 +125,6 @@
   "files": {
     "components": [
       "src/components/admin/AdminAccessManager.tsx",
-      "src/components/admin/AdminCmsCustomizer.tsx",
       "src/components/admin/AdminCoursesManager.tsx",
       "src/components/admin/AdminStatsCards.tsx",
       "src/components/admin/AuthShell.tsx",
@@ -274,6 +273,12 @@
       "version": "1.2.1",
       "author": "Vision7 Team",
       "description": "AutomationDashboard V1, AutomationKPIBar e AutomationCategoryTabs removidos do codebase. Apenas AutomationDashboardV2 em uso. Componente dashboard-section removido. DOM nesting errors corrigidos. Vercel Analytics adicionado."
+    },
+    {
+      "date": "2026-08-16",
+      "version": "1.3.0",
+      "author": "Vision7 Team",
+      "description": "Homepage Builder retirado por completo (decisão do projecto: layout do site deixou de ser editável em runtime). Removidos AdminCmsCustomizer, BuilderView, canvas Puck (@puckeditor/core), gestor de secções e banners de categoria, view 'builder' da dashboard e chaves associadas em site_settings. Dashboard passa de 9 para 8 views. Conteúdo que estava ao vivo fixado directamente nas páginas públicas, sem regressão visual."
     }
   ]
 }

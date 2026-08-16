@@ -39,10 +39,10 @@ export default defineConfig(({ mode }) => ({
       // via manualChunks no index.html, mesmo os só usados atrás de um
       // React.lazy() em rotas /admin — o agrupamento por nome quebra a
       // análise de alcançabilidade do Vite. Sem isto, bibliotecas pesadas
-      // só de admin (editor rico, gráficos, canvas Puck) seriam
-      // pré-carregadas para qualquer visitante público da homepage.
+      // só de admin (editor rico, gráficos) seriam pré-carregadas para
+      // qualquer visitante público da homepage.
       resolveDependencies: (_filename, deps) =>
-        deps.filter((dep) => !/vendor-(editor|puck|data-viz)/.test(dep)),
+        deps.filter((dep) => !/vendor-(editor|data-viz)/.test(dep)),
     },
     rollupOptions: {
       output: {
@@ -85,10 +85,6 @@ export default defineConfig(({ mode }) => ({
             id.includes("prosemirror")
           ) {
             return "vendor-editor";
-          }
-
-          if (id.includes("@puckeditor")) {
-            return "vendor-puck";
           }
 
           if (id.includes("dompurify")) {

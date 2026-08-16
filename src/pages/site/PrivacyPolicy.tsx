@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SectionPageHero from '@/components/content/SectionPageHero';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { parseSectionPageBanners, SECTION_PAGE_BANNERS_KEY } from '@/lib/sectionPageConfig';
+
+// Hero fixo — layout do site deixou de ser editável via admin.
+const PRIVACY_HERO_BANNER_URL = 'https://xhpfxvoonpclonjyfimt.supabase.co/storage/v1/object/public/post-images/gallery/1776256435058-nothbe.webp';
 
 const TOC = [
   { id: 'section-1', label: '1. Introdução' },
@@ -21,12 +22,6 @@ const TOC = [
 ];
 
 const PrivacyPolicy = () => {
-  const { data: siteSettings } = useSiteSettings();
-  const sectionPageBanners = useMemo(
-    () => parseSectionPageBanners(siteSettings?.[SECTION_PAGE_BANNERS_KEY]),
-    [siteSettings],
-  );
-  const privacyHero = sectionPageBanners.privacy;
   const updatedAt = new Date().toLocaleDateString('pt-PT');
 
   return (
@@ -38,11 +33,11 @@ const PrivacyPolicy = () => {
         description="Explicamos com transparência como o portal recolhe, utiliza e protege dados, preferências e permissões do utilizador em conformidade com RGPD e LGPD."
         align="left"
         fallbackClassName="bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800"
-        media={privacyHero.bannerUrl || privacyHero.mobileBannerUrl ? {
-          desktopUrl: privacyHero.bannerUrl,
-          mobileUrl: privacyHero.mobileBannerUrl,
+        media={{
+          desktopUrl: PRIVACY_HERO_BANNER_URL,
+          mobileUrl: PRIVACY_HERO_BANNER_URL,
           alt: 'Banner da página de política de privacidade',
-        } : null}
+        }}
         metaSlot={(
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/88 backdrop-blur-sm">

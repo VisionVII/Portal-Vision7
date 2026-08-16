@@ -1,7 +1,6 @@
-import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import SectionPageHero from '@/components/content/SectionPageHero';
 import PostCard from '@/components/content/PostCard';
 import AdSpace from '@/components/content/AdSpace';
 const NewsletterForm = React.lazy(() => import('@/components/content/NewsletterForm'));
@@ -25,16 +24,16 @@ import {
   Tag,
   TrendingUp,
 } from 'lucide-react';
-import {
-  HERO_PUCK_DATA_KEY,
-  HOME_PAGE_CONFIG_KEY,
-  defaultHomePageConfig,
-  getEnabledHomePageBanners,
-  parseHomePageConfig,
-  type HomePageConfig,
-} from '@/lib/homepage-config';
-import { extractHeroFromPuckData, type HeroPuckData } from '@/lib/heroPuckConfig';
 import { SectionBlock } from '@/components/home/SectionBlock';
+
+// Estrutura fixa da homepage — sem opção de edição via admin (decisão do
+// projecto: layout do site deixou de ser editável em runtime).
+const HOME_SECTIONS: Array<{ id: 'featured' | 'latest' | 'courses' | 'more'; label: string }> = [
+  { id: 'featured', label: 'Destaque' },
+  { id: 'latest', label: 'Últimas Notícias' },
+  { id: 'courses', label: 'Parcerias recomendadas' },
+  { id: 'more', label: 'Mais Notícias' },
+];
 
 interface CourseMeta {
   affiliateUrl?: string;
@@ -91,10 +90,6 @@ const Index = () => {
   const { data: courses = [] } = useCourses();
   const { data: siteSettings } = useSiteSettings();
 
-  const homeConfig = useMemo(
-    () => parseHomePageConfig(siteSettings?.[HOME_PAGE_CONFIG_KEY]),
-    [siteSettings]
-  );
   const courseMeta = useMemo(
     () => parseCourseMeta(siteSettings?.course_partner_meta),
     [siteSettings]
@@ -118,92 +113,9 @@ const Index = () => {
 
   const { paginatedItems: paginatedRegularPosts, currentPage, totalPages, goToPage } = usePagination(regularPosts, { pageSize: 6 });
 
-  const newsletterLabel = homeConfig.sections.find((section) => section.id === 'newsletter')?.label || 'Newsletter';
-
-  // Fase 1 do builder estilo Elementor: o hero passa a ser editado no canvas
-  // do Puck (admin), mas continua a usar o mesmo motor de render aqui —
-  // dot-nav, CTA dupla e roteamento por tipo de link já testados. Sem dados
-  // no Puck ainda (site novo, ou antes da primeira publicação), cai para o
-  // schema antigo (homeConfig.heroTitle/rotatingBanners), nunca fica vazio.
-  const heroPuckData = useMemo<HeroPuckData | null>(() => {
-    const raw = siteSettings?.[HERO_PUCK_DATA_KEY];
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as HeroPuckData;
-    } catch {
-      return null;
-    }
-  }, [siteSettings]);
-  const extractedHero = useMemo(
-    () => (heroPuckData ? extractHeroFromPuckData(heroPuckData) : null),
-    [heroPuckData]
-  );
-
-  const activeBanners = useMemo(() => {
-    if (extractedHero && extractedHero.banners.length > 0) {
-      const enabled = extractedHero.banners.filter((banner) => banner.enabled);
-      const list = enabled.length > 0 ? enabled : extractedHero.banners;
-      return list.map((banner, index) => ({ ...banner, id: `puck-banner-${index}` }));
-    }
-    return getEnabledHomePageBanners(homeConfig);
-  }, [extractedHero, homeConfig]);
-
-  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
-  const activeBanner = activeBanners[activeBannerIndex] || activeBanners[0];
-  const bannerHref = activeBanner?.ctaHref?.trim() || '#noticias';
-  const bannerCtaLabel = activeBanner?.ctaLabel?.trim() || homeConfig.primaryCtaLabel || 'Explorar Notícias';
-  const isExternalBannerHref = /^https?:\/\//i.test(bannerHref);
-  const isHashBannerHref = bannerHref.startsWith('#');
-  const activeBannerDesktopUrl = activeBanner?.imageUrl || homeConfig.bannerUrl || defaultHomePageConfig.bannerUrl;
-  const activeBannerMobileUrl = activeBanner?.mobileImageUrl || homeConfig.mobileBannerUrl || activeBannerDesktopUrl;
-  const heroTitle = activeBanner?.title?.trim() || extractedHero?.title || homeConfig.heroTitle;
-  const heroDescription = activeBanner?.description?.trim() || extractedHero?.description || homeConfig.heroDescription;
-  const heroBadgeSource = extractedHero?.badge ?? homeConfig.heroBadge;
-  const heroBadge = heroBadgeSource?.trim() || activeBanner?.title ? 'Destaque Vision7' : undefined;
-  const heroAlignment = extractedHero?.alignment || homeConfig.heroAlignment;
-  const heroPrimaryCta = bannerCtaLabel || homeConfig.primaryCtaLabel || 'Explorar Notícias';
-  const heroSecondaryCta = homeConfig.secondaryCtaLabel || 'Categorias';
-  const heroSecondaryHref = '#categorias';
-
-  useEffect(() => {
-    setActiveBannerIndex((prev) => (prev >= activeBanners.length ? 0 : prev));
-  }, [activeBanners.length]);
-
-  useEffect(() => {
-    if (activeBanners.length < 2) {
-      return;
-    }
-
-    let intervalId: number | undefined;
-
-    const start = () => {
-      if (intervalId == null) {
-        intervalId = window.setInterval(() => {
-          setActiveBannerIndex((prev) => (prev + 1) % activeBanners.length);
-        }, 5200);
-      }
-    };
-
-    const stop = () => {
-      if (intervalId != null) {
-        window.clearInterval(intervalId);
-        intervalId = undefined;
-      }
-    };
-
-    const onVisibility = () => (document.hidden ? stop() : start());
-    document.addEventListener('visibilitychange', onVisibility);
-    start();
-
-    return () => {
-      stop();
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, [activeBanners.length]);
-
-  const renderSection = (section: HomePageConfig['sections'][number]) => {
+  const renderSection = (section: (typeof HOME_SECTIONS)[number]) => {
     const sectionId = section.id;
-    const sectionLabel = section.label || defaultHomePageConfig.sections.find((item) => item.id === sectionId)?.label || 'Secção';
+    const sectionLabel = section.label;
 
     switch (sectionId) {
       // ── Featured ──────────────────────────────────────────────────────────
@@ -443,83 +355,13 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {activeBannerDesktopUrl && <SectionPageHero
-        title={heroTitle}
-        description={heroDescription}
-        badge={heroBadge}
-        align={heroAlignment}
-        fallbackClassName="bg-[#020817]"
-        media={{
-          desktopUrl: activeBannerDesktopUrl,
-          mobileUrl: activeBannerMobileUrl,
-          alt: activeBanner?.title || 'Banner principal do Vision7',
-        }}
-        overlayClassName="bg-[linear-gradient(118deg,rgba(2,6,23,0.58)_0%,rgba(2,6,23,0.12)_42%,rgba(2,6,23,0.62)_100%)]"
-        contentClassName="max-w-[36rem] pb-2 text-left sm:pb-6 lg:pb-10 xl:pl-6"
-        actionsSlot={(
-          <div className="flex w-full flex-col gap-4 pt-6 sm:pt-8">
-            <div className="flex w-full flex-col gap-3 xs:flex-row xs:items-center">
-              {isExternalBannerHref ? (
-                <a
-                  href={bannerHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100 xs:w-auto xs:min-w-[180px]"
-                >
-                  {heroPrimaryCta}
-                </a>
-              ) : isHashBannerHref ? (
-                <a
-                  href={bannerHref}
-                  className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100 xs:w-auto xs:min-w-[180px]"
-                >
-                  {heroPrimaryCta}
-                </a>
-              ) : (
-                <Link
-                  to={bannerHref}
-                  className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-neutral-950 shadow-[0_18px_50px_rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-100 xs:w-auto xs:min-w-[180px]"
-                >
-                  {heroPrimaryCta}
-                </Link>
-              )}
-
-              <Link
-                to={heroSecondaryHref}
-                className="inline-flex w-full items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/15 xs:w-auto xs:min-w-[180px]"
-              >
-                {heroSecondaryCta}
-              </Link>
-            </div>
-
-            {activeBanners.length > 1 ? (
-              <div className="flex items-center gap-2">
-                {activeBanners.map((banner, index) => (
-                  <button
-                    key={`dot-${banner.id}`}
-                    type="button"
-                    aria-label={`Abrir banner ${index + 1}`}
-                    onClick={() => setActiveBannerIndex(index)}
-                    className={`h-2.5 rounded-full transition-all duration-300 ${
-                      activeBannerIndex === index ? 'w-10 bg-white shadow-[0_0_24px_rgba(255,255,255,0.45)]' : 'w-2.5 bg-white/35 hover:bg-white/55'
-                    }`}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        )}
-      />}
-
       {/* ── Main Content ─────────────────────────────────────────────────── */}
       <main className="bg-muted/25">
         <div className="container mx-auto px-4 py-10 lg:py-14" id="noticias">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
             {/* Content column */}
             <div className="space-y-14 lg:col-span-8">
-              {homeConfig.sections
-                .filter((section) => section.enabled && section.id !== 'newsletter')
-                .map((section) => renderSection(section))}
+              {HOME_SECTIONS.map((section) => renderSection(section))}
             </div>
 
             {/* Sidebar */}
@@ -598,22 +440,20 @@ const Index = () => {
                 <AdSpace size="square" position="Lateral 2" className="hidden lg:flex" />
 
                 {/* Newsletter */}
-                {homeConfig.sections.some((s) => s.id === 'newsletter' && s.enabled) && (
-                  <div
-                    id="newsletter"
-                    className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 p-6 text-white shadow-lg dark:from-primary-700 dark:to-secondary-700"
+                <div
+                  id="newsletter"
+                  className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 p-6 text-white shadow-lg dark:from-primary-700 dark:to-secondary-700"
+                >
+                  <h3 className="mb-1.5 text-lg font-bold">Newsletter</h3>
+                  <p className="mb-5 text-sm text-white/80">
+                    Receba as principais notícias diretamente no seu email
+                  </p>
+                  <Suspense
+                    fallback={<div className="h-10 animate-pulse rounded-xl bg-white/20" />}
                   >
-                    <h3 className="mb-1.5 text-lg font-bold">{newsletterLabel}</h3>
-                    <p className="mb-5 text-sm text-white/80">
-                      Receba as principais notícias diretamente no seu email
-                    </p>
-                    <Suspense
-                      fallback={<div className="h-10 animate-pulse rounded-xl bg-white/20" />}
-                    >
-                      <NewsletterForm variant="sidebar" />
-                    </Suspense>
-                  </div>
-                )}
+                    <NewsletterForm variant="sidebar" />
+                  </Suspense>
+                </div>
               </div>
             </aside>
           </div>

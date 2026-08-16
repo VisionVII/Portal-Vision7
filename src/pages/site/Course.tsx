@@ -5,7 +5,9 @@ import Footer from '@/components/layout/Footer';
 import { useCourses } from '@/hooks/useCourses';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import SectionPageHero from '@/components/content/SectionPageHero';
-import { parseSectionPageBanners, SECTION_PAGE_BANNERS_KEY } from '@/lib/sectionPageConfig';
+
+// Hero fixo — layout do site deixou de ser editável via admin.
+const COURSE_HERO_BANNER_URL = 'https://xhpfxvoonpclonjyfimt.supabase.co/storage/v1/object/public/post-images/gallery/1776256435058-nothbe.webp';
 
 interface CourseMeta {
   affiliateUrl?: string;
@@ -30,12 +32,7 @@ const Course = () => {
   const { data: siteSettings } = useSiteSettings();
   const course = courses?.find((item) => item.slug === slug);
   const courseMeta = useMemo(() => parseCourseMeta(siteSettings?.course_partner_meta), [siteSettings]);
-  const sectionPageBanners = useMemo(
-    () => parseSectionPageBanners(siteSettings?.[SECTION_PAGE_BANNERS_KEY]),
-    [siteSettings],
-  );
   const partnerMeta = course ? courseMeta[course.slug] ?? {} : {};
-  const courseHero = sectionPageBanners.courses;
   const heroTitle = course ? course.title : isLoading ? 'A carregar curso...' : 'Curso não encontrado';
   const heroDescription = course
     ? `${course.description.slice(0, 220).trim()}${course.description.length > 220 ? '...' : ''}`
@@ -52,11 +49,11 @@ const Course = () => {
         description={heroDescription}
         align="left"
         fallbackClassName="bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-800"
-        media={courseHero.bannerUrl || courseHero.mobileBannerUrl ? {
-          desktopUrl: courseHero.bannerUrl,
-          mobileUrl: courseHero.mobileBannerUrl,
+        media={{
+          desktopUrl: COURSE_HERO_BANNER_URL,
+          mobileUrl: COURSE_HERO_BANNER_URL,
           alt: 'Banner das páginas de curso',
-        } : null}
+        }}
         metaSlot={course ? (
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/88 backdrop-blur-sm">

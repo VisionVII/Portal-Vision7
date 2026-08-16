@@ -14,7 +14,6 @@ import { TourController } from '@/components/admin/onboarding/TourController';
 // Lazy-loaded views
 const OverviewView = lazy(() => import('@/components/admin/views/OverviewView'));
 const ContentView = lazy(() => import('@/components/admin/views/ContentView'));
-const BuilderView = lazy(() => import('@/components/admin/views/BuilderView'));
 const AutomationsView = lazy(() => import('@/components/admin/views/AutomationsView'));
 const CoursesView = lazy(() => import('@/components/admin/views/CoursesView'));
 const CrmView = lazy(() => import('@/components/admin/views/CrmView'));
@@ -207,7 +206,6 @@ const AdminDashboard = () => {
                     searchQuery={contentSearchQuery}
                   />
                 </Panel>
-                <Panel view="builder"><BuilderView /></Panel>
                 <Panel view="media"><MediaGalleryView /></Panel>
                 <Panel view="automations"><AutomationsView isActive={activeView === 'automations'} /></Panel>
                 <Panel view="courses"><CoursesView /></Panel>

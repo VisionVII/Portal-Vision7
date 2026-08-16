@@ -1,7 +1,6 @@
 export type AdminView =
   | 'overview'
   | 'content'
-  | 'builder'
   | 'media'
   | 'automations'
   | 'courses'
@@ -13,7 +12,6 @@ export type AdminView =
 
 export const VIEW_ACCESS_RULES: Record<AdminView, string[]> = {
   overview: ['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst'],
-  builder: ['super_admin', 'admin', 'editor'],
   content: ['super_admin', 'admin', 'editor', 'redator', 'moderador'],
   media: ['super_admin', 'admin', 'editor', 'redator'],
   automations: ['super_admin', 'admin', 'editor'],

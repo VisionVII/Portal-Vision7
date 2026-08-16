@@ -52,7 +52,7 @@
       "id": "cms",
       "name": "CMS",
       "spec_file": "sdd/modules/cms.json",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "status": "Finalizado",
       "owner": "Vision7 Core Team",
       "depends_on": [
@@ -279,8 +279,8 @@
       "id": "admin-onboarding",
       "name": "Tutorial de Onboarding (Admin)",
       "spec_file": "sdd/modules/admin-onboarding.json",
-      "version": "0.3.0",
-      "status": "Finalizado — cobertura completa (11 áreas, 38 passos) + QA manual aprovada (4/4)",
+      "version": "0.4.0",
+      "status": "Finalizado — cobertura completa (10 áreas, 36 passos) + QA manual aprovada (4/4)",
       "owner": "Vision7 Core Team",
       "depends_on": [
         "cms",

@@ -106,7 +106,7 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 - [x] Limpeza concluída: removidas as referências vestigiais a `/audiocasts` do system prompt de `portal-ai-assistant` e do comentário de categorias em `ingest-manus-post` — os redirects legados `/audiocasts` e `/audiocast/:id` em `App.tsx` mantêm-se de propósito
 
 ### F7 — Tutorial de Onboarding (Admin) ✅
-- [x] Tour guiado nativo cobrindo as 11 áreas do dashboard (38 passos) — `src/components/admin/onboarding/`
+- [x] Tour guiado nativo cobrindo as 10 áreas do dashboard (36 passos) — `src/components/admin/onboarding/`
 - [x] Motor `activateSelector` — passos que apontam para conteúdo dentro de tabs não-default (Automações, CRM, Acesso, Developer)
 - [x] Persistência híbrida localStorage + Supabase (`user_onboarding`), com fallback silencioso
 - [x] Ponto único de controlo em Configurações > Tutorial (activar/desactivar, progresso, reiniciar)
@@ -118,7 +118,7 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 Iniciativa contínua de melhoria de design/UX, área por área. Cada fase é combinada com o utilizador antes de implementar.
 - [x] Visão Geral — removido botão "Novo post" duplicado (já existe no header global) e botão "Automações" (redundante com a sidebar). Depois: título estático substituído por faixa de informações rotativa (data/hora ao vivo + mensagens do portal em crossfade), cards de stats maiores/individuais com tom de cor por estado, secções "Semanas" e "Top categorias" removidas, "Últimos artigos" reduzido para 4 itens
 - [x] Conteúdo — removido cabeçalho (pill/título/subtítulo) e badges de contagem redundantes com os cards da Visão Geral; barra de pesquisa movida para o header global (contextual, só aparece com Conteúdo activo — reaproveitável por outras áreas no futuro)
-- [~] Builder (Homepage) — motor "estilo Elementor" iniciado. Fase 1 (fundação do canvas) concluída: hero + banners rotativos editam-se num canvas visual real (Puck — `@puckeditor/core`), com migração automática do conteúdo antigo (`home_page_hero_puck` em `site_settings`) e sem perda de funcionalidade pública (navegação por pontos, CTA dupla). Restantes secções (destaques/recentes/cursos/mais/newsletter) continuam geridas pelo `SectionSorter` existente — ainda não entraram no canvas. Fases futuras (elementos livres, posicionamento absoluto, outras páginas fixas, templates) combinadas mas não iniciadas — ver plano em curso antes de continuar
+- [x] Builder (Homepage) — **retirado por completo** (decisão do projecto: o layout do site deixou de ser editável em runtime). O motor "estilo Elementor" (Puck — `@puckeditor/core`) tinha sido construído em duas fases (UI de formulários, depois canvas visual), mas nunca chegou a ser usado em produção antes de a direcção mudar. Removido: `AdminCmsCustomizer`, `BuilderView`, canvas Puck, `SectionSorter`, gestor de banners rotativos, gestor de banners de categoria, dependência `@puckeditor/core`, chaves `home_page_config`/`home_page_hero_puck`/`section_page_banners` em `site_settings`, item "Homepage" da sidebar, 4 passos do tutorial guiado. O conteúdo que estava ao vivo em produção (textos, ordem das secções, banners de categoria) foi fixado directamente no código das páginas públicas (`Index.tsx`, `CategoryPage.tsx`, `Course.tsx`, `PrivacyPolicy.tsx`, `Sobre.tsx`) — zero regressão visual. Definições simples e genéricas (logo, nome do portal) continuam em Configurações via `SiteSettingsManager`, que já existia antes do Builder e não foi afectado
 - [ ] Media (Galeria)
 - [ ] Automações
 - [ ] Cursos (Parceiros)

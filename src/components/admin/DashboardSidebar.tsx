@@ -7,7 +7,6 @@ import {
   Handshake,
   Image,
   LayoutDashboard,
-  LayoutTemplate,
   Mail,
   Settings,
   Shield,
@@ -55,7 +54,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const allItems: NavItem[] = [
     { id: 'overview', label: 'Visão geral', icon: LayoutDashboard, hint: 'KPIs e atalhos' },
     { id: 'content', label: 'Conteúdo', icon: FileText, hint: 'Posts e editorial', badge: draftCount || undefined },
-    { id: 'builder', label: 'Homepage', icon: LayoutTemplate, hint: 'Builder visual' },
     { id: 'media', label: 'Galeria', icon: Image, hint: 'Imagens do portal' },
     { id: 'automations', label: 'Automações', icon: Bot, hint: 'N8N e workflows' },
     { id: 'courses', label: 'Parceiros', icon: Handshake, hint: 'Cursos, afiliados e links' },
@@ -72,7 +70,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const groups: NavGroup[] = [
     {
       title: 'Conteúdo',
-      items: navigationItems.filter((i) => ['overview', 'content', 'builder', 'media'].includes(i.id)),
+      items: navigationItems.filter((i) => ['overview', 'content', 'media'].includes(i.id)),
     },
     {
       title: 'Marketing',

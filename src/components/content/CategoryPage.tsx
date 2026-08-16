@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PostCard from './PostCard';
@@ -8,12 +8,19 @@ import { usePostsByCategory } from '@/hooks/usePosts';
 import { usePagination } from '@/hooks/usePagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { getSectionPageBanner, parseSectionPageBanners, SECTION_PAGE_BANNERS_KEY } from '@/lib/sectionPageConfig';
 import SectionPageHero from './SectionPageHero';
 import { cn } from '@/lib/utils';
 
 const dateFormatter = new Intl.DateTimeFormat('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' });
+
+// Hero fixo por categoria — layout do site deixou de ser editável via admin.
+const CATEGORY_HERO_BANNERS: Record<string, string> = {
+  tecnologia: 'https://xhpfxvoonpclonjyfimt.supabase.co/storage/v1/object/public/post-images/gallery/1776535407111-snex7r.webp',
+  mundo: 'https://xhpfxvoonpclonjyfimt.supabase.co/storage/v1/object/public/post-images/gallery/1776535397143-4au28q.webp',
+  musica: 'https://xhpfxvoonpclonjyfimt.supabase.co/storage/v1/object/public/post-images/gallery/1776535403028-rffe3x.webp',
+  saude: 'https://xhpfxvoonpclonjyfimt.supabase.co/storage/v1/object/public/post-images/gallery/1776535392917-a6qrs3.webp',
+  desporto: 'https://xhpfxvoonpclonjyfimt.supabase.co/storage/v1/object/public/post-images/gallery/1776535384442-995lep.webp',
+};
 
 interface CategoryPageProps {
   slug: string;
@@ -33,16 +40,10 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
   otherCategories,
 }) => {
   const { data: posts, isLoading, isError, refetch } = usePostsByCategory(slug);
-  const { data: siteSettings } = useSiteSettings();
   const { paginatedItems, currentPage, totalPages, goToPage } = usePagination(posts, { pageSize: 6 });
   const totalPosts = posts?.length ?? 0;
-  const sectionPageBanners = useMemo(
-    () => parseSectionPageBanners(siteSettings?.[SECTION_PAGE_BANNERS_KEY]),
-    [siteSettings],
-  );
-  const heroBanner = getSectionPageBanner(sectionPageBanners, slug);
-  const heroBannerUrl = heroBanner?.bannerUrl || '';
-  const heroMobileBannerUrl = heroBanner?.mobileBannerUrl || '';
+  const heroBannerUrl = CATEGORY_HERO_BANNERS[slug] || '';
+  const heroMobileBannerUrl = heroBannerUrl;
 
   return (
     <div className="min-h-screen bg-background">
