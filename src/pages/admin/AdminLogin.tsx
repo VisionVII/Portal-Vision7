@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,6 +85,18 @@ const AdminLogin = () => {
       title="Acesso administrativo"
       description="Introduza as credenciais do perfil administrativo para aceder ao dashboard."
       note="Área restrita — apenas perfis autorizados"
+      footer={
+        <>
+          Recebeu um convite de equipa?{' '}
+          <Link to="/acesso/equipa" className="font-semibold text-primary hover:text-primary/80">
+            Aceder aqui
+          </Link>
+          {' · '}
+          <Link to="/acesso/parceria" className="font-semibold text-primary hover:text-primary/80">
+            Solicitar acesso
+          </Link>
+        </>
+      }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">

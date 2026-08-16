@@ -271,6 +271,9 @@ const UserLogin = () => {
             </button>
 
             <div className="space-y-3 border-t border-border/80 pt-5 text-center">
+              <Link to="/acesso/parceria" className="block text-sm font-semibold text-primary hover:text-primary/80">
+                Não tem convite? Solicitar acesso
+              </Link>
               <Link to="/admin/login" className="block text-sm font-semibold text-primary hover:text-primary/80">
                 É administrador? Use o login admin
               </Link>

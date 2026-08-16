@@ -31,6 +31,7 @@ const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminAutomationLab = lazy(() => import("@/pages/admin/AdminAutomationLab"));
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
 const UserLogin = lazy(() => import("@/pages/admin/UserLogin"));
+const TeamAccess = lazy(() => import("@/pages/admin/TeamAccess"));
 
 // Initialize CMP API layer (fire-and-forget consent logging)
 initConsentAPI();
@@ -78,6 +79,7 @@ const AnimatedRoutes = () => {
         {/* ── Auth routes ── */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/acesso/equipa" element={<UserLogin />} />
+        <Route path="/acesso/parceria" element={<TeamAccess />} />
 
         {/* ── Legacy redirects ── */}
         <Route path="/podcasts" element={<Navigate to="/" replace />} />
