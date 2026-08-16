@@ -701,7 +701,6 @@ export function AutomationDashboardV2({
             <span className="hidden xs:inline sm:inline">Ferramentas</span>
           </TabsTrigger>
         </TabsList>
-      </Tabs>
 
       <Suspense fallback={<TabSkeleton />}>
         {activeView === 'pipeline' && (
@@ -781,6 +780,7 @@ export function AutomationDashboardV2({
           />
         )}
       </Suspense>
+      </Tabs>
     </div>
   );
 }

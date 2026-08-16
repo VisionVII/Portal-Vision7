@@ -193,7 +193,13 @@ const AdminDashboard = () => {
           </div>
 
           {/* Main content */}
-          <main className="min-w-0 flex-1 overflow-x-hidden bg-muted/20">
+          {/* overflow-x-clip, não "hidden": "hidden" faz overflow-y computar para
+              "auto" (regra do CSS), o que transforma este <main> num scroll
+              container — mas quem scrolla de facto é a página, não o <main>,
+              o que impedia qualquer position:sticky dentro dele de funcionar.
+              "clip" corta o overflow horizontal na mesma sem esse efeito
+              secundário. */}
+          <main className="min-w-0 flex-1 overflow-x-clip bg-muted/20">
             <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
 
               <Suspense fallback={<ViewSkeleton />}>

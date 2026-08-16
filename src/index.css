@@ -190,7 +190,11 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
-    overflow-x: hidden;
+    /* clip, não hidden: "hidden" faz o body deixar de propagar overflow para
+       o viewport (torna-se o seu próprio scroll container), o que por sua vez
+       quebra position:sticky em qualquer descendente da página inteira.
+       "clip" corta o overflow horizontal sem esse efeito secundário. */
+    overflow-x: clip;
     letter-spacing: -0.01em;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
