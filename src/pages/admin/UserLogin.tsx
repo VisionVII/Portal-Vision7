@@ -331,8 +331,8 @@ const UserLogin = () => {
       case 'invite-password':
         return (
           <form onSubmit={handleCreateAccount} className="space-y-4">
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800 dark:bg-emerald-950">
-              <p className="text-sm text-emerald-700 dark:text-emerald-300">
+            <div className="rounded-xl border border-success/30 bg-success/10 px-4 py-3">
+              <p className="text-sm text-success">
                 <CheckCircle2 className="mr-1.5 inline h-4 w-4" />
                 Código válido! Defina a password para <strong>{email}</strong>
                 {role && <span className="ml-1">({ROLE_LABELS[role] ?? role})</span>}
@@ -377,7 +377,7 @@ const UserLogin = () => {
       case 'invite-done':
         return (
           <div className="space-y-5 text-center">
-            <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
+            <CheckCircle2 className="mx-auto h-12 w-12 text-success" />
             <div>
               <h2 className="text-lg font-semibold">Conta criada!</h2>
               <p className="text-sm text-muted-foreground mt-1">

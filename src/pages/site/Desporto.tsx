@@ -6,8 +6,8 @@ const Desporto = () => (
     slug="desporto"
     title="Desporto"
     description="Futebol, modalidades e toda a atualidade desportiva"
-    heroColor="bg-green-600"
-    defaultCategoryColor="bg-green-600"
+    heroColor="bg-orange-600"
+    defaultCategoryColor="bg-orange-600"
     otherCategories={[
       { name: 'Tecnologia', slug: 'tecnologia' },
       { name: 'Música', slug: 'musica' },

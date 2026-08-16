@@ -6,8 +6,8 @@ const Musica = () => (
     slug="musica"
     title="Música"
     description="Festivais, concertos e toda a atualidade musical"
-    heroColor="bg-secondary-600"
-    defaultCategoryColor="bg-secondary-600"
+    heroColor="bg-violet-600"
+    defaultCategoryColor="bg-violet-600"
     otherCategories={[
       { name: 'Tecnologia', slug: 'tecnologia' },
       { name: 'Desporto', slug: 'desporto' },

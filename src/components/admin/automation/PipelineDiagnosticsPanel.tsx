@@ -29,10 +29,10 @@ interface StatTileProps {
 function StatTile({ icon: Icon, label, value, sub, tone = 'default', index = 0 }: StatTileProps) {
   const toneMap = {
     default: { card: 'border-white/25 dark:border-white/10 shadow-sm', icon: 'text-muted-foreground', value: 'text-foreground', sub: 'text-muted-foreground' },
-    blue:    { card: 'border-blue-500/30 hover:border-blue-500/60 bg-gradient-to-br from-blue-500/20 via-blue-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(2,122,227,0.4)]',    icon: 'text-blue-400',    value: 'text-blue-500 dark:text-blue-400',    sub: 'text-blue-400/70' },
-    amber:   { card: 'border-amber-500/30 hover:border-amber-500/60 bg-gradient-to-br from-amber-500/20 via-amber-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(245,158,11,0.4)]',   icon: 'text-amber-400',   value: 'text-amber-500 dark:text-amber-400',  sub: 'text-amber-400/70' },
-    emerald: { card: 'border-emerald-500/30 hover:border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 via-emerald-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(16,185,129,0.4)]', icon: 'text-emerald-400', value: 'text-emerald-500 dark:text-emerald-400', sub: 'text-emerald-400/70' },
-    red:     { card: 'border-red-400/30 hover:border-red-400/60 bg-gradient-to-br from-red-500/20 via-red-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(239,68,68,0.4)]',     icon: 'text-red-400',     value: 'text-red-500 dark:text-red-400',      sub: 'text-red-400/70' },
+    blue:    { card: 'border-info/30 hover:border-info/60 bg-gradient-to-br from-info/20 via-info/5 to-transparent glow-info', icon: 'text-info', value: 'text-info', sub: 'text-info/70' },
+    amber:   { card: 'border-warning/30 hover:border-warning/60 bg-gradient-to-br from-warning/20 via-warning/5 to-transparent glow-warning', icon: 'text-warning', value: 'text-warning', sub: 'text-warning/70' },
+    emerald: { card: 'border-success/30 hover:border-success/60 bg-gradient-to-br from-success/20 via-success/5 to-transparent glow-success', icon: 'text-success', value: 'text-success', sub: 'text-success/70' },
+    red:     { card: 'border-destructive/30 hover:border-destructive/60 bg-gradient-to-br from-destructive/20 via-destructive/5 to-transparent glow-danger', icon: 'text-destructive', value: 'text-destructive', sub: 'text-destructive/70' },
   };
   const t = toneMap[tone];
 

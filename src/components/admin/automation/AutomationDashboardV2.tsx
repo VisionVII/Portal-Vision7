@@ -92,24 +92,24 @@ interface KpiStat {
 function KpiGrid({ stats, showSecondary = true }: { stats: KpiStat[]; showSecondary?: boolean }) {
   const toneMap = {
     success: {
-      card: 'border-emerald-500/30 hover:border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 via-emerald-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(16,185,129,0.4)]',
-      icon: 'bg-emerald-500/15 text-emerald-500 dark:text-emerald-400',
-      value: 'text-emerald-600 dark:text-emerald-400',
+      card: 'border-success/30 hover:border-success/60 bg-gradient-to-br from-success/20 via-success/5 to-transparent glow-success',
+      icon: 'bg-success/15 text-success',
+      value: 'text-success',
     },
     warning: {
-      card: 'border-amber-500/30 hover:border-amber-500/60 bg-gradient-to-br from-amber-500/20 via-amber-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(245,158,11,0.4)]',
-      icon: 'bg-amber-500/15 text-amber-500 dark:text-amber-400',
-      value: 'text-amber-600 dark:text-amber-400',
+      card: 'border-warning/30 hover:border-warning/60 bg-gradient-to-br from-warning/20 via-warning/5 to-transparent glow-warning',
+      icon: 'bg-warning/15 text-warning',
+      value: 'text-warning',
     },
     error: {
-      card: 'border-red-400/30 hover:border-red-400/60 bg-gradient-to-br from-red-500/20 via-red-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(239,68,68,0.4)]',
-      icon: 'bg-red-500/15 text-red-500 dark:text-red-400',
-      value: 'text-red-600 dark:text-red-400',
+      card: 'border-destructive/30 hover:border-destructive/60 bg-gradient-to-br from-destructive/20 via-destructive/5 to-transparent glow-danger',
+      icon: 'bg-destructive/15 text-destructive',
+      value: 'text-destructive',
     },
     blue: {
-      card: 'border-blue-500/30 hover:border-blue-500/60 bg-gradient-to-br from-blue-500/20 via-blue-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(2,122,227,0.4)]',
-      icon: 'bg-blue-500/15 text-blue-500 dark:text-blue-400',
-      value: 'text-blue-600 dark:text-blue-400',
+      card: 'border-info/30 hover:border-info/60 bg-gradient-to-br from-info/20 via-info/5 to-transparent glow-info',
+      icon: 'bg-info/15 text-info',
+      value: 'text-info',
     },
     neutral: {
       card: 'border-white/25 dark:border-white/10 shadow-sm',
@@ -693,19 +693,19 @@ export function AutomationDashboardV2({
       {/* ── Tab navigation (estático — vidro em cada botão, sem barra sólida a uni-los) ── */}
       <Tabs data-tour="automation-tabs" value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
         <TabsList className="mb-5 h-auto w-full gap-2 overflow-x-auto bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsTrigger data-tour="automation-tab-pipeline" value="pipeline" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-pipeline" value="pipeline" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)] sm:flex-none sm:px-4">
             <Zap className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Pipeline</span>
           </TabsTrigger>
-          <TabsTrigger data-tour="automation-tab-automations" value="automations" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-automations" value="automations" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)] sm:flex-none sm:px-4">
             <Workflow className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Automações</span>
           </TabsTrigger>
-          <TabsTrigger data-tour="automation-tab-logs" value="logs" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-logs" value="logs" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)] sm:flex-none sm:px-4">
             <Clock className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Logs</span>
           </TabsTrigger>
-          <TabsTrigger data-tour="automation-tab-tools" value="tools" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-tools" value="tools" className="glass-panel flex-1 gap-1.5 px-2 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)] sm:flex-none sm:px-4">
             <Wrench className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Ferramentas</span>
           </TabsTrigger>

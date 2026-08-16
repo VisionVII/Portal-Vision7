@@ -145,12 +145,21 @@
     /* Color Mappings Dark */
     --primary: 209 98% 45%;
     --primary-foreground: 210 100% 98%;
-    --secondary: 209 98% 45%;
+    /* Distinto de --primary de propósito: Progress/Slider/Toast (shadcn)
+       usam bg-secondary como cor do "track" atrás do preenchimento em
+       --primary — se forem iguais, o track fica invisível em dark mode. */
+    --secondary: 217 24% 30%;
     --secondary-foreground: 210 100% 98%;
     --muted: 217 19% 27%;
     --muted-foreground: 213 13% 83%;
     --accent: 38 92% 48%;
     --accent-foreground: 229 84% 5%;
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 71% 48%;
+    --success-foreground: 229 84% 5%;
+    --warning: 38 92% 58%;
+    --warning-foreground: 229 84% 5%;
     --info: 209 98% 60%;
     --info-foreground: 229 84% 5%;
     --background: 229 84% 5%;
@@ -288,6 +297,15 @@
   .glass-panel {
     @apply rounded-xl border border-white/20 bg-background/40 shadow-sm backdrop-blur-xl transition-all dark:border-white/10;
   }
+
+  /* Brilhos de tom reutilizáveis — evitam rgba()/hex cravados nos
+     componentes; seguem os tokens semânticos, por isso acompanham dark mode
+     automaticamente. */
+  .glow-primary { box-shadow: 0 4px 24px -6px hsl(var(--primary) / 0.4); }
+  .glow-success { box-shadow: 0 4px 24px -6px hsl(var(--success) / 0.4); }
+  .glow-warning { box-shadow: 0 4px 24px -6px hsl(var(--warning) / 0.4); }
+  .glow-danger  { box-shadow: 0 4px 24px -6px hsl(var(--destructive) / 0.4); }
+  .glow-info    { box-shadow: 0 4px 24px -6px hsl(var(--info) / 0.4); }
 
   /* Premium soft shadow override for cards */
   .blog-card,

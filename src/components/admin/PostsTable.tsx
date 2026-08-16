@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 const POSTS_PER_PAGE = 12;
 
@@ -120,7 +121,6 @@ const PostsTable = ({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {paginatedPosts.map((post) => {
             const imgSrc = post.image_url || post.banner_url;
-            const catColor = post.categories?.color || '#3b82f6';
 
             return (
               <article
@@ -143,8 +143,10 @@ const PostsTable = ({
 
                   {post.categories && (
                     <span
-                      className="absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm"
-                      style={{ backgroundColor: `${catColor}dd` }}
+                      className={cn(
+                        'absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm',
+                        post.categories.color || 'bg-primary'
+                      )}
                     >
                       {post.categories.name}
                     </span>

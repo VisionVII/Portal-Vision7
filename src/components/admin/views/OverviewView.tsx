@@ -29,9 +29,9 @@ function formatRelative(iso: string | null | undefined): string {
 }
 
 const STATUS: Record<string, { bar: string; dot: string; text: string }> = {
-  published: { bar: 'bg-emerald-400', dot: 'bg-emerald-400', text: 'text-emerald-400' },
-  draft:     { bar: 'bg-amber-400',   dot: 'bg-amber-400',   text: 'text-amber-400'  },
-  scheduled: { bar: 'bg-blue-400',    dot: 'bg-blue-400',    text: 'text-blue-400'   },
+  published: { bar: 'bg-success', dot: 'bg-success', text: 'text-success' },
+  draft:     { bar: 'bg-warning', dot: 'bg-warning', text: 'text-warning' },
+  scheduled: { bar: 'bg-info',    dot: 'bg-info',    text: 'text-info'    },
 };
 
 // Section header with left accent bar
@@ -115,19 +115,19 @@ function OverviewInfoBanner({ messages }: { messages: string[] }) {
 
 const STAT_TONE = {
   success: {
-    card: 'border-emerald-500/20 bg-emerald-500/[0.04]',
-    icon: 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400',
-    value: 'text-emerald-600 dark:text-emerald-400',
+    card: 'border-success/30 bg-gradient-to-br from-success/15 via-success/5 to-transparent',
+    icon: 'bg-success/15 text-success',
+    value: 'text-success',
   },
   warning: {
-    card: 'border-amber-500/20 bg-amber-500/[0.04]',
-    icon: 'bg-amber-500/10 text-amber-500 dark:text-amber-400',
-    value: 'text-amber-600 dark:text-amber-400',
+    card: 'border-warning/30 bg-gradient-to-br from-warning/15 via-warning/5 to-transparent',
+    icon: 'bg-warning/15 text-warning',
+    value: 'text-warning',
   },
   blue: {
-    card: 'border-blue-500/20 bg-blue-500/[0.04]',
-    icon: 'bg-blue-500/10 text-blue-500 dark:text-blue-400',
-    value: 'text-blue-600 dark:text-blue-400',
+    card: 'border-info/30 bg-gradient-to-br from-info/15 via-info/5 to-transparent',
+    icon: 'bg-info/15 text-info',
+    value: 'text-info',
   },
   neutral: {
     card: 'border-border/40 bg-card',
@@ -160,7 +160,7 @@ function StatCard({ icon: Icon, label, value, sub, tone, progress }: StatCardPro
       {progress !== undefined && (
         <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-border/10">
           <div
-            className={`h-full transition-all duration-700 ease-out ${tone === 'success' ? 'bg-emerald-400' : 'bg-primary'}`}
+            className={`h-full transition-all duration-700 ease-out ${tone === 'success' ? 'bg-success' : 'bg-primary'}`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -224,7 +224,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       {/* ── Ambient glow (Vision7 blue) ─────────────────── */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-12 -top-12 h-64 w-64 rounded-full bg-[#027ae3] opacity-[0.06] blur-3xl dark:opacity-[0.08]"
+        className="pointer-events-none absolute -left-12 -top-12 h-64 w-64 rounded-full bg-primary opacity-[0.06] blur-3xl dark:opacity-[0.08]"
       />
 
       {/* ── Info banner: data/hora + mensagens do portal ─── */}

@@ -452,10 +452,10 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
       <SheetTrigger asChild>
         <Button
           aria-label="Abrir assistente Vision7 AI"
-          className={`shrink-0 text-white shadow-lg shadow-[#027ae3]/25 hover:bg-[#0269c2] ${
+          className={`shrink-0 text-white shadow-lg shadow-primary/25 hover:bg-primary-700 ${
             compact
-              ? 'h-11 w-11 rounded-lg border border-white/15 bg-[#027ae3]/95 p-0'
-              : 'rounded-full bg-[#027ae3] px-3.5 py-2 text-sm'
+              ? 'h-11 w-11 rounded-lg border border-white/15 bg-primary/95 p-0'
+              : 'rounded-full bg-primary px-3.5 py-2 text-sm'
           }`}
         >
           <Bot className={`${compact ? '' : 'mr-2 '}${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
@@ -471,7 +471,7 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
         <VisuallyHidden><SheetTitle>Assistente Vision7 AI</SheetTitle></VisuallyHidden>
 
         {/* Chat header */}
-        <div className="shrink-0 border-b border-border bg-gradient-to-r from-[#027ae3] to-[#035aa6] px-5 py-4 dark:from-[#027ae3] dark:to-[#013b73]">
+        <div className="shrink-0 border-b border-border bg-gradient-to-r from-primary to-primary-700 px-5 py-4 dark:from-primary dark:to-primary-900">
           <div className="flex items-center min-h-[36px] pr-12">
             <BrandLogo siteName={siteSettings?.site_name} logoUrl={siteSettings?.logo_url} compact showTagline={false} className="[&_img]:h-8 [&_img]:max-w-[130px] sm:[&_img]:h-9 sm:[&_img]:max-w-[145px]" />
           </div>

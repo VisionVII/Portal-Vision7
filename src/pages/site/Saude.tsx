@@ -6,8 +6,8 @@ const Saude = () => (
     slug="saude"
     title="Saúde"
     description="Bem-estar, medicina e investigação em saúde"
-    heroColor="bg-red-600"
-    defaultCategoryColor="bg-red-600"
+    heroColor="bg-emerald-600"
+    defaultCategoryColor="bg-emerald-600"
     otherCategories={[
       { name: 'Tecnologia', slug: 'tecnologia' },
       { name: 'Desporto', slug: 'desporto' },

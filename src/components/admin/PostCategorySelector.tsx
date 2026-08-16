@@ -36,7 +36,7 @@ const PostCategorySelector = ({
     const name = newName.trim();
     if (!name) return;
     try {
-      const result = await createCategory.mutateAsync({ name, slug: generateSlug(name), color: 'bg-blue-600' });
+      const result = await createCategory.mutateAsync({ name, slug: generateSlug(name), color: 'bg-primary' });
       onCreated(result.id);
       setNewName('');
       setShowNew(false);

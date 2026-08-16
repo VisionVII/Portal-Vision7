@@ -16,13 +16,13 @@ const Fallback = () => (
 const CrmView: React.FC = () => (
   <Tabs defaultValue="contacts" className="w-full">
     <TabsList className="mb-5 h-auto w-full gap-2 overflow-x-auto bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <TabsTrigger data-tour="crm-tab-contacts" value="contacts" className="glass-panel gap-1.5 px-3 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:px-4">
+      <TabsTrigger data-tour="crm-tab-contacts" value="contacts" className="glass-panel gap-1.5 px-3 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)] sm:px-4">
         <Users className="h-4 w-4 shrink-0" /> Contactos
       </TabsTrigger>
-      <TabsTrigger data-tour="crm-tab-newsletter" value="newsletter" className="glass-panel gap-1.5 px-3 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:px-4">
+      <TabsTrigger data-tour="crm-tab-newsletter" value="newsletter" className="glass-panel gap-1.5 px-3 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)] sm:px-4">
         <Mail className="h-4 w-4 shrink-0" /> Newsletter
       </TabsTrigger>
-      <TabsTrigger data-tour="crm-tab-deals" value="deals" className="glass-panel gap-1.5 px-3 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_rgba(2,122,227,0.4)] sm:px-4">
+      <TabsTrigger data-tour="crm-tab-deals" value="deals" className="glass-panel gap-1.5 px-3 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-background/70 data-[state=active]:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)] sm:px-4">
         <TrendingUp className="h-4 w-4 shrink-0" /> Pipeline
       </TabsTrigger>
     </TabsList>
