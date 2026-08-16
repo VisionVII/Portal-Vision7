@@ -1,8 +1,8 @@
 {
   "module": "Agents & Skills AI",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "owner": "Vision7 Core Team",
-  "status": "Maioritariamente finalizado — falta FR-008 (jornadas multi-login por hierarquia)",
+  "status": "Finalizado",
   "last_updated": "2026-08-16",
   "objective": "Agentes e skills de IA para assistência no desenvolvimento, segurança, UX/UI, curadoria de conteúdo, planejamento de acessos hierárquicos e otimização de performance do portal Vision7.",
   "functional_requirements": [
@@ -52,7 +52,7 @@
       "id": "FR-008",
       "description": "Agentes e skills devem apoiar definição e revisão de jornadas multi-login por hierarquia (admin, equipa, parceiros)",
       "priority": "Média",
-      "status": "Em desenvolvimento"
+      "status": "Finalizado — documentado em docs/ai/seguranca-portal.skill.md § 'Jornadas de Login por Hierarquia'. Ao rever a jornada de parceiros, encontrada e corrigida uma página completa (TeamAccess.tsx) sem rota — nunca tinha sido ligada ao router"
     }
   ],
   "non_functional_requirements": [
@@ -153,6 +153,12 @@
       "version": "0.9.0",
       "author": "Claude Code",
       "description": "FR-007 corrigido para Finalizado — o chat assistente no frontend já estava integrado e activo, o SDD é que estava desatualizado. FR-008 (jornadas multi-login por hierarquia) confirmado como o único item real por fazer, ligado à iniciativa maior 'Auth & Security Core v2.0' ainda não construída."
+    },
+    {
+      "date": "2026-08-16",
+      "version": "1.0.0",
+      "author": "Claude Code",
+      "description": "FR-008 fechado — seguranca-portal.skill.md ganhou a secção 'Jornadas de Login por Hierarquia' (admin, equipa, parceiros: rotas, mecanismos, edge functions, como se relacionam). Também actualizado o resto do skill, que ainda descrevia o modelo antigo 'OTP-only' e listava CSP/gitleaks como pendentes quando já estavam feitos. Durante a revisão da jornada de parceiros, encontrada e corrigida uma página completa (TeamAccess.tsx) sem rota."
     }
   ]
 }
