@@ -17,7 +17,7 @@
  *     "title": string,
  *     "slug": string,
  *     "meta_description": string (145–155 chars),
- *     "category": "tecnologia|mundo|saude|musica|desporto|audiocasts",
+ *     "category": "tecnologia|mundo|saude|musica|desporto",
  *     "author": string,
  *     "seo": {
  *       "primary_keyword": string,

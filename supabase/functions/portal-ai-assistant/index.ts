@@ -16,7 +16,7 @@ const DEFAULT_ASSISTANT_SDD = {
   version: '0.1.0',
   allowed_scope: [
     'Noticias e posts publicados no portal',
-    'Categorias, cursos, audiocasts e seções do Vision7',
+    'Categorias, cursos e seções do Vision7',
     'Ajuda de navegação e descoberta interna'
   ],
   forbidden_scope: [
@@ -302,16 +302,16 @@ function buildSystemPrompt(sdd: Record<string, unknown>, viewerContext: Record<s
     'Se a pergunta é sobre conteúdo (últimos posts, cursos, notícias), use o knowledge fornecido para dar respostas específicas com links reais.',
     'Adapte o tom: casual para saudações, analítico para perguntas sobre tendências, prático para navegação.',
     contextBlock,
-    `Escopo: ${allowedScope || 'portal Vision7 — noticias, categorias, cursos, audiocasts e navegacao interna.'}`,
+    `Escopo: ${allowedScope || 'portal Vision7 — noticias, categorias, cursos e navegacao interna.'}`,
     `Fora de escopo: ${forbiddenScope || 'nada fora do universo Vision7.'}`,
     'Se a pergunta fugir do escopo, redirecione com elegância para algo relevante no portal.',
     'Use o histórico da conversa para manter contexto e lembrar preferências do utilizador dentro da sessão.',
     'Se o utilizador mostrou interesse por um tema, proponha conteúdos relacionados sem que ele peça — antecipe necessidades.',
-    'Rotas internas: posts /post/{slug}; cursos /curso/{slug}; categorias /{slug}; audiocasts /audiocasts.',
+    'Rotas internas: posts /post/{slug}; cursos /curso/{slug}; categorias /{slug}.',
     `Formato: ${rules || 'responda APENAS em JSON válido, sem texto antes ou depois: {"summary": string, "suggestions": string[], "links": [{"label": string, "href": string, "type": "post|course|category|action"}]}.'}`,
     'REGRA CRITICA DE FORMATO: A sua resposta INTEIRA deve ser APENAS o objeto JSON, sem nenhum texto adicional antes ou depois. Não inclua explicações, saudações ou comentários fora do JSON. O JSON deve começar com { e terminar com }.',
     'IMPORTANTE: O array "links" DEVE conter 1 a 4 links internos extraidos do knowledge fornecido. Cada link deve ter label (titulo curto), href (rota interna começando com /), e type (post, course, category ou action).',
-    'Se o knowledge estiver vazio (sem posts/cursos/categorias), use apenas links genéricos de navegação como {"label":"Ver notícias","href":"/#noticias","type":"action"} ou {"label":"Explorar categorias","href":"/","type":"action"} ou {"label":"Audiocasts","href":"/audiocasts","type":"action"}. NUNCA invente slugs que não existam no knowledge.',
+    'Se o knowledge estiver vazio (sem posts/cursos/categorias), use apenas links genéricos de navegação como {"label":"Ver notícias","href":"/#noticias","type":"action"} ou {"label":"Explorar categorias","href":"/","type":"action"}. NUNCA invente slugs que não existam no knowledge.',
     'Exemplo de link: {"label": "Supercomputação em Portugal", "href": "/post/supercomputacao-ia-portugal", "type": "post"}.',
     'NUNCA retorne summary vazio. Se nao tiver o que dizer, cumprimente o utilizador e sugira conteudos do portal.',
     'O summary deve ser fluido e humano. Suggestions devem ser ações concretas que o utilizador pode fazer agora no portal.',
@@ -541,7 +541,7 @@ Deno.serve(async (req: Request) => {
       const fallbacks = [
         'Olá! Estou aqui para ajudar. Pergunte-me sobre notícias, cursos ou navegue pelas categorias do portal.',
         'Oi! Sou o assistente do Vision7. Diga-me o que procura — posso sugerir conteúdos, cursos e muito mais.',
-        'Bem-vindo! Explore o portal Vision7 comigo — pergunte sobre tecnologia, categorias ou audiocasts.',
+        'Bem-vindo! Explore o portal Vision7 comigo — pergunte sobre tecnologia, categorias ou cursos.',
       ];
       return jsonResponse({
         summary: fallbacks[Math.floor(Math.random() * fallbacks.length)],
@@ -560,7 +560,7 @@ Deno.serve(async (req: Request) => {
       const greetings = [
         'Olá! Estou aqui para ajudar. Pergunte-me sobre notícias, cursos ou navegue pelas categorias do portal.',
         'Oi! Sou o assistente do Vision7. Diga-me o que procura — posso sugerir conteúdos, cursos e muito mais.',
-        'Bem-vindo! Explore o portal Vision7 comigo — pergunte sobre tecnologia, categorias ou audiocasts.',
+        'Bem-vindo! Explore o portal Vision7 comigo — pergunte sobre tecnologia, categorias ou cursos.',
       ];
       const fallbackSummary = greetings[Math.floor(Math.random() * greetings.length)];
       return jsonResponse({

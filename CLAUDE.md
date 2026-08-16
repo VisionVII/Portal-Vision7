@@ -103,7 +103,7 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 ### Remoção Audiocast ✅
 - [x] Feature audiocast removida por completo (código + docs + rotas)
 - [x] URLs legados `/audiocasts` e `/audiocast/:id` redirecionam para `/`
-- [ ] Limpeza pendente: `supabase/functions/portal-ai-assistant/index.ts` ainda tem o assistente a sugerir links `/audiocasts` (redirecionam para `/`) — referências vestigiais do system prompt, não afectam o resto do portal
+- [x] Limpeza concluída: removidas as referências vestigiais a `/audiocasts` do system prompt de `portal-ai-assistant` e do comentário de categorias em `ingest-manus-post` — os redirects legados `/audiocasts` e `/audiocast/:id` em `App.tsx` mantêm-se de propósito
 
 ### F7 — Tutorial de Onboarding (Admin) ✅
 - [x] Tour guiado nativo cobrindo as 11 áreas do dashboard (38 passos) — `src/components/admin/onboarding/`
