@@ -32,7 +32,7 @@ function resolveVisibleTarget(selector: string): HTMLElement | null {
 const CARD_WIDTH = 320;
 const GAP = 12;
 
-function computePosition(rect: DOMRect, placement: TourStep['placement']) {
+function computePosition(rect: DOMRect, placement: TourStep['placement'], cardHeight: number) {
   const viewportW = window.innerWidth;
   const viewportH = window.innerHeight;
   const resolvedPlacement = placement ?? 'bottom';
@@ -41,7 +41,10 @@ function computePosition(rect: DOMRect, placement: TourStep['placement']) {
   let left = rect.left;
 
   if (resolvedPlacement === 'top') {
-    top = rect.top - GAP;
+    // O card cresce para baixo a partir de `top` — para ficar ACIMA do alvo
+    // (e não sobreposto a ele), é preciso subtrair a própria altura do card,
+    // não só o gap.
+    top = rect.top - GAP - cardHeight;
   } else if (resolvedPlacement === 'left') {
     top = rect.top;
     left = rect.left - CARD_WIDTH - GAP;
@@ -50,11 +53,11 @@ function computePosition(rect: DOMRect, placement: TourStep['placement']) {
     left = rect.right + GAP;
   }
 
-  // Keep the card inside the viewport with a small margin.
+  // Keep the card inside the viewport with a small margin — em ambos os
+  // eixos a altura/largura reais do card contam, senão um alvo perto do
+  // fundo da página deixa o card a sair do ecrã por baixo.
   left = Math.min(Math.max(left, 12), viewportW - CARD_WIDTH - 12);
-  if (resolvedPlacement !== 'top') {
-    top = Math.min(top, viewportH - 12);
-  }
+  top = Math.min(top, viewportH - cardHeight - 12);
   top = Math.max(top, 12);
 
   return { top, left, placement: resolvedPlacement };
@@ -78,7 +81,8 @@ export function TourSpotlight({
         return;
       }
       const rect = target.getBoundingClientRect();
-      setCoords(computePosition(rect, step.placement));
+      const cardHeight = cardRef.current?.offsetHeight ?? 220;
+      setCoords(computePosition(rect, step.placement, cardHeight));
       setRingStyle({
         position: 'fixed',
         top: rect.top - 4,
