@@ -49,6 +49,7 @@ import { useTour } from '@/components/admin/onboarding/TourProgressContext';
 import { supabase } from '@/integrations/supabase/client';
 import { logAutomationAction } from '@/services/auditLog';
 import { notifyAdmin } from '@/services/adminNotifications';
+import { InlineTip } from '@/components/admin/InlineTip';
 
 import {
   checkN8nHealth,
@@ -637,14 +638,11 @@ export function AutomationDashboardV2({
 
       {/* ── O que fazer agora (mini-tutorial inline) ── */}
       {!isAreaComplete('automations') && (
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-          <p className="mb-2 text-xs font-semibold text-primary">O que fazer agora</p>
-          <ol className="space-y-1 text-xs text-muted-foreground">
-            <li>1. Confere o estado do <strong className="text-foreground">Pipeline</strong> — coleta, cluster e reescrita IA.</li>
-            <li>2. Revê os posts prontos para publicar.</li>
-            <li>3. Ajusta ou cria automações no separador <strong className="text-foreground">Automações</strong>.</li>
-          </ol>
-        </div>
+        <InlineTip storageKey="automations">
+          <li>1. Confere o estado do <strong className="text-foreground">Pipeline</strong> — coleta, cluster e reescrita IA.</li>
+          <li>2. Revê os posts prontos para publicar.</li>
+          <li>3. Ajusta ou cria automações no separador <strong className="text-foreground">Automações</strong>.</li>
+        </InlineTip>
       )}
 
       {/* ── KPI grid ── */}

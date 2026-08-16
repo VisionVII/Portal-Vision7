@@ -12,6 +12,7 @@ import { CuratedPostsReview } from '@/components/admin/automation/CuratedPostsRe
 import { useCategories, useDeleteCategory } from '@/hooks/useCategories';
 import { useToast } from '@/hooks/use-toast';
 import { useTour } from '@/components/admin/onboarding/TourProgressContext';
+import { InlineTip } from '@/components/admin/InlineTip';
 
 interface ContentViewProps {
   editingPost: Post | null;
@@ -77,14 +78,11 @@ const ContentView: React.FC<ContentViewProps> = ({
 
       {/* ── Mini-tutorial inline: "O que fazer agora" ── */}
       {!isAreaComplete('content') && (
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
-          <p className="mb-2 text-xs font-semibold text-primary">O que fazer agora</p>
-          <ol className="space-y-1 text-xs text-muted-foreground">
-            <li>1. Escreve ou revê um rascunho em <strong className="text-foreground">Posts editoriais</strong>.</li>
-            <li>2. Usa a busca e os filtros para encontrar conteúdo rapidamente.</li>
-            <li>3. Publica quando estiver pronto — ou aprova sugestões em <strong className="text-foreground">Curados pela IA</strong>.</li>
-          </ol>
-        </div>
+        <InlineTip storageKey="content">
+          <li>1. Escreve ou revê um rascunho em <strong className="text-foreground">Posts editoriais</strong>.</li>
+          <li>2. Usa a busca e os filtros para encontrar conteúdo rapidamente.</li>
+          <li>3. Publica quando estiver pronto — ou aprova sugestões em <strong className="text-foreground">Curados pela IA</strong>.</li>
+        </InlineTip>
       )}
 
       {/* ── PostForm inline when open ── */}
