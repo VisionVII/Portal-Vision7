@@ -4,6 +4,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Recupera de deploy stale quando o próprio script de entrada falha
+      // (mesma chave que o handler vite:preloadError em src/main.tsx).
+      (function () {
+        var KEY = 'vite-reload-on-preload-error';
+        window.addEventListener('error', function (event) {
+          var target = event.target;
+          if (target && target.tagName === 'SCRIPT' && target.type === 'module') {
+            if (sessionStorage.getItem(KEY)) return;
+            sessionStorage.setItem(KEY, '1');
+            window.location.reload();
+          }
+        }, true);
+      })();
+    </script>
     <title>Vision7 - Mídia Tech</title>
     <meta name="description" content="Vision7 reúne notícias, análises e conteúdos premium sobre tecnologia, negócios, cultura, saúde e tendências globais." />
     <meta name="keywords" content="Vision7, Portal Digital, tecnologia, negócios, cultura, saúde, tendências globais" />
