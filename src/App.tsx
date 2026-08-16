@@ -13,6 +13,8 @@ import ConsentBanner from "@/components/system/ConsentBanner";
 import { initConsentAPI } from "@/cmp/api";
 import ProtectedRoute from "@/components/system/ProtectedRoute";
 import NetworkStatusNotifier from "@/components/system/NetworkStatusNotifier";
+import { useEffect, useRef } from "react";
+import { useTrackEvent } from "@/hooks/useAnalytics";
 
 const Index = lazy(() => import("@/pages/site/Index"));
 const Tecnologia = lazy(() => import("@/pages/site/Tecnologia"));
@@ -44,6 +46,27 @@ const PublicPrivacyControls = () => {
   }
 
   return <ConsentBanner />;
+};
+
+// Regista um page_view por navegação nas páginas públicas (não /admin/*) — sem
+// isto o Analytics nunca tinha dados reais: o hook existia mas nada o
+// chamava. useTrackEvent() já respeita o consentimento CMP internamente.
+const PageViewTracker = () => {
+  const location = useLocation();
+  const { mutate: trackEvent } = useTrackEvent();
+  const trackEventRef = useRef(trackEvent);
+  trackEventRef.current = trackEvent;
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/admin')) return;
+    trackEventRef.current({
+      event_type: 'page_view',
+      event_data: { path: location.pathname },
+      referrer: document.referrer || undefined,
+    });
+  }, [location.pathname]);
+
+  return null;
 };
 
 const RedirectWithParams = ({ to }: { to: string }) => {
@@ -152,6 +175,7 @@ const App = () => (
                 <AnimatedRoutes />
               </Suspense>
               <PublicPrivacyControls />
+              <PageViewTracker />
             </BrowserRouter>
           </ErrorBoundary>
         </TooltipProvider>
