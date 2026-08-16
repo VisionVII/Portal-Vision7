@@ -545,95 +545,83 @@ export function AutomationDashboardV2({
 
   return (
     <div className="space-y-5">
-      {/* ── Page header ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-            Centro de Automação
-          </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Pipeline IA · Workflows n8n · Monitoramento
-          </p>
-        </div>
+      {/* ── Status + actions ── */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {/* n8n status pill */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className={`flex cursor-default items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
+                isConnected
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                  : 'border-red-400/30 bg-red-400/10 text-red-600 dark:text-red-400'
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 animate-pulse rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-400'}`} />
+              n8n {isConnected ? 'Online' : 'Offline'}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[220px] space-y-1 text-center">
+            <p className="font-semibold">Motor de Automação (n8n)</p>
+            <p className="text-xs text-muted-foreground">
+              {isConnected
+                ? 'Servidor n8n acessível — workflows podem ser acionados.'
+                : 'Servidor n8n inacessível. Verifique se o Docker está em execução.'}
+            </p>
+            {keepAlive.lastPing && (
+              <p className="text-[11px] text-muted-foreground/70">
+                Último ping: {new Date(keepAlive.lastPing).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </p>
+            )}
+          </TooltipContent>
+        </Tooltip>
 
-        {/* Status + actions */}
-        <div className="flex shrink-0 items-center gap-2">
-          {/* n8n status pill */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                className={`flex cursor-default items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
-                  isConnected
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                    : 'border-red-400/30 bg-red-400/10 text-red-600 dark:text-red-400'
-                }`}
-              >
-                <span className={`h-1.5 w-1.5 animate-pulse rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-400'}`} />
-                n8n {isConnected ? 'Online' : 'Offline'}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[220px] space-y-1 text-center">
-              <p className="font-semibold">Motor de Automação (n8n)</p>
-              <p className="text-xs text-muted-foreground">
-                {isConnected
-                  ? 'Servidor n8n acessível — workflows podem ser acionados.'
-                  : 'Servidor n8n inacessível. Verifique se o Docker está em execução.'}
+        {/* Keep-alive toggle */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={keepAlive.isActive ? 'secondary' : 'ghost'}
+              size="icon"
+              className={`h-8 w-8 ${keepAlive.isActive ? 'border border-primary/30 bg-primary/10' : ''}`}
+              onClick={() => (keepAlive.isActive ? keepAlive.stop() : keepAlive.start())}
+            >
+              <Zap className={`h-3.5 w-3.5 ${keepAlive.isActive ? 'text-primary' : ''}`} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[230px] space-y-1">
+            <p className="font-semibold">
+              Keep-Alive {keepAlive.isActive ? '— Ativo' : '— Inativo'}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Envia um ping ao n8n a cada 4 min para evitar que o servidor adormeça por inatividade.
+            </p>
+            {keepAlive.isActive && keepAlive.lastPing && (
+              <p className="text-[11px] text-muted-foreground/70">
+                Último ping: {new Date(keepAlive.lastPing).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                {keepAlive.lastStatus === 'connected' && ' ✓'}
+                {keepAlive.lastStatus === 'unreachable' && ' ✗'}
               </p>
-              {keepAlive.lastPing && (
-                <p className="text-[11px] text-muted-foreground/70">
-                  Último ping: {new Date(keepAlive.lastPing).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                </p>
-              )}
-            </TooltipContent>
-          </Tooltip>
+            )}
+            <p className="text-[11px] text-primary/80">
+              {keepAlive.isActive ? 'Clique para desativar' : 'Clique para ativar'}
+            </p>
+          </TooltipContent>
+        </Tooltip>
 
-          {/* Keep-alive toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={keepAlive.isActive ? 'secondary' : 'ghost'}
-                size="icon"
-                className={`h-8 w-8 ${keepAlive.isActive ? 'border border-primary/30 bg-primary/10' : ''}`}
-                onClick={() => (keepAlive.isActive ? keepAlive.stop() : keepAlive.start())}
-              >
-                <Zap className={`h-3.5 w-3.5 ${keepAlive.isActive ? 'text-primary' : ''}`} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[230px] space-y-1">
-              <p className="font-semibold">
-                Keep-Alive {keepAlive.isActive ? '— Ativo' : '— Inativo'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Envia um ping ao n8n a cada 4 min para evitar que o servidor adormeça por inatividade.
-              </p>
-              {keepAlive.isActive && keepAlive.lastPing && (
-                <p className="text-[11px] text-muted-foreground/70">
-                  Último ping: {new Date(keepAlive.lastPing).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
-                  {keepAlive.lastStatus === 'connected' && ' ✓'}
-                  {keepAlive.lastStatus === 'unreachable' && ' ✗'}
-                </p>
-              )}
-              <p className="text-[11px] text-primary/80">
-                {keepAlive.isActive ? 'Clique para desativar' : 'Clique para ativar'}
-              </p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Refresh */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void refreshN8n()}>
-                <RefreshCw className={`h-3.5 w-3.5 ${loadingAutomations ? 'animate-spin' : ''}`} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[200px] space-y-1">
-              <p className="font-semibold">Atualizar Dashboard</p>
-              <p className="text-xs text-muted-foreground">
-                Recarrega o estado dos workflows, métricas e contadores do pipeline agora.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+        {/* Refresh */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void refreshN8n()}>
+              <RefreshCw className={`h-3.5 w-3.5 ${loadingAutomations ? 'animate-spin' : ''}`} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[200px] space-y-1">
+            <p className="font-semibold">Atualizar Dashboard</p>
+            <p className="text-xs text-muted-foreground">
+              Recarrega o estado dos workflows, métricas e contadores do pipeline agora.
+            </p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* ── O que fazer agora (mini-tutorial inline) ── */}
