@@ -118,8 +118,7 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 Iniciativa contínua de melhoria de design/UX, área por área. Cada fase é combinada com o utilizador antes de implementar.
 - [x] Visão Geral — removido botão "Novo post" duplicado (já existe no header global) e botão "Automações" (redundante com a sidebar). Depois: título estático substituído por faixa de informações rotativa (data/hora ao vivo + mensagens do portal em crossfade), cards de stats maiores/individuais com tom de cor por estado, secções "Semanas" e "Top categorias" removidas, "Últimos artigos" reduzido para 4 itens
 - [x] Conteúdo — removido cabeçalho (pill/título/subtítulo) e badges de contagem redundantes com os cards da Visão Geral; barra de pesquisa movida para o header global (contextual, só aparece com Conteúdo activo — reaproveitável por outras áreas no futuro)
-- [ ] Builder (Homepage)
-- [ ] Builder (Homepage)
+- [~] Builder (Homepage) — motor "estilo Elementor" iniciado. Fase 1 (fundação do canvas) concluída: hero + banners rotativos editam-se num canvas visual real (Puck — `@puckeditor/core`), com migração automática do conteúdo antigo (`home_page_hero_puck` em `site_settings`) e sem perda de funcionalidade pública (navegação por pontos, CTA dupla). Restantes secções (destaques/recentes/cursos/mais/newsletter) continuam geridas pelo `SectionSorter` existente — ainda não entraram no canvas. Fases futuras (elementos livres, posicionamento absoluto, outras páginas fixas, templates) combinadas mas não iniciadas — ver plano em curso antes de continuar
 - [ ] Media (Galeria)
 - [ ] Automações
 - [ ] Cursos (Parceiros)

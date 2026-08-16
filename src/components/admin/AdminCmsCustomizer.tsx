@@ -1,24 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ImagePlus, LayoutTemplate, Plus, RotateCcw, Save, Sparkles } from 'lucide-react';
+import { Puck } from '@puckeditor/core';
+import '@puckeditor/core/puck.css';
+import { ImagePlus, LayoutTemplate, RotateCcw, Save, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSiteSettings, useUpdateSiteSetting } from '@/hooks/useSiteSettings';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { heroPuckConfig, migrateHeroToPuckData, type HeroPuckData } from '@/lib/heroPuckConfig';
 import {
   ALLOWED_HOME_BANNER_TYPES,
   buildBannerUploadPath,
-  createEmptyBanner,
   defaultHomePageConfig,
+  HERO_PUCK_DATA_KEY,
   HOME_BANNER_STORAGE_BUCKET,
   HOME_PAGE_CONFIG_KEY,
   MAX_HOME_BANNER_SIZE_BYTES,
   parseHomePageConfig,
-  type HomePageBanner,
   type HomePageConfig,
 } from '@/lib/homepage-config';
 import {
@@ -34,7 +35,6 @@ import {
   type SectionPageBannerVariant,
 } from '@/lib/sectionPageConfig';
 import HomeBannerUploader from './HomeBannerUploader';
-import RotatingBannerCard from './RotatingBannerCard';
 import SectionBannerCard from './SectionBannerCard';
 import SectionSorter from './SectionSorter';
 import HomepagePreview from './HomepagePreview';
@@ -48,26 +48,32 @@ const AdminCmsCustomizer = () => {
   const { toast } = useToast();
   const [config, setConfig] = useState<HomePageConfig>(defaultHomePageConfig);
   const [sectionPageBanners, setSectionPageBanners] = useState(parseSectionPageBanners(null));
+  const [heroPuckData, setHeroPuckData] = useState<HeroPuckData | null>(null);
   const [activeTab, setActiveTab] = useState<BuilderTab>('hero');
   const [draggedSectionId, setDraggedSectionId] = useState<SectionId | null>(null);
   const [dragOverSectionId, setDragOverSectionId] = useState<SectionId | null>(null);
-  const [draggedBannerId, setDraggedBannerId] = useState<string | null>(null);
-  const [dragOverBannerId, setDragOverBannerId] = useState<string | null>(null);
   const [uploadingBannerKey, setUploadingBannerKey] = useState<string | null>(null);
 
   useEffect(() => {
-    setConfig(parseHomePageConfig(siteSettings?.[HOME_PAGE_CONFIG_KEY]));
+    const nextConfig = parseHomePageConfig(siteSettings?.[HOME_PAGE_CONFIG_KEY]);
+    setConfig(nextConfig);
     setSectionPageBanners(parseSectionPageBanners(siteSettings?.[SECTION_PAGE_BANNERS_KEY]));
+
+    const rawHeroPuck = siteSettings?.[HERO_PUCK_DATA_KEY];
+    if (rawHeroPuck) {
+      try {
+        setHeroPuckData(JSON.parse(rawHeroPuck) as HeroPuckData);
+      } catch {
+        setHeroPuckData(migrateHeroToPuckData(nextConfig));
+      }
+    } else {
+      setHeroPuckData(migrateHeroToPuckData(nextConfig));
+    }
   }, [siteSettings]);
 
   const enabledSections = useMemo(
     () => config.sections.filter((section) => section.enabled),
     [config.sections]
-  );
-
-  const activeRotatingBanner = useMemo(
-    () => config.rotatingBanners.find((banner) => banner.enabled) ?? config.rotatingBanners[0] ?? null,
-    [config.rotatingBanners]
   );
 
   const updateSection = (index: number, patch: Partial<HomeSection>) => {
@@ -106,89 +112,20 @@ const AdminCmsCustomizer = () => {
     });
   };
 
-  // ── Rotating banners ────────────────────────────────────────────────
-  const updateBanner = (id: string, patch: Partial<HomePageBanner>) => {
-    setConfig((prev) => ({
-      ...prev,
-      rotatingBanners: prev.rotatingBanners.map((banner) => (banner.id === id ? { ...banner, ...patch } : banner)),
-    }));
-  };
-
-  const addBanner = () => {
-    setConfig((prev) => ({ ...prev, rotatingBanners: [...prev.rotatingBanners, createEmptyBanner()] }));
-  };
-
-  const removeBanner = (id: string) => {
-    setConfig((prev) => {
-      if (prev.rotatingBanners.length <= 1) return prev;
-      return { ...prev, rotatingBanners: prev.rotatingBanners.filter((banner) => banner.id !== id) };
-    });
-  };
-
-  const moveBanner = (index: number, direction: -1 | 1) => {
-    setConfig((prev) => {
-      const nextIndex = index + direction;
-      if (nextIndex < 0 || nextIndex >= prev.rotatingBanners.length) return prev;
-
-      const nextBanners = [...prev.rotatingBanners];
-      [nextBanners[index], nextBanners[nextIndex]] = [nextBanners[nextIndex], nextBanners[index]];
-
-      return { ...prev, rotatingBanners: nextBanners };
-    });
-  };
-
-  const moveBannerByDrag = (draggedId: string, targetId: string) => {
-    setConfig((prev) => {
-      const currentIndex = prev.rotatingBanners.findIndex((banner) => banner.id === draggedId);
-      const targetIndex = prev.rotatingBanners.findIndex((banner) => banner.id === targetId);
-
-      if (currentIndex < 0 || targetIndex < 0 || currentIndex === targetIndex) return prev;
-
-      const nextBanners = [...prev.rotatingBanners];
-      const [draggedBanner] = nextBanners.splice(currentIndex, 1);
-      nextBanners.splice(targetIndex, 0, draggedBanner);
-
-      return { ...prev, rotatingBanners: nextBanners };
-    });
-  };
-
-  const handleRotatingBannerUpload = async (bannerId: string, variant: 'desktop' | 'mobile', file?: File | null) => {
-    if (!file) return;
-
-    if (!ALLOWED_HOME_BANNER_TYPES.includes(file.type as (typeof ALLOWED_HOME_BANNER_TYPES)[number])) {
-      toast({ title: 'Formato inválido', description: 'Use PNG, JPG ou WEBP para o banner.', variant: 'destructive' });
-      return;
-    }
-
-    if (file.size > MAX_HOME_BANNER_SIZE_BYTES) {
-      toast({ title: 'Imagem demasiado grande', description: 'O banner não pode exceder 5MB.', variant: 'destructive' });
-      return;
-    }
-
-    const uploadKey = `${bannerId}:${variant}`;
-    setUploadingBannerKey(uploadKey);
-
+  const handleSaveHeroPuck = async (data: HeroPuckData) => {
+    setHeroPuckData(data);
     try {
-      const uploadPath = buildBannerUploadPath(bannerId, variant, file.name);
-      const { error: uploadError } = await supabase.storage
-        .from(HOME_BANNER_STORAGE_BUCKET)
-        .upload(uploadPath, file, { cacheControl: '3600', upsert: false });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from(HOME_BANNER_STORAGE_BUCKET).getPublicUrl(uploadPath);
-
-      updateBanner(bannerId, variant === 'desktop' ? { imageUrl: publicUrl } : { mobileImageUrl: publicUrl });
-
-      toast({ title: 'Banner carregado', description: `Versão ${variant === 'desktop' ? 'desktop' : 'mobile'} pronta.` });
+      await updateSetting.mutateAsync({
+        key: HERO_PUCK_DATA_KEY,
+        value: JSON.stringify(data),
+      });
+      toast({ title: 'Hero publicado', description: 'O canvas já reflete no portal público.' });
     } catch (error) {
       toast({
-        title: 'Erro ao carregar banner',
-        description: error instanceof Error ? error.message : 'Não foi possível enviar a imagem.',
+        title: 'Erro ao publicar',
+        description: error instanceof Error ? error.message : 'Não foi possível guardar o hero.',
         variant: 'destructive',
       });
-    } finally {
-      setUploadingBannerKey(null);
     }
   };
 
@@ -371,120 +308,49 @@ const AdminCmsCustomizer = () => {
 
               {/* ── Hero & banners rotativos ── */}
               <TabsContent value="hero" className="mt-4 space-y-5">
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="hero-badge">Etiqueta acima do título (opcional)</Label>
-                    <Input
-                      id="hero-badge"
-                      value={config.heroBadge}
-                      onChange={(event) => setConfig((prev) => ({ ...prev, heroBadge: event.target.value }))}
-                      placeholder="ex: Destaque da semana"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="hero-title">Título</Label>
-                    <Input
-                      id="hero-title"
-                      value={config.heroTitle}
-                      onChange={(event) => setConfig((prev) => ({ ...prev, heroTitle: event.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="hero-description">Descrição</Label>
-                    <Textarea
-                      id="hero-description"
-                      rows={3}
-                      value={config.heroDescription}
-                      onChange={(event) => setConfig((prev) => ({ ...prev, heroDescription: event.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Alinhamento do texto</Label>
-                    <div className="flex gap-2 rounded-xl border border-border/40 bg-muted/30 p-1 w-fit">
-                      {(['left', 'center'] as const).map((alignment) => (
-                        <button
-                          key={alignment}
-                          type="button"
-                          onClick={() => setConfig((prev) => ({ ...prev, heroAlignment: alignment }))}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                            config.heroAlignment === alignment
-                              ? 'bg-primary text-primary-foreground shadow-sm'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          {alignment === 'left' ? 'Esquerda' : 'Centro'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cta-primary">CTA primária</Label>
-                      <Input
-                        id="cta-primary"
-                        value={config.primaryCtaLabel}
-                        onChange={(event) => setConfig((prev) => ({ ...prev, primaryCtaLabel: event.target.value }))}
+                <div data-tour="builder-rotating-banners" className="space-y-2">
+                  <p className="text-sm font-semibold text-foreground">Canvas do hero</p>
+                  <p className="text-xs text-muted-foreground">
+                    Selecciona um elemento para editar o texto ou os banners. As alterações ficam no ar quando clicas em <strong>Publish</strong>, dentro do próprio editor abaixo.
+                  </p>
+                  {heroPuckData && (
+                    <div className="overflow-hidden rounded-2xl border border-border/60">
+                      <Puck
+                        config={heroPuckConfig}
+                        data={heroPuckData}
+                        onPublish={(data) => void handleSaveHeroPuck(data)}
+                        height="640px"
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cta-secondary">CTA secundária</Label>
-                      <Input
-                        id="cta-secondary"
-                        value={config.secondaryCtaLabel}
-                        onChange={(event) => setConfig((prev) => ({ ...prev, secondaryCtaLabel: event.target.value }))}
-                        placeholder="Opcional"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cta-tertiary">CTA terciária</Label>
-                      <Input
-                        id="cta-tertiary"
-                        value={config.tertiaryCtaLabel}
-                        onChange={(event) => setConfig((prev) => ({ ...prev, tertiaryCtaLabel: event.target.value }))}
-                        placeholder="Opcional"
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                <div data-tour="builder-rotating-banners" className="space-y-3 border-t border-border/40 pt-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-foreground">Banners rotativos</p>
-                    <Button type="button" size="sm" variant="outline" className="gap-1.5" onClick={addBanner}>
-                      <Plus className="h-3.5 w-3.5" /> Adicionar
-                    </Button>
+                <div className="grid gap-3 border-t border-border/40 pt-4 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cta-primary">CTA primária (reserva)</Label>
+                    <Input
+                      id="cta-primary"
+                      value={config.primaryCtaLabel}
+                      onChange={(event) => setConfig((prev) => ({ ...prev, primaryCtaLabel: event.target.value }))}
+                    />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    O hero mostra estes banners em rotação automática. Arraste para reordenar — a sequência aqui é a mesma no portal.
-                  </p>
-                  <div className="space-y-3">
-                    {config.rotatingBanners.map((banner, index) => (
-                      <RotatingBannerCard
-                        key={banner.id}
-                        banner={banner}
-                        index={index}
-                        total={config.rotatingBanners.length}
-                        uploadingBannerKey={uploadingBannerKey}
-                        isDragOver={dragOverBannerId === banner.id}
-                        onUpdate={updateBanner}
-                        onRemove={removeBanner}
-                        onMove={moveBanner}
-                        onUpload={(id, variant, file) => void handleRotatingBannerUpload(id, variant, file)}
-                        onDragStart={setDraggedBannerId}
-                        onDragOver={(id) => {
-                          if (draggedBannerId && draggedBannerId !== id) setDragOverBannerId(id);
-                        }}
-                        onDrop={(id) => {
-                          if (draggedBannerId) moveBannerByDrag(draggedBannerId, id);
-                          setDraggedBannerId(null);
-                          setDragOverBannerId(null);
-                        }}
-                        onDragEnd={() => {
-                          setDraggedBannerId(null);
-                          setDragOverBannerId(null);
-                        }}
-                      />
-                    ))}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cta-secondary">CTA secundária</Label>
+                    <Input
+                      id="cta-secondary"
+                      value={config.secondaryCtaLabel}
+                      onChange={(event) => setConfig((prev) => ({ ...prev, secondaryCtaLabel: event.target.value }))}
+                      placeholder="Opcional"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cta-tertiary">CTA terciária</Label>
+                    <Input
+                      id="cta-tertiary"
+                      value={config.tertiaryCtaLabel}
+                      onChange={(event) => setConfig((prev) => ({ ...prev, tertiaryCtaLabel: event.target.value }))}
+                      placeholder="Opcional"
+                    />
                   </div>
                 </div>
 
@@ -582,16 +448,7 @@ const AdminCmsCustomizer = () => {
 
       {/* Live preview */}
       <div className="space-y-6">
-        <HomepagePreview
-          heroBadge={config.heroBadge}
-          heroTitle={config.heroTitle}
-          heroDescription={config.heroDescription}
-          bannerUrl={activeRotatingBanner?.imageUrl || config.bannerUrl}
-          mobileBannerUrl={activeRotatingBanner?.mobileImageUrl || config.mobileBannerUrl}
-          primaryCtaLabel={activeRotatingBanner?.ctaLabel || config.primaryCtaLabel}
-          bannerCount={config.rotatingBanners.filter((b) => b.enabled).length}
-          enabledSections={enabledSections}
-        />
+        <HomepagePreview enabledSections={enabledSections} />
       </div>
     </div>
   );

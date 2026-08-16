@@ -21,6 +21,7 @@ export const PUBLIC_SITE_SETTING_KEYS = [
   'course_partner_meta',
   'section_page_banners',
   'home_page_config',
+  'home_page_hero_puck',
 ];
 
 const SITE_SETTINGS_CACHE_KEY = 'v7_public_settings_cache';

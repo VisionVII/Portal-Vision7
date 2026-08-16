@@ -34,6 +34,7 @@ export interface HomePageConfig {
 }
 
 export const HOME_PAGE_CONFIG_KEY = 'home_page_config';
+export const HERO_PUCK_DATA_KEY = 'home_page_hero_puck';
 export const HOME_BANNER_STORAGE_BUCKET = 'post-images';
 export const HOME_BANNER_STORAGE_PREFIX = 'site/banners';
 export const ALLOWED_HOME_BANNER_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;

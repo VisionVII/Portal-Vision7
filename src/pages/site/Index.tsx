@@ -26,12 +26,14 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import {
+  HERO_PUCK_DATA_KEY,
   HOME_PAGE_CONFIG_KEY,
   defaultHomePageConfig,
   getEnabledHomePageBanners,
   parseHomePageConfig,
   type HomePageConfig,
 } from '@/lib/homepage-config';
+import { extractHeroFromPuckData, type HeroPuckData } from '@/lib/heroPuckConfig';
 import { SectionBlock } from '@/components/home/SectionBlock';
 
 interface CourseMeta {
@@ -117,10 +119,35 @@ const Index = () => {
   const { paginatedItems: paginatedRegularPosts, currentPage, totalPages, goToPage } = usePagination(regularPosts, { pageSize: 6 });
 
   const newsletterLabel = homeConfig.sections.find((section) => section.id === 'newsletter')?.label || 'Newsletter';
-  const activeBanners = useMemo(
-    () => getEnabledHomePageBanners(homeConfig),
-    [homeConfig]
+
+  // Fase 1 do builder estilo Elementor: o hero passa a ser editado no canvas
+  // do Puck (admin), mas continua a usar o mesmo motor de render aqui —
+  // dot-nav, CTA dupla e roteamento por tipo de link já testados. Sem dados
+  // no Puck ainda (site novo, ou antes da primeira publicação), cai para o
+  // schema antigo (homeConfig.heroTitle/rotatingBanners), nunca fica vazio.
+  const heroPuckData = useMemo<HeroPuckData | null>(() => {
+    const raw = siteSettings?.[HERO_PUCK_DATA_KEY];
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as HeroPuckData;
+    } catch {
+      return null;
+    }
+  }, [siteSettings]);
+  const extractedHero = useMemo(
+    () => (heroPuckData ? extractHeroFromPuckData(heroPuckData) : null),
+    [heroPuckData]
   );
+
+  const activeBanners = useMemo(() => {
+    if (extractedHero && extractedHero.banners.length > 0) {
+      const enabled = extractedHero.banners.filter((banner) => banner.enabled);
+      const list = enabled.length > 0 ? enabled : extractedHero.banners;
+      return list.map((banner, index) => ({ ...banner, id: `puck-banner-${index}` }));
+    }
+    return getEnabledHomePageBanners(homeConfig);
+  }, [extractedHero, homeConfig]);
+
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const activeBanner = activeBanners[activeBannerIndex] || activeBanners[0];
   const bannerHref = activeBanner?.ctaHref?.trim() || '#noticias';
@@ -129,9 +156,11 @@ const Index = () => {
   const isHashBannerHref = bannerHref.startsWith('#');
   const activeBannerDesktopUrl = activeBanner?.imageUrl || homeConfig.bannerUrl || defaultHomePageConfig.bannerUrl;
   const activeBannerMobileUrl = activeBanner?.mobileImageUrl || homeConfig.mobileBannerUrl || activeBannerDesktopUrl;
-  const heroTitle = activeBanner?.title?.trim() || homeConfig.heroTitle;
-  const heroDescription = activeBanner?.description?.trim() || homeConfig.heroDescription;
-  const heroBadge = homeConfig.heroBadge?.trim() || activeBanner?.title ? 'Destaque Vision7' : undefined;
+  const heroTitle = activeBanner?.title?.trim() || extractedHero?.title || homeConfig.heroTitle;
+  const heroDescription = activeBanner?.description?.trim() || extractedHero?.description || homeConfig.heroDescription;
+  const heroBadgeSource = extractedHero?.badge ?? homeConfig.heroBadge;
+  const heroBadge = heroBadgeSource?.trim() || activeBanner?.title ? 'Destaque Vision7' : undefined;
+  const heroAlignment = extractedHero?.alignment || homeConfig.heroAlignment;
   const heroPrimaryCta = bannerCtaLabel || homeConfig.primaryCtaLabel || 'Explorar Notícias';
   const heroSecondaryCta = homeConfig.secondaryCtaLabel || 'Categorias';
   const heroSecondaryHref = '#categorias';
@@ -418,7 +447,7 @@ const Index = () => {
         title={heroTitle}
         description={heroDescription}
         badge={heroBadge}
-        align={homeConfig.heroAlignment}
+        align={heroAlignment}
         fallbackClassName="bg-[#020817]"
         media={{
           desktopUrl: activeBannerDesktopUrl,
