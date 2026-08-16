@@ -12,16 +12,24 @@ const sectionPreviewDescription: Record<SectionId, string> = {
 };
 
 interface HomepagePreviewProps {
+  heroBadge?: string;
+  heroTitle?: string;
+  heroDescription?: string;
   bannerUrl: string;
   mobileBannerUrl: string;
   primaryCtaLabel: string;
+  bannerCount?: number;
   enabledSections: HomeSection[];
 }
 
 const HomepagePreview = ({
+  heroBadge,
+  heroTitle,
+  heroDescription,
   bannerUrl,
   mobileBannerUrl,
   primaryCtaLabel,
+  bannerCount,
   enabledSections,
 }: HomepagePreviewProps) => {
   return (
@@ -33,6 +41,11 @@ const HomepagePreview = ({
         </CardTitle>
         <CardDescription>
           Visualização do template principal com as camadas e posições definidas no painel à esquerda.
+          {bannerCount !== undefined && (
+            bannerCount > 0
+              ? ` ${bannerCount} banner${bannerCount === 1 ? '' : 's'} activo${bannerCount === 1 ? '' : 's'} em rotação.`
+              : ' Sem banners rotativos activos — a usar o banner de reserva.'
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 p-4 md:p-6">
@@ -57,8 +70,21 @@ const HomepagePreview = ({
               <div className="absolute inset-0 bg-[linear-gradient(118deg,rgba(2,6,23,0.74)_0%,rgba(2,6,23,0.16)_44%,rgba(2,6,23,0.78)_100%)]" />
               <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:26px_26px]" />
 
-              <div className="relative z-10 flex min-h-[420px] items-end justify-center px-6 py-8 text-center sm:min-h-[460px] sm:px-10 lg:min-h-[520px]">
-                <span className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white drop-shadow-2xl">
+              <div className="relative z-10 flex min-h-[420px] flex-col items-center justify-end gap-3 px-6 py-8 text-center sm:min-h-[460px] sm:px-10 lg:min-h-[520px]">
+                {heroBadge && (
+                  <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/90">
+                    {heroBadge}
+                  </span>
+                )}
+                <h2 className="text-3xl font-bold text-white drop-shadow-2xl sm:text-4xl lg:text-5xl">
+                  {heroTitle || defaultHomePageConfig.heroTitle}
+                </h2>
+                {heroDescription && (
+                  <p className="max-w-xl text-sm text-white/80 sm:text-base">
+                    {heroDescription}
+                  </p>
+                )}
+                <span className="mt-2 rounded-full bg-white px-5 py-2 text-sm font-semibold text-neutral-950 shadow-lg">
                   {primaryCtaLabel || 'Explorar Notícias'}
                 </span>
               </div>
