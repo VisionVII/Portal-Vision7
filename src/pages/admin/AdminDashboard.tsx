@@ -107,8 +107,11 @@ const AdminDashboard = () => {
   const Panel = useCallback(
     ({ view, children }: { view: AdminView; children: React.ReactNode }) => {
       if (activeView !== view) return null;
+      // fill-mode-backwards (não "both"): evita o flash inicial sem manter um
+      // transform indefinidamente — um transform no pai, mesmo "vazio" depois
+      // da animação, quebra position:sticky nos filhos (ex: barras de tabs).
       return (
-        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out fill-mode-both">
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out fill-mode-backwards">
           {children}
         </div>
       );
