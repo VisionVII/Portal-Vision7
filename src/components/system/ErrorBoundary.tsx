@@ -20,9 +20,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    if (import.meta.env.DEV) {
-      console.error('ErrorBoundary caught an error', error, errorInfo);
-    }
+    // Sempre regista, incluindo em produção — sem isto não há forma de
+    // diagnosticar crashes que só reproduzem fora do ambiente de dev
+    // (ex: só em mobile), mesmo com o inspector remoto ligado.
+    console.error('ErrorBoundary caught an error', error, errorInfo);
   }
 
   render() {

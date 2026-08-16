@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import ImageExtension from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -75,9 +73,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           levels: [1, 2, 3, 4],
         },
         codeBlock: false,
+        link: { openOnClick: false },
       }),
-      Underline,
-      Link.configure({ openOnClick: false }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       ImageExtension,
       Placeholder.configure({ placeholder: placeholder || 'Escreva o conteúdo...' }),
