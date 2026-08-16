@@ -28,21 +28,21 @@ interface StatTileProps {
 
 function StatTile({ icon: Icon, label, value, sub, tone = 'default', index = 0 }: StatTileProps) {
   const toneMap = {
-    default: { border: 'border-white/20 dark:border-white/10', icon: 'text-muted-foreground', value: 'text-foreground', sub: 'text-muted-foreground' },
-    blue:    { border: 'border-blue-500/25 hover:border-blue-500/40',    icon: 'text-blue-400',    value: 'text-blue-500 dark:text-blue-400',    sub: 'text-blue-400/70' },
-    amber:   { border: 'border-amber-500/25 hover:border-amber-500/40',   icon: 'text-amber-400',   value: 'text-amber-500 dark:text-amber-400',  sub: 'text-amber-400/70' },
-    emerald: { border: 'border-emerald-500/25 hover:border-emerald-500/40', icon: 'text-emerald-400', value: 'text-emerald-500 dark:text-emerald-400', sub: 'text-emerald-400/70' },
-    red:     { border: 'border-red-500/25 hover:border-red-500/40',     icon: 'text-red-400',     value: 'text-red-500 dark:text-red-400',      sub: 'text-red-400/70' },
+    default: { card: 'border-white/25 dark:border-white/10 shadow-sm', icon: 'text-muted-foreground', value: 'text-foreground', sub: 'text-muted-foreground' },
+    blue:    { card: 'border-blue-500/30 hover:border-blue-500/60 bg-gradient-to-br from-blue-500/20 via-blue-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(2,122,227,0.4)]',    icon: 'text-blue-400',    value: 'text-blue-500 dark:text-blue-400',    sub: 'text-blue-400/70' },
+    amber:   { card: 'border-amber-500/30 hover:border-amber-500/60 bg-gradient-to-br from-amber-500/20 via-amber-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(245,158,11,0.4)]',   icon: 'text-amber-400',   value: 'text-amber-500 dark:text-amber-400',  sub: 'text-amber-400/70' },
+    emerald: { card: 'border-emerald-500/30 hover:border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 via-emerald-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(16,185,129,0.4)]', icon: 'text-emerald-400', value: 'text-emerald-500 dark:text-emerald-400', sub: 'text-emerald-400/70' },
+    red:     { card: 'border-red-400/30 hover:border-red-400/60 bg-gradient-to-br from-red-500/20 via-red-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(239,68,68,0.4)]',     icon: 'text-red-400',     value: 'text-red-500 dark:text-red-400',      sub: 'text-red-400/70' },
   };
   const t = toneMap[tone];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: index * 0.04 }}
-      whileHover={{ y: -2 }}
-      className={cn('glass-panel flex flex-col gap-1.5 p-3', t.border)}
+      transition={{ duration: 0.3, delay: index * 0.05 }}
+      whileHover={{ y: -3, scale: 1.015 }}
+      className={cn('glass-panel flex flex-col gap-1.5 p-3 backdrop-blur-2xl', t.card)}
     >
       <div className="flex items-center gap-1.5">
         <Icon className={`h-3.5 w-3.5 shrink-0 ${t.icon}`} />

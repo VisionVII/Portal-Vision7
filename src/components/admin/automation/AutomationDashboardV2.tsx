@@ -92,27 +92,27 @@ interface KpiStat {
 function KpiGrid({ stats, showSecondary = true }: { stats: KpiStat[]; showSecondary?: boolean }) {
   const toneMap = {
     success: {
-      card: 'border-emerald-500/25 hover:border-emerald-500/40',
-      icon: 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400',
+      card: 'border-emerald-500/30 hover:border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 via-emerald-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(16,185,129,0.4)]',
+      icon: 'bg-emerald-500/15 text-emerald-500 dark:text-emerald-400',
       value: 'text-emerald-600 dark:text-emerald-400',
     },
     warning: {
-      card: 'border-amber-500/25 hover:border-amber-500/40',
-      icon: 'bg-amber-500/10 text-amber-500 dark:text-amber-400',
+      card: 'border-amber-500/30 hover:border-amber-500/60 bg-gradient-to-br from-amber-500/20 via-amber-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(245,158,11,0.4)]',
+      icon: 'bg-amber-500/15 text-amber-500 dark:text-amber-400',
       value: 'text-amber-600 dark:text-amber-400',
     },
     error: {
-      card: 'border-red-400/25 hover:border-red-400/40',
-      icon: 'bg-red-500/10 text-red-500 dark:text-red-400',
+      card: 'border-red-400/30 hover:border-red-400/60 bg-gradient-to-br from-red-500/20 via-red-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(239,68,68,0.4)]',
+      icon: 'bg-red-500/15 text-red-500 dark:text-red-400',
       value: 'text-red-600 dark:text-red-400',
     },
     blue: {
-      card: 'border-blue-500/25 hover:border-blue-500/40',
-      icon: 'bg-blue-500/10 text-blue-500 dark:text-blue-400',
+      card: 'border-blue-500/30 hover:border-blue-500/60 bg-gradient-to-br from-blue-500/20 via-blue-500/5 to-transparent shadow-[0_4px_24px_-6px_rgba(2,122,227,0.4)]',
+      icon: 'bg-blue-500/15 text-blue-500 dark:text-blue-400',
       value: 'text-blue-600 dark:text-blue-400',
     },
     neutral: {
-      card: 'border-white/20 dark:border-white/10',
+      card: 'border-white/25 dark:border-white/10 shadow-sm',
       icon: 'bg-muted text-muted-foreground',
       value: 'text-foreground',
     },
@@ -127,11 +127,11 @@ function KpiGrid({ stats, showSecondary = true }: { stats: KpiStat[]; showSecond
         return (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: index * 0.04 }}
-            whileHover={{ y: -2 }}
-            className={cn('glass-panel items-center gap-3 px-4 py-3', visibility, t.card)}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            whileHover={{ y: -3, scale: 1.015 }}
+            className={cn('glass-panel items-center gap-3 px-4 py-3 backdrop-blur-2xl', visibility, t.card)}
           >
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
               <Icon className="h-4 w-4" />
