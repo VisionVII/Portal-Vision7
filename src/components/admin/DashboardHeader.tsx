@@ -4,6 +4,7 @@ import { Bell, CheckCheck, ChevronDown, Globe, LogOut, Menu, Plus, Search, User 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import ThemeToggle from '@/components/system/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useAdminNotifications, useMarkNotificationRead, useMarkAllRead } from '@/hooks/useAdminNotifications';
@@ -201,6 +202,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onNewPost, onMenuOpen
               <div className="mb-2 border-b pb-2">
                 <p className="truncate text-xs font-semibold text-foreground">{user?.email}</p>
                 {roleLabel && <p className="mt-0.5 text-[11px] text-muted-foreground">{roleLabel}</p>}
+              </div>
+              <div className="mb-2 border-b pb-2">
+                <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Tema</p>
+                <ThemeToggle compact className="w-full [&>button]:flex-1" />
               </div>
               <a
                 href="/"

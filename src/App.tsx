@@ -13,6 +13,7 @@ import ConsentBanner from "@/components/system/ConsentBanner";
 import { initConsentAPI } from "@/cmp/api";
 import ProtectedRoute from "@/components/system/ProtectedRoute";
 import NetworkStatusNotifier from "@/components/system/NetworkStatusNotifier";
+import { UserThemeSync } from "@/components/system/UserThemeSync";
 import { useEffect, useRef } from "react";
 import { useTrackEvent } from "@/hooks/useAnalytics";
 
@@ -176,6 +177,7 @@ const App = () => (
               </Suspense>
               <PublicPrivacyControls />
               <PageViewTracker />
+              <UserThemeSync />
             </BrowserRouter>
           </ErrorBoundary>
         </TooltipProvider>
