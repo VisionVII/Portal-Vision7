@@ -40,7 +40,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
   if (featured) {
     return (
-      <article className="blog-card group relative overflow-hidden rounded-2xl border border-border/60 shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10">
+      <article className="blog-card group relative overflow-hidden rounded-3xl border border-border/60 shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-primary/20">
         <div className="relative min-h-[320px] sm:min-h-[360px] lg:min-h-[400px]">
           {heroImage ? (
             <img
@@ -92,7 +92,7 @@ const PostCard: React.FC<PostCardProps> = ({
   }
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5">
+    <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/15">
       <div className="relative aspect-[16/9] overflow-hidden">
         {bannerUrl ? (
           <>
