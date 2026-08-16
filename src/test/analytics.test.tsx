@@ -8,6 +8,9 @@ vi.mock('@/cmp', () => ({
 
 // Mock supabase client
 const mockInsert = vi.fn().mockResolvedValue({ error: null });
+// Terminal call of the useAnalyticsSummary() chain (select().gte().limit()) —
+// distinct mock so each test can control what the query resolves to.
+const mockLimit = vi.fn().mockResolvedValue({ data: [], error: null });
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
@@ -23,8 +26,9 @@ vi.mock('@/integrations/supabase/client', () => ({
       insert: mockInsert,
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
+      limit: mockLimit,
       maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     })),
     rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -58,9 +62,9 @@ vi.mock('@/contexts/AuthContext', () => ({
 }));
 
 import React from 'react';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useTrackEvent } from '@/hooks/useAnalytics';
+import { useTrackEvent, useAnalyticsSummary } from '@/hooks/useAnalytics';
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -107,5 +111,48 @@ describe('T-10: useTrackEvent', () => {
 
     // When consent denied, insert should not be called
     expect(mockInsert).not.toHaveBeenCalled();
+  });
+});
+
+describe('T-10b: useAnalyticsSummary — QA-002', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('aggregates events by type and groups them by day', async () => {
+    mockLimit.mockResolvedValueOnce({
+      data: [
+        { event_type: 'page_view', created_at: '2026-08-10T10:00:00.000Z' },
+        { event_type: 'page_view', created_at: '2026-08-10T11:00:00.000Z' },
+        { event_type: 'click', created_at: '2026-08-11T09:00:00.000Z' },
+      ],
+      error: null,
+    });
+
+    const { result } = renderHook(() => useAnalyticsSummary(30), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data?.summary).toEqual({ page_view: 2, click: 1 });
+    expect(result.current.data?.dailyData['2026-08-10']).toEqual({ page_view: 2 });
+    expect(result.current.data?.dailyData['2026-08-11']).toEqual({ click: 1 });
+  });
+
+  it('returns empty aggregates when there are no events in range', async () => {
+    mockLimit.mockResolvedValueOnce({ data: [], error: null });
+
+    const { result } = renderHook(() => useAnalyticsSummary(7), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toEqual({ summary: {}, dailyData: {} });
+  });
+
+  it('surfaces a query error instead of silently returning empty data', async () => {
+    mockLimit.mockResolvedValueOnce({ data: null, error: { message: 'permission denied' } });
+
+    const { result } = renderHook(() => useAnalyticsSummary(30), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });

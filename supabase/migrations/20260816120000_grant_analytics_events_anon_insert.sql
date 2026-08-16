@@ -1,0 +1,24 @@
+-- Grants the missing table-level INSERT privilege on public.analytics_events
+-- to the `anon` role.
+--
+-- Root cause: 20260411130000_fix_table_grants.sql only ran
+--   GRANT SELECT, INSERT ON public.analytics_events TO authenticated;
+-- but the RLS policy "Anyone can insert analytics events" (re-created with
+-- payload validation in 20260810120500_add_payload_validation_public_inserts.sql)
+-- explicitly reads `FOR INSERT TO anon, authenticated`. A Postgres/Supabase
+-- role needs BOTH the table-level GRANT and a permitting RLS policy — the
+-- policy alone is not enough. Without the grant, every anonymous visitor
+-- (the vast majority of public-site traffic) got "permission denied for
+-- table analytics_events" (42501) on every insert attempt, silently and
+-- completely breaking event tracking for anonymous users since that
+-- migration — confirmed live via the REST API (anon insert returns 42501
+-- before this migration).
+--
+-- Scope kept minimal: only INSERT is granted to anon, matching the RLS
+-- policy's own scope. SELECT stays authenticated-only (admin-gated by the
+-- separate "Admins can view analytics" policy) — anon was never meant to
+-- read analytics data, only write its own events.
+--
+-- Rollback: REVOKE INSERT ON public.analytics_events FROM anon;
+
+GRANT INSERT ON public.analytics_events TO anon;
