@@ -1,7 +1,7 @@
 {
   "project": "Vision7 Portal",
   "version": "1.0.0",
-  "last_updated": "2026-07-22",
+  "last_updated": "2026-08-16",
   "description": "Índice central SDD do projeto Vision7 — mapa de todos os módulos, dependências e status.",
   "modules": [
     {
@@ -279,13 +279,14 @@
       "id": "admin-onboarding",
       "name": "Tutorial de Onboarding (Admin)",
       "spec_file": "sdd/modules/admin-onboarding.json",
-      "version": "0.2.0",
-      "status": "Código em produção — migration user_onboarding e QA manual pendentes",
+      "version": "0.3.0",
+      "status": "Finalizado — cobertura completa (11 áreas, 38 passos) + QA manual aprovada (4/4)",
       "owner": "Vision7 Core Team",
       "depends_on": [
         "cms",
         "supabase-database",
-        "auth-security"
+        "auth-security",
+        "automation-engine"
       ],
       "dependents": [],
       "priority": "Média",

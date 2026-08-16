@@ -105,13 +105,14 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 - [x] URLs legados `/audiocasts` e `/audiocast/:id` redirecionam para `/`
 - [ ] Limpeza pendente: `supabase/functions/portal-ai-assistant/index.ts` ainda tem o assistente a sugerir links `/audiocasts` (redirecionam para `/`) — referências vestigiais do system prompt, não afectam o resto do portal
 
-### F7 — Tutorial de Onboarding (Admin) 🟡
-- [x] Tour guiado nativo por área (Visão Geral, Conteúdo, Automações, Configurações) — `src/components/admin/onboarding/`
+### F7 — Tutorial de Onboarding (Admin) ✅
+- [x] Tour guiado nativo cobrindo as 11 áreas do dashboard (38 passos) — `src/components/admin/onboarding/`
+- [x] Motor `activateSelector` — passos que apontam para conteúdo dentro de tabs não-default (Automações, CRM, Acesso, Developer)
 - [x] Persistência híbrida localStorage + Supabase (`user_onboarding`), com fallback silencioso
 - [x] Ponto único de controlo em Configurações > Tutorial (activar/desactivar, progresso, reiniciar)
 - [x] Mini-tutoriais inline ("O que fazer agora") em Conteúdo e Automações
 - [x] Migration `supabase/migrations/20260720120000_user_onboarding.sql` aplicada em produção (confirmado via REST API — `permission denied` em vez de `relation does not exist`)
-- [ ] QA manual dos 4 cenários — ver `sdd/modules/admin-onboarding.json`
+- [x] QA manual dos 4 cenários aprovado (4/4) — ver `sdd/modules/admin-onboarding.json`. Durante o QA foram corrigidos 3 bugs reais de produção: crash ao trocar de área a meio do tour, coachmark sobreposto/fora do ecrã em secções baixas, e um crash do editor de posts (TipTap) num duplo-toque mobile
 
 ---
 

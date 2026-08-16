@@ -1,41 +1,47 @@
 {
   "$schema": "./module_schema.json",
   "module": "Tutorial de Onboarding (Admin)",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "owner": "Vision7 Core Team",
-  "status": "Código em produção — migration user_onboarding e QA manual pendentes",
-  "last_updated": "2026-07-22",
-  "objective": "Tour guiado nativo (sem libs externas) que ensina cada área do dashboard admin passo-a-passo, com progresso persistido por utilizador e um único ponto de controlo em Configurações.",
+  "status": "Finalizado — cobertura completa (11 áreas, 38 passos) + QA manual aprovada (4/4)",
+  "last_updated": "2026-08-16",
+  "objective": "Tour guiado nativo (sem libs externas) que ensina cada uma das 11 áreas do dashboard admin passo-a-passo — incluindo o motor de automação em detalhe (Pipeline, Automações, Logs, Ferramentas) — com progresso persistido por utilizador e um único ponto de controlo em Configurações.",
   "functional_requirements": [
     {
       "id": "FR-001",
-      "description": "Mostrar um coachmark sequencial por área do dashboard (Visão geral, Conteúdo, Automações, Configurações), ancorado a elementos reais via atributos data-tour.",
+      "description": "Mostrar um coachmark sequencial por área do dashboard (as 11 áreas: Visão geral, Conteúdo, Builder, Media, Automações, Cursos, CRM, Analytics, Acesso, Developer, Configurações), ancorado a elementos reais via atributos data-tour.",
       "priority": "Alta",
-      "status": "Finalizado (código) — QA manual pendente"
+      "status": "Finalizado (código + QA manual aprovada)"
     },
     {
       "id": "FR-002",
       "description": "Persistir progresso (passos concluídos, ativo/inativo) em localStorage e espelhar em Supabase (user_onboarding) quando o utilizador está autenticado, com fallback silencioso.",
       "priority": "Alta",
-      "status": "Código finalizado — tabela user_onboarding ainda por criar em produção (migration pendente)"
+      "status": "Finalizado — migration confirmada aplicada em produção (verificado via REST API: 42501 permission denied, não 42P01 relation does not exist)"
     },
     {
       "id": "FR-003",
       "description": "Ponto único de controlo em Configurações — ativar/desativar, ver progresso por área, reiniciar tutorial.",
       "priority": "Alta",
-      "status": "Finalizado (código) — QA manual pendente"
+      "status": "Finalizado (código + QA manual aprovada)"
     },
     {
       "id": "FR-004",
       "description": "Não reabrir automaticamente o overlay depois de uma área estar concluída ou do tutorial ter sido desativado/saltado.",
       "priority": "Média",
-      "status": "Finalizado (código) — QA manual pendente"
+      "status": "Finalizado (código + QA manual aprovada)"
     },
     {
       "id": "FR-005",
       "description": "Mini-tutorial estático inline (\"O que fazer agora\") nas áreas mais densas (Automações, Conteúdo), independente do overlay.",
       "priority": "Média",
-      "status": "Finalizado (código) — QA manual pendente"
+      "status": "Finalizado (código + QA manual aprovada)"
+    },
+    {
+      "id": "FR-006",
+      "description": "Suportar passos que apontam para conteúdo dentro de tabs não-default (Automações, CRM, Acesso, Developer) via campo activateSelector em TourStep — clica na tab certa antes de resolver/posicionar o alvo do passo.",
+      "priority": "Alta",
+      "status": "Finalizado (código + QA manual aprovada)"
     }
   ],
   "non_functional_requirements": [
@@ -56,14 +62,20 @@
       "description": "RLS em user_onboarding restringe cada utilizador à sua própria linha (auth.uid() = user_id).",
       "category": "Segurança",
       "status": "Finalizado"
+    },
+    {
+      "id": "NFR-004",
+      "description": "O cartão do coachmark nunca fica sobreposto ao elemento-alvo nem sai da área visível do ecrã, mesmo para alvos perto do fundo da página ou com placement 'top'.",
+      "category": "UX",
+      "status": "Finalizado — bug de posicionamento corrigido em 2026-08-16 (computePosition não descontava a altura real do cartão)"
     }
   ],
   "flows": {
-    "data_flow": "TourProgressProvider (AdminDashboard) → useTourProgress (localStorage + Supabase) → TourController lê a área ativa e decide o passo → TourSpotlight resolve o alvo data-tour visível e renderiza o coachmark.",
+    "data_flow": "TourProgressProvider (AdminDashboard) → useTourProgress (localStorage + Supabase) → TourController lê a área ativa e decide o passo → TourSpotlight activa a tab certa (se activateSelector), resolve o alvo data-tour visível e renderiza o coachmark dentro dos limites do ecrã.",
     "user_flow": "Primeira visita → tour da área ativa arranca automaticamente → utilizador avança/recua/salta → ao concluir uma área fica marcada como feita → quando todas as áreas estão completas o overlay deixa de aparecer → utilizador pode reativar/reiniciar em Configurações."
   },
   "dependencies": {
-    "modules": ["cms", "supabase-database", "auth-security"],
+    "modules": ["cms", "supabase-database", "auth-security", "automation-engine"],
     "packages": [],
     "supabase_tables": ["user_onboarding"],
     "api_endpoints": []
@@ -94,25 +106,25 @@
       "id": "QA-001",
       "type": "manual",
       "description": "Primeira visita ao dashboard → tour da Visão geral arranca sozinho.",
-      "status": "Pendente"
+      "status": "Aprovado"
     },
     {
       "id": "QA-002",
       "type": "manual",
       "description": "Concluir todos os passos de todas as áreas → overlay não reaparece e o cartão em Configurações mostra 'Concluído'.",
-      "status": "Pendente"
+      "status": "Aprovado"
     },
     {
       "id": "QA-003",
       "type": "manual",
       "description": "'Reiniciar tutorial' em Configurações volta a mostrar o overlay a partir da Visão geral.",
-      "status": "Pendente"
+      "status": "Aprovado"
     },
     {
       "id": "QA-004",
       "type": "manual",
       "description": "Em viewport estreita, o coachmark aponta para o item de navegação visível (mobile), não para o desktop escondido por CSS.",
-      "status": "Pendente"
+      "status": "Aprovado"
     }
   ],
   "security_considerations": [
@@ -134,6 +146,12 @@
       "version": "0.2.0",
       "author": "Claude Code",
       "description": "Implementação enviada para main (commit 3438b9a): todos os FR/NFR de código concluídos. Pendente: aplicar migration user_onboarding em produção (Supabase) e correr os 4 cenários de QA manual."
+    },
+    {
+      "date": "2026-08-16",
+      "version": "0.3.0",
+      "author": "Claude Code",
+      "description": "Expansão de 4 para 11 áreas (38 passos), motor activateSelector para passos dentro de tabs não-default. Migration user_onboarding confirmada em produção. Durante o QA manual, 3 bugs reais corrigidos: (1) crash do React ao trocar de área a meio do tour — stepIndex desatualizado indexava fora dos limites do array de passos da nova área antes do useEffect de reset correr; (2) coachmark sobreposto ao alvo (placement 'top') ou a sair do ecrã por baixo em secções próximas do fundo da página — computePosition() não descontava a altura real do cartão; (3) crash do editor de posts (getHTML() num editor TipTap já destruído por corrida de desmontagem, mais fácil de disparar por duplo-toque em mobile) — não é bug do tutorial em si, mas foi descoberto durante o QA guiado pelo tutorial. QA manual aprovado 4/4."
     }
   ]
 }
