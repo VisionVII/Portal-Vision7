@@ -234,7 +234,7 @@ const AdminCoursesManager = () => {
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-      <Card className="shadow-sm">
+      <Card data-tour="courses-form" className="shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Handshake className="h-4 w-4 text-primary-600" />
@@ -431,7 +431,7 @@ const AdminCoursesManager = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="courses-catalog">
           <CardHeader>
             <CardTitle className="text-base">Catálogo atual</CardTitle>
             <CardDescription>

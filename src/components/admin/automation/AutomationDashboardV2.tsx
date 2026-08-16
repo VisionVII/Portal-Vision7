@@ -25,6 +25,18 @@ function TabSkeleton() {
   );
 }
 
+// Supabase/Postgrest errors are plain objects ({message, details, hint, code}),
+// not Error instances — `err instanceof Error` misses them and falls through
+// to String(err), which renders as "[object Object]".
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === 'string') return msg;
+  }
+  return String(err);
+}
+
 import { useAutomationsV2, useAutomationStats } from '@/hooks/useAutomationsV2';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import { useAutomationTemplates } from '@/hooks/useAutomationTemplates';
@@ -447,7 +459,7 @@ export function AutomationDashboardV2({
       else await bulkSetStatus(ids, action === 'activate' ? 'active' : 'paused');
       setSelectedIds(new Set());
     } catch (err) {
-      toast({ title: 'Erro na operação em massa', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+      toast({ title: 'Erro na operação em massa', description: getErrorMessage(err), variant: 'destructive' });
     } finally {
       setBulkBusy(false);
     }
@@ -524,7 +536,7 @@ export function AutomationDashboardV2({
         description: `Staging: ${stagingDeleted} · Clusters: ${clustersDeleted} · Curados: ${curatedCleaned}`,
       });
     } catch (err) {
-      toast({ title: 'Erro na limpeza', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+      toast({ title: 'Erro na limpeza', description: getErrorMessage(err), variant: 'destructive' });
     } finally {
       setCleaning(false);
     }
@@ -686,19 +698,19 @@ export function AutomationDashboardV2({
       {/* ── Tab navigation ── */}
       <Tabs data-tour="automation-tabs" value={activeView} onValueChange={(v) => setActiveView(v as DashboardView)}>
         <TabsList className="h-auto w-full gap-1 overflow-x-auto rounded-xl border border-border/40 bg-muted/40 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsTrigger value="pipeline" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-pipeline" value="pipeline" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
             <Zap className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Pipeline</span>
           </TabsTrigger>
-          <TabsTrigger value="automations" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-automations" value="automations" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
             <Workflow className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Automações</span>
           </TabsTrigger>
-          <TabsTrigger value="logs" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-logs" value="logs" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
             <Clock className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Logs</span>
           </TabsTrigger>
-          <TabsTrigger value="tools" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
+          <TabsTrigger data-tour="automation-tab-tools" value="tools" className="flex-1 gap-1.5 rounded-lg px-2 py-2 text-xs sm:flex-none sm:px-4">
             <Wrench className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xs:inline sm:inline">Ferramentas</span>
           </TabsTrigger>
@@ -762,7 +774,7 @@ export function AutomationDashboardV2({
             toggleSelect={toggleSelect}
             toggleSelectAll={toggleSelectAll}
             handleBulkAction={(action) => void handleBulkAction(action)}
-            handleSave={(payload) => void handleSave(payload)}
+            handleSave={handleSave}
             handleEdit={handleEdit}
             handleClone={handleClone}
             handleDelete={(id) => void handleDelete(id)}

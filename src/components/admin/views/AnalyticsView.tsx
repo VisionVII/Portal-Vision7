@@ -135,7 +135,7 @@ const AnalyticsView: React.FC = () => {
           <h2 className="text-xl font-bold tracking-tight sm:text-2xl">Analytics</h2>
           <p className="text-sm text-muted-foreground">Panorama de eventos e tráfego do portal</p>
         </div>
-        <div className="flex gap-1.5 rounded-lg border border-border/50 bg-muted/30 p-1">
+        <div data-tour="analytics-period" className="flex gap-1.5 rounded-lg border border-border/50 bg-muted/30 p-1">
           {PERIOD_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -153,7 +153,7 @@ const AnalyticsView: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div data-tour="analytics-kpis" className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <KpiCard
           icon={Eye}
           label="Total de eventos"
@@ -182,7 +182,7 @@ const AnalyticsView: React.FC = () => {
       </div>
 
       {/* Charts Row */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div data-tour="analytics-charts" className="grid gap-4 lg:grid-cols-3">
         {/* Daily trend — 2/3 */}
         <Card className="lg:col-span-2">
           <CardHeader className="pb-2">

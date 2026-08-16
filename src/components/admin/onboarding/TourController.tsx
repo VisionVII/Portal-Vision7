@@ -1,5 +1,5 @@
 // Controla qual passo do tutorial mostrar para a área ativa do dashboard.
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTour } from './TourProgressContext';
 import { TOUR_AREAS } from './tour-types';
 import { TourSpotlight } from './TourSpotlight';
@@ -10,19 +10,25 @@ export function TourController() {
   const steps = area ? [...area.steps].sort((a, b) => a.order - b.order) : [];
 
   const [stepIndex, setStepIndex] = useState(0);
+  // Rastreia a área já resolvida para recalcular stepIndex durante o
+  // próprio render (não num useEffect, que só corre depois do commit) —
+  // caso contrário, ao trocar de área com um stepIndex mais alto do que o
+  // número de passos da nova área, `steps[stepIndex]` fica undefined nesse
+  // render intermédio e derruba o TourSpotlight.
+  const [resolvedView, setResolvedView] = useState(activeView);
 
-  useEffect(() => {
-    if (!area) return;
+  if (activeView !== resolvedView) {
+    setResolvedView(activeView);
     const firstIncomplete = steps.findIndex((s) => !isStepDone(s.id));
     setStepIndex(firstIncomplete >= 0 ? firstIncomplete : 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeView]);
+  }
 
   if (!area || !enabled || isAreaComplete(activeView) || steps.length === 0) {
     return null;
   }
 
   const currentStep = steps[stepIndex];
+  if (!currentStep) return null;
   const isLastStep = stepIndex === steps.length - 1;
 
   return (

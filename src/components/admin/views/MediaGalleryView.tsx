@@ -113,7 +113,7 @@ const MediaGalleryView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Upload area */}
-      <Card className="border-border/30 border-dashed dark:border-border/20">
+      <Card data-tour="media-upload" className="border-border/30 border-dashed dark:border-border/20">
         <CardContent className="flex flex-col items-center gap-4 py-8">
           <div className="rounded-2xl bg-primary-50 p-4 dark:bg-primary-900/20">
             <Upload className="h-8 w-8 text-primary-500" />
@@ -146,6 +146,7 @@ const MediaGalleryView: React.FC = () => {
       </Card>
 
       {/* Gallery grid */}
+      <div data-tour="media-grid">
       {isLoading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -226,6 +227,7 @@ const MediaGalleryView: React.FC = () => {
           ))}
         </div>
       )}
+      </div>
 
       {/* Count */}
       {images.length > 0 && (

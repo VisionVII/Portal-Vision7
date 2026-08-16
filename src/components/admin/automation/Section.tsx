@@ -23,6 +23,7 @@ export function Section({
   actions,
   collapsible = false,
   defaultExpanded = true,
+  dataTour,
 }: {
   title: string;
   description?: string;
@@ -31,11 +32,12 @@ export function Section({
   actions?: React.ReactNode;
   collapsible?: boolean;
   defaultExpanded?: boolean;
+  dataTour?: string;
 }) {
   const [open, setOpen] = useState(defaultExpanded);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
+    <section data-tour={dataTour} className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
       <div
         className={`flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5 ${
           collapsible ? 'cursor-pointer select-none transition-colors hover:bg-muted/30' : ''

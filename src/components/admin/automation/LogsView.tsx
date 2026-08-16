@@ -33,6 +33,7 @@ export function LogsView({
         title="Execuções recentes"
         description="Histórico operacional do pipeline e das automações"
         icon={<SectionIcon icon={Clock} className="bg-amber-500/10 text-amber-500" />}
+        dataTour="automation-logs-executions"
         actions={
           <Select
             value={executionStatusFilter}

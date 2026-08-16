@@ -26,6 +26,7 @@ export function ToolsView({
         title="Workflows n8n"
         description={`${activeWorkflows} de ${workflows.length} ativos`}
         icon={<SectionIcon icon={Settings2} className="bg-amber-500/10 text-amber-500" />}
+        dataTour="automation-tools-workflows"
         actions={
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRefresh} title="Atualizar workflows">
             <RefreshCw className="h-3.5 w-3.5" />

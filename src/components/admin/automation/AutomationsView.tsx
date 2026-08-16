@@ -47,7 +47,7 @@ interface AutomationsViewProps {
   toggleSelect: (id: string, checked: boolean) => void;
   toggleSelectAll: () => void;
   handleBulkAction: (action: 'activate' | 'pause' | 'delete') => void;
-  handleSave: (payload: CreateAutomationPayload) => void;
+  handleSave: (payload: CreateAutomationPayload) => Promise<void>;
   handleEdit: (a: AutomationV2) => void;
   handleClone: (a: AutomationV2) => void;
   handleDelete: (id: string) => void;
@@ -91,7 +91,7 @@ export function AutomationsView({
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div data-tour="automation-list-toolbar" className="flex flex-wrap items-center justify-between gap-3">
         <Select value={activeCategory} onValueChange={(v) => setActiveCategory(v as AutomationCategory | 'all')}>
           <SelectTrigger className="h-8 w-44 text-xs">
             <SelectValue />

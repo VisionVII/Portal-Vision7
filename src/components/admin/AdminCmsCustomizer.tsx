@@ -251,7 +251,7 @@ const AdminCmsCustomizer = () => {
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
       <div className="space-y-6 xl:sticky xl:top-24 self-start">
         {/* Homepage builder */}
-        <Card className="border-primary-200/60 shadow-sm">
+        <Card data-tour="builder-homepage" className="border-primary-200/60 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <LayoutTemplate className="h-4 w-4 text-primary-600" />
@@ -306,7 +306,7 @@ const AdminCmsCustomizer = () => {
         </Card>
 
         {/* Section banners */}
-        <Card>
+        <Card data-tour="builder-section-banners">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <ImagePlus className="h-4 w-4 text-primary-600" />
@@ -342,7 +342,7 @@ const AdminCmsCustomizer = () => {
         </Card>
 
         {/* Section sorter */}
-        <Card>
+        <Card data-tour="builder-section-sorter">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Sparkles className="h-4 w-4 text-secondary-500" />

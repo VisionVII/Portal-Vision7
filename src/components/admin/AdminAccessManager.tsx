@@ -35,7 +35,9 @@ const AdminAccessManager: React.FC = () => {
     <div className="grid grid-cols-1 gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
       {/* Left: Invite form + stats */}
       <div className="space-y-5">
-        <InviteForm />
+        <div data-tour="access-invite">
+          <InviteForm />
+        </div>
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <div className="rounded-xl border border-border/60 bg-card p-3 text-center shadow-sm">
@@ -61,6 +63,7 @@ const AdminAccessManager: React.FC = () => {
               <button
                 key={tab.id}
                 type="button"
+                data-tour={`access-tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                   activeTab === tab.id
@@ -83,14 +86,16 @@ const AdminAccessManager: React.FC = () => {
         </CardHeader>
         <CardContent>
           {activeTab === 'team' && (
-            <TeamMembersTable
-              members={teamMembers}
-              currentUserId={user?.id}
-              isSuperAdmin={isSuperAdmin}
-            />
+            <div data-tour="access-content-team">
+              <TeamMembersTable
+                members={teamMembers}
+                currentUserId={user?.id}
+                isSuperAdmin={isSuperAdmin}
+              />
+            </div>
           )}
-          {activeTab === 'invites' && <InvitesList />}
-          {activeTab === 'roles' && <RoleBlueprintsPanel />}
+          {activeTab === 'invites' && <div data-tour="access-content-invites"><InvitesList /></div>}
+          {activeTab === 'roles' && <div data-tour="access-content-roles"><RoleBlueprintsPanel /></div>}
         </CardContent>
       </Card>
     </div>

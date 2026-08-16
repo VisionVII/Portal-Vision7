@@ -10,6 +10,7 @@ const DeveloperView: React.FC = () => {
     <div className="space-y-4">
       <div className="flex gap-1.5 rounded-lg border border-border/50 bg-muted/30 p-1 w-fit">
         <button
+          data-tour="developer-tab-diagnostics"
           onClick={() => setTab('dev')}
           className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
             tab === 'dev' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
@@ -18,6 +19,7 @@ const DeveloperView: React.FC = () => {
           Diagnósticos
         </button>
         <button
+          data-tour="developer-tab-vault"
           onClick={() => setTab('vault')}
           className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
             tab === 'vault' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
@@ -27,11 +29,13 @@ const DeveloperView: React.FC = () => {
         </button>
       </div>
 
-      {tab === 'dev' && <DeveloperControlCenter />}
+      {tab === 'dev' && <div data-tour="developer-content-diagnostics"><DeveloperControlCenter /></div>}
       {tab === 'vault' && (
-        <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted/50" />}>
-          <CredentialVault />
-        </Suspense>
+        <div data-tour="developer-content-vault">
+          <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted/50" />}>
+            <CredentialVault />
+          </Suspense>
+        </div>
       )}
     </div>
   );

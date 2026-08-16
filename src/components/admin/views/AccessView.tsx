@@ -6,7 +6,7 @@ import { ShieldCheck } from 'lucide-react';
 
 const AccessView: React.FC = () => (
   <div className="space-y-5">
-    <Card className="border-border/40">
+    <Card data-tour="access-mfa" className="border-border/40">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />

@@ -237,6 +237,7 @@ export function PipelineView({
         title="Estado do pipeline"
         description="Coleta → Cluster → IA Reescrita → Publicação"
         icon={<SectionIcon icon={Zap} className="bg-primary/10 text-primary" />}
+        dataTour="automation-stages"
       >
         <PipelineRail stages={pipelineStages} />
       </Section>
@@ -246,6 +247,7 @@ export function PipelineView({
         title="Fila de conteúdo"
         description="Artigos por estado"
         icon={<SectionIcon icon={Activity} className="bg-blue-500/10 text-blue-500" />}
+        dataTour="automation-queue"
       >
         <QueueBoard sections={queueSections} />
       </Section>
@@ -257,6 +259,7 @@ export function PipelineView({
         icon={<SectionIcon icon={PlayCircle} className="bg-blue-500/10 text-blue-500" />}
         collapsible
         defaultExpanded={false}
+        dataTour="automation-review"
       >
         <CuratedPostsReview />
       </Section>
@@ -268,6 +271,7 @@ export function PipelineView({
         icon={<SectionIcon icon={Trash2} className="bg-red-500/10 text-red-500" />}
         collapsible
         defaultExpanded={false}
+        dataTour="automation-cleanup"
       >
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-xs text-muted-foreground">Remover dados mais antigos que:</span>

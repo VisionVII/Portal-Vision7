@@ -91,13 +91,34 @@ export function TourSpotlight({
       });
     };
 
-    const target = resolveVisibleTarget(step.targetSelector);
-    target?.scrollIntoView({
-      behavior: prefersReducedMotion ? 'auto' : 'smooth',
-      block: 'center',
-    });
+    // Áreas com tabs internas (Automações, CRM, Acesso, Developer): activa a
+    // tab certa antes de procurar o alvo — o clique é síncrono no DOM, mas o
+    // conteúdo da tab só existe depois do próximo render do React.
+    if (step.activateSelector) {
+      resolveVisibleTarget(step.activateSelector)?.click();
+    }
 
-    update();
+    const runAfterActivate = () => {
+      const target = resolveVisibleTarget(step.targetSelector);
+      target?.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'center',
+      });
+      update();
+    };
+
+    if (step.activateSelector) {
+      const raf = requestAnimationFrame(runAfterActivate);
+      window.addEventListener('resize', update);
+      window.addEventListener('scroll', update, true);
+      return () => {
+        cancelAnimationFrame(raf);
+        window.removeEventListener('resize', update);
+        window.removeEventListener('scroll', update, true);
+      };
+    }
+
+    runAfterActivate();
     window.addEventListener('resize', update);
     window.addEventListener('scroll', update, true);
     return () => {

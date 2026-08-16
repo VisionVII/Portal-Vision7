@@ -151,7 +151,7 @@ export function EngineStatusPanel({
   const hasWorkflows = workflowSteps.length > 0;
 
   return (
-    <div className={`overflow-hidden rounded-2xl border transition-colors ${
+    <div data-tour="automation-engine-status" className={`overflow-hidden rounded-2xl border transition-colors ${
       isConnected
         ? 'border-emerald-500/25 bg-gradient-to-br from-emerald-500/[0.04] via-card to-card'
         : 'border-red-400/25 bg-gradient-to-br from-red-400/[0.04] via-card to-card'
