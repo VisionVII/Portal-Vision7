@@ -365,7 +365,6 @@ const PortalAIAssistantButton = ({ compact = false }: PortalAIAssistantButtonPro
                   assistantId: aiConfig.assistantId,
                   model: aiConfig.model,
                 },
-                // @ts-expect-error — signal is accepted by fetch but not typed in supabase-js
                 signal: abortCtrl.signal,
               }
             ),

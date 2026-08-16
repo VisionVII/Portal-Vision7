@@ -5,7 +5,7 @@ export type MFAStatus = 'disabled' | 'enrolled' | 'verified';
 
 interface MFAFactor {
   id: string;
-  type: 'totp';
+  factor_type: 'totp';
   friendly_name?: string;
   created_at: string;
   updated_at: string;

@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { logAutomationAction, diffAutomation } from '@/services/auditLog';
-import type { Json } from '@/integrations/supabase/types';
+import type { Database, Json } from '@/integrations/supabase/types';
+
+type AutomationsV2Update = Database['public']['Tables']['automations_v2']['Update'];
 import type {
   AutomationV2,
   AutomationCategory,
@@ -140,7 +142,7 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
     mutationFn: async ({ id, ...payload }: UpdateAutomationPayload & { id: string }) => {
       const before = data?.automations.find((a) => a.id === id) ?? null;
 
-      const row: Record<string, unknown> = {};
+      const row: AutomationsV2Update = {};
       if (payload.name !== undefined) row.name = payload.name;
       if (payload.description !== undefined) row.description = payload.description;
       if (payload.category !== undefined) row.category = payload.category;
@@ -153,7 +155,7 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
 
       const { data: updatedRow, error: err } = await supabase
         .from('automations_v2')
-        .update(row as Record<string, Json>)
+        .update(row)
         .eq('id', id)
         .select()
         .single();
@@ -201,7 +203,7 @@ export function useAutomationsV2(filters: AutomationFilters = {}) {
   const bulkSetStatus = async (ids: string[], status: AutomationStatus) => {
     const { error: err } = await supabase
       .from('automations_v2')
-      .update({ status } as Record<string, Json>)
+      .update({ status } satisfies AutomationsV2Update)
       .in('id', ids);
     if (err) throw new Error(err.message);
     void queryClient.invalidateQueries({ queryKey: QUERY_KEY });

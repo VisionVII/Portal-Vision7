@@ -1,4 +1,4 @@
-export type SectionPageId = 'tecnologia' | 'mundo' | 'musica' | 'saude' | 'desporto' | 'courses' | 'privacy';
+export type SectionPageId = 'tecnologia' | 'mundo' | 'musica' | 'saude' | 'desporto' | 'courses' | 'privacy' | 'about';
 export type SectionPageBannerVariant = 'desktop' | 'mobile';
 
 export interface SectionPageBannerEntry {
@@ -50,6 +50,11 @@ const SECTION_PAGE_BANNER_CATALOG: Array<Omit<SectionPageBannerEntry, 'bannerUrl
     id: 'privacy',
     label: 'Privacidade',
     description: 'Hero da página fixa de política de privacidade.',
+  },
+  {
+    id: 'about',
+    label: 'Sobre',
+    description: 'Hero da página fixa "Sobre o Vision7".',
   },
 ];
 

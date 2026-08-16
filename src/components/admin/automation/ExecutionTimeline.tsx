@@ -186,8 +186,8 @@ interface ExecutionTimelineProps {
   total: number;
   isLoading: boolean;
   error?: string | null;
-  statusFilter: ExecutionStatus | '';
-  onStatusFilterChange: (s: ExecutionStatus | '') => void;
+  statusFilter: ExecutionStatus | 'all';
+  onStatusFilterChange: (s: ExecutionStatus | 'all') => void;
 }
 
 export function ExecutionTimeline({
@@ -209,14 +209,14 @@ export function ExecutionTimeline({
           <span className="text-xs text-muted-foreground font-normal ml-2">({total})</span>
         </h3>
         <Select
-          value={statusFilter || '__all__'}
-          onValueChange={(v) => onStatusFilterChange((v === '__all__' ? '' : v) as ExecutionStatus | '')}
+          value={statusFilter}
+          onValueChange={(v) => onStatusFilterChange(v as ExecutionStatus | 'all')}
         >
           <SelectTrigger className="w-[110px] sm:w-[140px] bg-muted/30 border-border h-8 text-xs">
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__all__">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="success">✓ Sucesso</SelectItem>
             <SelectItem value="error">✕ Erro</SelectItem>
             <SelectItem value="running">◉ Executando</SelectItem>

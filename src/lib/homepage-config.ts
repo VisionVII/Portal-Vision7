@@ -1,4 +1,4 @@
-export type HeroAlignment = 'left' | 'center' | 'right';
+export type HeroAlignment = 'left' | 'center';
 
 export type SectionId = 'latest' | 'featured' | 'courses' | 'more' | 'newsletter';
 

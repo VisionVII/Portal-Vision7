@@ -122,7 +122,7 @@ describe('T-12: Automations CRUD', () => {
   it('supports filtering by category', async () => {
     const { useAutomationsV2 } = await import('@/hooks/useAutomationsV2');
     const { result } = renderHook(
-      () => useAutomationsV2({ category: 'content' }),
+      () => useAutomationsV2({ category: 'content_pipeline' }),
       { wrapper: createWrapper() }
     );
     expect(result.current).toHaveProperty('automations');

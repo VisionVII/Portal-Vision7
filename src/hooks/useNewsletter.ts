@@ -148,8 +148,7 @@ export const useSendNewsletterDigest = () => {
           subject,
           template: 'newsletter_digest' as const,
           data: {
-            previewText: previewText || 'Novidades da semana',
-            articles: [],
+            posts: [],
             unsubscribeUrl: `${window.location.origin}/newsletter/cancelar?email=${encodeURIComponent(email)}`,
           },
         });
