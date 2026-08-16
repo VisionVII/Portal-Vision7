@@ -790,7 +790,7 @@ export function NewsPipelineCard() {
         </div>
 
         {/* ── Diagnostics ── */}
-        <div className="rounded-2xl border border-border/30 bg-muted/10 p-4">
+        <div className="border-t border-border/30 pt-5">
           <PipelineDiagnosticsPanel
             diagnostics={diagnostics}
             diagnosticsError={diagnosticsError}
@@ -813,7 +813,7 @@ export function NewsPipelineCard() {
 
         {/* ── Editorial config summary / edit form ── */}
         {!showConfig && activeConfig && (
-          <div className="rounded-2xl border border-border/30 bg-muted/10 p-4">
+          <div className="border-t border-border/30 pt-5">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-500/10">
@@ -856,7 +856,7 @@ export function NewsPipelineCard() {
         )}
 
         {showConfig && (
-          <div className="rounded-2xl border border-border/30 bg-muted/10 p-4">
+          <div className="border-t border-border/30 pt-5">
             <EditorialConfigForm
               editConfigLabel={editConfigLabel}
               setEditConfigLabel={setEditConfigLabel}
