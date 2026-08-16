@@ -4,9 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Link2, History } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { usePostCategories, useSetPostCategories } from '@/hooks/usePostCategories';
+import { useDebouncedEffect } from '@/hooks/useDebouncedEffect';
+import { saveDraft, loadDraft, clearDraft, PostDraftPayload } from '@/lib/postDraftStorage';
 import PostCategorySelector from './PostCategorySelector';
 import PostImageUploadField from './PostImageUploadField';
 
@@ -59,8 +62,33 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
+interface PostFormState {
+  title: string;
+  excerpt: string;
+  content: string;
+  category_id: string;
+  image_url: string;
+  banner_url: string;
+  author_name: string;
+  tags: string;
+  read_time: string;
+  featured: boolean;
+  status: string;
+}
+
+const AUTOSAVE_DELAY_MS = 2000;
+
+function formatRelativeTime(ms: number): string {
+  const diffSeconds = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (diffSeconds < 60) return 'há poucos segundos';
+  const diffMinutes = Math.round(diffSeconds / 60);
+  if (diffMinutes < 60) return `há ${diffMinutes} minuto${diffMinutes === 1 ? '' : 's'}`;
+  const diffHours = Math.round(diffMinutes / 60);
+  return `há ${diffHours} hora${diffHours === 1 ? '' : 's'}`;
+}
+
 const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PostFormState>({
     title: post?.title || '',
     excerpt: post?.excerpt || '',
     content: post?.content || '',
@@ -83,6 +111,12 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   const [imagePreview, setImagePreview] = useState<string | null>(post?.image_url || null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(post?.banner_url || null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [recoverableDraft, setRecoverableDraft] = useState<PostDraftPayload<PostFormState> | null>(null);
+
+  // Baseline snapshot to detect real changes — autosave only writes once the
+  // user has actually diverged from what was loaded (server content or a
+  // just-restored draft), never on mount with untouched content.
+  const baselineSnapshotRef = useRef('');
 
   const { data: existingPostCategories } = usePostCategories(post?.id ?? null);
   const setPostCategories = useSetPostCategories();
@@ -100,7 +134,8 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
   // Reset all form state when switching to a different post
   useEffect(() => {
     categoriesInitRef.current = false;
-    setFormData({
+    const nextCategoryIds = post?.category_id ? [post.category_id] : [];
+    const nextFormData: PostFormState = {
       title: post?.title || '',
       excerpt: post?.excerpt || '',
       content: post?.content || '',
@@ -112,12 +147,47 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       read_time: post?.read_time || '5 min',
       featured: post?.featured || false,
       status: post?.status || 'draft',
-    });
-    setSelectedCategoryIds(post?.category_id ? [post.category_id] : []);
+    };
+    setFormData(nextFormData);
+    setSelectedCategoryIds(nextCategoryIds);
     setImagePreview(post?.image_url || null);
     setBannerPreview(post?.banner_url || null);
+    baselineSnapshotRef.current = JSON.stringify({ formData: nextFormData, selectedCategoryIds: nextCategoryIds });
+
+    // Offer recovery only if a local draft exists and is newer than the last
+    // known server save (an existing post) — or exists at all (a new post).
+    const draft = loadDraft<PostFormState>(post?.id);
+    if (draft && (!post || draft.savedAt > new Date(post.updated_at).getTime())) {
+      setRecoverableDraft(draft);
+    } else {
+      setRecoverableDraft(null);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [post?.id]);
+
+  const applyRecoveredDraft = useCallback(() => {
+    if (!recoverableDraft) return;
+    setFormData(recoverableDraft.formData);
+    setSelectedCategoryIds(recoverableDraft.selectedCategoryIds);
+    setImagePreview(recoverableDraft.formData.image_url || null);
+    setBannerPreview(recoverableDraft.formData.banner_url || null);
+    setRecoverableDraft(null);
+  }, [recoverableDraft]);
+
+  const discardRecoveredDraft = useCallback(() => {
+    clearDraft(post?.id);
+    setRecoverableDraft(null);
+  }, [post?.id]);
+
+  // Autosave: debounced, silent, client-side only. Only writes once the form
+  // has actually diverged from the loaded baseline (or from a just-restored
+  // draft), so it never overwrites the recovery banner's own snapshot with a
+  // no-op save immediately on mount.
+  useDebouncedEffect(() => {
+    const snapshot = JSON.stringify({ formData, selectedCategoryIds });
+    if (snapshot === baselineSnapshotRef.current) return;
+    saveDraft(post?.id, { formData, selectedCategoryIds });
+  }, [formData, selectedCategoryIds], AUTOSAVE_DELAY_MS);
 
   // Sync from DB junction table on load (overrides the single category_id default)
   useEffect(() => {
@@ -354,6 +424,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
           description: publish ? "Post publicado com sucesso!" : "Rascunho guardado!",
         });
       }
+      clearDraft(post?.id);
       onClose();
     } catch (error: unknown) {
       const message = getErrorMessage(error, 'Ocorreu um erro ao guardar o post.');
@@ -375,6 +446,28 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
+          {recoverableDraft && (
+            <Alert className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <History className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <AlertTitle>Rascunho não guardado encontrado</AlertTitle>
+                  <AlertDescription>
+                    Encontrámos alterações não guardadas de {formatRelativeTime(recoverableDraft.savedAt)}.
+                  </AlertDescription>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Button type="button" size="sm" onClick={applyRecoveredDraft}>
+                  Restaurar
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={discardRecoveredDraft}>
+                  Descartar
+                </Button>
+              </div>
+            </Alert>
+          )}
+
           {post?.slug && (
             <div className="rounded-2xl border border-border/50 bg-muted/10 p-4 text-sm text-muted-foreground">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
