@@ -72,25 +72,29 @@
     --warning-foreground: 48 100% 96%;
     --info: 210 90% 52%;
     --info-foreground: 210 100% 97%;
-    --background: 210 20% 98%;
+    /* Antes 210 20% 98% — quase indistinguível do --card branco (só 2
+       pontos de luminosidade), por isso a página inteira lia "toda branca"
+       e dependia só da sombra para separar card de fundo. Mais presente
+       agora, cards ficam claramente "levantados" por cima. */
+    --background: 220 20% 95%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --border: 214 15% 91%;
+    --border: 214 18% 88%;
     --input: 210 16% 96%;
     --ring: 208 98% 45%;
     --radius: 0.75rem;
 
     /* Sidebar Light */
-    --sidebar-background: 210 20% 98%;
+    --sidebar-background: 220 20% 95%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 208 98% 45%;
     --sidebar-primary-foreground: 210 100% 98%;
     --sidebar-accent: 210 95% 95%;
     --sidebar-accent-foreground: 214 95% 28%;
-    --sidebar-border: 214 15% 91%;
+    --sidebar-border: 214 18% 88%;
     --sidebar-ring: 208 98% 45%;
   }
 
@@ -307,15 +311,63 @@
   .glow-danger  { box-shadow: 0 4px 24px -6px hsl(var(--destructive) / 0.4); }
   .glow-info    { box-shadow: 0 4px 24px -6px hsl(var(--info) / 0.4); }
 
-  /* Premium soft shadow override for cards */
+  /* Sombras premium, graduadas por tamanho — substitui os tons pesados por
+     defeito do Tailwind (opacidade 0.1 fixa em todos os tamanhos) por uma
+     progressão mais suave, tingida de navy em vez de preto puro em light
+     mode (mais "de marca" que cinza genérico). O fallback var(--tw-shadow-color, …)
+     preserva sombras coloridas explícitas (ex: shadow-primary/25) — só entra
+     em ação quando nenhuma cor foi definida. */
   .blog-card,
   [class*="shadow-md"] {
-    --tw-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.06), 0 1px 3px -1px rgb(0 0 0 / 0.04);
+    --tw-shadow: 0 4px 12px -3px var(--tw-shadow-color, hsl(217 50% 20% / 0.07)), 0 2px 4px -2px var(--tw-shadow-color, hsl(217 50% 20% / 0.05));
+  }
+
+  [class*="shadow-sm"] {
+    --tw-shadow: 0 1px 3px -1px var(--tw-shadow-color, hsl(217 50% 20% / 0.05)), 0 1px 2px -1px var(--tw-shadow-color, hsl(217 50% 20% / 0.04));
+  }
+
+  [class*="shadow-lg"] {
+    --tw-shadow: 0 12px 28px -6px var(--tw-shadow-color, hsl(217 50% 20% / 0.10)), 0 4px 10px -4px var(--tw-shadow-color, hsl(217 50% 20% / 0.06));
+  }
+
+  [class*="shadow-xl"] {
+    --tw-shadow: 0 20px 44px -10px var(--tw-shadow-color, hsl(217 50% 20% / 0.12)), 0 8px 16px -6px var(--tw-shadow-color, hsl(217 50% 20% / 0.08));
+  }
+
+  [class*="shadow-2xl"] {
+    --tw-shadow: 0 30px 64px -14px var(--tw-shadow-color, hsl(217 50% 20% / 0.16));
   }
 
   .dark .blog-card,
   .dark [class*="shadow-md"] {
-    --tw-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.25), 0 1px 3px -1px rgb(0 0 0 / 0.15);
+    --tw-shadow: 0 4px 12px -3px var(--tw-shadow-color, rgb(0 0 0 / 0.35)), 0 2px 4px -2px var(--tw-shadow-color, rgb(0 0 0 / 0.2));
+  }
+
+  .dark [class*="shadow-sm"] {
+    --tw-shadow: 0 1px 3px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.3)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.2));
+  }
+
+  .dark [class*="shadow-lg"] {
+    --tw-shadow: 0 12px 28px -6px var(--tw-shadow-color, rgb(0 0 0 / 0.45)), 0 4px 10px -4px var(--tw-shadow-color, rgb(0 0 0 / 0.3));
+  }
+
+  .dark [class*="shadow-xl"] {
+    --tw-shadow: 0 20px 44px -10px var(--tw-shadow-color, rgb(0 0 0 / 0.5)), 0 8px 16px -6px var(--tw-shadow-color, rgb(0 0 0 / 0.35));
+  }
+
+  .dark [class*="shadow-2xl"] {
+    --tw-shadow: 0 30px 64px -14px var(--tw-shadow-color, rgb(0 0 0 / 0.6));
+  }
+
+  /* Wash ambiente exclusivo do dark mode — azul (marca) + dourado (acento)
+     muito subtis no topo da página, para dar identidade própria em vez de
+     um dark mode genérico cinza-invertido. Opacidade baixa de propósito:
+     não deve alterar o contraste do texto por cima. */
+  .dark body {
+    background-image:
+      radial-gradient(ellipse 900px 560px at 10% -10%, hsl(var(--primary) / 0.10), transparent 60%),
+      radial-gradient(ellipse 700px 460px at 100% 0%, hsl(var(--accent-500) / 0.06), transparent 55%);
+    background-repeat: no-repeat;
   }
 
   .section-title {
