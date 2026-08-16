@@ -27,7 +27,7 @@ interface AuthContextType {
   mfaRequired: boolean;
   mfaFactorId: string | null;
   hasRole: (role: AppRole) => boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null; isAdmin: boolean; canAccessDashboard: boolean; roles: AppRole[] }>;
+  signIn: (email: string, password: string, captchaToken?: string) => Promise<{ error: Error | null; isAdmin: boolean; canAccessDashboard: boolean; roles: AppRole[] }>;
   signOut: () => Promise<void>;
   completeMfaChallenge: () => void;
 }
@@ -263,7 +263,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ── Sign in (email + password) ────────────────────────────────────────────
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string, captchaToken?: string) => {
     const fail = { isAdmin: false, canAccessDashboard: false, roles: [] as AppRole[] };
 
     setIsLoading(true);
@@ -280,6 +280,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
+        options: captchaToken ? { captchaToken } : undefined,
       });
       data = result.data;
       if (result.error) {

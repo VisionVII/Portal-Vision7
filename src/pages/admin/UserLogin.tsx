@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { checkPasswordStrength } from '@/lib/passwordStrength';
+import { CaptchaWidget } from '@/components/system/CaptchaWidget';
 
 type Step = 'choose' | 'invite-code' | 'invite-password' | 'invite-done' | 'otp-email' | 'otp-code';
 
@@ -38,12 +40,19 @@ const UserLogin = () => {
   const [role, setRole] = useState(paramRole);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && canAccessDashboard) {
       navigate('/admin/dashboard', { replace: true });
     }
   }, [user, canAccessDashboard, navigate]);
+
+  // Reset the captcha token whenever the step changes — a token from a
+  // previous step's widget must never be reused for a different auth call.
+  useEffect(() => {
+    setCaptchaToken(null);
+  }, [step]);
 
   useEffect(() => {
     if (paramMode === 'convite' && paramEmail) {
@@ -111,12 +120,17 @@ const UserLogin = () => {
   const handleCreateAccount = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    if (password.length < 8) {
-      setError('A password deve ter pelo menos 8 caracteres.');
+    const strengthError = checkPasswordStrength(password);
+    if (strengthError) {
+      setError(strengthError);
       return;
     }
     if (password !== confirmPassword) {
       setError('As passwords não coincidem.');
+      return;
+    }
+    if (!captchaToken) {
+      setError('Confirme que não é um robô antes de continuar.');
       return;
     }
     setLoading(true);
@@ -126,7 +140,9 @@ const UserLogin = () => {
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
         email: normalized,
         password,
+        options: { captchaToken },
       });
+      setCaptchaToken(null);
 
       if (signUpErr) {
         if (signUpErr.message?.includes('already registered')) {
@@ -159,7 +175,7 @@ const UserLogin = () => {
     } finally {
       setLoading(false);
     }
-  }, [email, password, confirmPassword, role, paramRole, toast]);
+  }, [email, password, confirmPassword, role, paramRole, toast, captchaToken]);
 
   /* ── OTP: Request Code ── */
   const handleRequestOtp = useCallback(async (e: FormEvent) => {
@@ -169,12 +185,17 @@ const UserLogin = () => {
       setError('Introduza o seu email.');
       return;
     }
+    if (!captchaToken) {
+      setError('Confirme que não é um robô antes de continuar.');
+      return;
+    }
     setLoading(true);
     try {
       const { error: otpErr } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase().trim(),
-        options: { shouldCreateUser: false },
+        options: { shouldCreateUser: false, captchaToken },
       });
+      setCaptchaToken(null);
       if (otpErr) {
         setError(otpErr.message?.includes('Signups not allowed')
           ? 'Email não reconhecido. É necessário um convite para criar conta.'
@@ -188,7 +209,7 @@ const UserLogin = () => {
     } finally {
       setLoading(false);
     }
-  }, [email, toast]);
+  }, [email, toast, captchaToken]);
 
   /* ── OTP: Verify Code ── */
   const handleVerifyOtp = useCallback(async (e: FormEvent) => {
@@ -321,9 +342,12 @@ const UserLogin = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínimo 10 caracteres"
                 autoFocus
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Mínimo 10 caracteres, combinando pelo menos 3 de: minúsculas, maiúsculas, números, símbolos.
+              </p>
             </div>
 
             <div>
@@ -336,9 +360,11 @@ const UserLogin = () => {
               />
             </div>
 
+            <CaptchaWidget onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} className="flex justify-center" />
+
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Criar conta
             </Button>
@@ -382,9 +408,11 @@ const UserLogin = () => {
               />
             </div>
 
+            <CaptchaWidget onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} className="flex justify-center" />
+
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Enviar código
             </Button>

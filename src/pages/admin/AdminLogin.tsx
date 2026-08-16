@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import AuthShell from '@/components/admin/AuthShell';
 import { supabase } from '@/integrations/supabase/client';
+import { CaptchaWidget } from '@/components/system/CaptchaWidget';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -15,6 +16,7 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const { signIn, user, canAccessDashboard } = useAuth();
   const navigate = useNavigate();
@@ -29,15 +31,20 @@ const AdminLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) return;
+    if (!captchaToken) {
+      setLoginError('Confirme que não é um robô antes de continuar.');
+      return;
+    }
 
     setIsSubmitting(true);
     setLoginError(null);
 
     let result;
     try {
-      result = await signIn(email, password);
+      result = await signIn(email, password, captchaToken);
     } catch (err) {
       setIsSubmitting(false);
+      setCaptchaToken(null);
       toast({
         title: 'Erro ao iniciar sessão',
         description: err instanceof Error ? err.message : 'Erro inesperado. Tente novamente.',
@@ -51,6 +58,7 @@ const AdminLogin = () => {
     setIsSubmitting(false);
 
     if (error) {
+      setCaptchaToken(null);
       const msg = error.message ?? '';
       const isCredentialError = /invalid.*credentials|invalid.*login|email.*not.*confirmed/i.test(msg);
       const displayMsg = isCredentialError
@@ -120,10 +128,12 @@ const AdminLogin = () => {
           </div>
         </div>
 
+        <CaptchaWidget onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} className="flex justify-center" />
+
         <Button
           type="submit"
           className="h-12 w-full rounded-2xl text-base font-semibold"
-          disabled={isSubmitting || !email.trim() || !password}
+          disabled={isSubmitting || !email.trim() || !password || !captchaToken}
         >
           {isSubmitting
             ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />A validar…</>
