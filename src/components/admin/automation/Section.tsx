@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 
 export function SectionIcon({
@@ -37,7 +38,13 @@ export function Section({
   const [open, setOpen] = useState(defaultExpanded);
 
   return (
-    <section data-tour={dataTour} className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
+    <motion.section
+      data-tour={dataTour}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm"
+    >
       <div
         className={`flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5 ${
           collapsible ? 'cursor-pointer select-none transition-colors hover:bg-muted/30' : ''
@@ -67,6 +74,6 @@ export function Section({
       {open && (
         <div className="border-t border-border/40 px-4 py-4 sm:px-5">{children}</div>
       )}
-    </section>
+    </motion.section>
   );
 }

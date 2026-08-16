@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutGrid, Plus, Clock, Zap,
   Workflow, RefreshCw, Wrench,
@@ -9,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 // Each tab is its own chunk — opening "Centro de Automação" no longer pulls
 // in the other 3 tabs' code until the user actually clicks them (NFR-007).
@@ -90,27 +92,27 @@ interface KpiStat {
 function KpiGrid({ stats, showSecondary = true }: { stats: KpiStat[]; showSecondary?: boolean }) {
   const toneMap = {
     success: {
-      card: 'border-emerald-500/20 bg-emerald-500/[0.04]',
+      card: 'border-emerald-500/25 hover:border-emerald-500/40',
       icon: 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400',
       value: 'text-emerald-600 dark:text-emerald-400',
     },
     warning: {
-      card: 'border-amber-500/20 bg-amber-500/[0.04]',
+      card: 'border-amber-500/25 hover:border-amber-500/40',
       icon: 'bg-amber-500/10 text-amber-500 dark:text-amber-400',
       value: 'text-amber-600 dark:text-amber-400',
     },
     error: {
-      card: 'border-red-400/20 bg-red-500/[0.04]',
+      card: 'border-red-400/25 hover:border-red-400/40',
       icon: 'bg-red-500/10 text-red-500 dark:text-red-400',
       value: 'text-red-600 dark:text-red-400',
     },
     blue: {
-      card: 'border-blue-500/20 bg-blue-500/[0.04]',
+      card: 'border-blue-500/25 hover:border-blue-500/40',
       icon: 'bg-blue-500/10 text-blue-500 dark:text-blue-400',
       value: 'text-blue-600 dark:text-blue-400',
     },
     neutral: {
-      card: 'border-border/40 bg-card',
+      card: 'border-white/20 dark:border-white/10',
       icon: 'bg-muted text-muted-foreground',
       value: 'text-foreground',
     },
@@ -118,12 +120,19 @@ function KpiGrid({ stats, showSecondary = true }: { stats: KpiStat[]; showSecond
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-      {stats.map((stat) => {
+      {stats.map((stat, index) => {
         const t = toneMap[stat.tone];
         const Icon = stat.icon;
         const visibility = stat.secondary ? `${showSecondary ? 'flex' : 'hidden'} lg:flex` : 'flex';
         return (
-          <div key={stat.label} className={`${visibility} items-center gap-3 rounded-xl border px-4 py-3 ${t.card}`}>
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: index * 0.04 }}
+            whileHover={{ y: -2 }}
+            className={cn('glass-panel items-center gap-3 px-4 py-3', visibility, t.card)}
+          >
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
               <Icon className="h-4 w-4" />
             </div>
@@ -131,7 +140,7 @@ function KpiGrid({ stats, showSecondary = true }: { stats: KpiStat[]; showSecond
               <p className="truncate text-[11px] font-medium text-muted-foreground">{stat.label}</p>
               <p className={`text-xl font-bold tabular-nums leading-tight ${t.value}`}>{stat.value}</p>
             </div>
-          </div>
+          </motion.div>
         );
       })}
     </div>
@@ -703,6 +712,14 @@ export function AutomationDashboardV2({
         </TabsList>
 
       <Suspense fallback={<TabSkeleton />}>
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={activeView}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      >
         {activeView === 'pipeline' && (
           <PipelineView
             pipelineErrors={pipelineErrors}
@@ -779,6 +796,8 @@ export function AutomationDashboardV2({
             onRefresh={() => void refreshN8n()}
           />
         )}
+      </motion.div>
+      </AnimatePresence>
       </Suspense>
       </Tabs>
     </div>

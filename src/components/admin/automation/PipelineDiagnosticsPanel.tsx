@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { RefreshCw, CheckCircle2, AlertTriangle, Database, Layers, Sparkles, Newspaper, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 import type { PipelineDiagnostics } from '@/hooks/usePipelineDiagnostics';
 import type { PipelineSearchConfig } from '@/hooks/usePipelineConfig';
 
@@ -21,27 +23,34 @@ interface StatTileProps {
   value: string | number;
   sub?: string;
   tone?: 'default' | 'blue' | 'amber' | 'emerald' | 'red';
+  index?: number;
 }
 
-function StatTile({ icon: Icon, label, value, sub, tone = 'default' }: StatTileProps) {
+function StatTile({ icon: Icon, label, value, sub, tone = 'default', index = 0 }: StatTileProps) {
   const toneMap = {
-    default: { bg: 'bg-muted/30', icon: 'text-muted-foreground', value: 'text-foreground', sub: 'text-muted-foreground' },
-    blue:    { bg: 'bg-blue-500/5',    icon: 'text-blue-400',    value: 'text-blue-500 dark:text-blue-400',    sub: 'text-blue-400/70' },
-    amber:   { bg: 'bg-amber-500/5',   icon: 'text-amber-400',   value: 'text-amber-500 dark:text-amber-400',  sub: 'text-amber-400/70' },
-    emerald: { bg: 'bg-emerald-500/5', icon: 'text-emerald-400', value: 'text-emerald-500 dark:text-emerald-400', sub: 'text-emerald-400/70' },
-    red:     { bg: 'bg-red-500/5',     icon: 'text-red-400',     value: 'text-red-500 dark:text-red-400',      sub: 'text-red-400/70' },
+    default: { border: 'border-white/20 dark:border-white/10', icon: 'text-muted-foreground', value: 'text-foreground', sub: 'text-muted-foreground' },
+    blue:    { border: 'border-blue-500/25 hover:border-blue-500/40',    icon: 'text-blue-400',    value: 'text-blue-500 dark:text-blue-400',    sub: 'text-blue-400/70' },
+    amber:   { border: 'border-amber-500/25 hover:border-amber-500/40',   icon: 'text-amber-400',   value: 'text-amber-500 dark:text-amber-400',  sub: 'text-amber-400/70' },
+    emerald: { border: 'border-emerald-500/25 hover:border-emerald-500/40', icon: 'text-emerald-400', value: 'text-emerald-500 dark:text-emerald-400', sub: 'text-emerald-400/70' },
+    red:     { border: 'border-red-500/25 hover:border-red-500/40',     icon: 'text-red-400',     value: 'text-red-500 dark:text-red-400',      sub: 'text-red-400/70' },
   };
   const t = toneMap[tone];
 
   return (
-    <div className={`flex flex-col gap-1.5 rounded-xl border border-border/30 p-3 ${t.bg}`}>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.04 }}
+      whileHover={{ y: -2 }}
+      className={cn('glass-panel flex flex-col gap-1.5 p-3', t.border)}
+    >
       <div className="flex items-center gap-1.5">
         <Icon className={`h-3.5 w-3.5 shrink-0 ${t.icon}`} />
         <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">{label}</span>
       </div>
       <p className={`text-xl font-bold tabular-nums leading-none ${t.value}`}>{value}</p>
       {sub && <p className={`text-[10px] leading-tight ${t.sub}`}>{sub}</p>}
-    </div>
+    </motion.div>
   );
 }
 
@@ -176,6 +185,7 @@ export function PipelineDiagnosticsPanel({ diagnostics, diagnosticsError, active
               value={diagnostics.staging.total}
               sub={diagnostics.staging.unprocessed > 0 ? `${diagnostics.staging.unprocessed} não proc.` : 'todos proc.'}
               tone={stagingTone}
+              index={0}
             />
             <StatTile
               icon={Layers}
@@ -183,6 +193,7 @@ export function PipelineDiagnosticsPanel({ diagnostics, diagnosticsError, active
               value={diagnostics.clusters.total}
               sub={diagnostics.clusters.highConfidence > 0 ? `${diagnostics.clusters.highConfidence} ≥60%` : 'sem clusters'}
               tone={clusterTone}
+              index={1}
             />
             <StatTile
               icon={Sparkles}
@@ -190,6 +201,7 @@ export function PipelineDiagnosticsPanel({ diagnostics, diagnosticsError, active
               value={diagnostics.curated.total}
               sub={diagnostics.curated.ready > 0 ? `${diagnostics.curated.ready} prontos` : diagnostics.curated.draft > 0 ? `${diagnostics.curated.draft} rascunho` : '—'}
               tone={curatedTone}
+              index={2}
             />
             <StatTile
               icon={MapPin}
@@ -197,6 +209,7 @@ export function PipelineDiagnosticsPanel({ diagnostics, diagnosticsError, active
               value={diagnostics.configLanguage || '—'}
               sub={diagnostics.configRegion || undefined}
               tone="default"
+              index={3}
             />
           </div>
 
