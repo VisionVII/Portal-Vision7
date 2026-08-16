@@ -89,7 +89,7 @@ const PostsTable = ({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between rounded-2xl border border-border/40 bg-card/70 px-4 py-3 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between px-1 py-1 text-xs text-muted-foreground">
         <div className="flex flex-wrap gap-2">
           <span className="rounded-full bg-muted px-2.5 py-1 font-medium">{totalPosts} total</span>
           <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-600 dark:text-emerald-400">{publishedCount} pub.</span>
