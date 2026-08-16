@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
   ArrowRight,
-  Bot,
   Plus,
   TrendingDown,
   TrendingUp,
@@ -108,35 +107,14 @@ const OverviewView: React.FC<OverviewViewProps> = ({ onNewPost, onNavigate, onEd
       />
 
       {/* ── Page header ──────────────────────────────────── */}
-      <div className="relative flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary/60">
-            Vision7 · Painel
-          </p>
-          <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-            Visão Geral
-          </h1>
-          <p className="mt-0.5 text-[13px] capitalize text-muted-foreground">{todayLabel}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 pt-1">
-          {allowedViews.includes('content') && (
-            <Button size="sm" onClick={onNewPost} className="gap-1.5">
-              <Plus className="h-3.5 w-3.5" />
-              <span className="hidden xs:inline">Novo post</span>
-            </Button>
-          )}
-          {allowedViews.includes('automations') && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onNavigate('automations')}
-              className="gap-1.5 text-muted-foreground"
-            >
-              <Bot className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Automações</span>
-            </Button>
-          )}
-        </div>
+      <div className="relative">
+        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary/60">
+          Vision7 · Painel
+        </p>
+        <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+          Visão Geral
+        </h1>
+        <p className="mt-0.5 text-[13px] capitalize text-muted-foreground">{todayLabel}</p>
       </div>
 
       {/* ── Stats strip ──────────────────────────────────── */}

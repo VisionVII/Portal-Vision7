@@ -114,6 +114,20 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 - [x] Migration `supabase/migrations/20260720120000_user_onboarding.sql` aplicada em produção (confirmado via REST API — `permission denied` em vez de `relation does not exist`)
 - [x] QA manual dos 4 cenários aprovado (4/4) — ver `sdd/modules/admin-onboarding.json`. Durante o QA foram corrigidos 3 bugs reais de produção: crash ao trocar de área a meio do tour, coachmark sobreposto/fora do ecrã em secções baixas, e um crash do editor de posts (TipTap) num duplo-toque mobile
 
+### F8 — Redesign do Dashboard Admin 🟡
+Iniciativa contínua de melhoria de design/UX, área por área. Cada fase é combinada com o utilizador antes de implementar.
+- [x] Visão Geral — removido botão "Novo post" duplicado (já existe no header global) e botão "Automações" (redundante com a sidebar)
+- [ ] Conteúdo
+- [ ] Builder (Homepage)
+- [ ] Media (Galeria)
+- [ ] Automações
+- [ ] Cursos (Parceiros)
+- [ ] CRM
+- [ ] Analytics
+- [ ] Acessos
+- [ ] Developer
+- [ ] Configurações
+
 ---
 
 ## Padrões de Código
