@@ -63,7 +63,7 @@ const ErrorRetryBlock: React.FC<{ message: string; onRetry: () => void }> = ({
   message,
   onRetry,
 }) => (
-  <div className="flex flex-col items-center gap-3 rounded-3xl border border-destructive/20 bg-destructive/5 px-6 py-10 text-center">
+  <div className="flex flex-col items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-6 py-10 text-center">
     <p className="font-medium text-destructive">{message}</p>
     <button
       type="button"
@@ -79,7 +79,7 @@ const ErrorRetryBlock: React.FC<{ message: string; onRetry: () => void }> = ({
 const SectionSkeleton: React.FC<{ rows?: number }> = ({ rows = 3 }) => (
   <div className="space-y-4">
     {Array.from({ length: rows }).map((_, i) => (
-      <Skeleton key={i} className="h-28 w-full rounded-3xl" />
+      <Skeleton key={i} className="h-28 w-full rounded-2xl" />
     ))}
   </div>
 );
@@ -123,7 +123,7 @@ const Index = () => {
         if (isLoading)
           return (
             <SectionBlock key="featured" title={sectionLabel} icon={<Star size={16} />}>
-              <Skeleton className="h-80 w-full rounded-3xl" />
+              <Skeleton className="h-80 w-full rounded-2xl" />
             </SectionBlock>
           );
         if (isError)
@@ -173,7 +173,7 @@ const Index = () => {
             {isLoading ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-60 w-full rounded-3xl" />
+                  <Skeleton key={i} className="h-60 w-full rounded-2xl" />
                 ))}
               </div>
             ) : isError ? (
@@ -212,12 +212,12 @@ const Index = () => {
             title={sectionLabel}
             icon={<Handshake size={16} />}
             subtitle="Parcerias recomendadas"
-            className="rounded-3xl border border-primary-100/70 bg-gradient-to-br from-primary-50/60 via-background to-secondary-50/50 p-5 sm:p-7 dark:border-primary-800/30 dark:from-primary-950/20 dark:via-background dark:to-secondary-950/20"
+            className="rounded-2xl border border-primary-100/70 bg-gradient-to-br from-primary-50/60 via-background to-secondary-50/50 p-5 sm:p-7 dark:border-primary-800/30 dark:from-primary-950/20 dark:via-background dark:to-secondary-950/20"
           >
             {isLoading ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-44 w-full rounded-3xl" />
+                  <Skeleton key={i} className="h-44 w-full rounded-2xl" />
                 ))}
               </div>
             ) : (
@@ -228,7 +228,7 @@ const Index = () => {
                   const imgUrl = course.image_url || null;
                   const isCourse = pType === 'curso';
                   const cardBody = (
-                    <div className="group flex h-full flex-col rounded-3xl border border-border/60 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10">
+                    <div className="group flex h-full flex-col rounded-2xl border border-border/60 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
                       {imgUrl && (
                         <div className="mb-3 h-32 w-full overflow-hidden rounded-xl">
                           <img src={imgUrl} alt={course.title} loading="lazy" className="h-full w-full object-cover" width="400" height="128" />
@@ -298,7 +298,7 @@ const Index = () => {
             ) : isError ? (
               <ErrorRetryBlock message="Erro ao carregar notícias" onRetry={refetch} />
             ) : paginatedRegularPosts.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 rounded-3xl border border-border bg-muted/30 px-6 py-14 text-center">
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-muted/30 px-6 py-14 text-center">
                 <p className="font-medium text-muted-foreground">Nenhuma notícia disponível no momento</p>
                 <p className="text-sm text-muted-foreground">Verifique novamente mais tarde para novo conteúdo.</p>
               </div>
@@ -306,7 +306,7 @@ const Index = () => {
               <div className="space-y-3">
                 {paginatedRegularPosts.map((post) => (
                   <Link to={`/post/${post.slug}`} key={post.id} className="block">
-                    <article className="group flex gap-4 rounded-3xl border border-border/60 bg-card p-4 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10">
+                    <article className="group flex gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-lg">
                       {post.image_url && (
                         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl sm:h-24 sm:w-24">
                           <img
@@ -370,7 +370,7 @@ const Index = () => {
 
               <div className="space-y-6 lg:sticky lg:top-24">
                 {/* Popular posts */}
-                <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                   <div className="flex items-center gap-3 border-b border-border/50 px-5 py-4">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
                       <TrendingUp size={16} />
@@ -412,7 +412,7 @@ const Index = () => {
                 </div>
 
                 {/* Categories sidebar */}
-                <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                   <div className="flex items-center gap-3 border-b border-border/50 px-5 py-4">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
                       <Tag size={16} />
@@ -442,7 +442,7 @@ const Index = () => {
                 {/* Newsletter */}
                 <div
                   id="newsletter"
-                  className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-secondary-600 p-6 text-white shadow-lg dark:from-primary-700 dark:to-secondary-700"
+                  className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 p-6 text-white shadow-lg dark:from-primary-700 dark:to-secondary-700"
                 >
                   <h3 className="mb-1.5 text-lg font-bold">Newsletter</h3>
                   <p className="mb-5 text-sm text-white/80">
