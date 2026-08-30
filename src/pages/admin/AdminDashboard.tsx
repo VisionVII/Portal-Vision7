@@ -41,6 +41,9 @@ const AdminDashboard = () => {
   const [activeView, setActiveView] = useState<AdminView>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [contentSearchQuery, setContentSearchQuery] = useState('');
+  const [mediaSearchQuery, setMediaSearchQuery] = useState('');
+  const [coursesSearchQuery, setCoursesSearchQuery] = useState('');
+  const [crmSearchQuery, setCrmSearchQuery] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('admin-sidebar-collapsed');
     return saved === 'true';
@@ -156,6 +159,18 @@ const AdminDashboard = () => {
             value: contentSearchQuery,
             onChange: setContentSearchQuery,
             placeholder: 'Buscar posts por título ou categoria...',
+          } : activeView === 'media' ? {
+            value: mediaSearchQuery,
+            onChange: setMediaSearchQuery,
+            placeholder: 'Pesquisar imagens...',
+          } : activeView === 'courses' ? {
+            value: coursesSearchQuery,
+            onChange: setCoursesSearchQuery,
+            placeholder: 'Pesquisar parceiros...',
+          } : activeView === 'crm' ? {
+            value: crmSearchQuery,
+            onChange: setCrmSearchQuery,
+            placeholder: 'Pesquisar no CRM...',
           } : undefined}
         />
 
@@ -215,10 +230,10 @@ const AdminDashboard = () => {
                     searchQuery={contentSearchQuery}
                   />
                 </Panel>
-                <Panel view="media"><MediaGalleryView /></Panel>
+                <Panel view="media"><MediaGalleryView searchQuery={mediaSearchQuery} /></Panel>
                 <Panel view="automations"><AutomationsView isActive={activeView === 'automations'} /></Panel>
-                <Panel view="courses"><CoursesView /></Panel>
-                <Panel view="crm"><CrmView /></Panel>
+                <Panel view="courses"><CoursesView searchQuery={coursesSearchQuery} /></Panel>
+                <Panel view="crm"><CrmView searchQuery={crmSearchQuery} /></Panel>
                 <Panel view="analytics"><AnalyticsView /></Panel>
                 <Panel view="access"><AccessView /></Panel>
                 <Panel view="developer"><DeveloperView /></Panel>
