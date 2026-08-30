@@ -265,7 +265,7 @@ export const TOUR_AREAS: TourArea[] = [
         targetSelector: '[data-tour="crm-content-deals"]',
         activateSelector: '[data-tour="crm-tab-deals"]',
         title: 'Pipeline de parcerias',
-        body: 'Quadro estilo Kanban para acompanhar negociações de parcerias/afiliados — arrasta ou muda a fase de cada negócio à medida que avança.',
+        body: 'Quadro estilo Kanban para acompanhar negociações de parcerias/afiliados — muda a fase de cada negócio à medida que avança.',
         placement: 'bottom',
         order: 3,
       },

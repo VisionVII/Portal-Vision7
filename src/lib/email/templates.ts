@@ -242,7 +242,7 @@ function newsletterDigestTemplate(data: EmailTemplateData['newsletter_digest']):
 
   return {
     subject: `📬 Destaques da Semana — ${BRAND_NAME}`,
-    html: wrapInLayout('Digest Semanal', body, `As melhores notícias da semana no ${BRAND_NAME}.`),
+    html: wrapInLayout('Digest Semanal', body, data.previewText || `As melhores notícias da semana no ${BRAND_NAME}.`),
   };
 }
 

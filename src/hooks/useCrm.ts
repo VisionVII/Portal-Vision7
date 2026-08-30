@@ -223,3 +223,16 @@ export const useUpdateDeal = () => {
     },
   });
 };
+
+export const useDeleteDeal = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('crm_deals').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['crm-deals'] });
+    },
+  });
+};

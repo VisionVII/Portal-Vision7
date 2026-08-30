@@ -43,6 +43,7 @@ export interface EmailTemplateData {
   newsletter_digest: {
     posts: Array<{ title: string; excerpt: string; url: string; imageUrl?: string }>;
     unsubscribeUrl: string;
+    previewText?: string;
   };
   password_reset: {
     resetUrl: string;

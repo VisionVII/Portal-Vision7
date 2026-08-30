@@ -124,9 +124,24 @@ export const useDeleteSubscriber = () => {
   });
 };
 
+export interface NewsletterDigestPost {
+  title: string;
+  excerpt: string;
+  url: string;
+  imageUrl?: string;
+}
+
 export const useSendNewsletterDigest = () => {
   return useMutation({
-    mutationFn: async ({ subject, previewText }: { subject: string; previewText?: string }) => {
+    mutationFn: async ({
+      subject,
+      previewText,
+      posts,
+    }: {
+      subject: string;
+      previewText?: string;
+      posts: NewsletterDigestPost[];
+    }) => {
       // Get all active subscribers
       const { data: activeSubscribers, error: fetchError } = await supabase
         .from('newsletter_subscribers')
@@ -148,7 +163,8 @@ export const useSendNewsletterDigest = () => {
           subject,
           template: 'newsletter_digest' as const,
           data: {
-            posts: [],
+            posts,
+            previewText,
             unsubscribeUrl: `${window.location.origin}/newsletter/cancelar?email=${encodeURIComponent(email)}`,
           },
         });

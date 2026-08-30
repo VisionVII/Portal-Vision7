@@ -1,12 +1,13 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Mail, Users, UserCheck, Download, MoreVertical, Send, UserX, UserPlus, Trash2 } from 'lucide-react';
+import { Download, MoreVertical, Send, UserX, UserPlus, Trash2 } from 'lucide-react';
 import {
   useNewsletterSubscribers,
   useNewsletterStats,
@@ -32,6 +33,7 @@ import {
   useSendNewsletterDigest,
 } from '@/hooks/useNewsletter';
 import type { NewsletterSubscriber } from '@/hooks/useNewsletter';
+import { usePosts } from '@/hooks/usePosts';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -57,16 +59,51 @@ function exportSubscribersCSV(subscribers: NewsletterSubscriber[]) {
 const CampaignPanel: React.FC<{ activeCount: number }> = ({ activeCount }) => {
   const [subject, setSubject] = useState('');
   const [previewText, setPreviewText] = useState('');
+  const { data: recentPosts } = usePosts();
+  const [selectedPostIds, setSelectedPostIds] = useState<Set<string>>(new Set());
   const sendDigest = useSendNewsletterDigest();
   const { toast } = useToast();
+
+  // Os primeiros N artigos recentes vêm pré-selecionados para reduzir fricção,
+  // mas o admin pode ajustar antes de enviar.
+  const posts = useMemo(() => (recentPosts ?? []).slice(0, 8), [recentPosts]);
+  React.useEffect(() => {
+    if (posts.length && selectedPostIds.size === 0) {
+      setSelectedPostIds(new Set(posts.slice(0, 3).map((p) => p.id)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posts]);
+
+  const togglePost = (id: string) => {
+    setSelectedPostIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleSend = async () => {
     if (!subject.trim()) {
       toast({ title: 'Assunto obrigatório', variant: 'destructive' });
       return;
     }
+    const selectedPosts = posts.filter((p) => selectedPostIds.has(p.id));
+    if (!selectedPosts.length) {
+      toast({ title: 'Escolha pelo menos um artigo para incluir', variant: 'destructive' });
+      return;
+    }
     try {
-      const result = await sendDigest.mutateAsync({ subject: subject.trim(), previewText: previewText.trim() || undefined });
+      const result = await sendDigest.mutateAsync({
+        subject: subject.trim(),
+        previewText: previewText.trim() || undefined,
+        posts: selectedPosts.map((p) => ({
+          title: p.title,
+          excerpt: p.excerpt,
+          url: `${window.location.origin}/post/${p.slug}`,
+          imageUrl: p.image_url ?? undefined,
+        })),
+      });
       toast({
         title: 'Campanha enviada',
         description: `${result.sent} enviados, ${result.failed} falhados de ${result.total} subscritores.`,
@@ -87,9 +124,8 @@ const CampaignPanel: React.FC<{ activeCount: number }> = ({ activeCount }) => {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Send className="h-4 w-4" />
-          Enviar Newsletter
+          Nova campanha
         </CardTitle>
-        <CardDescription>Enviar digest para {activeCount} subscritores ativos</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-1.5">
@@ -113,6 +149,24 @@ const CampaignPanel: React.FC<{ activeCount: number }> = ({ activeCount }) => {
             maxLength={300}
           />
         </div>
+        <div className="space-y-1.5 rounded-lg border border-primary/30 bg-primary/5 p-2.5">
+          <Label className="text-xs font-semibold text-primary-600 dark:text-primary-400">Incluir artigos</Label>
+          {posts.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Sem artigos publicados recentes.</p>
+          ) : (
+            <div className="max-h-40 space-y-1.5 overflow-y-auto">
+              {posts.map((post) => (
+                <label key={post.id} className="flex cursor-pointer items-center gap-2">
+                  <Checkbox
+                    checked={selectedPostIds.has(post.id)}
+                    onCheckedChange={() => togglePost(post.id)}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-xs">{post.title}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
         <Button
           onClick={handleSend}
           disabled={sendDigest.isPending || !subject.trim() || activeCount === 0}
@@ -127,23 +181,26 @@ const CampaignPanel: React.FC<{ activeCount: number }> = ({ activeCount }) => {
   );
 };
 
+interface NewsletterManagerProps {
+  searchQuery?: string;
+}
+
 /* ---- Main Component ---- */
-const NewsletterManager = () => {
+const NewsletterManager: React.FC<NewsletterManagerProps> = ({ searchQuery = '' }) => {
   const { data: subscribers, isLoading } = useNewsletterSubscribers();
   const { data: stats } = useNewsletterStats();
   const toggleSubscriber = useToggleSubscriber();
   const deleteSubscriber = useDeleteSubscriber();
   const { toast } = useToast();
-  const [search, setSearch] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<NewsletterSubscriber | null>(null);
 
   const filteredSubscribers = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch = searchQuery.trim().toLowerCase();
     if (!normalizedSearch) return (subscribers ?? []) as NewsletterSubscriber[];
     return ((subscribers ?? []) as NewsletterSubscriber[]).filter((s) =>
       s.email.toLowerCase().includes(normalizedSearch),
     );
-  }, [search, subscribers]);
+  }, [searchQuery, subscribers]);
 
   const handleToggle = useCallback(
     (sub: NewsletterSubscriber) => {
@@ -203,41 +260,26 @@ const NewsletterManager = () => {
 
   return (
     <div className="space-y-5">
+      <div className="flex items-center gap-2">
+        <div className="h-3.5 w-[3px] rounded-full bg-primary" />
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/50">Newsletter</span>
+        <span className="ml-1 text-xs text-muted-foreground">{stats?.total ?? 0} subscritores</span>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <Users className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats?.total || 0}</p>
-              <p className="text-xs text-muted-foreground">Total Subscritores</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-              <UserCheck className="h-4 w-4 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{activeCount}</p>
-              <p className="text-xs text-muted-foreground">Ativos</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{(stats?.total || 0) - activeCount}</p>
-              <p className="text-xs text-muted-foreground">Inativos</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-border/40 bg-card/60 p-3.5">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Total</p>
+          <p className="mt-1 text-xl font-extrabold text-foreground">{stats?.total || 0}</p>
+        </div>
+        <div className="rounded-xl border border-success/30 bg-gradient-to-br from-success/15 via-success/5 to-transparent p-3.5">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-success">Ativos</p>
+          <p className="mt-1 text-xl font-extrabold text-success">{activeCount}</p>
+        </div>
+        <div className="rounded-xl border border-border/40 bg-card/60 p-3.5">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Inativos</p>
+          <p className="mt-1 text-xl font-extrabold text-foreground">{(stats?.total || 0) - activeCount}</p>
+        </div>
       </div>
 
       {/* Campaign + Subscribers side by side on large screens */}
@@ -260,23 +302,8 @@ const NewsletterManager = () => {
                 </Button>
               )}
             </div>
-            <CardDescription className="text-xs">
-              Lista com busca, toggle ativo/inativo e exportação.
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar por email"
-                className="sm:max-w-xs"
-              />
-              <p className="text-xs text-muted-foreground">
-                {filteredSubscribers.length} resultado(s)
-              </p>
-            </div>
-
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (

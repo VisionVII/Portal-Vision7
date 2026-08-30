@@ -37,7 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Users, UserPlus, MoreVertical, Trash2, Edit, Search, Download, Eye, EyeOff } from 'lucide-react';
+import { Users, UserPlus, MoreVertical, Trash2, Edit, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   useCrmContacts,
@@ -79,7 +79,11 @@ const INITIAL_FORM: Partial<CrmContact> = {
   notes: '',
 };
 
-const CrmContactsTable: React.FC = () => {
+interface CrmContactsTableProps {
+  searchQuery?: string;
+}
+
+const CrmContactsTable: React.FC<CrmContactsTableProps> = ({ searchQuery = '' }) => {
   const { toast } = useToast();
   const { data: contacts, isLoading } = useCrmContacts();
   const { data: stats } = useCrmContactStats();
@@ -87,7 +91,6 @@ const CrmContactsTable: React.FC = () => {
   const updateMut = useUpdateContact();
   const deleteMut = useDeleteContact();
 
-  const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContact, setEditContact] = useState<CrmContact | null>(null);
@@ -98,8 +101,8 @@ const CrmContactsTable: React.FC = () => {
     if (!contacts) return [];
     let list = contacts;
     if (typeFilter !== 'all') list = list.filter((c) => c.contact_type === typeFilter);
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
       list = list.filter(
         (c) =>
           c.email.toLowerCase().includes(q) ||
@@ -108,7 +111,7 @@ const CrmContactsTable: React.FC = () => {
       );
     }
     return list;
-  }, [contacts, search, typeFilter]);
+  }, [contacts, searchQuery, typeFilter]);
 
   const openNew = useCallback(() => {
     setEditContact(null);
@@ -186,60 +189,51 @@ const CrmContactsTable: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="h-3.5 w-[3px] rounded-full bg-primary" />
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/50">Contactos</span>
+        <span className="ml-1 text-xs text-muted-foreground">{stats?.total ?? 0} no total</span>
+      </div>
+
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <Users className="h-5 w-5 shrink-0 text-muted-foreground" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-2xl font-bold">{stats?.total ?? 0}</p>
-              <p className="truncate text-xs text-muted-foreground">Total de contactos</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <Eye className="h-5 w-5 shrink-0 text-emerald-600" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-2xl font-bold">{stats?.active ?? 0}</p>
-              <p className="truncate text-xs text-muted-foreground">Ativos</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <UserPlus className="h-5 w-5 shrink-0 text-amber-600" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-2xl font-bold">{stats?.leads ?? 0}</p>
-              <p className="truncate text-xs text-muted-foreground">Leads</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/60 p-3.5">
+          <Users className="h-5 w-5 shrink-0 text-muted-foreground" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xl font-extrabold text-foreground">{stats?.total ?? 0}</p>
+            <p className="truncate text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Total de contactos</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl border border-success/30 bg-gradient-to-br from-success/15 via-success/5 to-transparent p-3.5">
+          <Users className="h-5 w-5 shrink-0 text-success" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xl font-extrabold text-success">{stats?.active ?? 0}</p>
+            <p className="truncate text-[10px] font-bold uppercase tracking-wide text-success">Ativos</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl border border-warning/30 bg-gradient-to-br from-warning/15 via-warning/5 to-transparent p-3.5">
+          <UserPlus className="h-5 w-5 shrink-0 text-warning" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xl font-extrabold text-warning">{stats?.leads ?? 0}</p>
+            <p className="truncate text-[10px] font-bold uppercase tracking-wide text-warning">Leads</p>
+          </div>
+        </div>
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Pesquisar por email, nome ou empresa..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="flex flex-1 items-center gap-2 sm:flex-none">
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="flex-1 sm:w-[160px]">
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {(Object.keys(CONTACT_TYPE_LABELS) as CrmContactType[]).map((t) => (
-                <SelectItem key={t} value={t}>{CONTACT_TYPE_LABELS[t]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {(Object.keys(CONTACT_TYPE_LABELS) as CrmContactType[]).map((t) => (
+              <SelectItem key={t} value={t}>{CONTACT_TYPE_LABELS[t]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> CSV
           </Button>
@@ -267,8 +261,18 @@ const CrmContactsTable: React.FC = () => {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Nenhum contacto encontrado
+                  <TableCell colSpan={6} className="py-12">
+                    <div className="flex flex-col items-center">
+                      <div className="rounded-2xl bg-muted/40 p-4 dark:bg-muted/20">
+                        <Users className="h-8 w-8 text-muted-foreground/40" />
+                      </div>
+                      <p className="mt-3 text-sm font-medium text-foreground/70">
+                        {contacts?.length ? 'Nenhum contacto encontrado' : 'Ainda sem contactos'}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {contacts?.length ? 'Tente outra pesquisa ou filtro' : 'Adicione o primeiro contacto para começar'}
+                      </p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -287,11 +291,9 @@ const CrmContactsTable: React.FC = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
-                      {c.is_active ? (
-                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700">Ativo</Badge>
-                      ) : (
-                        <Badge variant="outline" className="badge-status-neutral">Inativo</Badge>
-                      )}
+                      <Badge variant="outline" className={c.is_active ? 'badge-status-success' : 'badge-status-neutral'}>
+                        {c.is_active ? 'Ativo' : 'Inativo'}
+                      </Badge>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
                       {format(new Date(c.created_at), 'dd/MM/yyyy', { locale: pt })}
