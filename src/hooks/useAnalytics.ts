@@ -3,18 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 import { isAllowed } from '@/cmp';
 
-export interface AnalyticsEvent {
-  id: string;
-  event_type: string;
-  event_data: Json | null;
-  user_id: string | null;
-  session_id: string | null;
-  ip_address: string | null;
-  user_agent: string | null;
-  referrer: string | null;
-  created_at: string;
-}
-
 export interface AnalyticsEventData {
   event_type: string;
   event_data?: Json | null;
@@ -44,32 +32,10 @@ export const useTrackEvent = () => {
   });
 };
 
-// Get analytics data (admin only)
-export const useAnalytics = (eventType?: string, days = 30) => {
-  return useQuery({
-    queryKey: ['analytics', eventType, days],
-    queryFn: async () => {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-
-      let query = supabase
-        .from('analytics_events')
-        .select('id, event_type, event_data, user_id, session_id, created_at')
-        .gte('created_at', startDate.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1000);
-
-      if (eventType) {
-        query = query.eq('event_type', eventType);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as AnalyticsEvent[];
-    },
-  });
-};
+export interface TopPage {
+  path: string;
+  count: number;
+}
 
 // Get analytics summary
 export const useAnalyticsSummary = (days = 30) => {
@@ -81,7 +47,7 @@ export const useAnalyticsSummary = (days = 30) => {
 
       const { data, error } = await supabase
         .from('analytics_events')
-        .select('event_type, created_at')
+        .select('event_type, created_at, event_data')
         .gte('created_at', startDate.toISOString())
         .limit(10000);
 
@@ -111,7 +77,22 @@ export const useAnalyticsSummary = (days = 30) => {
         return acc;
       }, {} as Record<string, Record<string, number>>) || {};
 
-      return { summary, dailyData };
+      // Top pages — cada page_view já guarda o path em event_data, só nunca
+      // tinha sido lido de volta.
+      const pageCounts = data?.reduce((acc, event) => {
+        if (event.event_type !== 'page_view') return acc;
+        const path = (event.event_data as { path?: string } | null)?.path;
+        if (!path) return acc;
+        acc[path] = (acc[path] ?? 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      const topPages: TopPage[] = Object.entries(pageCounts)
+        .map(([path, count]) => ({ path, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8);
+
+      return { summary, dailyData, topPages };
     },
   });
 };

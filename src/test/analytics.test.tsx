@@ -138,6 +138,28 @@ describe('T-10b: useAnalyticsSummary — QA-002', () => {
     expect(result.current.data?.dailyData['2026-08-11']).toEqual({ click: 1 });
   });
 
+  it('ranks top pages by path from page_view event_data', async () => {
+    mockLimit.mockResolvedValueOnce({
+      data: [
+        { event_type: 'page_view', created_at: '2026-08-10T10:00:00.000Z', event_data: { path: '/tecnologia/a' } },
+        { event_type: 'page_view', created_at: '2026-08-10T11:00:00.000Z', event_data: { path: '/tecnologia/a' } },
+        { event_type: 'page_view', created_at: '2026-08-11T09:00:00.000Z', event_data: { path: '/mundo/b' } },
+        { event_type: 'page_view', created_at: '2026-08-11T10:00:00.000Z', event_data: null },
+        { event_type: 'click', created_at: '2026-08-11T10:05:00.000Z', event_data: { path: '/tecnologia/a' } },
+      ],
+      error: null,
+    });
+
+    const { result } = renderHook(() => useAnalyticsSummary(30), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data?.topPages).toEqual([
+      { path: '/tecnologia/a', count: 2 },
+      { path: '/mundo/b', count: 1 },
+    ]);
+  });
+
   it('returns empty aggregates when there are no events in range', async () => {
     mockLimit.mockResolvedValueOnce({ data: [], error: null });
 
@@ -145,7 +167,7 @@ describe('T-10b: useAnalyticsSummary — QA-002', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data).toEqual({ summary: {}, dailyData: {} });
+    expect(result.current.data).toEqual({ summary: {}, dailyData: {}, topPages: [] });
   });
 
   it('surfaces a query error instead of silently returning empty data', async () => {
