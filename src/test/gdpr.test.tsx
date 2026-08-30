@@ -7,11 +7,19 @@ import React from 'react';
 // Mock CMP module
 vi.mock('@/cmp/useCMP', () => ({
   useCMP: () => ({
+    consent: { necessary: true, analytics: false, marketing: false, personalization: false },
     hasConsented: false,
+    categories: [
+      { id: 'necessary', label: 'Essenciais', description: 'Necessários para o funcionamento básico do site.', required: true, legalBasis: 'legitimate-interest', retention: '12 meses', vendors: ['Supabase Auth'] },
+      { id: 'analytics', label: 'Análise', description: 'Estatísticas de uso agregadas.', required: false, legalBasis: 'consent', retention: '12 meses', vendors: [] },
+      { id: 'marketing', label: 'Marketing', description: 'Publicidade personalizada.', required: false, legalBasis: 'consent', retention: '12 meses', vendors: [] },
+      { id: 'personalization', label: 'Personalização', description: 'Conteúdo adaptado à localização.', required: false, legalBasis: 'consent', retention: '12 meses', vendors: [] },
+    ],
     acceptAll: vi.fn(),
     rejectAll: vi.fn(),
-    preferences: { analytics: false, marketing: false },
-    updatePreferences: vi.fn(),
+    update: vi.fn(),
+    reset: vi.fn(),
+    isAllowed: vi.fn(() => false),
   }),
 }));
 
@@ -75,15 +83,7 @@ describe('T-06: GDPR — Cookie consent', () => {
   });
 
   it('ConsentBanner component can render without errors', async () => {
-    // Dynamic import to pick up mocks
-    try {
-      const { default: ConsentBanner } = await import('@/components/system/ConsentBanner');
-      renderWithProviders(<ConsentBanner />);
-      // If the banner renders, the component exists and doesn't crash
-      expect(true).toBe(true);
-    } catch {
-      // Component may have additional dependencies — verify existence is enough
-      expect(true).toBe(true);
-    }
+    const { default: ConsentBanner } = await import('@/components/system/ConsentBanner');
+    expect(() => renderWithProviders(<ConsentBanner />)).not.toThrow();
   });
 });
