@@ -9,6 +9,9 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '
 const DEFAULT_SITE_URL = Deno.env.get('SITE_URL') ?? 'https://portal.vision7.pt';
 const MAX_FAILED_ATTEMPTS = 5;
 const BLOCK_WINDOW_MINUTES = 15;
+// Segunda verificação — send-invite-code já bloqueia a origem, isto cobre
+// qualquer outro caminho que venha a inserir em security_codes.
+const ELEVATED_ROLES = new Set(['super_admin', 'admin']);
 
 const configuredOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
   .split(',')
@@ -218,6 +221,24 @@ Deno.serve(async (req: Request) => {
     await adminClient.from('security_codes').update({ used: true }).eq('id', data.id);
 
     const role = data.metadata?.role ?? 'editor';
+    const invitedBy = data.metadata?.invited_by;
+
+    if (ELEVATED_ROLES.has(role)) {
+      const { data: inviterIsSuperAdmin } = invitedBy
+        ? await adminClient
+          .from('user_roles')
+          .select('id')
+          .eq('user_id', invitedBy)
+          .eq('role', 'super_admin')
+          .eq('is_active', true)
+          .maybeSingle()
+        : { data: null };
+
+      if (!inviterIsSuperAdmin) {
+        console.error(`[activate-invite] Blocked: invite for role "${role}" was not issued by an active super_admin (invited_by=${invitedBy})`);
+        return jsonResponse({ error: 'Este convite não é válido. Contacte um administrador.' }, 403, corsHeaders);
+      }
+    }
 
     // Create user via Supabase admin API (email confirmed immediately — no confirmation email)
     const { data: newUserData, error: createError } = await adminClient.auth.admin.createUser({

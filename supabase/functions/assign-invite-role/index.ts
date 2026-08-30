@@ -9,6 +9,9 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '
 const DEFAULT_SITE_URL = Deno.env.get('SITE_URL') ?? 'https://portal.vision7.pt';
 
 const VALID_ROLES = ['super_admin', 'admin', 'editor', 'redator', 'moderador', 'analyst'];
+// Segunda verificação — send-invite-code já bloqueia a origem, isto cobre
+// este caminho de resgate específico (o realmente usado por UserLogin.tsx).
+const ELEVATED_ROLES = new Set(['super_admin', 'admin']);
 
 const fallbackAllowedOrigins = [
   'http://127.0.0.1:8080',
@@ -87,6 +90,24 @@ Deno.serve(async (req) => {
     }
 
     const inviteRole = (usedCode.metadata as { role?: string })?.role ?? role;
+    const invitedBy = (usedCode.metadata as { invited_by?: string })?.invited_by;
+
+    if (ELEVATED_ROLES.has(inviteRole)) {
+      const { data: inviterIsSuperAdmin } = invitedBy
+        ? await adminClient
+          .from('user_roles')
+          .select('id')
+          .eq('user_id', invitedBy)
+          .eq('role', 'super_admin')
+          .eq('is_active', true)
+          .maybeSingle()
+        : { data: null };
+
+      if (!inviterIsSuperAdmin) {
+        console.error(`[assign-invite-role] Blocked: invite for role "${inviteRole}" was not issued by an active super_admin (invited_by=${invitedBy})`);
+        return jsonResponse({ error: 'Este convite não é válido.' }, 403, corsHeaders);
+      }
+    }
 
     // Auto-confirm email since user was invited via verified security code
     const { error: confirmError } = await adminClient.auth.admin.updateUserById(user_id, {

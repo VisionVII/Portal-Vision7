@@ -81,6 +81,11 @@ const ROLE_LABELS: Record<string, string> = {
   analyst: 'Analista',
 };
 
+const VALID_ROLES = new Set(Object.keys(ROLE_LABELS));
+// Só um super_admin pode convidar para os papéis de topo — sem isto, qualquer
+// admin conseguia criar uma conta super_admin através de um convite normal.
+const ELEVATED_ROLES = new Set(['super_admin', 'admin']);
+
 function renderInviteEmail(
   code: string,
   role: string,
@@ -250,6 +255,20 @@ Deno.serve(async (req: Request) => {
 
     if (!role) {
       return jsonResponse({ error: 'Papel (role) é obrigatório.' }, 400, corsHeaders);
+    }
+
+    if (!VALID_ROLES.has(role)) {
+      return jsonResponse({ error: `Papel inválido: ${role}` }, 400, corsHeaders);
+    }
+
+    // Um admin normal só pode convidar para papéis operacionais — só um
+    // super_admin pode convidar para admin/super_admin.
+    if (ELEVATED_ROLES.has(role) && roleData.role !== 'super_admin') {
+      return jsonResponse(
+        { error: 'Apenas super administradores podem convidar para os papéis de Administrador ou Super Admin.' },
+        403,
+        corsHeaders,
+      );
     }
 
     const normalizedEmail = email.toLowerCase().trim();
