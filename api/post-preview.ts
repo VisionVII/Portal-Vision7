@@ -9,6 +9,7 @@ type PreviewPost = {
   title?: string;
   slug?: string;
   excerpt?: string;
+  content?: string | null;
   image_url?: string | null;
   banner_url?: string | null;
   published_at?: string | null;
@@ -27,7 +28,18 @@ const toAbsoluteUrl = (value?: string | null) => {
   return new URL(value.startsWith('/') ? value : `/${value}`, `${SITE_URL}/`).toString();
 };
 
-const renderHtml = ({ title, description, url, image, publishedAt }: { title: string; description: string; url: string; image: string; publishedAt?: string | null }) => `<!DOCTYPE html>
+const stripHtml = (value: string) => value
+  .replace(/<br\s*\/?>/gi, '\n')
+  .replace(/<\/p>|<\/h[1-6]>|<\/li>|<\/blockquote>/gi, '\n')
+  .replace(/<[^>]*>/g, '')
+  .replace(/&nbsp;/gi, ' ')
+  .replace(/&amp;/gi, '&')
+  .replace(/&quot;/gi, '"')
+  .replace(/&#39;/gi, "'")
+  .replace(/\n{3,}/g, '\n\n')
+  .trim();
+
+const renderHtml = ({ title, description, url, image, publishedAt, content }: { title: string; description: string; url: string; image: string; publishedAt?: string | null; content?: string | null }) => `<!DOCTYPE html>
 <html lang="pt-PT">
   <head>
     <meta charset="UTF-8" />
@@ -71,13 +83,20 @@ const renderHtml = ({ title, description, url, image, publishedAt }: { title: st
         logo: { '@type': 'ImageObject', url: `${SITE_URL}/vision-logo-premium-default.webp` },
       },
       mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-    })}</script>
-
-    <meta http-equiv="refresh" content="0;url=${escapeHtml(url)}" />
+    }).replace(/</g, '\\u003c')}</script>
   </head>
   <body>
-    <script>window.location.replace(${JSON.stringify(url)});</script>
-    <p>Redirecionando para <a href="${escapeHtml(url)}">${escapeHtml(title)}</a>...</p>
+    <main>
+      <article>
+        <header>
+          <p>Vision7</p>
+          <h1>${escapeHtml(title)}</h1>
+          <p>${escapeHtml(description)}</p>
+          ${publishedAt ? `<time datetime="${escapeHtml(publishedAt)}">Publicado em ${escapeHtml(publishedAt)}</time>` : ''}
+        </header>
+        <div>${escapeHtml(stripHtml(content || description)).replace(/\n/g, '<br />')}</div>
+      </article>
+    </main>
   </body>
 </html>`;
 
@@ -94,11 +113,12 @@ export default async function handler(req: { query?: Record<string, string | str
   let description = DEFAULT_DESCRIPTION;
   let image = DEFAULT_IMAGE;
   let publishedAt: string | null = null;
+  let content: string | null = null;
 
   if (normalizedSlug && SUPABASE_URL && SUPABASE_ANON_KEY) {
     try {
       const url = new URL(`${SUPABASE_URL}/rest/v1/posts`);
-      url.searchParams.set('select', 'title,slug,excerpt,image_url,banner_url,status,published_at');
+      url.searchParams.set('select', 'title,slug,excerpt,content,image_url,banner_url,status,published_at');
       url.searchParams.set('slug', `eq.${normalizedSlug}`);
       url.searchParams.set('status', 'eq.published');
       url.searchParams.set('limit', '1');
@@ -125,6 +145,7 @@ export default async function handler(req: { query?: Record<string, string | str
           const rawImage = post.banner_url || post.image_url;
           image = rawImage ? toAbsoluteUrl(rawImage) : DEFAULT_IMAGE;
           publishedAt = post.published_at || null;
+          content = post.content || null;
         }
       }
     } catch {
@@ -135,5 +156,5 @@ export default async function handler(req: { query?: Record<string, string | str
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
   res.setHeader('Vary', 'User-Agent');
-  res.status(200).send(renderHtml({ title, description, url: canonicalUrl, image, publishedAt }));
+  res.status(200).send(renderHtml({ title, description, url: canonicalUrl, image, publishedAt, content }));
 }
