@@ -32,6 +32,7 @@
 -- only the SELECT policies that already existed.
 
 DROP POLICY IF EXISTS "Only admins can manage roles" ON public.user_roles;
+DROP POLICY IF EXISTS "Admins can view all roles" ON public.user_roles;
 
 CREATE POLICY "Admins can view all roles"
     ON public.user_roles FOR SELECT
