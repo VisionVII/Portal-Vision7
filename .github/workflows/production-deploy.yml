@@ -40,6 +40,7 @@ jobs:
         run: |
           for function_dir in supabase/functions/*; do
             [ -d "$function_dir" ] || continue
+            [ -f "$function_dir/index.ts" ] || continue
             function_name="$(basename "$function_dir")"
             supabase functions deploy "$function_name" --project-ref "$SUPABASE_PROJECT_REF"
           done
