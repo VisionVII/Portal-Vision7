@@ -65,7 +65,7 @@ export default async function handler(_req: unknown, res: {
     .map((post) => post.updated_at || post.published_at)
     .filter((value): value is string => Boolean(value))
     .sort()
-    .at(-1);
+    .slice(-1)[0];
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
