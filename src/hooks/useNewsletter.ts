@@ -181,10 +181,9 @@ export const useUnsubscribeNewsletter = () => {
   return useMutation({
     mutationFn: async (email: string) => {
       const normalizedEmail = email.trim().toLowerCase();
-      const { error } = await supabase
-        .from('newsletter_subscribers')
-        .update({ is_active: false })
-        .eq('email', normalizedEmail);
+      const { error } = await supabase.functions.invoke('unsubscribe-newsletter', {
+        body: { email: normalizedEmail },
+      });
       if (error) throw error;
     },
   });

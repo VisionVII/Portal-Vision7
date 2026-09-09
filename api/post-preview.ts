@@ -11,6 +11,7 @@ type PreviewPost = {
   excerpt?: string;
   image_url?: string | null;
   banner_url?: string | null;
+  published_at?: string | null;
 };
 
 const escapeHtml = (value: string) => value
@@ -26,7 +27,7 @@ const toAbsoluteUrl = (value?: string | null) => {
   return new URL(value.startsWith('/') ? value : `/${value}`, `${SITE_URL}/`).toString();
 };
 
-const renderHtml = ({ title, description, url, image }: { title: string; description: string; url: string; image: string }) => `<!DOCTYPE html>
+const renderHtml = ({ title, description, url, image, publishedAt }: { title: string; description: string; url: string; image: string; publishedAt?: string | null }) => `<!DOCTYPE html>
 <html lang="pt-PT">
   <head>
     <meta charset="UTF-8" />
@@ -54,6 +55,24 @@ const renderHtml = ({ title, description, url, image }: { title: string; descrip
     <meta name="twitter:image" content="${escapeHtml(image)}" />
     <meta name="twitter:image:alt" content="${escapeHtml(title)}" />
 
+    <script type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'NewsArticle',
+      headline: title,
+      description,
+      url,
+      image: [image],
+      datePublished: publishedAt || undefined,
+      author: { '@type': 'Organization', name: 'Vision7' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Vision7',
+        url: SITE_URL,
+        logo: { '@type': 'ImageObject', url: `${SITE_URL}/vision-logo-premium-default.webp` },
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    })}</script>
+
     <meta http-equiv="refresh" content="0;url=${escapeHtml(url)}" />
   </head>
   <body>
@@ -74,11 +93,12 @@ export default async function handler(req: { query?: Record<string, string | str
   let title = DEFAULT_TITLE;
   let description = DEFAULT_DESCRIPTION;
   let image = DEFAULT_IMAGE;
+  let publishedAt: string | null = null;
 
   if (normalizedSlug && SUPABASE_URL && SUPABASE_ANON_KEY) {
     try {
       const url = new URL(`${SUPABASE_URL}/rest/v1/posts`);
-      url.searchParams.set('select', 'title,slug,excerpt,image_url,banner_url,status');
+      url.searchParams.set('select', 'title,slug,excerpt,image_url,banner_url,status,published_at');
       url.searchParams.set('slug', `eq.${normalizedSlug}`);
       url.searchParams.set('status', 'eq.published');
       url.searchParams.set('limit', '1');
@@ -104,6 +124,7 @@ export default async function handler(req: { query?: Record<string, string | str
             : rawExcerpt;
           const rawImage = post.banner_url || post.image_url;
           image = rawImage ? toAbsoluteUrl(rawImage) : DEFAULT_IMAGE;
+          publishedAt = post.published_at || null;
         }
       }
     } catch {
@@ -114,5 +135,5 @@ export default async function handler(req: { query?: Record<string, string | str
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
   res.setHeader('Vary', 'User-Agent');
-  res.status(200).send(renderHtml({ title, description, url: canonicalUrl, image }));
+  res.status(200).send(renderHtml({ title, description, url: canonicalUrl, image, publishedAt }));
 }

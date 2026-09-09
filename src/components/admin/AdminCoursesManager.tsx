@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -461,6 +461,9 @@ const AdminCoursesManager: React.FC<AdminCoursesManagerProps> = ({ searchQuery =
         <DialogContent className="flex max-h-[85vh] max-w-lg flex-col overflow-hidden rounded-2xl p-0">
           <DialogHeader className="shrink-0 border-b border-border/60 px-5 py-4">
             <DialogTitle className="text-base">{editingCourse ? 'Editar parceiro' : 'Novo parceiro'}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Preencha os dados do parceiro para publicar ou atualizar o cartão.
+            </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">

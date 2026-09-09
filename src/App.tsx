@@ -18,6 +18,7 @@ import { useEffect, useRef } from "react";
 import { useTrackEvent } from "@/hooks/useAnalytics";
 
 const Index = lazy(() => import("@/pages/site/Index"));
+const AllPosts = lazy(() => import("@/pages/site/AllPosts"));
 const Tecnologia = lazy(() => import("@/pages/site/Tecnologia"));
 const Desporto = lazy(() => import("@/pages/site/Desporto"));
 const Musica = lazy(() => import("@/pages/site/Musica"));
@@ -88,6 +89,7 @@ const AnimatedRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      <Route path="/todas" element={<AllPosts />} />
       <Route path="/tecnologia" element={<Tecnologia />} />
       <Route path="/desporto" element={<Desporto />} />
       <Route path="/musica" element={<Musica />} />

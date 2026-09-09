@@ -86,6 +86,12 @@ This project is built with:
 
 O deploy de produção é feito via Vercel.
 
+### Deploy automático
+
+O workflow `.github/workflows/production-deploy.yml` é executado em pushes para `main` ou manualmente pelo GitHub Actions. Ele aplica as migrations Supabase, publica todas as Edge Functions e só depois faz o deploy da aplicação na Vercel.
+
+No environment `production` do GitHub, configure os secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`, `VERCEL_TOKEN`, `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID`. O slot de anúncios é configurado com `VITE_ADSENSE_SLOT_ID` nas variáveis da Vercel; sem ele os espaços de publicidade permanecem ocultos.
+
 ## Posso conectar um domínio personalizado ao portal Vision7?
 
 Yes, you can!

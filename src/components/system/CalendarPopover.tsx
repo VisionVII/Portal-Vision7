@@ -3,6 +3,7 @@ import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -100,6 +101,9 @@ const CalendarPopover: React.FC<CalendarPopoverProps> = ({ localDateLabel, class
             <CalendarDays className="h-5 w-5 text-primary-600" />
             Calendário — Feriados PT
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Consulte os feriados de Portugal por mês.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex justify-center px-3 pb-1 pt-2">

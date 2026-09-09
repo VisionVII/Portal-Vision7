@@ -3,6 +3,7 @@ import { Image, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -35,6 +36,9 @@ const MediaPickerDialog: React.FC<MediaPickerDialogProps> = ({ open, onOpenChang
       <DialogContent className="flex max-h-[80vh] max-w-3xl flex-col overflow-hidden rounded-2xl p-0">
         <DialogHeader className="shrink-0 border-b border-border/60 px-5 py-4">
           <DialogTitle className="text-base">Escolher da Galeria</DialogTitle>
+          <DialogDescription className="sr-only">
+            Selecione uma imagem da galeria para utilizar no conteúdo.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="shrink-0 px-5 pt-4">

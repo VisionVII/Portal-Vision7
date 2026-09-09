@@ -167,7 +167,31 @@ const Post = () => {
     upsertMetaTag('name', 'twitter:image', image);
     upsertMetaTag('name', 'twitter:image:alt', post.title);
 
+    const structuredData = document.createElement('script');
+    structuredData.type = 'application/ld+json';
+    structuredData.dataset.seo = 'article';
+    structuredData.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'NewsArticle',
+      headline: post.title,
+      description,
+      url,
+      image: image ? [image] : undefined,
+      datePublished: post.published_at || post.created_at,
+      dateModified: post.updated_at || post.published_at || post.created_at,
+      author: { '@type': 'Person', name: post.author_name || 'Equipa Vision7' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Vision7',
+        url: SITE_URL,
+        logo: { '@type': 'ImageObject', url: `${SITE_URL}/vision-logo-premium-default.webp` },
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    });
+    document.head.appendChild(structuredData);
+
     return () => {
+      structuredData.remove();
       resetSeo();
     };
   }, [post]);
@@ -263,7 +287,6 @@ const Post = () => {
               width={1280}
               height={720}
               className="absolute inset-0 h-full w-full object-cover object-center"
-              fetchPriority="high"
               decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-black/60 to-black/30" />
@@ -406,7 +429,6 @@ const Post = () => {
                 height={720}
                 className="h-64 w-full object-cover sm:h-80 lg:h-[420px]"
                 loading="eager"
-                fetchPriority="high"
                 decoding="async"
               />
             </div>

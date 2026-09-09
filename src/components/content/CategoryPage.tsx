@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PostCard from './PostCard';
@@ -44,6 +44,20 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
   const totalPosts = posts?.length ?? 0;
   const heroBannerUrl = CATEGORY_HERO_BANNERS[slug] || '';
   const heroMobileBannerUrl = heroBannerUrl;
+
+  useEffect(() => {
+    const canonicalUrl = `${window.location.origin}/${slug}`;
+    const descriptionMeta = document.head.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    const canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    document.title = `${title} | Vision7`;
+    if (descriptionMeta) descriptionMeta.content = description;
+    if (canonical) canonical.href = canonicalUrl;
+    return () => {
+      document.title = 'Vision7 - Mídia Tech';
+      if (descriptionMeta) descriptionMeta.content = 'Vision7 reúne notícias, análises e conteúdos premium sobre tecnologia, negócios, cultura, saúde e tendências globais.';
+      if (canonical) canonical.href = `${window.location.origin}/`;
+    };
+  }, [description, slug, title]);
 
   return (
     <div className="min-h-screen bg-background">

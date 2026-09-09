@@ -51,7 +51,6 @@ const PostCard: React.FC<PostCardProps> = ({
               height={540}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="eager"
-              fetchPriority="high"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           ) : (

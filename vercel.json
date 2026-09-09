@@ -5,6 +5,12 @@
   "framework": "vite",
   "headers": [
     {
+      "source": "/(admin|acesso|n8n)(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
@@ -38,6 +44,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     {
       "source": "/post/(.*)",
       "has": [
