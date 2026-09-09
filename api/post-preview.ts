@@ -13,6 +13,10 @@ type PreviewPost = {
   image_url?: string | null;
   banner_url?: string | null;
   published_at?: string | null;
+  updated_at?: string | null;
+  author_name?: string | null;
+  tags?: string[] | null;
+  categories?: { name?: string | null; slug?: string | null } | null;
 };
 
 const escapeHtml = (value: string) => value
@@ -39,7 +43,7 @@ const stripHtml = (value: string) => value
   .replace(/\n{3,}/g, '\n\n')
   .trim();
 
-const renderHtml = ({ title, description, url, image, publishedAt, content }: { title: string; description: string; url: string; image: string; publishedAt?: string | null; content?: string | null }) => `<!DOCTYPE html>
+const renderHtml = ({ title, description, url, image, publishedAt, modifiedAt, content, authorName, categoryName, categorySlug, tags }: { title: string; description: string; url: string; image: string; publishedAt?: string | null; modifiedAt?: string | null; content?: string | null; authorName?: string | null; categoryName?: string | null; categorySlug?: string | null; tags?: string[] | null }) => `<!DOCTYPE html>
 <html lang="pt-PT">
   <head>
     <meta charset="UTF-8" />
@@ -75,7 +79,12 @@ const renderHtml = ({ title, description, url, image, publishedAt, content }: { 
       url,
       image: [image],
       datePublished: publishedAt || undefined,
-      author: { '@type': 'Organization', name: 'Vision7' },
+      dateModified: modifiedAt || publishedAt || undefined,
+      author: { '@type': 'Person', name: authorName || 'Equipa Vision7' },
+      articleSection: categoryName || undefined,
+      keywords: tags?.length ? tags.join(', ') : undefined,
+      inLanguage: 'pt-BR',
+      wordCount: stripHtml(content || '').split(/\s+/).filter(Boolean).length || undefined,
       publisher: {
         '@type': 'Organization',
         name: 'Vision7',
@@ -83,6 +92,15 @@ const renderHtml = ({ title, description, url, image, publishedAt, content }: { 
         logo: { '@type': 'ImageObject', url: `${SITE_URL}/vision-logo-premium-default.webp` },
       },
       mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    }).replace(/</g, '\\u003c')}</script>
+    <script type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: SITE_URL },
+        ...(categoryName && categorySlug ? [{ '@type': 'ListItem', position: 2, name: categoryName, item: `${SITE_URL}/${encodeURIComponent(categorySlug)}` }] : []),
+        { '@type': 'ListItem', position: categoryName && categorySlug ? 3 : 2, name: title, item: url },
+      ],
     }).replace(/</g, '\\u003c')}</script>
   </head>
   <body>
@@ -92,6 +110,7 @@ const renderHtml = ({ title, description, url, image, publishedAt, content }: { 
           <p>Vision7</p>
           <h1>${escapeHtml(title)}</h1>
           <p>${escapeHtml(description)}</p>
+          ${categoryName && categorySlug ? `<nav aria-label="Breadcrumb"><a href="${escapeHtml(SITE_URL)}">Início</a> / <a href="${escapeHtml(`${SITE_URL}/${encodeURIComponent(categorySlug)}`)}">${escapeHtml(categoryName)}</a> / ${escapeHtml(title)}</nav>` : ''}
           ${publishedAt ? `<time datetime="${escapeHtml(publishedAt)}">Publicado em ${escapeHtml(publishedAt)}</time>` : ''}
         </header>
         <div>${escapeHtml(stripHtml(content || description)).replace(/\n/g, '<br />')}</div>
@@ -113,12 +132,17 @@ export default async function handler(req: { query?: Record<string, string | str
   let description = DEFAULT_DESCRIPTION;
   let image = DEFAULT_IMAGE;
   let publishedAt: string | null = null;
+  let modifiedAt: string | null = null;
   let content: string | null = null;
+  let authorName: string | null = null;
+  let categoryName: string | null = null;
+  let categorySlug: string | null = null;
+  let tags: string[] | null = null;
 
   if (normalizedSlug && SUPABASE_URL && SUPABASE_ANON_KEY) {
     try {
       const url = new URL(`${SUPABASE_URL}/rest/v1/posts`);
-      url.searchParams.set('select', 'title,slug,excerpt,content,image_url,banner_url,status,published_at');
+      url.searchParams.set('select', 'title,slug,excerpt,content,image_url,banner_url,status,published_at,updated_at,author_name,tags,categories(name,slug)');
       url.searchParams.set('slug', `eq.${normalizedSlug}`);
       url.searchParams.set('status', 'eq.published');
       url.searchParams.set('limit', '1');
@@ -145,7 +169,12 @@ export default async function handler(req: { query?: Record<string, string | str
           const rawImage = post.banner_url || post.image_url;
           image = rawImage ? toAbsoluteUrl(rawImage) : DEFAULT_IMAGE;
           publishedAt = post.published_at || null;
+          modifiedAt = post.updated_at || post.published_at || null;
           content = post.content || null;
+          authorName = post.author_name || null;
+          categoryName = post.categories?.name || null;
+          categorySlug = post.categories?.slug || null;
+          tags = post.tags || null;
         }
       }
     } catch {
@@ -156,5 +185,5 @@ export default async function handler(req: { query?: Record<string, string | str
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
   res.setHeader('Vary', 'User-Agent');
-  res.status(200).send(renderHtml({ title, description, url: canonicalUrl, image, publishedAt, content }));
+  res.status(200).send(renderHtml({ title, description, url: canonicalUrl, image, publishedAt, modifiedAt, content, authorName, categoryName, categorySlug, tags }));
 }

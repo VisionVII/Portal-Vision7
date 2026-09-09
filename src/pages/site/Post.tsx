@@ -139,6 +139,9 @@ const Post = () => {
     [post?.content],
   );
 
+  const categoryPath = post?.categories?.slug ? `/${post.categories.slug}` : '/';
+  const categoryLabel = post?.categories?.name ?? 'Notícias';
+
   useEffect(() => {
     if (!post) {
       resetSeo();
@@ -180,6 +183,10 @@ const Post = () => {
       datePublished: post.published_at || post.created_at,
       dateModified: post.updated_at || post.published_at || post.created_at,
       author: { '@type': 'Person', name: post.author_name || 'Equipa Vision7' },
+      articleSection: post.categories?.name || undefined,
+      keywords: post.tags?.length ? post.tags.join(', ') : undefined,
+      inLanguage: 'pt-BR',
+      wordCount: post.content?.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length || undefined,
       publisher: {
         '@type': 'Organization',
         name: 'Vision7',
@@ -190,11 +197,26 @@ const Post = () => {
     });
     document.head.appendChild(structuredData);
 
+    const breadcrumbData = document.createElement('script');
+    breadcrumbData.type = 'application/ld+json';
+    breadcrumbData.dataset.seo = 'breadcrumb';
+    breadcrumbData.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: SITE_URL },
+        { '@type': 'ListItem', position: 2, name: categoryLabel, item: `${SITE_URL}${categoryPath}` },
+        { '@type': 'ListItem', position: 3, name: post.title, item: url },
+      ],
+    });
+    document.head.appendChild(breadcrumbData);
+
     return () => {
       structuredData.remove();
+      breadcrumbData.remove();
       resetSeo();
     };
-  }, [post]);
+  }, [categoryLabel, categoryPath, post]);
 
   if (isLoading) {
     return (
@@ -233,8 +255,6 @@ const Post = () => {
     );
   }
 
-  const categoryPath = post.categories?.slug ? `/${post.categories.slug}` : '/';
-  const categoryLabel = post.categories?.name ?? 'Notícias';
   const heroImage = post.banner_url || post.image_url;
 
   const formattedDate = new Date(post.published_at || post.created_at).toLocaleDateString('pt-PT', {

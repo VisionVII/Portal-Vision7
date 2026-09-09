@@ -29,3 +29,5 @@ public/vision7.pt_admin_dashboard_2026_04_15_15_36_31.png
 .env
 .env.local
 .env.*.local
+.vercel
+.env*

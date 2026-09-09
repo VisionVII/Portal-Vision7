@@ -48,23 +48,23 @@ Não iniciar tarefas P3/P4 enquanto existir P0/P1 relevante.
 
 ### Infraestrutura
 
-- [ ] `P0` Build de produção — AUDITAR
-- [ ] `P0` Deploy Vercel — AUDITAR
-- [ ] `P0` Supabase — AUDITAR
-- [ ] `P0` Render — AUDITAR
+- [x] `P0` Build de produção — confirmado localmente em 2026-09-09 (`npm run build`)
+- [ ] `P0` Deploy Vercel — domínio responde; deploy publicado ainda não contém RSS/previews locais; token CLI inválido
+- [ ] `P0` Supabase — endpoint público acessível e protegido por API key; secrets e estado de produção por confirmar
+- [ ] `P0` Render — `/healthz` responde `200` com `{"status":"ok"}`; raiz `/` responde `502` por falha de DNS da base PostgreSQL legada
 - [ ] `P0` n8n — AUDITAR
-- [ ] `P0` Environment variables — AUDITAR
-- [ ] `P0` Domínio — AUDITAR
-- [ ] `P0` SSL — AUDITAR
+- [ ] `P0` Environment variables — nomes documentados; valores e ambientes por confirmar
+- [x] `P0` Domínio — `portal.vision7.pt` responde `200`
+- [x] `P0` SSL — HTTPS activo com HSTS
 - [ ] `P0` Backups — AUDITAR
 
 ### Segurança base
 
-- [ ] `P0` RLS — AUDITAR
-- [ ] `P0` Roles — AUDITAR
+- [ ] `P0` RLS — migrations de correcção presentes; aplicação em produção por confirmar
+- [ ] `P0` Roles — migrations de correcção presentes; aplicação em produção por confirmar
 - [ ] `P0` Permissions — AUDITAR
 - [ ] `P0` MFA — AUDITAR
-- [ ] `P0` Edge Functions — AUDITAR
+- [x] `P0` Edge Functions — pipeline GitHub Actions configurado para publicar todas as funções
 - [ ] `P0` JWT — AUDITAR
 - [ ] `P0` Secrets — AUDITAR
 - [ ] `P0` Uploads — AUDITAR

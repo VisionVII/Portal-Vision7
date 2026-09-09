@@ -118,6 +118,7 @@ Só marcar uma funcionalidade como `PRODUCTION READY` quando funciona, está int
 - `docs/planejamento/PRODUCTION_CHECKLIST.md` é a checklist oficial de produção.
 - `docs/ai/CHECKLIST_VALIDACAO_EDITORIAL.md` continua a ser a checklist especializada do motor editorial e não substitui a checklist de produção.
 - `docs/planejamento/CHECKLIST_TOKENS_3DIAS.md` está expirada/arquivada.
+- `.github/workflows/production-deploy.yml` está configurado para aplicar migrations e publicar Edge Functions; a execução real em produção ainda precisa ser confirmada.
 
 ---
 

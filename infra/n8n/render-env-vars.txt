@@ -34,12 +34,16 @@
 
 # ── Persistência PostgreSQL (OBRIGATÓRIO) ─────────────────────────────────────
 DB_TYPE=postgresdb
-DB_POSTGRESDB_HOST=db.SEU-PROJECT-ID.supabase.co
-DB_POSTGRESDB_PORT=5432
+# Projecto Supabase actual: xhpfxvoonpclonjyfimt.
+# No Render, usar o pooler IPv4/hostname estável em vez de
+# postgres.<project-ref> ou db.<project-ref>.supabase.co.
+DB_POSTGRESDB_HOST=aws-0-eu-west-1.pooler.supabase.com
+DB_POSTGRESDB_PORT=6543
 DB_POSTGRESDB_DATABASE=postgres
-DB_POSTGRESDB_USER=n8n_service
+# O utilizador do pooler deve incluir o ref do projecto.
+DB_POSTGRESDB_USER=postgres.xhpfxvoonpclonjyfimt
 DB_POSTGRESDB_PASSWORD=PASSWORD_DO_PASSO_1
-DB_POSTGRESDB_SCHEMA=n8n
+DB_POSTGRESDB_SCHEMA=public
 # Se usar conexão SSL (Supabase exige):
 DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED=false
 
