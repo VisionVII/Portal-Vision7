@@ -71,6 +71,56 @@ Proxy n8n, Portal AI Assistant, e restantes funções de backend.
 
 ---
 
+## Master Prompt de Execução para Produção
+
+Este ficheiro é o Master Prompt operativo do Vision7. A checklist oficial de produção está em [docs/planejamento/PRODUCTION_CHECKLIST.md](docs/planejamento/PRODUCTION_CHECKLIST.md).
+
+### Ordem obrigatória de prioridade
+
+1. Manualmente funcional
+2. Editorialmente consistente
+3. Content rendering estável
+4. Página pública estável
+5. SEO / AEO / indexação
+6. Segurança / secrets
+7. Dashboard operacional
+8. Automação
+9. Chat / inteligência
+10. Observabilidade / custos
+11. Performance / CRO
+12. ContentOS / escala
+
+**Regra fundamental:** não automatizar o que ainda não funciona correctamente manualmente. O Vision7 deve conseguir funcionar como uma publicação real mesmo que a produção de artigos seja temporariamente 100% manual.
+
+### Classificação de prioridade
+
+- **P0** — Bloqueador absoluto de produção
+- **P1** — Problema crítico
+- **P2** — Melhoria importante
+- **P3** — Optimização
+- **P4** — Futuro / escala
+
+Nunca trabalhar numa tarefa P3/P4 enquanto existir P0/P1 relevante.
+
+### Regra documental de execução
+
+Esta actualização é documentação/organização. Não implementar automaticamente funcionalidades da checklist, não fazer redesign, não alterar arquitectura, workflows, banco de dados ou credenciais, e não fazer deploy sem instrução explícita.
+
+Depois de analisar uma fase, responder no formato `STATUS`, `DESCOBERTAS`, `FICHEIROS`, `DEPENDÊNCIAS`, `RISCO` e `PRÓXIMO PASSO`. O próximo passo deve ser apenas o prioritário; a fase seguinte não deve ser implementada automaticamente.
+
+### Critério de Production Ready
+
+Só marcar uma funcionalidade como `PRODUCTION READY` quando funciona, está integrada, possui tratamento de erros, foi validada, não introduz regressões, funciona nos dispositivos relevantes, respeita segurança e está documentada quando necessário. Código que compila não é suficiente.
+
+### Estado documental
+
+- `CLAUDE.md` é o Master Prompt operativo.
+- `docs/planejamento/PRODUCTION_CHECKLIST.md` é a checklist oficial de produção.
+- `docs/ai/CHECKLIST_VALIDACAO_EDITORIAL.md` continua a ser a checklist especializada do motor editorial e não substitui a checklist de produção.
+- `docs/planejamento/CHECKLIST_TOKENS_3DIAS.md` está expirada/arquivada.
+
+---
+
 ## Roadmap Activo
 
 ### F1 — Limpeza ✅

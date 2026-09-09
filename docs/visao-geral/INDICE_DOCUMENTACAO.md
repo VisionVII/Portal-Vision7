@@ -19,7 +19,7 @@
 
 > **🔑 Referência principal de automações:** `sdd/modules/automation-engine.json` (v2.1.0 — pipeline n8n ativo em produção)
 >
-> **🟢 Pipeline AI ativo:** 6 workflows n8n em produção (WF-01 a WF-06), curadoria via Groq llama-3.1-8b-instant
+> **🧭 Prioridade de produção:** [PRODUCTION_CHECKLIST.md](../planejamento/PRODUCTION_CHECKLIST.md) — fonte oficial de fases, prioridades e readiness
 >
 > **📊 Performance otimizada:** First-load ~140KB gzip, bundle split em 6 chunks, lazy loading completo
 
@@ -52,6 +52,10 @@
 ```
 
 ---
+
+## 🧭 ORIENTAÇÃO OPERACIONAL
+
+Para decidir o que fazer a seguir, leia primeiro o [Master Prompt](../../CLAUDE.md) e a [Production Checklist](../planejamento/PRODUCTION_CHECKLIST.md). As checklists especializadas continuam válidas dentro do seu âmbito.
 
 ## 📋 LISTA COMPLETA DE DOCUMENTOS
 
