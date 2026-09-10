@@ -165,7 +165,7 @@ const MediaGalleryView: React.FC<MediaGalleryViewProps> = ({ searchQuery = '' })
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteTargets, setDeleteTargets] = useState<GalleryImage[] | null>(null);
 
-  const { data: images = [], isLoading } = useGalleryImages();
+  const { data: images = [], isLoading, isError, error } = useGalleryImages();
 
   // posts.image_url / posts.banner_url guardam o URL público completo do Storage,
   // por isso comparar por igualdade de string chega para saber se uma imagem está em uso.
@@ -446,6 +446,27 @@ const MediaGalleryView: React.FC<MediaGalleryViewProps> = ({ searchQuery = '' })
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="aspect-square animate-pulse rounded-xl bg-muted/50" />
             ))}
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center py-16 text-center">
+            <div className="rounded-2xl bg-destructive/10 p-5">
+              <AlertTriangle className="h-10 w-10 text-destructive/70" />
+            </div>
+            <p className="mt-4 text-sm font-medium text-foreground/80">Não foi possível carregar a galeria</p>
+            <p className="mt-1 max-w-md text-xs text-muted-foreground">
+              {error instanceof Error && error.message
+                ? error.message
+                : 'Verifique as permissões do Storage e tente novamente.'}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={() => void queryClient.invalidateQueries({ queryKey: ['media-gallery'] })}
+            >
+              Tentar novamente
+            </Button>
           </div>
         ) : filteredImages.length === 0 ? (
           <div className="flex flex-col items-center py-16">
