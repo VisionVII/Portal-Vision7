@@ -113,6 +113,62 @@ jobs:
       - name: Validate production build
         run: npm run build
 
+      - name: Validate Vercel account and project access
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::error::Um ou mais secrets Vercel estão vazios no environment production."
+            exit 1
+          fi
+
+          user_file="$(mktemp)"
+          user_status="$(curl --silent --show-error --output "$user_file" --write-out '%{http_code}' \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            'https://api.vercel.com/v2/user')"
+
+          case "$user_status" in
+            200)
+              echo "Token Vercel autenticado com sucesso."
+              ;;
+            401)
+              echo "::error::VERCEL_TOKEN inválido, expirado ou revogado (HTTP 401)."
+              exit 1
+              ;;
+            *)
+              echo "::error::API Vercel rejeitou a identidade do token (HTTP $user_status)."
+              exit 1
+              ;;
+          esac
+
+          project_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID")"
+
+          case "$project_status" in
+            200)
+              echo "Token Vercel tem acesso ao projeto $VERCEL_PROJECT_ID na equipa $VERCEL_ORG_ID."
+              ;;
+            403)
+              echo "::error::VERCEL_TOKEN é válido, mas a conta não tem acesso à equipa/projeto indicado (HTTP 403)."
+              exit 1
+              ;;
+            404)
+              echo "::error::Projeto Vercel não encontrado para este token/equipa (HTTP 404). Confirme VERCEL_PROJECT_ID e VERCEL_ORG_ID."
+              exit 1
+              ;;
+            *)
+              echo "::error::API Vercel retornou HTTP $project_status ao validar o projeto."
+              exit 1
+              ;;
+          esac
+
+          rm -f "$user_file"
+
       - name: Pull Vercel project settings
         run: npx vercel pull --yes --environment=production --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
         env:
