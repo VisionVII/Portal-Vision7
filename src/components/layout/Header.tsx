@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { CalendarDays, Clock3, CloudSnow, Flame, MapPin, Menu, Sun, Thermometer, Wind } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,38 @@ import BrandLogo from '@/components/system/BrandLogo';
 const PortalAIAssistantButton = React.lazy(() => import('@/components/system/PortalAIAssistantButton'));
 const CalendarPopover = React.lazy(() => import('@/components/system/CalendarPopover'));
 import ThemeToggle from '@/components/system/ThemeToggle';
+
+const DeferredPortalAIAssistantButton: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      if (!cancelled) setReady(true);
+    };
+
+    if ('requestIdleCallback' in window) {
+      const idleId = window.requestIdleCallback(load, { timeout: 1500 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = window.setTimeout(load, 1500);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  if (!ready) return null;
+  return (
+    <Suspense fallback={null}>
+      <PortalAIAssistantButton compact={compact} />
+    </Suspense>
+  );
+};
 
 const fallbackCategories = [
   { name: 'Tecnologia', path: '/tecnologia' },
@@ -115,15 +147,11 @@ const Header = () => {
           </Link>
 
           <div className="hidden shrink-0 items-center py-0.5 md:flex">
-            <Suspense fallback={null}>
-              <PortalAIAssistantButton />
-            </Suspense>
+            <DeferredPortalAIAssistantButton />
           </div>
 
           <div className="flex shrink-0 items-center gap-2 py-0.5 md:hidden">
-            <Suspense fallback={null}>
-              <PortalAIAssistantButton compact />
-            </Suspense>
+            <DeferredPortalAIAssistantButton compact />
           </div>
         </div>
       </div>
