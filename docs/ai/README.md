@@ -61,7 +61,7 @@ WF-06 Learning Loop
 
 - n8n: `https://portal-vision7.onrender.com` (Render, community edition)
 - AI Model: `claude-sonnet-4-6` (WF-03, curadoria editorial) · `claude-haiku-4-5-20251001` (assistente do portal, chat público)
-- Groq e HuggingFace foram eliminados (ver [CLAUDE.md](../../CLAUDE.md)) — `GROQ_API_KEY` só sobrevive como validação vestigial não usada em `n8n-settings`
+- Groq e HuggingFace foram removidos; o WF-03 usa Claude Sonnet e o assistente público usa Claude Haiku. As credenciais antigas não devem existir no Render/Supabase.
 - Todos os 6 workflows ativos em produção
 
 ## Áreas de Foco

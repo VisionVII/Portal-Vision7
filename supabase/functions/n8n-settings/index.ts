@@ -82,13 +82,6 @@ function validateCredentialFormat(keyName: string, value: string) {
     }
   }
 
-  if (normalizedKeyName === 'GROQ_API_KEY' && !normalizedValue.startsWith('gsk_')) {
-    throw new Error('GROQ_API_KEY inválida. O valor esperado começa com gsk_.');
-  }
-
-  if (normalizedKeyName === 'HF_API_TOKEN' && !normalizedValue.startsWith('hf_')) {
-    throw new Error('HF_API_TOKEN inválido. O valor esperado começa com hf_.');
-  }
 }
 
 function utf8ToBytes(text: string): Uint8Array {

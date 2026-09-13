@@ -738,7 +738,7 @@ auditoria de qualidade, salvaguarda e notificação.
 **Sequência de integração no WF-03:**
 ```
 Trigger (Schedule/Webhook)
-  ↓ Validar chave IA (Groq ou Anthropic)
+  ↓ Validar chave IA (Anthropic)
   ↓ Fetch cluster de alta prioridade (news_clusters)
   ↓ Fetch artigos-fonte (news_staging por fingerprint)
   ↓ Fetch posts recentes (para interlinking)
@@ -777,23 +777,13 @@ As tabelas abaixo são as que existem confirmadamente no schema actual:
 > Estas tabelas futuras estão descritas na `automacoes-portal.skill.md` como
 > arquitectura alvo. Só criar quando os workflows correspondentes forem implementados.
 
-### Modelo de IA — Estado Actual vs. Migração Alvo
+### Modelo de IA — Estado Actual
 
-**Estado actual (produção):**
-- Geração de artigos: Groq `llama-3.3-70b-versatile` via `GROQ_API_KEY`
-- Fallback: HuggingFace `mistralai/Mistral-7B-Instruct-v0.3` via `HF_API_TOKEN`
-- Nota: O WF-03 actual valida e usa ambos via lógica de fallback automática
-
-**Migração alvo (recomendada):**
-- Geração editorial (máxima qualidade): `claude-opus-4-6`
-- Validação/QA: `claude-sonnet-4-6`
-- Metadados rápidos (slug, meta description): `claude-haiku-4-5-20251001`
-- Variável de ambiente a adicionar: `ANTHROPIC_API_KEY`
-
-> ⚠️ O Prompt Master acima está escrito para o modelo alvo (Claude).
-> Para usar com Groq no estado actual, manter a estrutura do prompt mas
-> reduzir o output esperado para ~1.500 tokens e simplificar o JSON de saída
-> para os campos que o `llama-3.3-70b-versatile` consegue produzir de forma fiável.
+**Produção actual:**
+- Geração editorial e QA: Claude Sonnet `claude-sonnet-4-6`
+- Assistente público e metadados rápidos: Claude Haiku `claude-haiku-4-5-20251001`
+- Credencial: `ANTHROPIC_API_KEY`
+- Groq e Hugging Face são providers legados removidos; `GROQ_API_KEY` e `HF_API_TOKEN` não devem ser configuradas.
 
 ---
 
@@ -829,9 +819,7 @@ Antes de activar publicação automática sem revisão humana, confirmar:
 |----------|-------------|----------|-------|
 | `SUPABASE_URL` | ✅ | Todos os WFs | URL do projecto Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Todos os WFs | Nunca expor no frontend |
-| `GROQ_API_KEY` | ✅ (actual) | WF-03 | Modelo actual de geração |
-| `HF_API_TOKEN` | Fallback | WF-03 | Fallback se Groq falhar |
-| `ANTHROPIC_API_KEY` | ✅ (migração) | WF-03 | Modelo alvo do Engine |
+| `ANTHROPIC_API_KEY` | ✅ | WF-03 | Geração e QA editorial Claude |
 | `IMAGE_GEN_API_KEY` | Alta | WF-03 (novo nó) | Geração imagem de capa |
 | `SITE_URL` | ✅ | WF-05, WF-06 | URL pública do portal |
 | `TWITTER_BEARER_TOKEN` | Média | WF-05 | Distribuição Twitter/X |

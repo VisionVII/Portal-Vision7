@@ -56,10 +56,10 @@ N8N_ENCRYPTION_KEY=GERAR_COM_OPENSSL_RAND_HEX_16
 SUPABASE_URL=https://SEU-PROJECT-ID.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=SEU_SERVICE_ROLE_JWT
 
-# ── Credenciais IA (usadas no WF-03 via $env.*) ───────────────────────────────
+# ── Credencial IA (usada no WF-03 via $env.*) ─────────────────────────────────
+# Groq e Hugging Face foram removidos. O WF-03 usa Claude/Anthropic.
 # OBRIGATÓRIO: adicionar no Render Dashboard
-GROQ_API_KEY=SEU_GROQ_API_KEY
-HF_API_TOKEN=SEU_HUGGINGFACE_TOKEN
+ANTHROPIC_API_KEY=SEU_ANTHROPIC_API_KEY
 
 # ── Email (Resend) — notificações pós-execução dos workflows ─────────────────
 # Usado no WF-03 para enviar resumo de execução por email após cada pipeline

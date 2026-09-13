@@ -77,7 +77,7 @@
       "date": "2026-04-09",
       "version": "0.1.0",
       "author": "GitHub Copilot",
-      "description": "SDD inicial do assistente Vision7 com Groq, fallback local e guardrails estritos de portal."
+      "description": "SDD inicial legado do assistente Vision7 com Groq, posteriormente substituído por Claude Haiku."
     },
     {
       "date": "2026-08-16",

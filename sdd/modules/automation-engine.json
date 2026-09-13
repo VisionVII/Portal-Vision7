@@ -668,7 +668,7 @@
       "date": "2026-04-12",
       "version": "2.1.0",
       "author": "Vision7 Team",
-      "description": "Pipeline n8n end-to-end em produção: 6 workflows ativos (WF-01 a WF-06). Bugs corrigidos: WF-02 .item→.all(), id==eq., WF-03 GROQ_API_KEY+Authorization header. Dashboard refatorado para 3 tabs (Pipeline IA | Automações | Ferramentas). Integração com Groq llama-3.1-8b-instant para curadoria AI."
+      "description": "Registo histórico: pipeline n8n end-to-end com 6 workflows (WF-01 a WF-06). Bugs históricos corrigidos no WF-02 e WF-03. O motor de IA foi posteriormente migrado de Groq/Hugging Face para Claude; as credenciais antigas não são necessárias."
     },
     {
       "date": "2026-06-22",
