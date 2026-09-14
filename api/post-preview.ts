@@ -49,6 +49,7 @@ const renderHtml = ({ title, description, url, image, publishedAt, modifiedAt, c
     <meta charset="UTF-8" />
     <title>${escapeHtml(title)}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta name="description" content="${escapeHtml(description)}" />
     <link rel="canonical" href="${escapeHtml(url)}" />
 
@@ -142,7 +143,10 @@ export default async function handler(req: { query?: Record<string, string | str
   if (normalizedSlug && SUPABASE_URL && SUPABASE_ANON_KEY) {
     try {
       const url = new URL(`${SUPABASE_URL}/rest/v1/posts`);
-      url.searchParams.set('select', 'title,slug,excerpt,content,image_url,banner_url,status,published_at,updated_at,author_name,tags,categories(name,slug)');
+       // Keep the relationship explicit, as in the public app queries. Without
+       // the FK hint PostgREST can reject the embedded relationship and leave
+       // crawlers with the generic fallback metadata.
+       url.searchParams.set('select', 'title,slug,excerpt,content,image_url,banner_url,status,published_at,updated_at,author_name,tags,categories!posts_category_id_fkey(name,slug)');
       url.searchParams.set('slug', `eq.${normalizedSlug}`);
       url.searchParams.set('status', 'eq.published');
       url.searchParams.set('limit', '1');

@@ -38,7 +38,15 @@ export default async function handler(_req: unknown, res: {
   setHeader: (name: string, value: string) => void;
   status: (code: number) => { send: (body: string) => void };
 }) {
-  const urls = staticUrls.map(([path, changefreq, priority]) => renderUrl(path, changefreq, priority));
+  const urlEntries = new Map<string, string>();
+  const addUrl = (path: string, changefreq: string, priority: string, lastmod?: string | null) => {
+    // Deduplicate by canonical URL path rather than rendered XML. The same
+    // route may be returned by the static list and the categories table with
+    // different lastmod values.
+    if (!urlEntries.has(path)) urlEntries.set(path, renderUrl(path, changefreq, priority, lastmod));
+  };
+
+  staticUrls.forEach(([path, changefreq, priority]) => addUrl(path, changefreq, priority));
   let posts: SitemapPost[] = [];
   let categories: SitemapCategory[] = [];
   let courses: SitemapCourse[] = [];
@@ -85,17 +93,16 @@ export default async function handler(_req: unknown, res: {
     }
   }
 
-  const categoryUrls = categories
+  categories
     .filter((category) => category.slug && staticUrls.some(([path]) => path === `/${category.slug}`))
-    .map((category) => renderUrl(`/${encodeURIComponent(category.slug)}`, 'daily', '0.8', category.created_at));
-  const postUrls = posts
+    .forEach((category) => addUrl(`/${encodeURIComponent(category.slug)}`, 'daily', '0.8', category.created_at));
+  posts
     .filter((post) => post.slug)
-    .map((post) => renderUrl(`/post/${encodeURIComponent(post.slug)}`, 'weekly', '0.7', post.updated_at || post.published_at));
-  const courseUrls = courses
+    .forEach((post) => addUrl(`/post/${encodeURIComponent(post.slug)}`, 'weekly', '0.7', post.updated_at || post.published_at));
+  courses
     .filter((course) => course.slug)
-    .map((course) => renderUrl(`/curso/${encodeURIComponent(course.slug)}`, 'weekly', '0.5', course.updated_at || course.published_at));
-  const uniqueUrls = [...new Set([...urls, ...categoryUrls, ...postUrls, ...courseUrls])];
-  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${uniqueUrls.join('')}\n</urlset>`;
+    .forEach((course) => addUrl(`/curso/${encodeURIComponent(course.slug)}`, 'weekly', '0.5', course.updated_at || course.published_at));
+  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...urlEntries.values()].join('')}\n</urlset>`;
 
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
