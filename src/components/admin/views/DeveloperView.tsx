@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useState } from 'react';
+import { Activity, Key } from 'lucide-react';
 import DeveloperControlCenter from '@/components/admin/DeveloperControlCenter';
 
 const CredentialVault = lazy(() => import('@/components/admin/CredentialVault'));
@@ -7,32 +8,45 @@ const DeveloperView: React.FC = () => {
   const [tab, setTab] = useState<'dev' | 'vault'>('dev');
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-1.5 rounded-lg border border-border/50 bg-muted/30 p-1 w-fit">
+    <div className="space-y-6">
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted/60 p-1 border border-border/40 w-fit">
         <button
+          type="button"
           data-tour="developer-tab-diagnostics"
           onClick={() => setTab('dev')}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-            tab === 'dev' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+            tab === 'dev'
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
           }`}
         >
-          Diagnósticos
+          <Activity className="h-3.5 w-3.5" />
+          <span>Diagnósticos & Métricas</span>
         </button>
         <button
+          type="button"
           data-tour="developer-tab-vault"
           onClick={() => setTab('vault')}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-            tab === 'vault' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+            tab === 'vault'
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
           }`}
         >
-          Credential Vault
+          <Key className="h-3.5 w-3.5" />
+          <span>Credential Vault</span>
         </button>
       </div>
 
-      {tab === 'dev' && <div data-tour="developer-content-diagnostics"><DeveloperControlCenter /></div>}
+      {tab === 'dev' && (
+        <div data-tour="developer-content-diagnostics">
+          <DeveloperControlCenter />
+        </div>
+      )}
       {tab === 'vault' && (
         <div data-tour="developer-content-vault">
-          <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted/50" />}>
+          <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-muted/40" />}>
             <CredentialVault />
           </Suspense>
         </div>
