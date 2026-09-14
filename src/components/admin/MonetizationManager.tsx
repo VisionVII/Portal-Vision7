@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, DollarSign, LayoutGrid, Crown, Plus, X } from 'lucide-react';
+import { Loader2, DollarSign, LayoutGrid, Crown, Plus, X, CheckCircle2 } from 'lucide-react';
 import { useMonetizationSettings, useUpdateMonetizationSetting } from '@/hooks/useMonetization';
 import { useToast } from '@/hooks/use-toast';
 import type { Json } from '@/integrations/supabase/types';
@@ -48,7 +48,7 @@ export default function MonetizationManager() {
     updateSetting.mutate(
       { key, value: { [field]: value } as unknown as Json },
       {
-        onSuccess: () => toast({ title: `${field} ${value ? 'ativado' : 'desativado'}` }),
+        onSuccess: () => toast({ title: value ? `${field === 'ads_enabled' ? 'Publicidade' : 'Subscrições'} ativas` : `${field === 'ads_enabled' ? 'Publicidade' : 'Subscrições'} desativadas` }),
         onError: () => toast({ title: 'Erro ao atualizar', variant: 'destructive' }),
       },
     );
@@ -61,7 +61,7 @@ export default function MonetizationManager() {
     updateSetting.mutate(
       { key: 'ad_slots', value: { ad_slots: newSlots } as unknown as Json },
       {
-        onSuccess: () => toast({ title: 'Slots atualizados' }),
+        onSuccess: () => toast({ title: 'Posições de anúncio atualizadas' }),
         onError: () => toast({ title: 'Erro ao atualizar', variant: 'destructive' }),
       },
     );
@@ -74,7 +74,7 @@ export default function MonetizationManager() {
     updateSetting.mutate(
       { key: 'premium_features', value: { premium_features: updated } as unknown as Json },
       {
-        onSuccess: () => { setNewFeature(''); toast({ title: 'Feature adicionada' }); },
+        onSuccess: () => { setNewFeature(''); toast({ title: 'Funcionalidade adicionada', description: trimmed }); },
         onError: () => toast({ title: 'Erro ao atualizar', variant: 'destructive' }),
       },
     );
@@ -85,7 +85,7 @@ export default function MonetizationManager() {
     updateSetting.mutate(
       { key: 'premium_features', value: { premium_features: updated } as unknown as Json },
       {
-        onSuccess: () => toast({ title: 'Feature removida' }),
+        onSuccess: () => toast({ title: 'Funcionalidade removida' }),
         onError: () => toast({ title: 'Erro ao atualizar', variant: 'destructive' }),
       },
     );
@@ -93,8 +93,8 @@ export default function MonetizationManager() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
         A carregar definições de monetização...
       </div>
     );
@@ -102,18 +102,30 @@ export default function MonetizationManager() {
 
   return (
     <div className="space-y-6">
-      {/* Ads Toggle */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-emerald-500" />
-            <CardTitle className="text-base">Publicidade</CardTitle>
+      {/* Ads */}
+      <Card className="border-border/60">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <DollarSign className="h-4 w-4 text-emerald-500" />
+                Publicidade
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Controlar a exibição de espaços publicitários no portal.
+              </CardDescription>
+            </div>
+            <Badge
+              variant="outline"
+              className={`shrink-0 ${adsEnabled ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-border bg-muted text-muted-foreground'}`}
+            >
+              {adsEnabled ? <><CheckCircle2 className="mr-1 h-3 w-3" />Ativa</> : 'Inativa'}
+            </Badge>
           </div>
-          <CardDescription>Controlar exibição de espaços publicitários no portal.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="ads-toggle">Publicidade ativa</Label>
+            <Label htmlFor="ads-toggle" className="font-normal">Publicidade ativa no portal</Label>
             <Switch
               id="ads-toggle"
               checked={adsEnabled}
@@ -123,14 +135,18 @@ export default function MonetizationManager() {
           </div>
 
           {adsEnabled && (
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Posições ativas</Label>
+            <div className="space-y-2.5 rounded-lg border border-border/50 bg-muted/20 p-3.5">
+              <Label className="text-xs font-medium text-muted-foreground">Posições ativas (clique para alternar)</Label>
               <div className="flex flex-wrap gap-2">
                 {AD_SLOT_OPTIONS.map((slot) => (
                   <Badge
                     key={slot}
                     variant={adSlots.includes(slot) ? 'default' : 'outline'}
-                    className="cursor-pointer select-none"
+                    className={`cursor-pointer select-none transition-all ${
+                      adSlots.includes(slot)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
                     onClick={() => handleSlotToggle(slot)}
                   >
                     {slot}
@@ -143,17 +159,29 @@ export default function MonetizationManager() {
       </Card>
 
       {/* Subscriptions */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-amber-500" />
-            <CardTitle className="text-base">Subscrições Premium</CardTitle>
+      <Card className="border-border/60">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Crown className="h-4 w-4 text-amber-500" />
+                Subscrições Premium
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Ativar o sistema de conteúdo premium e acesso por subscrição.
+              </CardDescription>
+            </div>
+            <Badge
+              variant="outline"
+              className={`shrink-0 ${subscriptionEnabled ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400' : 'border-border bg-muted text-muted-foreground'}`}
+            >
+              {subscriptionEnabled ? <><CheckCircle2 className="mr-1 h-3 w-3" />Ativo</> : 'Inativo'}
+            </Badge>
           </div>
-          <CardDescription>Ativar sistema de conteúdo premium e subscrições.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="flex items-center justify-between">
-            <Label htmlFor="sub-toggle">Subscrições ativas</Label>
+            <Label htmlFor="sub-toggle" className="font-normal">Sistema de subscrições ativo</Label>
             <Switch
               id="sub-toggle"
               checked={subscriptionEnabled}
@@ -165,40 +193,51 @@ export default function MonetizationManager() {
       </Card>
 
       {/* Premium Features */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <LayoutGrid className="h-5 w-5 text-primary" />
-            <CardTitle className="text-base">Funcionalidades Premium</CardTitle>
-          </div>
-          <CardDescription>Definir quais funcionalidades são reservadas a subscritores.</CardDescription>
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <LayoutGrid className="h-4 w-4 text-primary" />
+            Funcionalidades Premium
+          </CardTitle>
+          <CardDescription>
+            Define quais funcionalidades ficam reservadas a subscritores. Clica no &times; para remover.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {premiumFeatures.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+          {premiumFeatures.length > 0 ? (
+            <div className="flex flex-wrap gap-2 rounded-lg border border-border/50 bg-muted/20 p-3.5">
               {premiumFeatures.map((f) => (
-                <Badge key={f} variant="secondary" className="gap-1 pr-1">
+                <Badge key={f} variant="secondary" className="gap-1.5 pr-1.5 text-xs">
                   {f}
                   <button
                     onClick={() => handleRemoveFeature(f)}
-                    className="ml-1 rounded-full p-0.5 hover:bg-destructive/20"
+                    className="flex items-center justify-center rounded-full p-0.5 hover:bg-destructive/20 hover:text-destructive transition-colors"
+                    aria-label={`Remover funcionalidade "${f}"`}
                   >
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
               ))}
             </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Nenhuma funcionalidade premium definida.</p>
           )}
+
           <div className="flex gap-2">
             <Input
-              placeholder="Nome da funcionalidade..."
+              placeholder="Nome da funcionalidade (ex: artigos-exclusivos)"
               value={newFeature}
               onChange={(e) => setNewFeature(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddFeature()}
               className="flex-1"
             />
-            <Button size="sm" onClick={handleAddFeature} disabled={!newFeature.trim() || updateSetting.isPending}>
-              <Plus className="mr-1 h-3.5 w-3.5" />
+            <Button
+              size="default"
+              onClick={handleAddFeature}
+              disabled={!newFeature.trim() || updateSetting.isPending}
+              className="gap-2 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
               Adicionar
             </Button>
           </div>
