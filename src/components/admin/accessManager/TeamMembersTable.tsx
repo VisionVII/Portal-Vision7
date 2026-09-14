@@ -80,59 +80,78 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({ members, currentUse
     const isCurrentUser = member.user_id === currentUserId;
     const canManage = isSuperAdmin && !isCurrentUser;
 
+    // Generate initials
+    const initials = member.full_name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || 'U';
+
     return (
       <div
         key={member.assignment_id}
-        className={`flex flex-col gap-2 rounded-lg border p-3 md:flex-row md:items-center md:justify-between ${
-          member.is_active ? 'border-border/60' : 'border-border/30 opacity-60'
+        className={`flex flex-col gap-3 rounded-xl border p-3.5 transition-all md:flex-row md:items-center md:justify-between ${
+          member.is_active
+            ? 'border-border/70 bg-card hover:border-border'
+            : 'border-border/30 bg-muted/15 opacity-60'
         }`}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase text-muted-foreground">
-            {member.full_name.slice(0, 2)}
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-mono text-xs font-bold text-primary border border-primary/20">
+            {initials}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 space-y-0.5">
             <div className="flex items-center gap-2">
-              <p className="truncate text-sm font-medium text-foreground">
+              <p className="truncate text-sm font-semibold text-foreground">
                 {member.full_name}
-                {isCurrentUser && <span className="ml-1 text-[10px] text-muted-foreground">(tu)</span>}
               </p>
+              {isCurrentUser && (
+                <span className="rounded-full bg-primary/10 border border-primary/20 px-1.5 py-0.2 text-[10px] font-medium text-primary">
+                  Tu
+                </span>
+              )}
               <StatusDot active={member.is_active} />
             </div>
-            <p className="truncate text-[11px] text-muted-foreground">
-              {member.email || member.user_id.slice(0, 12) + '…'}
+            <p className="truncate text-xs text-muted-foreground">
+              {member.email || `${member.user_id.slice(0, 12)}…`}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <RoleBadge role={member.role} />
-          <span className="text-[10px] text-muted-foreground">
-            {member.assigned_at ? new Date(member.assigned_at).toLocaleDateString('pt-PT') : '—'}
-          </span>
+        <div className="flex items-center gap-3 self-end md:self-auto">
+          <div className="flex items-center gap-2">
+            <RoleBadge role={member.role} />
+            <span className="text-[11px] text-muted-foreground font-mono">
+              {member.assigned_at ? new Date(member.assigned_at).toLocaleDateString('pt-PT') : '—'}
+            </span>
+          </div>
 
           {canManage && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <p className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">Alterar papel</p>
+              <DropdownMenuContent align="end" className="w-52">
+                <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Alterar Papel
+                </p>
                 {ROLE_BLUEPRINTS.filter((b) => b.role !== member.role).map((b) => (
                   <DropdownMenuItem
                     key={b.role}
+                    className="text-xs cursor-pointer"
                     onClick={() => setConfirmAction({ type: 'change-role', member, newRole: b.role })}
                   >
-                    <Shield className="mr-2 h-3.5 w-3.5" />
+                    <Shield className="mr-2 h-3.5 w-3.5 text-primary" />
                     {b.title}
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
                 {member.is_active ? (
                   <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
+                    className="text-xs text-destructive focus:text-destructive cursor-pointer"
                     onClick={() => setConfirmAction({ type: 'deactivate', member })}
                   >
                     <UserMinus className="mr-2 h-3.5 w-3.5" />
@@ -140,6 +159,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({ members, currentUse
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem
+                    className="text-xs text-emerald-600 focus:text-emerald-600 cursor-pointer"
                     onClick={() => setConfirmAction({ type: 'reactivate', member, newRole: member.role })}
                   >
                     <UserPlus className="mr-2 h-3.5 w-3.5" />
@@ -156,22 +176,24 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({ members, currentUse
 
   return (
     <>
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {activeMembers.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">Nenhum membro ativo.</p>
+          <div className="py-8 text-center text-sm text-muted-foreground">Nenhum membro ativo registado.</div>
         ) : (
           activeMembers.map(renderMemberRow)
         )}
 
         {inactiveMembers.length > 0 && (
-          <>
-            <div className="flex items-center gap-2 pt-2">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Inativos</span>
-              <div className="h-px flex-1 bg-border" />
+          <div className="pt-3 space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-border/60" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Membros Inativos ({inactiveMembers.length})
+              </span>
+              <div className="h-px flex-1 bg-border/60" />
             </div>
             {inactiveMembers.map(renderMemberRow)}
-          </>
+          </div>
         )}
       </div>
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Mail, ShieldCheck, Users } from 'lucide-react';
+import { Mail, ShieldCheck, UserCheck, Users, UserX } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useRegistrationInvites, useTeamMembers } from '@/hooks/useAdminAccess';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,63 +28,82 @@ const AdminAccessManager: React.FC = () => {
   const tabs: Array<{ id: TabId; label: string; icon: React.ReactNode; count?: number }> = [
     { id: 'team', label: 'Equipa', icon: <Users className="h-3.5 w-3.5" />, count: stats.active },
     { id: 'invites', label: 'Convites', icon: <Mail className="h-3.5 w-3.5" />, count: stats.pending },
-    { id: 'roles', label: 'Papéis', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+    { id: 'roles', label: 'Papéis & Escopos', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
-      {/* Left: Invite form + stats */}
-      <div className="space-y-5">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+      {/* Left: Invite form + semantic stats */}
+      <div className="space-y-4">
         <div data-tour="access-invite">
           <InviteForm />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <div className="rounded-xl border border-border/60 bg-card p-3 text-center shadow-sm">
-            <p className="text-lg font-bold text-foreground">{stats.active}</p>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Ativos</p>
+        {/* Semantic Stat Cards */}
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3 text-center transition-all">
+            <div className="flex items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 mb-1">
+              <UserCheck className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Ativos</span>
+            </div>
+            <p className="text-xl font-bold tracking-tight text-foreground">{stats.active}</p>
           </div>
-          <div className="rounded-xl border border-border/60 bg-card p-3 text-center shadow-sm">
-            <p className="text-lg font-bold text-foreground">{stats.pending}</p>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Pendentes</p>
+
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-3 text-center transition-all">
+            <div className="flex items-center justify-center gap-1 text-amber-600 dark:text-amber-400 mb-1">
+              <Mail className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Pendentes</span>
+            </div>
+            <p className="text-xl font-bold tracking-tight text-foreground">{stats.pending}</p>
           </div>
-          <div className="rounded-xl border border-border/60 bg-card p-3 text-center shadow-sm">
-            <p className="text-lg font-bold text-foreground">{stats.inactive}</p>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Inativos</p>
+
+          <div className="rounded-xl border border-slate-500/20 bg-slate-500/[0.04] p-3 text-center transition-all">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <UserX className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Inativos</span>
+            </div>
+            <p className="text-xl font-bold tracking-tight text-foreground">{stats.inactive}</p>
           </div>
         </div>
       </div>
 
       {/* Right: Tabs — Team / Invites / Roles */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-muted/50 p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                data-tour={`access-tab-${tab.id}`}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-                {tab.count !== undefined && (
-                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${
-                    activeTab === tab.id ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
+      <Card className="border-border/60 shadow-sm flex flex-col">
+        <CardHeader className="pb-3 border-b border-border/40">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-muted/60 p-1 border border-border/40">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    data-tour={`access-tab-${tab.id}`}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                    }`}
+                  >
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                    {tab.count !== undefined && (
+                      <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-semibold ${
+                        isActive
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted-foreground/15 text-muted-foreground'
+                      }`}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4 flex-1">
           {activeTab === 'team' && (
             <div data-tour="access-content-team">
               <TeamMembersTable

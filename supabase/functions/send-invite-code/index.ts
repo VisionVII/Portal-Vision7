@@ -247,7 +247,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'Acesso negado. Apenas administradores podem enviar convites.' }, 403, corsHeaders);
     }
 
-    const { email, role } = await req.json();
+    const { email, role, expiry_hours } = await req.json();
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return jsonResponse({ error: 'Email inválido.' }, 400, corsHeaders);
@@ -283,8 +283,13 @@ Deno.serve(async (req: Request) => {
     const brandName = settingsMap.get('site_name')?.trim() || 'Vision VII';
     const logoUrl = settingsMap.get('logo_url')?.trim() || `${DEFAULT_SITE_URL}/vision-logo-premium-default.png`;
 
+    const parsedHours = Number(expiry_hours);
+    const validExpiryHours = Number.isFinite(parsedHours) && parsedHours >= 1 && parsedHours <= 168
+      ? Math.round(parsedHours)
+      : CODE_EXPIRY_HOURS;
+
     const code = generateCode(6);
-    const expiresAt = new Date(Date.now() + CODE_EXPIRY_HOURS * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + validExpiryHours * 60 * 60 * 1000).toISOString();
 
     // Invalidate any previous unused invite codes for this email
     await adminClient
@@ -311,7 +316,7 @@ Deno.serve(async (req: Request) => {
 
     // Dev mode: no API key
     if (!RESEND_API_KEY) {
-      console.log(`[send-invite-code] DEV — invite code ${code} for ${normalizedEmail} (role: ${role})`);
+      console.log(`[send-invite-code] DEV — invite code ${code} for ${normalizedEmail} (role: ${role}, valid for ${validExpiryHours}h)`);
       return jsonResponse({ success: true }, 200, corsHeaders);
     }
 
@@ -327,7 +332,7 @@ Deno.serve(async (req: Request) => {
         from: FROM_EMAIL,
         to: [normalizedEmail],
         subject: `Convite de acesso Vision7 - ${brandName}`,
-        html: renderInviteEmail(code, role, brandName, logoUrl, registerUrl, CODE_EXPIRY_HOURS),
+        html: renderInviteEmail(code, role, brandName, logoUrl, registerUrl, validExpiryHours),
       }),
     });
 
